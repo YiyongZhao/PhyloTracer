@@ -32,44 +32,45 @@ if sys.version_info.major==2:
     quit() 
 
 # create a parameter parser
-import argparse
+class CustomHelpFormatter(argparse.HelpFormatter):
+    def _format_action(self, action):
+        if action.dest == 'command':
+            # Override the format of the subparsers
+            choices = self._metavar_formatter(action, action.choices)
+            return f"Available modules:\n{''.join(choices)}\n"
+        return super()._format_action(action)
 
-class CustomUsageFormatter(argparse.HelpFormatter):
-    def _format_usage(self, usage, actions, groups, prefix):
-        usage = super()._format_usage(usage, actions, groups, prefix)
-        return usage.replace("[", "[-").replace("]", "]")
+parser = argparse.ArgumentParser(formatter_class=CustomHelpFormatter, add_help=False)
+subparsers = parser.add_subparsers(dest='command', help='Available module')
 
-def setup_parser():
-    parser = argparse.ArgumentParser(description='PhyloTracer is a bioinformatics utility package for rooting and labeling duplicate genes in gene trees.', formatter_class=CustomUsageFormatter)
-    subparsers = parser.add_subparsers(dest='command', help='Available commands')
+# Tree_visualization command
+tree_visualization_parser = subparsers.add_parser('Tree_Visualization', help='Tree Visualization help')
+tree_visualization_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
+tree_visualization_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
+tree_visualization_parser.add_argument('--gene_categories', metavar='file', nargs='+', help='Gene category information')
+tree_visualization_parser.add_argument('--keep_branch', type=int, choices=[1, 0],help='[1/0] you can only input 1 or 0 Whether to preserve branch length information')
+tree_visualization_parser.add_argument('--tree_style', choices=['r', 'c'],default='r', help='Tree style: [r/c] (rectangular) or (circular) (default: rectangular)')
 
-    # Tree_visualization command
-    tree_visualization_parser = subparsers.add_parser('Tree_visualization', help='Perform tree visualization')
-    tree_visualization_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-    tree_visualization_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
-    tree_visualization_parser.add_argument('--gene_categories', metavar='category', nargs='+', required=True, help='Gene category information')
-    tree_visualization_parser.add_argument('--keep_branch', action='store_true', help='Whether to preserve branch length information')
-    tree_visualization_parser.add_argument('--tree_style', metavar='style', default='rectangular', choices=['rectangular', 'circular'], help='Tree style: "rectangular" or "circular" (default: rectangular)')
-
-    # Phylo_Rooting command
-    phylo_rooting_parser = subparsers.add_parser('Phylo_Rooting', help='Perform phylo rooting')
-    phylo_rooting_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-    phylo_rooting_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
-    phylo_rooting_parser.add_argument('--input_gene_length', metavar='file', required=True, help='Input gene length list')
-    phylo_rooting_parser.add_argument('--input_sps_tree', metavar='file', required=True, help='Input species tree file')
-
-    # Ortho_Split command
-    ortho_split_parser = subparsers.add_parser('Ortho_Split', help='Perform ortho split')
-    ortho_split_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-    ortho_split_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
-    ortho_split_parser.add_argument('--input_gene_length', metavar='file', required=True, help='Input gene length list')
+# Phylo_Rooting command
+phylo_rooting_parser = subparsers.add_parser('Phylo_Rooting', help='Phylo Rooting help')
+phylo_rooting_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
+phylo_rooting_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
+phylo_rooting_parser.add_argument('--input_gene_length', metavar='file', help='Input gene length list')
+phylo_rooting_parser.add_argument('--input_sps_tree', metavar='file', required=True, help='Input species tree file')
 
 
-    return parser
+# Ortho_Split command
+ortho_split_parser = subparsers.add_parser('Ortho_Split', help='Ortho Split help')
+ortho_split_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
+ortho_split_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
+ortho_split_parser.add_argument('--input_gene_length', metavar='file', required=True, help='Input gene length list')
+ortho_split_parser.add_argument('--input_sps_tree', metavar='file', required=True, help='Input species tree file')
 
-# Analyze command line parameters
-parser = setup_parser()
+# Display custom help message
+parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
+
 args = parser.parse_args()
+
 
 def main():
     # Perform the corresponding functions according to the parameters
@@ -118,12 +119,15 @@ def main():
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
+            input_sps_tree = args.input_sps_tree
             input_gene_length = args.input_gene_length
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             len_dic = read_and_return_dict(input_gene_length)
             renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
-            split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, renamed_len_dic)
+            sptree = PhyloTree(input_sps_tree)
+            sptree=rename_species_tree(sptree,voucher2taxa_dic)
+            split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic,sptree)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
@@ -131,7 +135,13 @@ def main():
             print("Required arguments for Ortho_Split command are missing.")
 
     else:
-        print("Invalid command.")
+        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split}")
+        print()
+        print("optional arguments:")
+        print('  -h, --help            show this help message and exit')
+        print()
+        print('Available Modules:')
+        print('  {Tree_Visualization,Phylo_Rooting,Ortho_Split}')
 
 
 if __name__ == "__main__":
