@@ -155,6 +155,6 @@ if __name__ == "__main__":
     len_dic=read_and_return_dict('length_list')
     renamed_len_dic=rename_len_dic(len_dic,gene2new_named_gene_dic)
     tre_dic=read_and_return_dict('GF_list')   
-    sptree=PhyloTree('F:/a/96tree/7sp.nwk')
+    sptree=PhyloTree('species_tree')
     sptree=rename_species_tree(sptree,voucher2taxa_dic)
     split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic,sptree)
