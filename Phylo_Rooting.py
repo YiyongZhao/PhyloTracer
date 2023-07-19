@@ -2,15 +2,21 @@ from Base import *
 from Filter import *
 from Ortho_Split import *
 ######################################################################################################################
-def calculate_RF_distance(Phylo_t_OG_L:object,sptree:object)->int:# RF comparison between each individual gene tree and the species tree
-    for leaf in Phylo_t_OG_L:
-        leaf.name=leaf.name[0:3]# Processing leaf names, such as changing ABC_001 to ABC, in order to compare with the species tree
-    RF=Phylo_t_OG_L.robinson_foulds(sptree)[0]
-    return RF
-
-def get_RF_dic(trees:list,gene2new_named_gene_dic:dict,tre_ID:str,tre_path:str,renamed_len_dic:dict,new_named_gene2gene_dic:dict,sptree:object)->dict:
+def get_RF_dic(voucher2taxa_dic,trees:list,gene2new_named_gene_dic:dict,tre_ID:str,tre_path:str,renamed_len_dic:dict,new_named_gene2gene_dic:dict,sptree:object)->dict:
+    sptree=rename_species_tree(sptree, voucher2taxa_dic)
     RF_dic={}
+    
+    def calculate_RF_distance(Phylo_t_OG_L:object,sptree:object)->int:# RF comparison between each individual gene tree and the species tree
+        for leaf in Phylo_t_OG_L:
+            leaf.name=leaf.name[0:3]# Processing leaf names, such as changing ABC_001 to ABC, in order to compare with the species tree
+        RF=Phylo_t_OG_L.robinson_foulds(sptree)[0]
+        return RF
+
+    processed_trees = set()
+    
     for i in trees:
+        if i in processed_trees:
+            continue
         #if not yes_or_no_root(i):
              #mid_node=i.get_midpoint_outgroup()
             #i.set_outgroup(mid_node)
@@ -24,12 +30,12 @@ def get_RF_dic(trees:list,gene2new_named_gene_dic:dict,tre_ID:str,tre_path:str,r
             Phylo_t0=read_tree(tre_path)
             Phylo_t=root_tre_with_midpoint_outgroup(Phylo_t0)
             Phylo_t_OG_L=extract_tree(OG_L,Phylo_t)
+            Phylo_t_OG_L=rename_input_tre(Phylo_t_OG_L,gene2new_named_gene_dic)
             #o.write(tre_name+"\t"+Phylo_t_OG_L.write()+"\n")
             RF+=calculate_RF_distance(Phylo_t_OG_L,sptree)
         RF_dic[i]=RF
-        
+        processed_trees.add(i)
     return RF_dic
-
 ######################################################################################################################
 def is_same_species(node:object)->bool:# Determining if the genes under a node are from the same species
     if calculate_species_num(node) >1:
@@ -61,14 +67,14 @@ def rename_output_tre(Phylo_t:object, new_named_gene2gene_dic:dict,tre_ID:str) -
     for node in Phylo_t.traverse():
         if node.name in new_named_gene2gene_dic.keys():
             node.name = new_named_gene2gene_dic[node.name]
-    return Phylo_t.write(outfile=str(tre_ID)+'.nwk',format=1)
+    return Phylo_t.write(outfile=str(tre_ID)+'.nwk')
 
-def root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic,sptree):
+def root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic,sptree,voucher2taxa_dic):
     for tre_ID,tre_path in tre_dic.items():
         Phylo_t0=read_tree(tre_path)
         Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
         if len(set(get_species_list(Phylo_t1))) <= 2:
-            Phylo_t1.write(outfile=str(tre_ID)+'.nwk',format=1)
+            Phylo_t1.write(outfile=str(tre_ID)+'.nwk')
             continue
         Phylo_t2=rename_input_tre(Phylo_t1,gene2new_named_gene_dic)
         root_list=manager(Phylo_t2)
@@ -78,7 +84,7 @@ def root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2
             if len(deeped_trees) > 1:
                 vared_trees=filter_min_var(deeped_trees)
                 if len(vared_trees) >1:
-                    RF_dic=get_RF_dic(vared_trees,gene2new_named_gene_dic,tre_ID,tre_path,renamed_len_dic,new_named_gene2gene_dic,sptree)   
+                    RF_dic=get_RF_dic(voucher2taxa_dic,vared_trees,gene2new_named_gene_dic,tre_ID,tre_path,renamed_len_dic,new_named_gene2gene_dic,sptree)   
                     RFed_trees=filter_min_RF(RF_dic)
                     rename_output_tre(RFed_trees[0],new_named_gene2gene_dic,tre_ID)
                 else:
@@ -92,7 +98,7 @@ def root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2
                 if len(max_overlaped_trees) >1:
                         vared_trees=filter_min_var(max_overlaped_trees)
                         if len (vared_trees) > 1:
-                            RF_dic=get_RF_dic(vared_trees,gene2new_named_gene_dic,tre_ID,tre_path,renamed_len_dic,new_named_gene2gene_dic,sptree)   
+                            RF_dic=get_RF_dic(voucher2taxa_dic,vared_trees,gene2new_named_gene_dic,tre_ID,tre_path,renamed_len_dic,new_named_gene2gene_dic,sptree)   
                             RFed_trees=filter_min_RF(RF_dic) 
                             rename_output_tre(RFed_trees[0],new_named_gene2gene_dic,tre_ID) 
                         else:
@@ -108,7 +114,4 @@ if __name__ == "__main__":
     renamed_len_dic=rename_len_dic(len_dic,gene2new_named_gene_dic)
     sptree=PhyloTree('sptree')
     tre_dic=read_and_return_dict('GF_list')   
-    root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic,sptree)
-
-
-
+    root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic,sptree,voucher2taxa_dic)
