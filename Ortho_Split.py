@@ -1,5 +1,23 @@
 from Base import *
 
+def count_gene_loss(gene_tree:object, species_tree:object)->int:
+    recon_tree, events = gene_tree.reconcile(sptree)
+    num=len(recon_tree)-len(gene_tree)
+    return str(num)
+
+def count_gene_dup(gene_tree:object)->int:
+    tre_ParaL,GF_leaves_S = find_tre_dup(gene_tree)
+    num=len(tre_ParaL)
+    return str(num)
+
+def rename_species_tree(sptree:object, voucher2taxa_dic:dict)->object:
+    for node in sptree:
+        key_to_find = node.name
+        if key_to_find in voucher2taxa_dic.values():
+            new_name = next(key for key, value in voucher2taxa_dic.items() if value == key_to_find)
+            node.name = new_name           
+    return sptree
+
 def rename_len_dic(len_dic:dict, gene2new_named_gene_dic:dict) -> dict:
     return {gene2new_named_gene_dic[key]: value for key,value in len_dic.items() if key in gene2new_named_gene_dic.keys()}
 
@@ -111,12 +129,15 @@ def rename_OGs_tre_name(principal_gene_S:list,minor_othologs_L:list,tre_ID:str)-
     return ordered_name_OG_L
 #ordered_name_OG_L=rename_OGs_tre_name(principal_gene_S,minor_othologs_L,tre_ID)
 ##########################################################################
-def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,out_file_name):
-    o=open(out_file_name,'w')
+def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic,sptree):
+    o=open('result.txt','w')
+    o.write('tre_name'+'\t'+'single_copy_tree'+'\t'+'gene_loss_num'+'\t'+'gene_dup_num'+'\n')
     for tre_ID,tre_path in tre_dic.items():
         Phylo_t0=read_tree(tre_path)
         Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
         Phylo_t1=rename_input_tre(Phylo_t1,gene2new_named_gene_dic)
+        gene_loss_num=count_gene_loss(Phylo_t1,sptree)
+        gene_dup_num=count_gene_dup(Phylo_t1)
         principal_gene_S,filtered_offcut_ev_seqs_L0=offcut_tre(Phylo_t1,renamed_len_dic)
         minor_othologs_L=[]
         minor_othologs_L=iterator(filtered_offcut_ev_seqs_L0,Phylo_t1,gene2new_named_gene_dic,minor_othologs_L,tre_path,renamed_len_dic)
@@ -126,11 +147,14 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed
             Phylo_t0=read_tree(tre_path)
             Phylo_t=root_tre_with_midpoint_outgroup(Phylo_t0)
             Phylo_t_OG_L=extract_tree(OG_L,Phylo_t)
-            o.write(tre_name+"\t"+Phylo_t_OG_L.write()+"\n")
+            o.write(tre_name + "\t" + Phylo_t_OG_L.write()+'\t'+gene_loss_num+'\t'+gene_dup_num+'\t'+ "\n")
+    o.close()
 
 if __name__ == "__main__":
     gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap")
     len_dic=read_and_return_dict('length_list')
     renamed_len_dic=rename_len_dic(len_dic,gene2new_named_gene_dic)
     tre_dic=read_and_return_dict('GF_list')   
-    split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,out_file_name)
+    sptree=PhyloTree('F:/a/96tree/7sp.nwk')
+    sptree=rename_species_tree(sptree,voucher2taxa_dic)
+    split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic,sptree)
