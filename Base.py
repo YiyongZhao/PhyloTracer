@@ -14,12 +14,18 @@ def generate_sps_voucher(sps_num:int) -> list:
 
 
 def gene_id_transfer(gene2taxa_list:str) -> dict:
-    gene2taxa_dic=read_and_return_dict(gene2taxa_list)
-    taxa_list=list(set(gene2taxa_dic.values()))
-    taxa2voucher_dic=dict(zip(taxa_list,generate_sps_voucher(len(taxa_list))))
-    voucher2taxa_dic=dict(zip(taxa2voucher_dic.values(),taxa2voucher_dic.keys()))
-    gene2new_named_gene_dic = {gene: f"{taxa2voucher_dic[gene2taxa_dic[gene]]}_{gene}" for gene in gene2taxa_dic.keys()}
-    new_named_gene2gene_dic=dict(zip(gene2new_named_gene_dic.values(),gene2new_named_gene_dic.keys()))
+    gene2taxa_dic = read_and_return_dict(gene2taxa_list)
+    taxa_list = list(set(gene2taxa_dic.values()))
+    taxa2voucher_dic = dict(zip(taxa_list, generate_sps_voucher(len(taxa_list))))
+    voucher2taxa_dic = {value: key for key, value in taxa2voucher_dic.items()}
+    gene_count = {}
+
+    for species in gene2taxa_dic.values():
+        gene_count[species] = gene_count.get(species, 0) + 1
+
+    new_gene_names = [f"{taxa2voucher_dic[species]}_{i}" for species, count in gene_count.items() for i in range(1, count + 1)]
+    gene2new_named_gene_dic = dict(zip(gene2taxa_dic.keys(), new_gene_names))
+    new_named_gene2gene_dic = {value: key for key, value in gene2new_named_gene_dic.items()}
     return gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic
 #gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("gene2taxa.list")
 
