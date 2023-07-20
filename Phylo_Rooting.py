@@ -1,7 +1,7 @@
 from ete3 import PhyloTree
 import numpy as np
 from Ortho_Split import *
-
+import __init__
 
 def filter_min_RF(RF_dic:dict)->list:#Filter RF and select the tree with the minimum value
     RF_trees=RF_dic.keys()
