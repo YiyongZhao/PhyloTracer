@@ -1,6 +1,6 @@
 from Base import *
 
-def count_gene_loss(gene_tree:object, species_tree:object)->int:
+def count_gene_loss(gene_tree:object, sptree:object)->int:
     recon_tree, events = gene_tree.reconcile(sptree)
     num=len(recon_tree)-len(gene_tree)
     return str(num)
@@ -129,7 +129,7 @@ def rename_OGs_tre_name(principal_gene_S:list,minor_othologs_L:list,tre_ID:str)-
     return ordered_name_OG_L
 #ordered_name_OG_L=rename_OGs_tre_name(principal_gene_S,minor_othologs_L,tre_ID)
 ##########################################################################
-def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic,sptree):
+def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic):
     o=open('result.txt','w')
     o.write('tre_name'+'\t'+'single_copy_tree'+'\t'+'gene_loss_num'+'\t'+'gene_dup_num'+'\n')
     for tre_ID,tre_path in tre_dic.items():
@@ -155,6 +155,6 @@ if __name__ == "__main__":
     len_dic=read_and_return_dict('length_list')
     renamed_len_dic=rename_len_dic(len_dic,gene2new_named_gene_dic)
     tre_dic=read_and_return_dict('GF_list')   
-    sptree=PhyloTree('species_tree')
+    sptree=PhyloTree('F:/a/96tree/7sp.nwk')
     sptree=rename_species_tree(sptree,voucher2taxa_dic)
-    split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic,sptree)
+    split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic)
