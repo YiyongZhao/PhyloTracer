@@ -1,3 +1,4 @@
+import __init__
 def count_gene_loss(gene_tree:object, sptree:object)->int:
     recon_tree, events = gene_tree.reconcile(sptree)
     num=len(recon_tree)-len(gene_tree)
