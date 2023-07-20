@@ -4,7 +4,7 @@ import time
 from Ortho_Split import *
 from Phylo_Rooting import *
 from Tree_Visualization import *
-import __init__
+from __init__ import *
 ##################################################################
 print(textwrap.dedent("""
 ###############################################################################################
