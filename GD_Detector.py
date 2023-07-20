@@ -1,4 +1,6 @@
+import pandas as pd
 import __init__
+
 def get_nodes(Phylo_t: object) -> list:
     nodes = [node for node in Phylo_t.traverse() if not node.is_leaf()]
     return nodes
