@@ -16,15 +16,21 @@ def find_dup_node(Phylo_t:object)->list:#After searching for duplication events,
     return dup_node_name_list
 
 def realign_branch_length(Phylo_t1:object)->object:
+    Phylo_t1.ladderize()
+    Phylo_t1.resolve_polytomy(recursive=True)
+    Phylo_t1.sort_descendants("support")
     max_deep=get_max_deepth(Phylo_t1)
-    
     for node in Phylo_t1.traverse():
-        if not node.is_leaf():
+        if not node.is_root():
             node.dist=1
-        else:
-            ancestors_list=node.get_ancestors()#list→All ancestor nodes of the current node.
-            current_deepth=len(ancestors_list)
-            node.dist=max_deep-current_deepth
+            degree=node.get_distance(node.get_tree_root()) + 1
+            deep=get_max_deepth(node)
+            node.dist=max_deep-deep-degree
+    clade_up=Phylo_t1.get_children()[0]
+    clade_down=Phylo_t1.get_children()[1]
+    difference=abs(get_max_deepth(clade_up)-get_max_deepth(clade_down))+1
+    clade_up.dist=clade_up.dist+difference  
+    clade_down.dist=clade_down.dist+difference   
     
     return Phylo_t1
 
@@ -36,8 +42,6 @@ def Dup_NodeIDs_from_Numbered_GFs(Phylo_t:object)->object:
     dup_node_name_list = find_dup_node(Phylo_t)
     Phylo_t1 = Tree(Phylo_t.write())
     num_tre_node(Phylo_t1)
-    Phylo_t1.ladderize()
-    Phylo_t1.sort_descendants("support")
     
     return Phylo_t1, dup_node_name_list
 
@@ -108,7 +112,7 @@ def get_color_dict(dictory:dict)->dict:
 def generate_color_dict(gene_categories:list)->list:
     return [get_color_dict(i) for i in gene_categories]
 
-def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,ts)->object:
+def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,ts,new_named_gene2gene_dic:dict)->object:
     sps_color_dict=get_color_dict(voucher2taxa_dic)
     color_dicts = generate_color_dict(gene_categories)
     faces_added = set()  # used to track the added faces
@@ -116,7 +120,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
     def add_face_to_node(node, color_dict:dict,species: str, column: int, position="aligned"):
         if (node, column, position) not in faces_added and species in color_dict:
             color = color_dict[species].split('-')[1]
-            face = TextFace("   ▐" + '  ' + color_dict[species].split('-')[0], fgcolor=color)
+            face = TextFace("   ▐" + '  ' + color_dict[species].split('-')[0], fgcolor=color,fstyle='italic')
             node.add_face(face, column=column, position=position)
             faces_added.add((node, column, position))
 
@@ -130,18 +134,18 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
         if node.is_leaf():
             # Get species names
             re_named_species = node.name.split("_")[0]
-            gene = node.name[4:]
+            gene = new_named_gene2gene_dic[node.name]
             species = voucher2taxa_dic[re_named_species]
 
             # Set the color for this species name
             if re_named_species in sps_color_dict:
                 color = sps_color_dict[re_named_species].split('-')[1]
-                face = TextFace(' ' + gene, fgcolor=color)
+                face = TextFace(' ' + species+'_'+gene, fgcolor=color,fstyle='italic')
                 node.add_face(face, column=-1)
 
             if re_named_species in sps_color_dict:
                 color = sps_color_dict[re_named_species].split('-')[1]
-                face4 = TextFace("   ▐" + '  ' + species, fgcolor=color)
+                face4 = TextFace("   ▐" + '  ' + species, fgcolor=color,fstyle='italic')
                 node.add_face(face4, column=0, position="aligned")
 
             column = 1
@@ -150,14 +154,14 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                 column += 1
     return Phylo_t1.render(str(tre_ID)+'.PDF',tree_style=ts)
 
-def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch):
+def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic):
     for tre_ID,tre_path in tre_dic.items():
         Phylo_t0=read_tree(tre_path)
         rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
         Phylo_t1,ts=get_treestyle(Phylo_t0,tree_style,tre_ID)
-        if keep_branch !='yes' :
+        if keep_branch !=1 :
             realign_branch_length(Phylo_t1)
-        tips_mark(Phylo_t1,voucher2taxa_dic,gene_categories,tre_ID,ts)
+        tips_mark(Phylo_t1,voucher2taxa_dic,gene_categories,tre_ID,ts,new_named_gene2gene_dic)
 ####################################################################################
 if __name__ == "__main__":
     gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap")
@@ -171,5 +175,3 @@ if __name__ == "__main__":
     tree_style='r'
     view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch)
 	
-
-
