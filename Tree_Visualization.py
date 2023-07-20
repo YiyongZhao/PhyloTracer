@@ -1,8 +1,7 @@
 from ete3 import NodeStyle, Tree, TreeStyle,TextFace
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-import numpy as np
-import __init__
+from __init__ import *
 
 def find_dup_node(Phylo_t:object)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
     events = Phylo_t.get_descendant_evol_events()
