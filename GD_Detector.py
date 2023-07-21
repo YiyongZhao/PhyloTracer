@@ -93,6 +93,7 @@ def sps_pair_count_dict(sptree: object, tre_dic: dict, imap: dict) -> dict:
     return sps_pair_count_dic
 
 def mark_sptree(sptree:object,sps_pair_count_dic:dict)->object:
+    num_tre_node(sptree)
     sptree.ladderize()
     sptree.sort_descendants("support")
     for node in sptree.traverse():
