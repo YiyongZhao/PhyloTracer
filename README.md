@@ -1,4 +1,4 @@
-# PhyloTracer: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog Retrieval, Species Hybridization Detection,and Visualization.
+# PhyloTools: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog Retrieval, Species Hybridization Detection,and Visualization.
 ```
 ###############################################################################################
 #                                                                                             #
@@ -22,7 +22,7 @@
 
 # gene-tree rooting and gene dup mark
 
-PhyloTracer v1.1.1
+PhyloTools v1.1.1
 A bioinformatics software that uses RF distance, branch length, and gene length for rooting
 
 I. Prerequisites and installation
