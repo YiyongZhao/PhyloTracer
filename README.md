@@ -4,7 +4,7 @@
 # <img src="logo/PhyloTools_logo.jpg" width="60" height="60" align="center"> PhyloTools V1.1.1 </div> 
 
 ```
-############################################################################################################  
+############################################################################################################
 #                       ____  _           _     _____           _                                          #
 #                      |  _ \| |__  _   _| | __|_   _|__   ___ | |___                                      #
 #                      | |_) | '_ \| | | | |/ _ \| |/ _ \ / _ \| / __|                                     #
@@ -13,11 +13,11 @@
 #                                   |___/                                                                  #
 #                                                                                                          #
 #   PhyloTools: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog   #
-#   Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection,and Visualization.          #                            
+#   Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection,and Visualization.          #
 #                                                                                                          #
 #   Pypi: https://pypi.org/project/PhyloTools                                                              #
-#   Github: https://github.com/YiyongZhao/PhyloTools                                                       #              
-#   Licence: MIT license                                                                                       #
+#   Github: https://github.com/YiyongZhao/PhyloTools                                                       #
+#   Licence: MIT license                                                                                   #
 #   Release Date: 2023-7                                                                                   #
 #   Please cite: Li et al. 2024, XXXX.                                                                     #
 #   Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                                   #
