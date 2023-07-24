@@ -19,7 +19,7 @@
 #   Github: https://github.com/YiyongZhao/PhyloTools                                                       #              
 #   Licence: GPL-3.0                                                                                       #
 #   Release Date: 2023-7                                                                                   #
-#   Please cite: Li et al. 2023, XXXX.                                                                     #
+#   Please cite: Li et al. 2024, XXXX.                                                                     #
 #   Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                                   #
 #                                                                                                          #
 ############################################################################################################
