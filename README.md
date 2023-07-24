@@ -1,22 +1,33 @@
-# <img src="logo/PhyloTools_logo.jpg" width="50" height="50" align="center"> PhyloTools 
-#  <p align = "justify">
+
+<div align="center">
+  
+# <img src="logo/PhyloTools_logo.jpg" width="60" height="60" align="center"> PhyloTools V1.1.1 </div> 
+
 ```
-##########################################################################################################
-#                                        PhyloTools V1.1.1                                               #                                                           
-#   A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog Retrieval,  #
-#   Phylogenetic Noise Elimination, Species Hybridization Detection,and Visualization.                   #                                     
-#
-#   Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                                                                                              
-#   Pypi: https://pypi.org/project/PhyloTools                                                            #
-#   Github: https://github.com/YiyongZhao/PhyloTools                                                     #                       
-#                                    #
-#   Licence: GPL-3.0                                                                                     #
-#   Release Date: 2023-7                                                                                 #
-#                                                                                                        #
-##########################################################################################################
+###########################################################################################################################         
+#                                ____  _           _     _____           _                                                #    
+#                               |  _ \| |__  _   _| | __|_   _|__   ___ | |___                                            #
+#                               | |_) | '_ \| | | | |/ _ \| |/ _ \ / _ \| / __|                                           #
+#                               |  __/| | | | |_| | | (_) | | (_) | (_) | \__ \                                           #
+#                               |_|   |_| |_|\__, |_|\___/|_|\___/ \___/|_|___/                                           #
+#                                            |___/                                                                        #
+#                                                                                                                         #
+#             PhyloTools: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog        #
+#             Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection,and Visualization.               #                                     
+#                                                                                                                         #
+#             Pypi: https://pypi.org/project/PhyloTools                                                                   #
+#             Github: https://github.com/YiyongZhao/PhyloTools                                                            #                       
+#             Licence: GPL-3.0                                                                                            #
+#             Release Date: 2023-7                                                                                        #
+#             Please cite: Li et al. 2023, XXXX.                                                                          #
+#             Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                                        #                                           
+#                                                                                                                         #
+###########################################################################################################################
 ```
 
-# gene-tree rooting and gene dup mark
+
+# User Mannual and Guide:
+## gene-tree rooting and gene dup mark
 
 PhyloTools v1.1.1
 A bioinformatics software that uses RF distance, branch length, and gene length for rooting
