@@ -1,44 +1,19 @@
-<div align="center">
-
-![PhyloTools Logo](logo/PhyloTools_logo.jpg)
-
-# PhyloTools: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection, and Visualization.
-
-
-
-
-
-
-
-
-
-
-
-
-<div align="center">
-<img src="logo/PhyloTools_logo.jpg" width = "100" height = "100"> 
-</div> 
-
-# PhyloTools: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection,and Visualization.
+# <img src="logo/PhyloTools_logo.jpg" width="50" height="50" align="center"> PhyloTools 
+#  <p align = "justify">
 ```
-###############################################################################################
-#                                                                                             #
-# ██████╗ ██╗  ██╗██╗   ██╗██╗      ██████╗ ████████╗██████╗  █████╗  ██████╗███████╗██████╗  #
-# ██╔══██╗██║  ██║╚██╗ ██╔╝██║     ██╔═══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗ # 
-# ██████╔╝███████║ ╚████╔╝ ██║     ██║   ██║   ██║   ██████╔╝███████║██║     █████╗  ██████╔╝ #
-# ██╔═══╝ ██╔══██║  ╚██╔╝  ██║     ██║   ██║   ██║   ██╔══██╗██╔══██║██║     ██╔══╝  ██╔══██╗ #
-# ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║ #
-# ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝ #
-#                                                                                             #        
-#                                   PhyloTracer v1.1.1                                        #
-#     A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification,         #
-#     Ortholog Retrieval, Species Hybridization Detection,and Visualization.                  #  
-#                                                                                             #
-#     Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yiyongzhao1991@gmail.com)                 #
-#     Licence: GPL-3.0                                                                        #
-#     Release Date: 2023-7                                                                    #
-#                                                                                             #
-###############################################################################################
+##########################################################################################################
+#                                        PhyloTools V1.1.1                                               #                                                           
+#   A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog Retrieval,  #
+#   Phylogenetic Noise Elimination, Species Hybridization Detection,and Visualization.                   #                                     
+#
+#   Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                                                                                              
+#   Pypi: https://pypi.org/project/PhyloTools                                                            #
+#   Github: https://github.com/YiyongZhao/PhyloTools                                                     #                       
+#                                    #
+#   Licence: GPL-3.0                                                                                     #
+#   Release Date: 2023-7                                                                                 #
+#                                                                                                        #
+##########################################################################################################
 ```
 
 # gene-tree rooting and gene dup mark
