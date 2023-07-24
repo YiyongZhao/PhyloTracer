@@ -1,5 +1,5 @@
 <div align="center">
-<img src="logo/PhyloTools_logo.jpg" width = "20" height = "20"> 
+<img src="logo/PhyloTools_logo.jpg" width = "60" height = "60"> 
 </div> 
 
 # PhyloTools: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection,and Visualization.
