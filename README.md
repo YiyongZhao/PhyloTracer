@@ -1,5 +1,6 @@
-<a href="https://github.com/YiyongZhao/PhyloTools/logo"><img src="https://github.com/YiyongZhao/PhyloTools/blob/main/logo/PhyloTools_logo.jpg" alt="PanGenome Graph Builder"></a>
-
+<div align="center">
+<img src="logo/PhyloTools_logo.jpg" width = "20" height = "20"> 
+</div> 
 
 # PhyloTools: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection,and Visualization.
 ```
