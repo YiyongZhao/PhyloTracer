@@ -17,7 +17,7 @@
 #                                                                                                          #
 #   Pypi: https://pypi.org/project/PhyloTools                                                              #
 #   Github: https://github.com/YiyongZhao/PhyloTools                                                       #              
-#   Licence: GPL-3.0                                                                                       #
+#   Licence: MIT license                                                                                       #
 #   Release Date: 2023-7                                                                                   #
 #   Please cite: Li et al. 2024, XXXX.                                                                     #
 #   Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                                   #
