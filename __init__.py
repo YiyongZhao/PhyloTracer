@@ -1,5 +1,5 @@
 import pandas as pd
-from ete3 import PhyloTree
+from ete3 import PhyloTree,Tree
 import random
 import numpy as np
 
@@ -40,6 +40,9 @@ def rename_input_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
     return Phylo_t
 
 def read_tree(tre_path:str) -> object:
+    return Tree(tre_path)
+
+def read_phylo_tree(tre_path:str) -> object:
     return PhyloTree(tre_path)
 
 ######################################################################################################################
