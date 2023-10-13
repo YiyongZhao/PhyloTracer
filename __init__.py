@@ -111,3 +111,32 @@ def calculate_species_num(node:object)->int:# Obtain the number of species under
     leaf_list=node.get_leaf_names()
     species_num=len(set(i.split('_')[0] for i in leaf_list))    
     return species_num
+    
+def calculate_gd_num(Phylo_t:object)->int:
+    gd_num=0
+    gd_node_names=find_dup_node(Phylo_t)
+    for node in gd_node_names:
+        clade=Phylo_t&node
+        sps=[leaf.split('_')[0] for leaf in clade.get_leaf_names()]
+        unique_sps=set(sps)
+        if len(unique_sps) >5:
+            if sps_dup_num(sps,unique_sps) > len(unique_sps)*0.2:
+                gd_num+=1
+        else:
+            if sps_dup_num(sps,unique_sps) >=1:
+                gd_num+=1
+    
+    return gd_num
+
+def sps_dup_num(sps_list:list, unique_sps:list)->int:
+    sps_num_dic = {i: 0 for i in unique_sps}
+    sps_dups = set()
+
+    for sps in sps_list:
+        if sps in sps_num_dic:
+            sps_num_dic[sps] += 1
+            if sps_num_dic[sps] > 1:
+                sps_dups.add(sps)
+
+    return len(sps_dups)
+
