@@ -86,7 +86,10 @@ def get_node_single_taxa_dict(Phylo_t):
 
 def judge(t):
     single_taxa_dict = get_node_single_taxa_dict(t)
-    single_taxa_dict.pop('basal angiosperms')
+    if 'basal angiosperms'  in single_taxa_dict.keys():
+        single_taxa_dict.pop('basal angiosperms')
+    if 'Outgroup' in single_taxa_dict.keys():
+        single_taxa_dict.pop('Outgroup')
     def check_single(dictionary):
         for value in dictionary.values():
             if len(value) != 1:
@@ -102,7 +105,7 @@ def get_single_inform_between_clade(clade1,clade2):
     empty_set -= {clade1, clade2}
     return empty_set
 
-def paraphyletic_process(clades,rm_group,single_taxa)->list:
+def paraphyletic_process(t,clades,rm_group,single_taxa)->list:
     clade1=clades[0]
     clade2=clades[1]
     clades_between_two_clade=get_single_inform_between_clade(clade1,clade2)
@@ -115,21 +118,55 @@ def paraphyletic_process(clades,rm_group,single_taxa)->list:
             else:
                 rm_group.add(clade1.name)
         else:
-                rm_group.add(in_clade.name)
+            rm_group.add(in_clade.name)
     else:
         if len(clade1)>len(clade2):
             rm_group.add(clade2.name)
-        elif len(clade1)==len(clade2):
+        else:
             rm_group.add(clade1.name)
+        if len(clade1)==len(clade2):
+            if calculate_branch_length_relative_score(t,clade1)>calculate_branch_length_relative_score(t,clade2):
+                rm_group.add(clade1.name)
+            else:
+                rm_group.add(clade2.name)
 
-def polyphyletic_process(clades,rm_group,single_taxa):
+def polyphyletic_process(t,clades,rm_group,single_taxa):
     paraphyletic_combinations=set()
     for i in range(len(clades)):
         for j in range(i+1, len(clades)):
             paraphyletic_combinations.add((clades[i], clades[j]))
 
     for combination in  paraphyletic_combinations:     
-        paraphyletic_process(combination,rm_group,single_taxa)
+        paraphyletic_process(t,combination,rm_group,single_taxa)
+        
+def polyphyletic_process1(clades):
+    paraphyletic_combinations=set()
+    for i in range(len(clades)):
+        for j in range(i+1, len(clades)):
+            paraphyletic_combinations.add((clades[i], clades[j]))    
+    return paraphyletic_combinations
+        
+def prune_single(t):
+    single_taxa_dict=get_node_single_taxa_dict(t)
+    if 'basal angiosperms'  in single_taxa_dict.keys():
+        single_taxa_dict.pop('basal angiosperms')
+    if 'Outgroup' in single_taxa_dict.keys():
+        single_taxa_dict.pop('Outgroup')
+    rm_group=set()
+    single_taxa=[k for k,v in single_taxa_dict.items() if len(v) ==1]
+    for k,v in single_taxa_dict.items():
+        if len (v) ==2:
+            paraphyletic_process(t,v,rm_group,single_taxa)
+        else:
+            polyphyletic_process(t,v,rm_group,single_taxa)
+    g=set()
+    for i in rm_group:
+        if i.split('_')[0] not in g:
+            clade=t&i
+            clade.delete()
+        g.add(i.split('_')[0])
+    
+    
  
 def merge_pdfs_side_by_side(file1, file2, output_file):
     pdf_writer = PdfFileWriter()
@@ -153,13 +190,56 @@ def merge_pdfs_side_by_side(file1, file2, output_file):
     f1.close()
     f2.close()
 
-              
+def calculate_avg_length(node):
+        total_length = 0.0
+        leaf_count = 0
+
+        for leaf in node.iter_leaves():
+            total_length += node.get_distance(leaf)
+            leaf_count += 1
+
+        if leaf_count > 0:
+            avg_length = total_length / leaf_count
+        else:
+            avg_length = 0.0
+
+        return avg_length
+    
+def calculate_branch_length_relative_score(root,node):
+    if not node.is_leaf():
+        avg_length=calculate_avg_length(node)
+        sister = node.get_sisters()[0] if not node.is_root() else None
+        if not sister.is_leaf():
+            sister_length = calculate_avg_length(sister) if sister else 0.0
+        else:
+            sister_length=sister.dist
+        return avg_length/sister_length
+    else:
+        branch_length=node.dist
+        sister = node.get_sisters()[0] if not node.is_root() else None
+        if not sister.is_leaf():
+            sister_length = calculate_avg_length(sister) if sister else 0.0
+        else:
+            sister_length=sister.dist
+        return branch_length/sister_length
+            
+        
+def get_root_relative_branch_ratio(root,leaf,avg_length):
+    branch_length=root.get_distance(leaf)
+    return (branch_length-avg_length)/avg_length
+
+def get_sister_relative_branch_ratio(root,leaf):
+    branch_length=root.get_distance(leaf)
+    sister = leaf.up.get_sisters()[0] if not node.is_root() else None
+    sister_length=root.get_distance(sister)
+    return (branch_length-sister_length)/sister_length
+      
 if __name__ == "__main__":
     dic=read_and_return_dict('taxa.txt')
     c_dic={k:v.split('_')[0] for k,v in dic.items()}
     tre_dic=read_and_return_dict('GF_list.txt')
     for k,v in tre_dic.items():
-        t=Tree(v)
+       t=Tree(v)
         t.ladderize()
         t.resolve_polytomy(recursive=True)
         t.sort_descendants("support")
@@ -169,14 +249,19 @@ if __name__ == "__main__":
         get_pdf(t,c_dic)
         ts=TreeStyle()
         ts.show_leaf_name=False
-        ts.title.add_face(TextFace(k1+'_before', fsize=10), column=0)
+        ts.title.add_face(TextFace(k+'_before', fsize=10), column=0)
         t.render(file_name=k1+'_before.pdf',tree_style=ts)
-        prune_single(t)
+        while not judge(t):
+            prune_single(t)
+            pass
+        t.ladderize()
+        t.resolve_polytomy(recursive=True)
+        t.sort_descendants("support")
         ts1=TreeStyle()
         ts1.show_leaf_name=False
-        ts1.title.add_face(TextFace(k1+'_after', fsize=10), column=0)
+        ts1.title.add_face(TextFace(k+'_after', fsize=10), column=0)
         t.render(file_name=k1+'_after.pdf',tree_style=ts1)
-        merge_pdfs_side_by_side(k1+'_before.pdf', k1+'_after.pdf', k1+'.pdf')
+        merge_pdfs_side_by_side(k1+'_before.pdf', k1+'_after.pdf', '20result/'+k1+'.pdf')
         os.remove(k1+'_before.pdf')
-        os.remove(k1+'_after.pdf')    
- 
+        os.remove(k1+'_after.pdf') 
+     
