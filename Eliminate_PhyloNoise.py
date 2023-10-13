@@ -154,27 +154,29 @@ def merge_pdfs_side_by_side(file1, file2, output_file):
     f2.close()
 
               
-
-dic=read_and_return_dict('taxa.txt')
-c_dic={k:v.split('_')[0] for k,v in dic.items()}
-t=Tree('polytypic_tree/OGs_100000_T1_41_single_copy.treefile')
-t.ladderize()
-t.resolve_polytomy(recursive=True)
-t.sort_descendants("support")
-num_tre_node(t)
-rename_input_tre(t,c_dic)
-k='OGs_100000_T1_40_copy.treefile'
-get_pdf(t,c_dic)
-ts=TreeStyle()
-ts.show_leaf_name=False
-ts.title.add_face(TextFace(k+'_before', fsize=10), column=0)
-t.render(file_name=k+'_before.pdf',tree_style=ts)
-prune_single(t)
-ts1=TreeStyle()
-ts1.show_leaf_name=False
-ts1.title.add_face(TextFace(k+'_after', fsize=10), column=0)
-t.render(file_name=k+'_after.pdf',tree_style=ts1)
-merge_pdfs_side_by_side(k+'_before.pdf', k+'_after.pdf', k+'.pdf')
-os.remove(k+'_before.pdf')
-os.remove(k+'_after.pdf')
+if __name__ == "__main__":
+    dic=read_and_return_dict('taxa.txt')
+    c_dic={k:v.split('_')[0] for k,v in dic.items()}
+    tre_dic=read_and_return_dict('GF_list.txt')
+    for k,v in tre_dic.items():
+        t=Tree(v)
+        t.ladderize()
+        t.resolve_polytomy(recursive=True)
+        t.sort_descendants("support")
+        num_tre_node(t)
+        rename_input_tre(t,c_dic)
+        k1=k
+        get_pdf(t,c_dic)
+        ts=TreeStyle()
+        ts.show_leaf_name=False
+        ts.title.add_face(TextFace(k1+'_before', fsize=10), column=0)
+        t.render(file_name=k1+'_before.pdf',tree_style=ts)
+        prune_single(t)
+        ts1=TreeStyle()
+        ts1.show_leaf_name=False
+        ts1.title.add_face(TextFace(k1+'_after', fsize=10), column=0)
+        t.render(file_name=k1+'_after.pdf',tree_style=ts1)
+        merge_pdfs_side_by_side(k1+'_before.pdf', k1+'_after.pdf', k1+'.pdf')
+        os.remove(k1+'_before.pdf')
+        os.remove(k1+'_after.pdf')    
  
