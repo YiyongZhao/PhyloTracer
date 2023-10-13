@@ -1,6 +1,16 @@
 from __init__ import *
 import os
 
+def find_dup_node(Phylo_t:object)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
+    events = Phylo_t.get_descendant_evol_events()
+    dup_node_name_list = []
+    for ev in events:
+        if ev.etype == "D":
+            i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
+            events_node_name_list = i.split(',')
+            common_ancestor_node_name = Phylo_t.get_common_ancestor(events_node_name_list)
+            dup_node_name_list.append(common_ancestor_node_name.name)
+    return dup_node_name_list
 
 def get_empty_count_dict(sptree: object) -> dict:
     empty_count_dic={}
