@@ -139,13 +139,6 @@ def polyphyletic_process(t,clades,rm_group,single_taxa):
     for combination in  paraphyletic_combinations:     
         paraphyletic_process(t,combination,rm_group,single_taxa)
         
-def polyphyletic_process1(clades):
-    paraphyletic_combinations=set()
-    for i in range(len(clades)):
-        for j in range(i+1, len(clades)):
-            paraphyletic_combinations.add((clades[i], clades[j]))    
-    return paraphyletic_combinations
-        
 def prune_single(t):
     single_taxa_dict=get_node_single_taxa_dict(t)
     if 'basal angiosperms'  in single_taxa_dict.keys():
