@@ -54,4 +54,4 @@ conda install time
 deactivate
 
 To install PhyloTracer, simply download it use :git
-git clone https://github.com/lt11300/PhyloTracer.git
+git clone https://github.com/lt11300/PhyloTools.git
