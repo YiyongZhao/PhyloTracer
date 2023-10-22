@@ -1,7 +1,7 @@
 
 <div align="center">
   
-# <img src="logo/PhyloTools_logo.jpg" width="60" height="60" align="center"> PhyloTools V1.1.1 </div> 
+# <img src="logo/PhyloTools_logo.png" width="60" height="60" align="center"> PhyloTools V1.1.1 </div> 
 
 ```
 #####################################################################################
