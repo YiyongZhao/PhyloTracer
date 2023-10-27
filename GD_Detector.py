@@ -171,14 +171,14 @@ def mark_sptree(sptree:object,empty_count_dic:dict)->object:
     return sptree.render('species_tree_GD_Detector.PDF')
     
 if __name__ == "__main__":
+    support=50
+    dup_species_percent = 0.5
+    dup_species_num = 2
     sptree=PhyloTree('F:/a/96tree/7sp.nwk')
     num_tre_node(sptree)
     tre_dic=read_and_return_dict('F:/a/96tree/96.txt')
     empty_count_dic=get_empty_count_dict(sptree)
-    empty_count_dic=batch_gfs_traverse(tre_dic, support_value, empty_count_dic,sptree) 
+    empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree) 
     mark_sptree(sptree,empty_count_dic)
     filename = '30sp_31131tree_GD.txt'
-    support=50
-    dup_species_percent = 0.5
-    dup_species_num = 2
     write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sptree)
