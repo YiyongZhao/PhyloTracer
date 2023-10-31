@@ -12,12 +12,12 @@
 #                   |_|   |_| |_|\__, |_|\___/|_|\___/ \___/|_|___/                 #
 #                                |___/                                              #
 #                                                                                   #
-#    PhyloTools: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication    #
+#    PhyloTracer: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication   #
 #    Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species    #
 #    Hybridization Detection,and Visualization.                                     #
 #                                                                                   #
-#    Pypi: https://pypi.org/project/PhyloTools                                      #
-#    Github: https://github.com/YiyongZhao/PhyloTools                               #
+#    Pypi: https://pypi.org/project/PhyloTracer                                     #
+#    Github: https://github.com/YiyongZhao/PhyloTracer                              #
 #    Licence: MIT license                                                           #
 #    Release Date: 2023-7                                                           #
 #    Please cite: Li et al. 2024, XXXX.                                             #
@@ -30,7 +30,7 @@
 # User Mannual and Guide:
 ## gene-tree rooting and gene dup mark
 
-PhyloTools v1.1.1
+PhyloTracer v1.1.1
 A bioinformatics software that uses RF distance, branch length, and gene length for rooting
 
 I. Prerequisites and installation
@@ -54,4 +54,4 @@ conda install time
 deactivate
 
 To install PhyloTracer, simply download it use :git
-git clone https://github.com/lt11300/PhyloTools.git
+git clone https://github.com/YiyongZhao/PhyloTracer.git
