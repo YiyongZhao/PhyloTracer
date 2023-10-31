@@ -9,23 +9,23 @@ from __init__ import *
 print(textwrap.dedent("""
 ###############################################################################################
 #                                                                                             #
-#                    ____  __          __    ______                                           #
-#                   / __ \/ /_  __  __/ /___/_  __/________ _________  _____                  #
-#                  / /_/ / __ \/ / / / / __ \/ / / ___/ __ `/ ___/ _ \/ ___/                  #
-#                 / ____/ / / / /_/ / / /_/ / / / /  / /_/ / /__/  __/ /                      #
-#                /_/   /_/ /_/\__, /_/\____/_/ /_/   \__,_/\___/\___/_/                       #
-#                            /____/                                                           #
+# ██████╗ ██╗  ██╗██╗   ██╗██╗      ██████╗ ████████╗██████╗  █████╗  ██████╗███████╗██████╗  #
+# ██╔══██╗██║  ██║╚██╗ ██╔╝██║     ██╔═══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗ #
+# ██████╔╝███████║ ╚████╔╝ ██║     ██║   ██║   ██║   ██████╔╝███████║██║     █████╗  ██████╔╝ #
+# ██╔═══╝ ██╔══██║  ╚██╔╝  ██║     ██║   ██║   ██║   ██╔══██╗██╔══██║██║     ██╔══╝  ██╔══██╗ #
+# ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║ #
+# ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝ # 
 #                                                                                             #
-#                                                                                             #        
-#                                   PhyloTracer v1.1.1                                        #
-#     A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication Identification,         #
-#     Ortholog Retrieval, Species Hybridization Detection,and Visualization.                  #  
+#    PhyloTracer: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication             #
+#    Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species              #
+#    Hybridization Detection,and Visualization.                                               #
 #                                                                                             #
-#     Github: https://github.com/YiyongZhao/PhyloTracer                                       #
-#     PyPI: https://pypi.org/project/PhyloTracer/                                             #
-#     Contacts: Taoli(l948777439@gmail.com); Yiyong Zhao(yiyongzhao1991@gmail.com)            #
-#     Licence: GPL-3.0                                                                        #
-#     Release Date: 2023-7                                                                    #
+#    Pypi: https://pypi.org/project/PhyloTracer                                               #
+#    Github: https://github.com/YiyongZhao/PhyloTracer                                        #
+#    Licence: MIT license                                                                     #
+#    Release Date: 2023-7                                                                     #
+#    Please cite: Li et al. 2024, XXXX.                                                       #
+#    Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                     #
 #                                                                                             #
 ###############################################################################################
 """))
