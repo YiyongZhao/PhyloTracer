@@ -33,7 +33,7 @@ def switch_tree(phylo_tree):
 
 def get_only_sps_tree(Phylo_t):
     for node in Phylo_t:
-        node.name=node.name[0:3]
+        node.name=node.name.split('_')[0]
     return Phylo_t
 
 def folding_tree(Phylo_t):
