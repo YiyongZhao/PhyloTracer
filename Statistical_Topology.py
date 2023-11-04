@@ -1,17 +1,6 @@
 from __init__ import *
 import os
 
-def find_dup_node(Phylo_t:object)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
-    events = Phylo_t.get_descendant_evol_events()
-    dup_node_name_list = []
-    for ev in events:
-        if ev.etype == "D":
-            i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
-            events_node_name_list = i.split(',')
-            common_ancestor_node_name = Phylo_t.get_common_ancestor(events_node_name_list)
-            dup_node_name_list.append(common_ancestor_node_name.name)
-    return dup_node_name_list
-
 def get_empty_count_dict(sptree: object) -> dict:
     empty_count_dic={}
     for node in sptree.traverse():
@@ -54,6 +43,16 @@ def statistical_clade(clade_dic,Phylo_t):
                 clade_dic[clade]+=1
             else:
                 clade_dic[clade]=1
+
+def get_multiplier(t):
+    multiplier=1
+    for i in t.traverse():
+        if not i.is_leaf():
+            sps=get_species_list(i)
+            if len(set(sps))==1:
+                 multiplier=multiplier*len(sps)
+    return multiplier
+                
 def rejust_clade_dic(clade_dic):
     new_dic={}
     for k,v in clade_dic.items():
@@ -67,97 +66,31 @@ def rejust_clade_dic(clade_dic):
             
     return new_dic
 
-def get_duplicated_species_num(node):
-    species_lst=get_species_list(node)
-    duplicates = []
-    unique_elements = set()
-
-    for element in species_lst:
-        if element in unique_elements:
-            duplicates.append(element)
-        else:
-            unique_elements.add(element)
-
-    duplicate_count = len(set(duplicates))
-
-    return duplicate_count
-
-def get_intraspecies_and_interspecies_node_list(dup_node_name_list,Phylo_t0):
-    intraspecies_node_list=[]
-    interspecies_node_list=[]
-    for node in dup_node_name_list:
-        clade=Phylo_t0&node
-        sps=get_species_list(clade)
-        if len(set(sps))==1 :
-            intraspecies_node_list.append(node)
-        else:
-            interspecies_node_list.append(node)
-    return intraspecies_node_list,interspecies_node_list
-    
-def get_target_node_list(dup_node_name_list,Phylo_t0,dup_percent,dup_species_num):
-    target_node_list=[]
-    for node in dup_node_name_list:
-        clade=Phylo_t0&node
-        sps=get_species_list(clade)
-        if get_duplicated_species_num(clade)/len(set(sps)) >=dup_percent and get_duplicated_species_num(clade)>=dup_species_num:
-            target_node_list.append(node)
-    return target_node_list
-
-
-def get_summary_GD_node(tre_dic,dup_percent,dup_species_num):
-  outfile=open('Summary_GD.txt','w')
-  outfile.write('tre_ID'+'\t'+'Basic_gene_duplication_event'+'\t'+'Intraspecific_gene_duplication_event'+'\t'+'Interspecific_gene_duplication_event'+'\t'+'Targetspecific_gene_duplication_event'+'\n')
-  
-  for tre_ID,tre_path in tre_dic.items():
-      outfile.write(str(tre_ID)+'\t')
-      Phylo_t0 = read_phylot_tree(tre_path)
-      num_tre_node(Phylo_t0)
-      dup_node_name_list=find_dup_node(Phylo_t0)
-      intraspecies_node_list,interspecies_node_list=get_intraspecies_and_interspecies_node_list(dup_node_name_list,Phylo_t0)
-      target_node_list=get_target_node_list(dup_node_name_list,Phylo_t0,dup_percent,dup_species_num)
-      Phylo_t0.write(outfile='num_tree/'+str(tre_ID)+'.nwk',format=1)
-      if dup_node_name_list != None:
-          outfile.write('-'.join(dup_node_name_list)+'\t')
-      else:
-          outfile.write('\n')
-      if intraspecies_node_list != None:
-          outfile.write('-'.join(intraspecies_node_list)+'\t')
-      else:
-          outfile.write('\n')
-      if interspecies_node_list != None:
-          outfile.write('-'.join(interspecies_node_list)+'\t')
-      else:
-          outfile.write('\n')
-      if target_node_list != None:
-          outfile.write('-'.join(target_node_list)+'\t')
-      else:
-          outfile.write('\n')
-      
-  outfile.close()
-  
-        
-
 if __name__ == "__main__":
-  os.makedirs(os.path.join(os.getcwd(), "num_tree"))
   tre_dic=read_and_return_dict('GF_list.txt')   
-  clade_dic={}
+  gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap")
+  relative_clade_dic={}
+  obtain_clade_dic={}
   for tre_path in tre_dic.values():
       Phylo_t0 = read_tree(tre_path)
+      Phylo_t0 =root_tre_with_midpoint_outgroup(Phylo_t0)
+      Phylo_t1=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
       Phylo_t1=get_only_sps_tree(Phylo_t0)
       Phylo_t2=folding_tree(Phylo_t1)
-      statistical_clade(clade_dic,Phylo_t2)
-  new_dic=rejust_clade_dic(clade_dic)
-  with open ('Statistical_calde.txt','w') as f :
-    for k,v in new_dic.items():
-        f.write(k+'\t'+str(v)+'\n')
-
-  dup_percent=0.5
-  dup_species_num=2
-  get_summary_GD_node(tre_dic,dup_percent,dup_species_num)
-      
-  
-    
-
-
-
+      statistical_clade(relative_clade_dic,Phylo_t2)
+      statistical_clade(obtain_clade_dic,Phylo_t1)
+  relative_new_dic=rejust_clade_dic(relative_clade_dic)
+  obtain_new_dic=rejust_clade_dic(obtain_clade_dic)
+  with open ('Relative_Statistical_calde.txt','w') as f :
+    for k,v in relative_new_dic.items():
+        t=Tree(k)
+        rename_input_tre(t,voucher2taxa_dic)
+        f.write(t.write(format=9)+'\t'+str(v)+'\n')
+  with open ('Obtain_Statistical_calde.txt','w') as f :
+    for k,v in clade_dic.items():
+        t=Tree(k)
+        if len(set(get_species_list(t))) !=1:
+            s=get_multiplier(t)
+            folding_tree(t)
+            f.write(t.write(format=9)+'\t'+str(v*s)+'\n')
 
