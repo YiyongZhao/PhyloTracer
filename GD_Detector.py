@@ -183,7 +183,7 @@ if __name__ == "__main__":
     sptree=rename_species_tree(sptree, voucher2taxa_dic)
     num_tre_node(sptree)
     tre_dic=read_and_return_dict('GF_list.txt')
-    filename = '30sp_31131tree_GD.txt'
+    filename = 'GD_Detector_result.txt'
     write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sptree)
     empty_count_dic=get_empty_count_dict(sptree)
     empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree) 
