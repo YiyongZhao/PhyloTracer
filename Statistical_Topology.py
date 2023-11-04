@@ -87,7 +87,7 @@ if __name__ == "__main__":
         rename_input_tre(t,voucher2taxa_dic)
         f.write(t.write(format=9)+'\t'+str(v)+'\n')
   with open ('Obtain_Statistical_calde.txt','w') as f :
-    for k,v in clade_dic.items():
+    for k,v in obtain_new_dic.items():
         t=Tree(k)
         if len(set(get_species_list(t))) !=1:
             s=get_multiplier(t)
