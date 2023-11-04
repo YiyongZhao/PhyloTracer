@@ -92,5 +92,6 @@ if __name__ == "__main__":
         if len(set(get_species_list(t))) !=1:
             s=get_multiplier(t)
             folding_tree(t)
+            rename_input_tre(t,voucher2taxa_dic)
             f.write(t.write(format=9)+'\t'+str(v*s)+'\n')
 
