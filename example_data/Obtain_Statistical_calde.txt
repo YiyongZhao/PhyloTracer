@@ -1,9 +1,0 @@
-(((CRU,ALY),BRA),(CPA,(((TPA,BRA),ESA),(CRU,(ATH,ALY)))));	2
-((CRU,ALY),BRA);	1
-(CPA,(((TPA,BRA),ESA),(CRU,(ATH,ALY))));	2
-(CRU,ALY);	1
-(((TPA,BRA),ESA),(CRU,(ATH,ALY)));	2
-((TPA,BRA),ESA);	2
-(CRU,(ATH,ALY));	1
-(TPA,BRA);	2
-(ATH,ALY);	1
