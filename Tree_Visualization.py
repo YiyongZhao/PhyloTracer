@@ -179,7 +179,7 @@ def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,t
         tips_mark(Phylo_t1,voucher2taxa_dic,gene_categories,tre_ID,ts,new_named_gene2gene_dic)
 ####################################################################################
 if __name__ == "__main__":
-    os.mkdir('PDF_result')
+    os.makedirs(os.path.join(os.getcwd(), "PDF_result"))
     gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap")
     #gene2fam=read_and_return_dict('gene2fam')
     sp2order=read_and_return_dict('order')
