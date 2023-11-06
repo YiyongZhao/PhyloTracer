@@ -38,8 +38,8 @@ def create_tree_style(tree_style,tre_ID):
     ts = TreeStyle()
     ts.legend.add_face(TextFace("★", fsize=20, fgcolor="red"), column=0)
     ts.legend.add_face(TextFace("Interspecific gene duplication event", fsize=20), column=1)
-    #ts.legend.add_face(TextFace("★", fsize=20, fgcolor="red"), column=0)
-    #ts.legend.add_face(TextFace("Order GD", fsize=20), column=1)
+    ts.legend.add_face(TextFace("★", fsize=20, fgcolor="blue"), column=0)
+    ts.legend.add_face(TextFace("Intraspecific gene duplication event", fsize=20), column=1)
     ts.title.add_face(TextFace(tre_ID, fsize=30), column=2)
     
     ts.legend_position = 1
@@ -63,12 +63,12 @@ def create_tree_style(tree_style,tre_ID):
 def set_node_style(node:object, dup_node_name_list:list):
     nstyle = NodeStyle()
     splist = set(get_species_list(node))
-    #if node.name in dup_node_name_list and len(splist) == 1:
-     #   nstyle["hz_line_type"] = 0 
-      #  nstyle["size"] = 0
-       # nstyle["shape"] = "circle"
-        #nstyle["fgcolor"] = "blue"
-        #node.add_face(TextFace("★", fsize=10, fgcolor="blue"), column=1, position="branch-top")
+    if node.name in dup_node_name_list and len(splist) == 1:
+        nstyle["hz_line_type"] = 0 
+        nstyle["size"] = 0
+        nstyle["shape"] = "circle"
+        nstyle["fgcolor"] = "blue"
+        node.add_face(TextFace("★", fsize=10, fgcolor="blue"), column=1, position="branch-top")
     if node.name in dup_node_name_list and len(splist) != 1:
         nstyle["hz_line_type"] = 0 
         nstyle["size"] = 0
@@ -116,18 +116,41 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
     color_dicts = generate_color_dict(gene_categories)
     faces_added = set()  # used to track the added faces
 
-    def add_face_to_node(node, color_dict:dict,species: str, column: int, position="aligned"):
-        if (node, column, position) not in faces_added and species in color_dict:
-            color = color_dict[species].split('-')[-1]
-            face = TextFace("   ▐" + '  ' + color_dict[species].split('-')[0], fgcolor=color,fstyle='italic')
+    def add_face_to_node(node, face, column, position="aligned"):
+        if (node, column, position) not in faces_added:
             node.add_face(face, column=column, position=position)
             faces_added.add((node, column, position))
 
-    def generate_face_mark(node, column:int, species:str, color_dict:dict):
+    def generate_face_mark(node, species, column, color_dict):
         if (node, column, "aligned") not in faces_added:
             if species in color_dict:
-                add_face_to_node(node, color_dict,species, column, position="aligned")
-                
+                color = color_dict[species].split('-')[-1]
+                face = TextFace("   ▐" + '  ' + color_dict[species].split('-')[0], fgcolor=color, fstyle='italic')
+                add_face_to_node(node, face, column, position="aligned")
+
+    def add_species_face(node, species):
+        if species in sps_color_dict:
+            color = sps_color_dict[species].split('-')[-1]
+            face = TextFace(' ' + gene, fgcolor=color, fstyle='italic')
+            node.add_face(face, column=-1)
+
+        if species in sps_color_dict:
+            color = sps_color_dict[species].split('-')[-1]
+            face4 = TextFace("   ▐" + '  ' + sp[species], fgcolor=color, fstyle='italic')
+            add_face_to_node(node, face4, 0, position="aligned")
+
+    def add_gene_face(node, gene):
+        matched_key = None
+        matched_value = None
+        for key in gene_color_dict:
+            if fuzzy_match(key, gene):
+                matched_key = key
+                matched_value = gene_color_dict.get(key)
+                break
+        if matched_value:
+            color = matched_value.split('-')[-1]
+            face5 = TextFace("   ▐" + '  ' +  matched_value.split('-')[0], fgcolor=color, fstyle='italic')
+            add_face_to_node(node, face5, column, position="aligned")
 
     for node in Phylo_t1.traverse():
         if node.is_leaf():
@@ -135,36 +158,17 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
             re_named_species = node.name.split("_")[0]
             gene = new_named_gene2gene_dic[node.name]
             species = voucher2taxa_dic[re_named_species]
-
-            # Set the color for this species name
-            if re_named_species in sps_color_dict:
-                color = sps_color_dict[re_named_species].split('-')[-1]
-                face = TextFace(' ' +gene, fgcolor=color,fstyle='italic')
-                node.add_face(face, column=-1)
-
-            if re_named_species in sps_color_dict:
-                color = sps_color_dict[re_named_species].split('-')[-1]
-                face4 = TextFace("   ▐" + '  ' + species, fgcolor=color,fstyle='italic')
-                node.add_face(face4, column=0, position="aligned")
-            if 'gene2fam' in globals():
-                matched_key = None
-                matched_value = None
-                for key in gene_color_dict:
-                    if fuzzy_match(key, gene):
-                        matched_key = key
-                        matched_value = gene_color_dict[key]
-                        break
-                if matched_key:
-                    #if gene in gene_color_dict:
-                        #color = gene_color_dict[gene].split('-')[1]
-                        color = matched_value.split('-')[-1]
-                        face5 = TextFace("   ▐" + '  ' + '-'.join(matched_value.split('-')[:-1]), fgcolor=color,fstyle='italic')
-                        node.add_face(face5, column=4, position="aligned")
+            add_species_face(node, species)
+            
             column = 1
             for color_dict in color_dicts:
-                generate_face_mark(node, column, species,color_dict)
+                generate_face_mark(node, species, column, color_dict)
                 column += 1
-    return Phylo_t1.render(file_name='PDF_result/'+str(tre_ID)+'.PDF',tree_style=ts)
+            
+            if 'gene2fam' in globals() and  gene in gene_color_dict:
+		add_gene_face(node, gene)
+         
+    return Phylo_t1.render(file_name='pdf_result/'+str(tre_ID)+'.pdf',tree_style=ts)
 
 def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic):
     for tre_ID,tre_path in tre_dic.items():
