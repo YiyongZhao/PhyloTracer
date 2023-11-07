@@ -1,42 +1,22 @@
-import pandas as pd
-from ete3 import TextFace,TreeStyle,Tree,NodeStyle
+from __init__ import *
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-import numpy as np
 from PyPDF4 import PdfFileReader, PdfFileWriter
-import os
+from ete3 import PhyloTree,Tree,NodeStyle,TreeStyle,TextFace
 
-def read_and_return_dict(filename, separator="\t") -> dict:
-    df=pd.read_csv(filename,sep=separator,header=None)
-    return df.set_index([0])[1].to_dict()
-
-def read_tree(tre_path:str) -> object:
-    return PhyloTree(tre_path)
-
-def rename_input_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
+def rename_input_single_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
     for node in Phylo_t :
         sps=node.name[0:3]
         if sps in gene2new_named_gene_dic:
             node.name=gene2new_named_gene_dic[sps]+'_'+node.name
     return Phylo_t
 
-def num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree
-    i = 1
-    for node in Phylo_t.traverse():
-        if not node.is_leaf():
-            node.name = "node" + str(i)
-            i += 1
+def rename_output_tre(Phylo_t:object) -> object:
+    for node in Phylo_t :
+        parts = node.name.split("_")  
+        new_str = "_".join(parts[1:]) 
+        node.name=new_str
     return Phylo_t
-
-def calculate_species_num(node:object)->int:# Obtain the number of species under a node
-    leaf_list=node.get_leaf_names()
-    species_num=len(set(i.split('_')[0] for i in leaf_list)) 
-    return species_num
-
-def get_species_list(Phylo_t:object)->list:
-    leaves = Phylo_t.get_leaf_names()
-    species_lst = [leaf.split("_")[0] for leaf in leaves]
-    return species_lst
 
 def get_pdf(t,c_dic):
     c_color_dict=get_color_dict(c_dic)
@@ -81,8 +61,8 @@ def get_node_single_taxa_dict(Phylo_t):
     empty_set=set()
     get_single_clades(Phylo_t,empty_set)
     single_taxa_dict =get_single_taxa_caldes(empty_set)      
-    
-    return single_taxa_dict                         
+    sorted_dict = dict(sorted(single_taxa_dict.items(), key=lambda item: len(item[1]), reverse=True))
+    return sorted_dict                         
 
 def judge(t):
     single_taxa_dict = get_node_single_taxa_dict(t)
@@ -98,69 +78,54 @@ def judge(t):
 
     return check_single(single_taxa_dict)
 
-def get_single_inform_between_clade(clade1,clade2):
-    ancestor=t.get_common_ancestor(clade1.name,clade2.name)
-    empty_set=set()
-    get_single_clades(ancestor,empty_set)
-    empty_set -= {clade1, clade2}
-    return empty_set
-
-def paraphyletic_process(t,clades,rm_group,single_taxa)->list:
-    clade1=clades[0]
-    clade2=clades[1]
-    clades_between_two_clade=get_single_inform_between_clade(clade1,clade2)
-    if len(clades_between_two_clade) ==1:
-        in_clade=list(clades_between_two_clade)[0]
-        sps=get_species_list(in_clade)[0]
-        if sps in single_taxa:
-            if len(clade1)>len(clade2):
-                rm_group.add(clade2.name) 
-            else:
-                rm_group.add(clade1.name)
-        else:
-            rm_group.add(in_clade.name)
-    else:
-        if len(clade1)>len(clade2):
-            rm_group.add(clade2.name)
-        else:
-            rm_group.add(clade1.name)
-        if len(clade1)==len(clade2):
-            if calculate_branch_length_relative_score(t,clade1)>calculate_branch_length_relative_score(t,clade2):
-                rm_group.add(clade1.name)
-            else:
-                rm_group.add(clade2.name)
-
-def polyphyletic_process(t,clades,rm_group,single_taxa):
-    paraphyletic_combinations=set()
-    for i in range(len(clades)):
-        for j in range(i+1, len(clades)):
-            paraphyletic_combinations.add((clades[i], clades[j]))
-
-    for combination in  paraphyletic_combinations:     
-        paraphyletic_process(t,combination,rm_group,single_taxa)
-        
-def prune_single(t):
-    single_taxa_dict=get_node_single_taxa_dict(t)
-    if 'basal angiosperms'  in single_taxa_dict.keys():
-        single_taxa_dict.pop('basal angiosperms')
-    if 'Outgroup' in single_taxa_dict.keys():
-        single_taxa_dict.pop('Outgroup')
-    rm_group=set()
-    single_taxa=[k for k,v in single_taxa_dict.items() if len(v) ==1]
+   
+def prune_single(Phylo_t):
+    rm_list=[]
+    single_taxa_dict=get_node_single_taxa_dict(Phylo_t)
     for k,v in single_taxa_dict.items():
-        if len (v) ==2:
-            paraphyletic_process(t,v,rm_group,single_taxa)
+        if len(v) ==1 :
+            pass
+        elif len(v)==2:
+            if len(v[0])>len(v[1]):
+                leafs=v[1].get_leaf_names()
+                total_leafs=Phylo_t.get_leaf_names()
+                diff = [a for a in total_leafs if a not in set(leafs)]
+                Phylo_t.prune(diff)
+
+            else:
+                leafs=v[0].get_leaf_names()
+                total_leafs=Phylo_t.get_leaf_names()
+                diff = [a for a in total_leafs if a not in set(leafs)]
+                Phylo_t.prune(diff)
         else:
-            polyphyletic_process(t,v,rm_group,single_taxa)
-    g=set()
-    for i in rm_group:
-        if i.split('_')[0] not in g:
-            clade=t&i
+            result=[]
+            for i in v :
+                insertion_index=calculate_insertion_index(i)
+                result.append(insertion_index)
+            min_score=min(result)
+            d=[]
+            for j in v :
+                insertion_index1=calculate_insertion_index(j)
+                if insertion_index1 ==min_score:
+                    branch_length_relative_score=calculate_branch_length_relative_score(Phylo_t,j)
+                    d.append(branch_length_relative_score)
+            min_score1=min(d)
+            for h in v :
+                branch_length_relative_score1=calculate_branch_length_relative_score(Phylo_t,h)
+                if branch_length_relative_score1 ==min_score1:
+                    rm_list.append(h.name)
+                    
+    for i in rm_list :
+        clade=Phylo_t&i
+        if clade.is_leaf():
             clade.delete()
-        g.add(i.split('_')[0])
+        else:
+            leafs=clade.get_leaf_names()
+            total_leafs=Phylo_t.get_leaf_names()
+            diff = [a for a in total_leafs if a not in set(leafs)]
+            Phylo_t.prune(diff)
     
-    
- 
+                    
 def merge_pdfs_side_by_side(file1, file2, output_file):
     pdf_writer = PdfFileWriter()
 
@@ -196,7 +161,7 @@ def calculate_avg_length(node):
         else:
             avg_length = 0.0
 
-        return avg_length
+        return avg_length+(node.dist/leaf_count)
     
 def calculate_branch_length_relative_score(root,node):
     if not node.is_leaf():
@@ -206,7 +171,12 @@ def calculate_branch_length_relative_score(root,node):
             sister_length = calculate_avg_length(sister) if sister else 0.0
         else:
             sister_length=sister.dist
-        return avg_length/sister_length
+        if sister_length != 0:
+            return avg_length / sister_length
+        
+        else:
+            return 0.0
+       
     else:
         branch_length=node.dist
         sister = node.get_sisters()[0] if not node.is_root() else None
@@ -214,7 +184,11 @@ def calculate_branch_length_relative_score(root,node):
             sister_length = calculate_avg_length(sister) if sister else 0.0
         else:
             sister_length=sister.dist
-        return branch_length/sister_length
+        if sister_length != 0:
+            return branch_length / sister_length
+        else:
+            return 0.0
+
             
         
 def get_root_relative_branch_ratio(root,leaf,avg_length):
@@ -226,35 +200,59 @@ def get_sister_relative_branch_ratio(root,leaf):
     sister = leaf.up.get_sisters()[0] if not node.is_root() else None
     sister_length=root.get_distance(sister)
     return (branch_length-sister_length)/sister_length
-      
+
+
+def calculate_insertion_index(node):
+    insertion_index = 1.0 
+    current_node = node
+    while current_node.up:
+        current_tips = len(current_node.get_leaves())
+        parent_node = current_node.up
+        parent_tips = len(parent_node.get_leaves())
+        
+        if parent_tips == 0:
+            insertion_index = 0.0  
+            break
+        current_insertion_index = len(node.get_leaves())/ current_tips
+        insertion_index = min(insertion_index, current_insertion_index)
+        
+        current_node = parent_node  
+    
+    return insertion_index
+
 if __name__ == "__main__":
-    dic=read_and_return_dict('taxa.txt')
-    c_dic={k:v.split('_')[0] for k,v in dic.items()}
-    tre_dic=read_and_return_dict('GF_list.txt')
+    os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
+    s_dic=read_and_return_dict('taxa.txt')
+    c_dic={k:v.split('_')[0] for k,v in s_dic.items()}
+    tre_dic=read_and_return_dict('100_nosingle_GF_list.txt')
     for k,v in tre_dic.items():
-       t=Tree(v)
+        t=Tree(v)
         t.ladderize()
         t.resolve_polytomy(recursive=True)
         t.sort_descendants("support")
         num_tre_node(t)
-        rename_input_tre(t,c_dic)
+        rename_input_single_tre(t,c_dic)
         k1=k
         get_pdf(t,c_dic)
         ts=TreeStyle()
         ts.show_leaf_name=False
-        ts.title.add_face(TextFace(k+'_before', fsize=10), column=0)
+        ts.title.add_face(TextFace(k1+'_before', fsize=10), column=0)
         t.render(file_name=k1+'_before.pdf',tree_style=ts)
+        for leaf in t :
+            if calculate_branch_length_relative_score(t,leaf) >5 :
+                leaf.delete()
         while not judge(t):
             prune_single(t)
             pass
-        t.ladderize()
-        t.resolve_polytomy(recursive=True)
-        t.sort_descendants("support")
         ts1=TreeStyle()
         ts1.show_leaf_name=False
-        ts1.title.add_face(TextFace(k+'_after', fsize=10), column=0)
+        ts1.title.add_face(TextFace(k1+'_after', fsize=10), column=0)
         t.render(file_name=k1+'_after.pdf',tree_style=ts1)
-        merge_pdfs_side_by_side(k1+'_before.pdf', k1+'_after.pdf', '20result/'+k1+'.pdf')
+        merge_pdfs_side_by_side(k1+'_before.pdf', k1+'_after.pdf', k1+'.pdf')
         os.remove(k1+'_before.pdf')
-        os.remove(k1+'_after.pdf') 
-     
+        os.remove(k1+'_after.pdf')
+
+        t1=rename_output_tre(t)
+        t1.write(outfile='pruned_tree/'+k1+'.nwk',format=0)
+   
+
