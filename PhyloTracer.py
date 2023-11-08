@@ -135,9 +135,68 @@ def main():
             print("Program execution time:", execution_time, "s")
         else:
             print("Required arguments for Ortho_Split command are missing.")
+            
+    elif args.command == 'Statistical_Topology':
+        # Execute the Ortho_Split function
+        if args.input_GF_list and args.input_imap :
+            start_time = time.time()
+            input_GF_list = args.input_GF_list
+            input_imap = args.input_imap
+            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
+            tre_dic = read_and_return_dict(input_GF_list)
+            statistical_main()
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print("Program execution time:", execution_time, "s")
+        else:
+            print("Required arguments for Statistical_Topology command are missing.")
 
+
+    elif args.command == 'GD_Detector':
+        # Execute the Ortho_Split function
+        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.support and args.dup_species_radio and args.dup_species_num :
+            start_time = time.time()
+            input_GF_list = args.input_GF_list
+            input_imap = args.input_imap
+            input_sps_tree = args.input_sps_tree
+            support=args.support
+            dup_species_percent = args.dup_species_radio
+            dup_species_num = args.dup_species_num
+            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
+            tre_dic = read_and_return_dict(input_GF_list)
+            sptree=PhyloTree(input_sps_tree)
+            sptree=rename_species_tree(sptree, voucher2taxa_dic)
+            num_tre_node(sptree)
+            filename = 'result.txt'
+            write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sptree)
+            empty_count_dic=get_empty_count_dict(sptree)
+            empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree) 
+            mark_sptree(sptree,empty_count_dic)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print("Program execution time:", execution_time, "s")
+        else:
+            print("Required arguments for GD_Detector command are missing.")
+            
+    elif args.command == 'Eliminate_PhyloNoise':
+        # Execute the Ortho_Split function
+        if args.input_GF_list and args.input_taxa  :
+            start_time = time.time()
+            os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
+            input_GF_list = args.input_GF_list
+            input_imap = args.input_imap
+            input_taxa=args.input_taxa
+            tre_dic = read_and_return_dict(input_GF_list)
+            taxa_dic=read_and_return_dict(input_taxa)
+            prune_main()
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print("Program execution time:", execution_time, "s")
+        else:
+            print("Required arguments for Eliminate_PhyloNoise command are missing.")
+            
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split}")
+        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split，Statistical_Topology,GD_Detector,Eliminate_PhyloNoise}")
         print()
         print("optional arguments:")
         print('  -h, --help            show this help message and exit')
