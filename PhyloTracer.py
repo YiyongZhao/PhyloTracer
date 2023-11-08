@@ -208,7 +208,6 @@ def main():
             start_time = time.time()
             os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
             input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
             input_taxa=args.input_taxa
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
