@@ -1,8 +1,8 @@
 import pandas as pd
-from ete3 import PhyloTree,Tree
+from ete3 import PhyloTree,Tree,NodeStyle,TreeStyle,TextFace
 import random
 import numpy as np
-
+import os
 def generate_sps_voucher(sps_num:int) -> list:
     characters = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)] + [str(i) for i in range(10)]
     unique_strings = set()
@@ -44,7 +44,6 @@ def read_tree(tre_path:str) -> object:
 
 def read_phylo_tree(tre_path:str) -> object:
     return PhyloTree(tre_path)
-
 ######################################################################################################################
 def isRoot_Judger(Phylo_t:object)->bool:#Translate the function that determines whether the input phylogenetic tree has a negated root.
     if len(Phylo_t.get_children()) ==2:
@@ -55,11 +54,22 @@ def root_tre_with_midpoint_outgroup(Phylo_t:object)->object:#Rooting the phyloge
     Phylo_t.set_outgroup(mid_node)
     return Phylo_t
 
+def find_dup_node(Phylo_t:object)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
+    events = Phylo_t.get_descendant_evol_events()
+    dup_node_name_list = []
+    for ev in events:
+        if ev.etype == "D":
+            i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
+            events_node_name_list = i.split(',')
+            common_ancestor_node_name = Phylo_t.get_common_ancestor(events_node_name_list)
+            dup_node_name_list.append(common_ancestor_node_name.name)
+    return dup_node_name_list
+
 def num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree.
     i = 1
     for node in Phylo_t.traverse():
         if not node.is_leaf():
-            node.name = "node" + str(i)
+            node.name = "N" + str(i)
             i += 1
     return Phylo_t
 
@@ -114,7 +124,7 @@ def calculate_species_num(node:object)->int:# Obtain the number of species under
     leaf_list=node.get_leaf_names()
     species_num=len(set(i.split('_')[0] for i in leaf_list))    
     return species_num
-    
+
 def calculate_gd_num(Phylo_t:object)->int:
     gd_num=0
     gd_node_names=find_dup_node(Phylo_t)
@@ -143,3 +153,19 @@ def sps_dup_num(sps_list:list, unique_sps:list)->int:
 
     return len(sps_dups)
 
+def rename_species_tree(sptree:object, voucher2taxa_dic:dict)->object:
+    for node in sptree:
+        key_to_find = node.name
+        if key_to_find in voucher2taxa_dic.values():
+            new_name = next(key for key, value in voucher2taxa_dic.items() if value == key_to_find)
+            node.name = new_name           
+    return sptree
+
+def find_tre_dup(Phylo_t:object) -> list:   #seperator either "@" or "_"
+    tre_ParaL=[]
+    GF_leaves_S = set(Phylo_t.get_leaf_names())
+    events = Phylo_t.get_descendant_evol_events()
+    for ev in events:
+        if ev.etype == "D":
+            tre_ParaL.append(",".join(ev.in_seqs)+"<=>"+",".join(ev.out_seqs))
+    return tre_ParaL,GF_leaves_S
