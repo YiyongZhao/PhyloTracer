@@ -66,32 +66,36 @@ def rejust_clade_dic(clade_dic):
             
     return new_dic
 
-if __name__ == "__main__":
-  tre_dic=read_and_return_dict('GF_list.txt')   
-  gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap")
-  relative_clade_dic={}
-  obtain_clade_dic={}
-  for tre_path in tre_dic.values():
-      Phylo_t0 = read_tree(tre_path)
-      Phylo_t0 =root_tre_with_midpoint_outgroup(Phylo_t0)
-      Phylo_t1=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
-      Phylo_t1=get_only_sps_tree(Phylo_t0)
-      Phylo_t2=folding_tree(Phylo_t1)
-      statistical_clade(relative_clade_dic,Phylo_t2)
-      statistical_clade(obtain_clade_dic,Phylo_t1)
-  relative_new_dic=rejust_clade_dic(relative_clade_dic)
-  obtain_new_dic=rejust_clade_dic(obtain_clade_dic)
-  with open ('Relative_Statistical_calde.txt','w') as f :
-    for k,v in relative_new_dic.items():
-        t=Tree(k)
-        rename_input_tre(t,voucher2taxa_dic)
-        f.write(t.write(format=9)+'\t'+str(v)+'\n')
-  with open ('Obtain_Statistical_calde.txt','w') as f :
-    for k,v in obtain_new_dic.items():
-        t=Tree(k)
-        if len(set(get_species_list(t))) !=1:
-            s=get_multiplier(t)
-            folding_tree(t)
+
+def statistical_main():
+    relative_clade_dic={}
+    obtain_clade_dic={}
+    for tre_path in tre_dic.values():
+        Phylo_t0 = read_tree(tre_path)
+        Phylo_t0 =root_tre_with_midpoint_outgroup(Phylo_t0)
+        Phylo_t1=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
+        Phylo_t1=get_only_sps_tree(Phylo_t0)
+        Phylo_t2=folding_tree(Phylo_t1)
+        statistical_clade(relative_clade_dic,Phylo_t2)
+        statistical_clade(obtain_clade_dic,Phylo_t1)
+    relative_new_dic=rejust_clade_dic(relative_clade_dic)
+    obtain_new_dic=rejust_clade_dic(obtain_clade_dic)
+    with open ('Relative_Statistical_calde.txt','w') as f :
+      for k,v in relative_new_dic.items():
+          t=Tree(k)
+          rename_input_tre(t,voucher2taxa_dic)
+          f.write(t.write(format=9)+'\t'+str(v)+'\n')
+    with open ('Obtain_Statistical_calde.txt','w') as f :
+      for k,v in obtain_new_dic.items():
+          t=Tree(k)
+          if len(set(get_species_list(t))) !=1:
+              s=get_multiplier(t)
+              folding_tree(t)
             rename_input_tre(t,voucher2taxa_dic)
             f.write(t.write(format=9)+'\t'+str(v*s)+'\n')
 
+
+if __name__ == "__main__":
+  tre_dic=read_and_return_dict('GF_list.txt')   
+  gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap")
+  statistical_main()
