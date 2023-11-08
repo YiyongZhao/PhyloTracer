@@ -81,18 +81,18 @@ def statistical_main():
     relative_new_dic=rejust_clade_dic(relative_clade_dic)
     obtain_new_dic=rejust_clade_dic(obtain_clade_dic)
     with open ('Relative_Statistical_calde.txt','w') as f :
-      for k,v in relative_new_dic.items():
-          t=Tree(k)
-          rename_input_tre(t,voucher2taxa_dic)
-          f.write(t.write(format=9)+'\t'+str(v)+'\n')
-    with open ('Obtain_Statistical_calde.txt','w') as f :
-      for k,v in obtain_new_dic.items():
-          t=Tree(k)
-          if len(set(get_species_list(t))) !=1:
-              s=get_multiplier(t)
-              folding_tree(t)
+        for k,v in relative_new_dic.items():
+            t=Tree(k)
             rename_input_tre(t,voucher2taxa_dic)
-            f.write(t.write(format=9)+'\t'+str(v*s)+'\n')
+            f.write(t.write(format=9)+'\t'+str(v)+'\n')
+    with open ('Obtain_Statistical_calde.txt','w') as f :
+        for k,v in obtain_new_dic.items():
+            t=Tree(k)
+            if len(set(get_species_list(t))) !=1:
+                s=get_multiplier(t)
+                folding_tree(t)
+                rename_input_tre(t,voucher2taxa_dic)
+                f.write(t.write(format=9)+'\t'+str(v*s)+'\n')
 
 
 if __name__ == "__main__":
