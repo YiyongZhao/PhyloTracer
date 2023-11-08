@@ -166,7 +166,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                 column += 1
             
             if 'gene2fam' in globals() and  gene in gene_color_dict:
-		add_gene_face(node, gene)
+		add_gene_face(node,gene)
          
     return Phylo_t1.render(file_name='pdf_result/'+str(tre_ID)+'.pdf',tree_style=ts)
 
