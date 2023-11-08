@@ -220,11 +220,8 @@ def calculate_insertion_index(node):
     
     return insertion_index
 
-if __name__ == "__main__":
-    os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
-    s_dic=read_and_return_dict('taxa.txt')
-    c_dic={k:v.split('_')[0] for k,v in s_dic.items()}
-    tre_dic=read_and_return_dict('100_nosingle_GF_list.txt')
+
+def prune_main():
     for k,v in tre_dic.items():
         t=Tree(v)
         t.ladderize()
@@ -254,5 +251,11 @@ if __name__ == "__main__":
 
         t1=rename_output_tre(t)
         t1.write(outfile='pruned_tree/'+k1+'.nwk',format=0)
+    
+if __name__ == "__main__":
+    os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
+    c_dic=read_and_return_dict('taxa.txt')
+    tre_dic=read_and_return_dict('100_nosingle_GF_list.txt')
+    prune_main()
    
 
