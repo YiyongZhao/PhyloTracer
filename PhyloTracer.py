@@ -71,9 +71,29 @@ ortho_split_parser.add_argument('--input_GF_list', metavar='file',  required=Tru
 ortho_split_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 ortho_split_parser.add_argument('--input_gene_length', metavar='file',  required=True, help='Input gene length list')
 ortho_split_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
-    
+
+# Statistical_Topology command
+statistical_Topology_parser = subparsers.add_parser('Statistical_Topology', help='Statistical_Topology help')
+statistical_Topology_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+statistical_Topology_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+
+# GD_Detector command
+gd_detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
+gd_detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+gd_detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+gd_detector_parser.add_argument('--support', type=int, choices=[0, 100],required=True, help='GD node support')
+gd_detector_parser.add_argument('--dup_species_radio', type=int, choices=[0, 1] ,required=True,help='The proportion of species with species duplications under the GD node')
+gd_detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
+gd_detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+
+# Eliminate_PhyloNoise command
+eliminate_phyloNoise_parser = subparsers.add_parser('Eliminate_PhyloNoise', help='Eliminate_PhyloNoise help')
+eliminate_phyloNoise_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+eliminate_phyloNoise_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
+
 
 args = parser.parse_args()
 
