@@ -4,6 +4,10 @@ import time
 from Ortho_Split import *
 from Phylo_Rooting import *
 from Tree_Visualization import *
+from Eliminate_PhyloNoise import *
+from GD_Detector import *
+from Statistical_Topology import *
+
 from __init__ import *
 ##################################################################
 print(textwrap.dedent("""
