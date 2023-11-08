@@ -81,7 +81,7 @@ statistical_Topology_parser.add_argument('--input_imap', metavar='file',  requir
 gd_detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
 gd_detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 gd_detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-gd_detector_parser.add_argument('--support', type=int, choices=[0, 100],required=True, help='GD node support')
+gd_detector_parser.add_argument('--support', type=int, choices=list(range(50, 100)),required=True, help='GD node support')
 gd_detector_parser.add_argument('--dup_species_radio', type=int, choices=[0, 1] ,required=True,help='The proportion of species with species duplications under the GD node')
 gd_detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
 gd_detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
