@@ -228,9 +228,9 @@ def prune_main():
         t.resolve_polytomy(recursive=True)
         t.sort_descendants("support")
         num_tre_node(t)
-        rename_input_single_tre(t,c_dic)
+        rename_input_single_tre(t,taxa_dic)
         k1=k
-        get_pdf(t,c_dic)
+        get_pdf(t,taxa_dic)
         ts=TreeStyle()
         ts.show_leaf_name=False
         ts.title.add_face(TextFace(k1+'_before', fsize=10), column=0)
@@ -254,7 +254,7 @@ def prune_main():
     
 if __name__ == "__main__":
     os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
-    c_dic=read_and_return_dict('taxa.txt')
+    taxa_dic=read_and_return_dict('taxa.txt')
     tre_dic=read_and_return_dict('100_nosingle_GF_list.txt')
     prune_main()
    
