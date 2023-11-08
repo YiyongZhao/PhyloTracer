@@ -220,13 +220,13 @@ def main():
             print("Required arguments for Eliminate_PhyloNoise command are missing.")
             
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split，Statistical_Topology,GD_Detector,Eliminate_PhyloNoise}")
+        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split, Statistical_Topology, GD_Detector, Eliminate_PhyloNoise}")
         print()
         print("optional arguments:")
         print('  -h, --help            show this help message and exit')
         print()
         print('available programs::')
-        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split，Statistical_Topology,GD_Detector,Eliminate_PhyloNoise}')
+        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split，Statistical_Topology, GD_Detector, Eliminate_PhyloNoise}')
 
 
 if __name__ == "__main__":
