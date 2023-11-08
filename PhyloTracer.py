@@ -206,7 +206,7 @@ def main():
         print('  -h, --help            show this help message and exit')
         print()
         print('available programs::')
-        print('  {Tree_Visualization,Phylo_Rooting,Ortho_Split}')
+        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split，Statistical_Topology,GD_Detector,Eliminate_PhyloNoise}')
 
 
 if __name__ == "__main__":
