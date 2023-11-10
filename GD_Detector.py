@@ -48,19 +48,19 @@ def get_target_node_list(dup_node_name_list,Phylo_t0,dup_percent,dup_species_num
             target_node_list.append(node)
     return target_node_list
 
-def write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num, sptree):
+def write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num, sptree,gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic):
     with open(filename,'w') as file:
-        file.write('tree_ID'+'\t'+'gd_id'+'\t'+'gd_support'+'\t'+'sub_calde1'+'\t'+'sub_calde1_support'+'\t'+'sub_calde2'+'\t'+'sub_calde2_support'+'\t'+'GD_dup_sps'+'\t'+'dup_ratio'+'\t'+'sps_level'+'\t'+'gd_type'+'\t'+'comment'+'\n') 
+        file.write('tree_ID'+'\t'+'gd_id'+'\t'+'gd_support'+'\t'+'sub_calde_up'+'\t'+'sub_calde_up_support'+'\t'+'sub_calde_down'+'\t'+'sub_calde_down_support'+'\t'+'sps_level'+'\t'+'GD_dup_sps'+'\t'+'dup_ratio'+'\t'+'gd_type'+'\t'+'comment'+'\n') 
         for tre_ID, tre_path in tre_dic.items():
             Phylo_t0 = read_phylo_tree(tre_path)
             Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
             Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
-            num_tre_node(Phylo_t0)
-            dup_node_name_list = find_dup_node(Phylo_t0)
+            num_tre_node(Phylo_t1)
+            dup_node_name_list = find_dup_node(Phylo_t1)
             #Phylo_t0.write(outfile='num_tree/' + str(tre_ID) + '.nwk', format=1)
             for i in dup_node_name_list:
                 file.write(tre_ID+'\t'+i+'\t')
-                clade=Phylo_t0&i
+                clade=Phylo_t1&i
                 sps=get_species_list(clade)
                 dup_sps=get_duplicated_species_num(clade)
                 dup_percent=dup_sps/len(set(sps))
@@ -68,12 +68,12 @@ def write_gene_duplication_events(filename, tre_dic, support,dup_species_percent
                 child1=[new_named_gene2gene_dic[i] for i in clade.get_children()[0].get_leaf_names()]
                 child2=[new_named_gene2gene_dic[i] for i in clade.get_children()[1].get_leaf_names()]
                 if len(set(sps)) ==1:
-                    file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+voucher2taxa_dic[sps[0]]+'\t'+model+'\t'+'Intraspecific_gene_duplication_event'+'\n')
+                    file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+voucher2taxa_dic[sps[0]]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'Intraspecific_gene_duplication_event'+'\n')
                 else:
                     if clade.support >=support and dup_sps>=dup_species_num and dup_percent>=dup_species_percent:
-                        file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+voucher2taxa_dic[sps[0]]+'\t'+model+'\t'+'Targetspecific_gene_duplication_event'+'\n')
+                        file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+voucher2taxa_dic[sps[0]]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'Targetspecific_gene_duplication_event'+'\n')
                     else:
-                        file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+voucher2taxa_dic[sps[0]]+'\t'+model+'\t'+'Interspecific_gene_duplication_event'+'\n')
+                        file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+voucher2taxa_dic[sps[0]]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'Interspecific_gene_duplication_event'+'\n')
  
 def get_model(clade,sptree):
     sps=get_species_list(clade)
@@ -135,7 +135,7 @@ def judge_support(support,support_value):
         else:
             return False
     
-def batch_gfs_traverse(tre_dic: dict, support_value: int, empty_count_dic: dict,sptree:object) -> dict:
+def batch_gfs_traverse(tre_dic: dict, support_value: int, empty_count_dic: dict,sptree:object,gene2new_named_gene_dic) -> dict:
     for tre_path in tre_dic.values():
         Phylo_t0 = read_phylo_tree(tre_path)
         Phylo_t1=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
@@ -156,7 +156,7 @@ def batch_gfs_traverse(tre_dic: dict, support_value: int, empty_count_dic: dict,
                     empty_count_dic[parent.name]+=1
     return empty_count_dic
 
-def mark_sptree(sptree:object,empty_count_dic:dict)->object:
+def mark_sptree(sptree:object,empty_count_dic:dict,voucher2taxa_dic)->object:
     sptree.ladderize()
     sptree.sort_descendants("support")
     for node in sptree.traverse():
@@ -178,15 +178,15 @@ if __name__ == "__main__":
     support=50
     dup_species_percent = 0.5
     dup_species_num = 2
-    gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap")
-    sptree=PhyloTree('30sps.nwk')
+    gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap.txt")
+    sptree=PhyloTree('30sptree.nwk')
     sptree=rename_species_tree(sptree, voucher2taxa_dic)
     num_tre_node(sptree)
-    tre_dic=read_and_return_dict('GF_list.txt')
-    filename = '30sp_31131tree_GD.txt'
-    write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sptree)
+    tre_dic=read_and_return_dict('GF.txt')
+    filename = 'result.txt'
+    write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
     empty_count_dic=get_empty_count_dict(sptree)
-    empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree) 
-    mark_sptree(sptree,empty_count_dic)
+    empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree,gene2new_named_gene_dic) 
+    mark_sptree(sptree,empty_count_dic,voucher2taxa_dic)
    
    
