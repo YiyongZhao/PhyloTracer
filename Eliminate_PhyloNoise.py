@@ -2,7 +2,7 @@ from __init__ import *
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from PyPDF4 import PdfFileReader, PdfFileWriter
-from ete3 import PhyloTree,Tree,NodeStyle,TreeStyle,TextFace
+
 
 def rename_input_single_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
     for node in Phylo_t :
@@ -221,7 +221,7 @@ def calculate_insertion_index(node):
     return insertion_index
 
 
-def prune_main():
+def prune_main(tre_dic,taxa_dic):
     for k,v in tre_dic.items():
         t=Tree(v)
         t.ladderize()
@@ -256,6 +256,6 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
     taxa_dic=read_and_return_dict('taxa.txt')
     tre_dic=read_and_return_dict('100_nosingle_GF_list.txt')
-    prune_main()
+    prune_main(tre_dic,taxa_dic)
    
 
