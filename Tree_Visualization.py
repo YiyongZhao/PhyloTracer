@@ -94,7 +94,7 @@ def get_treestyle(Phylo_t:object,tree_style:str,tre_ID:str)->object:
 
 ####################################################################################################################
 def get_color_dict(dictory:dict)->dict:
-    colormap = plt.get_cmap("gist_rainbow")
+    colormap = plt.get_cmap("rainbow")
     # color dictionary
     unique_values=set(dictory.values())   
     colors_lst = [colors.rgb2hex(colormap(i)) for i in np.linspace(0, 1, len(unique_values))]
