@@ -189,4 +189,3 @@ if __name__ == "__main__":
     empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree,gene2new_named_gene_dic) 
     mark_sptree(sptree,empty_count_dic,voucher2taxa_dic)
    
-   
