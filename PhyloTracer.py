@@ -81,8 +81,8 @@ statistical_Topology_parser.add_argument('--input_imap', metavar='file',  requir
 gd_detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
 gd_detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 gd_detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-gd_detector_parser.add_argument('--support', type=int, choices=list(range(50, 100)),required=True, help='GD node support')
-gd_detector_parser.add_argument('--dup_species_radio', type=int, choices=[0, 1] ,required=True,help='The proportion of species with species duplications under the GD node')
+gd_detector_parser.add_argument('--support', type=int,required=True, help='GD node support [50-100]')
+gd_detector_parser.add_argument('--dup_species_radio', type=float ,required=True,help='The proportion of species with species duplications under the GD node [0-1]')
 gd_detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
 gd_detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
@@ -104,6 +104,7 @@ def main():
         # Execute the Tree_visualization function
         if args.input_GF_list and args.input_imap :
             start_time = time.time()
+            os.makedirs(os.path.join(os.getcwd(), "pdf_result"))
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             tree_style = args.tree_style
@@ -168,7 +169,7 @@ def main():
             input_imap = args.input_imap
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
-            statistical_main()
+            statistical_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
@@ -187,15 +188,16 @@ def main():
             dup_species_percent = args.dup_species_radio
             dup_species_num = args.dup_species_num
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
-            tre_dic = read_and_return_dict(input_GF_list)
             sptree=PhyloTree(input_sps_tree)
             sptree=rename_species_tree(sptree, voucher2taxa_dic)
-            num_tre_node(sptree)
+            sptree=num_tre_node(sptree)
+            empty_count_dic= {node.name: 0 for node in sptree.traverse()}
+            sps_tree=sptree.copy()
+            tre_dic = read_and_return_dict(input_GF_list)
+            empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree,gene2new_named_gene_dic) 
+            mark_sptree(sptree,empty_count_dic,voucher2taxa_dic)
             filename = 'result.txt'
-            write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sptree)
-            empty_count_dic=get_empty_count_dict(sptree)
-            empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree) 
-            mark_sptree(sptree,empty_count_dic)
+            write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sps_tree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
@@ -225,7 +227,7 @@ def main():
         print('  -h, --help            show this help message and exit')
         print()
         print('available programs::')
-        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split，Statistical_Topology, GD_Detector, Eliminate_PhyloNoise}')
+        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split, Statistical_Topology, GD_Detector, Eliminate_PhyloNoise}')
 
 
 if __name__ == "__main__":
