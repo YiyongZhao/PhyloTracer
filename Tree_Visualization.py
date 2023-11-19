@@ -35,7 +35,6 @@ def Dup_NodeIDs_from_Numbered_GFs(Phylo_t:object)->object:
 
 def create_tree_style(tree_style,tre_ID):
     ts = TreeStyle()
-    ts = TreeStyle()
     ts.legend.add_face(TextFace("★", fsize=20, fgcolor="red"), column=0)
     ts.legend.add_face(TextFace("Interspecific gene duplication event", fsize=20), column=1)
     ts.legend.add_face(TextFace("★", fsize=20, fgcolor="blue"), column=0)
