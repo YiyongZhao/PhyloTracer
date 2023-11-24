@@ -38,6 +38,19 @@
   * tqdm
   * time
   * PyPDF4
+# Clone PhyloTracer repository from GitHub
+git clone https://github.com/YiyongZhao/PhyloTracer.git
+cd PhyloTracer
+
+# Now install PhyloTracer module
+python setup.py install
+
+# Test the installation
+make test
+
+# Install from PyPI with pip
+pip install PhyloTracer
+
 ***
 To install PhyloTracer, simply download it use :
 git clone https://github.com/YiyongZhao/PhyloTracer.git
