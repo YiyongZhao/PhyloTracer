@@ -43,13 +43,13 @@ IMPORTANT: PhyloTracer is currently only compatible with Python 3
 Installation via conda
 Create a conda environment under Python 3 and activate the environment
 
-#install pandas, numpy, tqdm, time, and ete3
+#install pandas, numpy, tqdm, time, PyPDF4 and ete3
 conda install -c etetoolkit ete3
 conda install pandas
 conda install numpy
 conda install tqdm
 conda install time
-
+conda install PyPDF4
 # deactivate conda environment
 deactivate
 
