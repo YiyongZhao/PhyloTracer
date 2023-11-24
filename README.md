@@ -39,17 +39,17 @@
   * time
   * PyPDF4
 
-<font color=#A9A9A9 size=7 face="# Clone PhyloTracer repository from GitHub">color=#0099ff size=72 face="# Clone PhyloTracer repository from GitHub"</font>
+# Clone HyDe repository from GitHub
 git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 
-Now install PhyloTracer module
+# Now install PhyloTracer module
 python setup.py install
 
-Test the installation
+# Test the installation
 make test
 
-## Install from PyPI with pip
+# Install from PyPI with pip
 pip install PhyloTracer
 
 ***
