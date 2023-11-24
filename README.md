@@ -32,13 +32,12 @@
 # Requirements:
 * Python 3.0+
 * Python Modules:
-*  ete3
-*  pandas
-*  numpy
-*  tqdm
-*  time
-*  PyPDF4
-
+  * ete3
+  * pandas
+  * numpy
+  * tqdm
+  * time
+  * PyPDF4
 ***
-To install PhyloTracer, simply download it use :git
+To install PhyloTracer, simply download it use :
 git clone https://github.com/YiyongZhao/PhyloTracer.git
