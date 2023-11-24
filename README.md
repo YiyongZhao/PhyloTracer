@@ -38,7 +38,7 @@
   * tqdm
   * time
   * PyPDF4
-# Clone PhyloTracer repository from GitHub
+<font color=#A9A9A9 size=7 face="# Clone PhyloTracer repository from GitHub">color=#0099ff size=72 face="# Clone PhyloTracer repository from GitHub"</font>
 git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 
