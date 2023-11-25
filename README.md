@@ -27,9 +27,6 @@
 ```
 
 
-Certainly! I've made some improvements to the README, including formatting and making it more visually appealing. Please check the updated version below:
-
-```markdown
 # PhyloTracer
 
 PhyloTracer is a versatile tool for gene tree analysis, offering six major functionalities: rooting, monophyly filtering, topology statistics, phylogenetic tree visualization, detection of gene duplication events, and the splitting of multi-copy trees.
@@ -50,21 +47,21 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 ## Installation
 
 ### Requirements:
-- Python 3.0+
-- Python Modules:
-  - ete3
-  - pandas
-  - numpy
-  - tqdm
-  - time
-  - PyPDF4
-  - matplotlib
+* Python 3.0+
+* Python Modules:
+  * ete3
+  * pandas
+  * numpy
+  * tqdm
+  * time
+  * PyPDF4
+  * matplotlib
 
 ### Clone and Install:
 
 ```bash
 git clone https://github.com/YiyongZhao/PhyloTracer.git  
-cd PhyloTracer
+cd PhyloTracer  
 python setup.py install
 ```
 
