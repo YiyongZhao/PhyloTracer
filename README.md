@@ -63,7 +63,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 ### Clone and Install:
 
 ```bash
-git clone https://github.com/YiyongZhao/PhyloTracer.git
+git clone https://github.com/YiyongZhao/PhyloTracer.git  
 cd PhyloTracer
 python setup.py install
 ```
