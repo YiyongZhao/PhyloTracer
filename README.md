@@ -37,12 +37,12 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 ## Features
 
-1. **Rooting:** Provides more accurate gene tree rooting.
-2. **Monophyly Filtering:** Filters based on provided labels to identify true orthologous genes.
-3. **Topology Statistics:** Counts the occurrences of different topology types for summarizing ABAB-ABBA models.
-4. **Phylogenetic Tree Visualization:** Offers an intuitive visualization of phylogenetic trees.
-5. **Duplication Detection (GD):** Assists in identifying hybridization signals in gene trees.
-6. **Multi-Copy Tree Splitting:** Splits multi-copy gene trees.
+1. **Phylo_Rooting:** Provides more accurate gene tree rooting.
+2. **Eliminate_PhyloNoise:** Filters based on provided labels to identify true orthologous genes.
+3. **Statistical_Topology:** Counts the occurrences of different topology types for summarizing ABAB-ABBA models.
+4. **Tree_Visualization:** Offers an intuitive visualization of phylogenetic trees.
+5. **GD_Detector:** Assists in identifying hybridization signals in gene trees.
+6. **Ortho_Split:** Splits multi-copy gene trees.
 
 # Installation
 ***
