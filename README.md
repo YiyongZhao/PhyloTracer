@@ -27,6 +27,23 @@
 ```
 
 
+# PhyloTracer
+
+PhyloTracer is a tool for gene tree analysis, offering six major functionalities: rooting, monophyly filtering, topology statistics, phylogenetic tree visualization, detection of gene duplication events, and the splitting of multi-copy trees.
+
+## Introduction
+
+PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring true orthologous genes. It also includes the functionality to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
+
+## Features
+
+1. **Rooting:** Provides more accurate gene tree rooting.
+2. **Monophyly Filtering:** Filters based on provided labels to identify true orthologous genes.
+3. **Topology Statistics:** Counts the occurrences of different topology types for summarizing ABAB-ABBA models.
+4. **Phylogenetic Tree Visualization:** Offers an intuitive visualization of phylogenetic trees.
+5. **Duplication Detection (GD):** Assists in identifying hybridization signals in gene trees.
+6. **Multi-Copy Tree Splitting:** Splits multi-copy gene trees.
+
 # Installation
 ***
 # Requirements:
