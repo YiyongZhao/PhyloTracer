@@ -70,6 +70,62 @@ make test
 # Install from PyPI with pip
 pip install PhyloTracer
 
+## Usage
+
+### Example Scenarios:
+
+1. **Eliminate PhyloNoise:**
+
+    ```bash
+    python PhyloTracer.py Eliminate_PhyloNoise --input_GF_list GF_list.txt --input_taxa taxa
+    ```
+
+2. **Gene Duplication Detection (GD Detector):**
+
+    ```bash
+    python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --support 50 --dup_species_radio 0.5 --dup_species_num 2
+    ```
+
+3. **Orthologous Gene Splitting:**
+
+    ```bash
+    python PhyloTracer.py Ortho_Split --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
+    ```
+
+4. **Statistical Topology Analysis:**
+
+    ```bash
+    python PhyloTracer.py Statistical_Topology --input_GF_list GF.txt --input_imap imap.txt
+    ```
+
+5. **Tree Visualization:**
+
+    ```bash
+    python PhyloTracer.py Tree_Visualization --input_GF_list GF.txt --input_imap imap --gene_categories genus order --keep_branch 1 --tree_style r
+    ```
+
+## Contributing
+
+If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
+
+## Version History
+
+Check the [Changelog](CHANGELOG.md) for details on different versions and updates.
+
+## License
+
+PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For any questions or suggestions, feel free to contact us via [email](mailto:your.email@example.com).
+```
+
+Make sure to replace placeholders like "[License Name]", "[dependency1 dependency2]", "[Changelog link]", "[email]", and others with the actual information for your project.
+
 ***
 To install PhyloTracer, simply download it use :
 git clone https://github.com/YiyongZhao/PhyloTracer.git
+
+`
+
