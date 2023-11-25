@@ -38,6 +38,7 @@
   * tqdm
   * time
   * PyPDF4
+  * matplotlib
 
 # Clone HyDe repository from GitHub
 git clone https://github.com/YiyongZhao/PhyloTracer.git
