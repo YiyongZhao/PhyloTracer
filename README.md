@@ -74,31 +74,31 @@ pip install PhyloTracer
 
 ### Example Scenarios:
 
-1. **Eliminate PhyloNoise:**
+1. **Eliminate_PhyloNoise:**
 
     ```bash
     python PhyloTracer.py Eliminate_PhyloNoise --input_GF_list GF_list.txt --input_taxa taxa
     ```
 
-2. **Gene Duplication Detection (GD Detector):**
+2. **GD_Detector:**
 
     ```bash
     python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --support 50 --dup_species_radio 0.5 --dup_species_num 2
     ```
 
-3. **Orthologous Gene Splitting:**
+3. **Ortho_Split:**
 
     ```bash
     python PhyloTracer.py Ortho_Split --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
     ```
 
-4. **Statistical Topology Analysis:**
+4. **Statistical_Topology:**
 
     ```bash
     python PhyloTracer.py Statistical_Topology --input_GF_list GF.txt --input_imap imap.txt
     ```
 
-5. **Tree Visualization:**
+5. **Tree_Visualization:**
 
     ```bash
     python PhyloTracer.py Tree_Visualization --input_GF_list GF.txt --input_imap imap --gene_categories genus order --keep_branch 1 --tree_style r
