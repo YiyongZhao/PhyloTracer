@@ -27,13 +27,16 @@
 ```
 
 
+Certainly! I've made some improvements to the README, including formatting and making it more visually appealing. Please check the updated version below:
+
+```markdown
 # PhyloTracer
 
-PhyloTracer is a tool for gene tree analysis, offering six major functionalities: rooting, monophyly filtering, topology statistics, phylogenetic tree visualization, detection of gene duplication events, and the splitting of multi-copy trees.
+PhyloTracer is a versatile tool for gene tree analysis, offering six major functionalities: rooting, monophyly filtering, topology statistics, phylogenetic tree visualization, detection of gene duplication events, and the splitting of multi-copy trees.
 
 ## Introduction
 
-PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring true orthologous genes. It also includes the functionality to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
+PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring true orthologous genes. It also includes functionality to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
 
 ## Features
 
@@ -44,31 +47,38 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 5. **GD_Detector:** Assists in identifying hybridization signals in gene trees.
 6. **Ortho_Split:** Splits multi-copy gene trees.
 
-# Installation
-***
-# Requirements:
-* Python 3.0+
-* Python Modules:
-  * ete3
-  * pandas
-  * numpy
-  * tqdm
-  * time
-  * PyPDF4
-  * matplotlib
+## Installation
 
-# Clone HyDe repository from GitHub
+### Requirements:
+- Python 3.0+
+- Python Modules:
+  - ete3
+  - pandas
+  - numpy
+  - tqdm
+  - time
+  - PyPDF4
+  - matplotlib
+
+### Clone and Install:
+
+```bash
 git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
-
-# Now install PhyloTracer module
 python setup.py install
+```
 
-# Test the installation
+### Test the Installation:
+
+```bash
 make test
+```
 
-# Install from PyPI with pip
+### Install from PyPI with pip:
+
+```bash
 pip install PhyloTracer
+```
 
 ## Usage
 
@@ -121,11 +131,7 @@ PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) fil
 For any questions or suggestions, feel free to contact us via [email](mailto:your.email@example.com).
 ```
 
-Make sure to replace placeholders like "[License Name]", "[dependency1 dependency2]", "[Changelog link]", "[email]", and others with the actual information for your project.
-
-***
-To install PhyloTracer, simply download it use :
-git clone https://github.com/YiyongZhao/PhyloTracer.git
+Feel free to customize it further according to your preferences or additional details you want to include.
 
 `
 
