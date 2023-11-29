@@ -90,7 +90,7 @@ def statistical_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic):
     with open ('Obtain_Statistical_calde.txt','w') as f :
         for k,v in obtain_sorted_dict.items():
             t=Tree(k)
-            if len(set(get_species_list(t))) !=1:
+            if len(set(get_species_list(t))) !=len(t.get_leaf_names()):
                 s=get_multiplier(t)
                 folding_tree(t)
                 rename_input_tre(t,voucher2taxa_dic)
