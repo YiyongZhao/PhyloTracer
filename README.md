@@ -84,7 +84,7 @@ pip install PhyloTracer
 1. **Eliminate_PhyloNoise:**
 
     ```bash
-    python PhyloTracer.py Eliminate_PhyloNoise --input_GF_list GF_list.txt --input_taxa taxa
+    python PhyloTracer.py Eliminate_PhyloNoise --input_GF_list GF.txt --input_taxa taxa
     ```
 
 2. **GD_Detector:**
@@ -108,7 +108,7 @@ pip install PhyloTracer
 5. **Tree_Visualization:**
 
     ```bash
-    python PhyloTracer.py Tree_Visualization --input_GF_list GF.txt --input_imap imap --gene_categories genus order --keep_branch 1 --tree_style r
+    python PhyloTracer.py Tree_Visualization --input_GF_list GF.txt --input_imap imap.txt --gene_categories genus order --keep_branch 1 --tree_style r
     ```
 
 ## Contributing
