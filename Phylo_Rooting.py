@@ -88,7 +88,7 @@ def get_RF_dic(voucher2taxa_dic,trees:list,gene2new_named_gene_dic:dict,tre_ID:s
         RF=0
         for tre_name,OG_S in ordered_name_OG_L: 
             OG_L = [new_named_gene2gene_dic[OG] for OG in OG_S]
-            Phylo_t0=read_tree(tre_path)
+            Phylo_t0=read_phylo_tree(tre_path)
             Phylo_t=root_tre_with_midpoint_outgroup(Phylo_t0)
             Phylo_t_OG_L=extract_tree(OG_L,Phylo_t)
             Phylo_t_OG_L=rename_input_tre(Phylo_t_OG_L,gene2new_named_gene_dic)
@@ -120,7 +120,7 @@ def get_reroot_list(Phylo_t0:object,node_name_list:list)->list:#Get the list of 
 def manager(Phylo_t0:object)->list:#Get a list of tree objects after rooting them
     Phylo_t0=num_tre_node(Phylo_t0)
     node_name_list=traverse(Phylo_t0).split('-')#Get the node_name_list of the tree that needs to be re-rooted
-    node_name_list.remove('node1')
+    node_name_list.remove('N1')
     root_list=get_reroot_list(Phylo_t0,node_name_list)#The list of tree objects that require root reassignment needs to be translated as follows:
     return root_list
 
@@ -132,7 +132,7 @@ def rename_output_tre(Phylo_t:object, new_named_gene2gene_dic:dict,tre_ID:str) -
 
 def root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic,sptree,voucher2taxa_dic):
     for tre_ID,tre_path in tre_dic.items():
-        Phylo_t0=read_tree(tre_path)
+        Phylo_t0=read_phylo_tree(tre_path)
         Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
         if len(set(get_species_list(Phylo_t1))) <= 2:
             Phylo_t1.write(outfile=str(tre_ID)+'.nwk')
