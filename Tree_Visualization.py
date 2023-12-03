@@ -124,18 +124,18 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
         if (node, column, "aligned") not in faces_added:
             if species in color_dict:
                 color = color_dict[species].split('*')[-1]
-                face = TextFace("   ▐" + '  ' + color_dict[species].split('*')[0], fgcolor=color, fstyle='italic')
+                face = TextFace("   ▐" + '  ' + color_dict[species].split('*')[0], fgcolor=color,ftype='Arial', fstyle='italic')
                 add_face_to_node(node, face, column, position="aligned")
 
     def add_species_face(node, species):
         if species in sps_color_dict:
             color = sps_color_dict[species].split('*')[-1]
-            face = TextFace(' ' + gene, fgcolor=color, fstyle='italic')
+            face = TextFace(' ' + gene, fgcolor=color,ftype='Arial',fstyle='italic')
             node.add_face(face, column=-1)
 
         if species in sps_color_dict:
             color = sps_color_dict[species].split('*')[-1]
-            face4 = TextFace("   ▐" + '  ' + sps_color_dict[species].split('*')[0], fgcolor=color, fstyle='italic')
+            face4 = TextFace("   ▐" + '  ' + sps_color_dict[species].split('*')[0], fgcolor=color, ftype='Arial',fstyle='italic')
             add_face_to_node(node, face4, 0, position="aligned")
 
     def add_gene_face(node, gene):
@@ -148,7 +148,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                 break
         if matched_value:
             color = matched_value.split('*')[-1]
-            face5 = TextFace("   ▐" + '  ' +  matched_value.split('*')[0], fgcolor=color, fstyle='italic')
+            face5 = TextFace("   ▐" + '  ' +  matched_value.split('*')[0], fgcolor=color, ftype='Arial',fstyle='italic')
             add_face_to_node(node, face5, column, position="aligned")
 
     
