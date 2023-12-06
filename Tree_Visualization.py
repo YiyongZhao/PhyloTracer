@@ -53,7 +53,7 @@ def create_tree_style(tree_style,tre_ID):
     ts.show_leaf_name = False
     ts.show_branch_support = True
     ts.extra_branch_line_type =0
-
+    ts.extra_branch_line_color='black'
     ts.branch_vertical_margin = -1
 	
     
@@ -63,23 +63,32 @@ def set_node_style(node:object, dup_node_name_list:list):
     nstyle = NodeStyle()
     splist = set(get_species_list(node))
     if node.name in dup_node_name_list and len(splist) == 1:
+        nstyle["vt_line_width"] = 1
+        nstyle["hz_line_width"] = 1
+        nstyle["vt_line_type"] = 0 
         nstyle["hz_line_type"] = 0 
         nstyle["size"] = 0
         nstyle["shape"] = "circle"
-        nstyle["fgcolor"] = "blue"
+        nstyle["fgcolor"] = "black"
         node.add_face(TextFace("★", fsize=10, fgcolor="blue"), column=1, position="branch-top")
     elif node.name in dup_node_name_list and len(splist) != 1:
+        nstyle["vt_line_width"] = 1
+        nstyle["hz_line_width"] = 1
+        nstyle["vt_line_type"] = 0 
         nstyle["hz_line_type"] = 0 
         nstyle["size"] = 0
         nstyle["shape"] = "circle"
-        nstyle["fgcolor"] = "red"
+        nstyle["fgcolor"] = "black"
         node.add_face(TextFace("★", fsize=10, fgcolor="red"), column=1, position="branch-top")
     else:
+        nstyle["vt_line_width"] = 1
+        nstyle["hz_line_width"] = 1
+        nstyle["vt_line_type"] = 0 
         nstyle["hz_line_type"] = 0 
-        nstyle["fgcolor"] = "black"
         nstyle["size"] = 0
         nstyle["shape"] = "circle"
-    node.set_style(nstyle)
+        nstyle["fgcolor"] = "black"
+	node.set_style(nstyle)
     
 def get_treestyle(Phylo_t:object,tree_style:str,tre_ID:str)->object:
     Phylo_t1, dup_node_name_list = Dup_NodeIDs_from_Numbered_GFs(Phylo_t)
