@@ -244,7 +244,7 @@ def main():
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for Eliminate_PhyloNoise command are missing.")
+            print("Required arguments for Gene_Gain_And_Loss_Visualization command are missing.")
             
     else:
         print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split, Statistical_Topology, GD_Detector, Eliminate_PhyloNoise}")
