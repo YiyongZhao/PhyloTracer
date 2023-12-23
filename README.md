@@ -43,7 +43,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 4. **Tree_Visualization:** Offers an intuitive visualization of phylogenetic trees.
 5. **GD_Detector:** Assists in identifying hybridization signals in gene trees.
 6. **Ortho_Split:** Splits multi-copy gene trees.
-7. **Gene_Gain_And_Loss_Visualization:** According to gene_ Gain_ And_ Generate visualized PDF files for loss information generation.
+7. **Gene_Gain_And_Loss_Visualization:** According to gene_gain_and_generate visualized PDF files for loss information generation.
 
 ## Installation
 
