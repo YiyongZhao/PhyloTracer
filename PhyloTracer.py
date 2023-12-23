@@ -91,6 +91,11 @@ eliminate_phyloNoise_parser = subparsers.add_parser('Eliminate_PhyloNoise', help
 eliminate_phyloNoise_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 eliminate_phyloNoise_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 
+# Gene_Gain_And_Loss_Visualization command
+Gene_Gain_And_Loss_Visualization_parser = subparsers.add_parser('Gene_Gain_And_Loss_Visualization', help='Gene_Gain_And_Loss_Visualization help')
+Gene_Gain_And_Loss_Visualization_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+Gene_Gain_And_Loss_Visualization_parser.add_argument('--input_summary_tree', metavar='file',  required=True, help='Input summary_species tree file')
+
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
 
@@ -162,7 +167,7 @@ def main():
             print("Required arguments for Ortho_Split command are missing.")
             
     elif args.command == 'Statistical_Topology':
-        # Execute the Ortho_Split function
+        # Execute the Statistical_Topology function
         if args.input_GF_list and args.input_imap :
             start_time = time.time()
             input_GF_list = args.input_GF_list
@@ -178,7 +183,7 @@ def main():
 
 
     elif args.command == 'GD_Detector':
-        # Execute the Ortho_Split function
+        # Execute the GD_Detector function
         if args.input_GF_list and args.input_imap and args.input_sps_tree and args.support and args.dup_species_radio and args.dup_species_num :
             start_time = time.time()
             input_GF_list = args.input_GF_list
@@ -205,7 +210,7 @@ def main():
             print("Required arguments for GD_Detector command are missing.")
             
     elif args.command == 'Eliminate_PhyloNoise':
-        # Execute the Ortho_Split function
+        # Execute the Eliminate_PhyloNoise function
         if args.input_GF_list and args.input_taxa  :
             start_time = time.time()
             os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
@@ -214,6 +219,26 @@ def main():
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
             prune_main()
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print("Program execution time:", execution_time, "s")
+        else:
+            print("Required arguments for Eliminate_PhyloNoise command are missing.")
+
+    elif args.command == 'Gene_Gain_And_Loss_Visualization':
+        # Execute the Gene_Gain_And_Loss_Visualization function
+        if args.input_sps_tree and args.input_summary_tree :
+            start_time = time.time()
+            input_sps_tree = args.input_sps_tree
+            input_summary_tree=args.input_summary_tree
+            dic=get_gain_and_loss_dic(input_summary_tree)
+            t=Tree(input_sps_tree)
+            t.ladderize()
+            t.sort_descendants("support")
+            t.sort_descendants()
+            ts=create_tree_style()
+            mark_sptree(t,dic)
+            t.render(file_name='gene_gain_loss.pdf',tree_style=ts)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
