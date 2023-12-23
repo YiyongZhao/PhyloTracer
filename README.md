@@ -43,6 +43,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 4. **Tree_Visualization:** Offers an intuitive visualization of phylogenetic trees.
 5. **GD_Detector:** Assists in identifying hybridization signals in gene trees.
 6. **Ortho_Split:** Splits multi-copy gene trees.
+7. **Gene_Gain_And_Loss_Visualization:** According to gene_ Gain_ And_ Generate visualized PDF files for loss information generation.
 
 ## Installation
 
@@ -81,35 +82,48 @@ pip install PhyloTracer
 
 ### Example Scenarios:
 
-1. **Eliminate_PhyloNoise:**
+1. **Phylo_Rooting:**
+
+    ```bash
+    python PhyloTracer.py Phylo_Rooting --input_GF_list GF.txt --input_taxa taxa
+    ```
+
+2. **Eliminate_PhyloNoise:**
 
     ```bash
     python PhyloTracer.py Eliminate_PhyloNoise --input_GF_list GF.txt --input_taxa taxa
     ```
-
-2. **GD_Detector:**
-
-    ```bash
-    python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --support 50 --dup_species_radio 0.5 --dup_species_num 2
-    ```
-
-3. **Ortho_Split:**
-
-    ```bash
-    python PhyloTracer.py Ortho_Split --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
-    ```
-
-4. **Statistical_Topology:**
+    
+3. **Statistical_Topology:**
 
     ```bash
     python PhyloTracer.py Statistical_Topology --input_GF_list GF.txt --input_imap imap.txt
     ```
 
-5. **Tree_Visualization:**
+4. **Tree_Visualization:**
 
     ```bash
     python PhyloTracer.py Tree_Visualization --input_GF_list GF.txt --input_imap imap.txt --gene_categories genus order --keep_branch 1 --tree_style r
     ```
+
+5. **GD_Detector:**
+
+    ```bash
+    python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --support 50 --dup_species_radio 0.5 --dup_species_num 2
+    ```
+
+6. **Ortho_Split:**
+
+    ```bash
+    python PhyloTracer.py Ortho_Split --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
+    ```
+
+7. **Gene_Gain_And_Loss_Visualization:**
+
+    ```bash
+    python PhyloTracer.py Gene_Gain_And_Loss_Visualization  --input_sps_tree sptree.nwk --input_summary_tree summary_tree
+    ```
+    
 
 ## Contributing
 
