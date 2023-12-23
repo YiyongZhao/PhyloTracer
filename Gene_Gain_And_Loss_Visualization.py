@@ -30,7 +30,7 @@ def get_gain_and_loss_dic(summary_tree):
     return dic
 
 def mark_sptree(sptree,dic):
-    for i in t.traverse():
+    for i in sptree.traverse():
         nstyle = NodeStyle()
         nstyle["vt_line_width"] = 1
         nstyle["hz_line_width"] = 1
