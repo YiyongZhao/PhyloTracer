@@ -7,6 +7,7 @@ from Tree_Visualization import *
 from Eliminate_PhyloNoise import *
 from GD_Detector import *
 from Statistical_Topology import *
+from Gene_Gain_And_Loss_Visualization import *
 
 from __init__ import *
 ##################################################################
