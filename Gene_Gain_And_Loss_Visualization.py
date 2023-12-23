@@ -2,6 +2,7 @@ from __init__ import *
 
 def create_tree_style():
     ts = TreeStyle()
+    ts.legend.add_face(TextFace('gene_gain_loss', fsize=20, fgcolor="black"), column=0)
     ts.legend_position = 1
     ts.mode ='r'
     ts.show_border = True
@@ -18,7 +19,7 @@ def create_tree_style():
   
 def get_gain_and_loss_dic(summary_tree):
     with open(summary_tree, 'r') as file:
-    tree_data = file.read()
+        tree_data = file.read()
     dic = {}
     for line in tree_data.split('\n'):
         line=line.replace('|','')
@@ -28,7 +29,7 @@ def get_gain_and_loss_dic(summary_tree):
             dic[node.strip()] = '[' + value.strip()
     return dic
 
-def mark_sptree(sptree):
+def mark_sptree(sptree,dic):
     for i in t.traverse():
         nstyle = NodeStyle()
         nstyle["vt_line_width"] = 1
@@ -39,8 +40,8 @@ def mark_sptree(sptree):
         nstyle["shape"] = "circle"
         nstyle["fgcolor"] = "black"
         i.set_style(nstyle)
-        if i.name in d:
-            v = d[i.name].replace('[', '').replace(']', '')
+        if i.name in dic:
+            v = dic[i.name].replace('[', '').replace(']', '')
             com1=TextFace('[',fgcolor='black')
             i.add_face(com1,column=1,position='branch-top')
 
@@ -58,6 +59,7 @@ def mark_sptree(sptree):
             i.add_face(com6,column=6,position='branch-top')
             com7=TextFace(']',fgcolor='black')
             i.add_face(com7,column=7,position='branch-top')
+
 
 if __name__ == "__main__":
     dic=get_gain_and_loss_dic('/Volumes/Elements/file/q_out/summary.tree')
