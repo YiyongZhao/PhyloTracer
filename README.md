@@ -85,7 +85,7 @@ pip install PhyloTracer
 1. **Phylo_Rooting:**
 
     ```bash
-    python PhyloTracer.py Phylo_Rooting --input_GF_list GF.txt --input_taxa taxa
+    python PhyloTracer.py Phylo_Rooting --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
     ```
 
 2. **Eliminate_PhyloNoise:**
