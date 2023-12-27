@@ -52,11 +52,11 @@ def mark_sptree(sptree,dic):
 
             com4=TextFace(v.split(',')[1],fgcolor='red')
             i.add_face(com4,column=4,position='branch-top')
-            com5=TextFace(',',fgcolor='black')
-            i.add_face(com5,column=5,position='branch-top')
+            #com5=TextFace(',',fgcolor='black')
+            #i.add_face(com5,column=5,position='branch-top')
 
-            com6=TextFace(v.split(',')[2],fgcolor='black')
-            i.add_face(com6,column=6,position='branch-top')
+            #com6=TextFace(v.split(',')[2],fgcolor='black')
+            #i.add_face(com6,column=6,position='branch-top')
             com7=TextFace(']',fgcolor='black')
             i.add_face(com7,column=7,position='branch-top')
 
