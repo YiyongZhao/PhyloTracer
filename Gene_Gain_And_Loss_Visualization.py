@@ -60,10 +60,18 @@ def mark_sptree(sptree,dic):
             com7=TextFace(']',fgcolor='black')
             i.add_face(com7,column=7,position='branch-top')
 
-
+def new_num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree.
+    i = 0
+    for node in Phylo_t.traverse('postorder'):
+        if not node.is_leaf():
+            node.name = "node_" + str(i)
+            i += 1
+    return Phylo_t
+    
 if __name__ == "__main__":
-    dic=get_gain_and_loss_dic('/Volumes/Elements/file/q_out/summary.tree')
-    t=Tree('/Users/apple/Desktop/jupyter_notebook/qiao/28sps_root.nwk')
+    dic=get_gain_and_loss_dic('example_data/Gene_Gain_And_Loss_Visualization/input/summary_tree')
+    t=Tree('example_data/Gene_Gain_And_Loss_Visualization/input/sptree.nwk')
+    new_num_tre_node(t)
     t.ladderize()
     t.sort_descendants("support")
     t.sort_descendants()
