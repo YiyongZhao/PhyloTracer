@@ -70,7 +70,7 @@ def set_node_style(node:object, dup_node_name_list:list):
         nstyle["size"] = 0
         nstyle["shape"] = "circle"
         nstyle["fgcolor"] = "black"
-        node.add_face(TextFace("★", fsize=10, fgcolor="blue"), column=1, position="branch-top")
+        node.add_face(TextFace("★", fsize=7, fgcolor="blue"), column=1, position="branch-top")
     elif node.name in dup_node_name_list and len(splist) != 1:
         nstyle["vt_line_width"] = 1
         nstyle["hz_line_width"] = 1
@@ -79,7 +79,7 @@ def set_node_style(node:object, dup_node_name_list:list):
         nstyle["size"] = 0
         nstyle["shape"] = "circle"
         nstyle["fgcolor"] = "black"
-        node.add_face(TextFace("★", fsize=10, fgcolor="red"), column=1, position="branch-top")
+        node.add_face(TextFace("★", fsize=7, fgcolor="red"), column=1, position="branch-top")
     else:
         nstyle["vt_line_width"] = 1
         nstyle["hz_line_width"] = 1
