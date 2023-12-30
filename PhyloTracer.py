@@ -147,7 +147,8 @@ def main():
             renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
             sptree = PhyloTree(input_sps_tree)
             tre_dic = read_and_return_dict(input_GF_list)
-            root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, sptree)
+            root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, sptree,voucher2taxa_dic)
+            end_time = time.time()
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
