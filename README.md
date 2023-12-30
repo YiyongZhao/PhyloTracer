@@ -66,12 +66,6 @@ cd PhyloTracer
 python setup.py install
 ```
 
-### Test the Installation:
-
-```bash
-make test
-```
-
 ### Install from PyPI with pip:
 
 ```bash
