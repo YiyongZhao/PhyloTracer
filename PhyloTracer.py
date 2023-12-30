@@ -119,7 +119,15 @@ def main():
             gene_category_list = [read_and_return_dict(i) for i in gene_categories]
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
-            view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic)
+            if args.gene_family and args.input_sps_tree:
+                input_gene2fam = args.gene_family
+                gene2fam = read_and_return_dict(input_gene2fam)
+                input_sps_tree = args.input_sps_tree
+                sptree = Tree(input_sps_tree)
+                mark_gene_to_sptree_main(tre_dic,gene_category_list,sptree,gene2fam)
+                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
+            else:
+                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
