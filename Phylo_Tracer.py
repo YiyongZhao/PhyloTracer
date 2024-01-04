@@ -1,13 +1,17 @@
 import sys, textwrap
 import argparse
 import time
-from Ortho_Split import *
-from Phylo_Rooting import *
-from Tree_Visualization import *
-from Eliminate_PhyloNoise import *
+from Phylo_Rooter import *
+from PhyloNoise_Filter import *
+from Tree_Visualizer import *
 from GD_Detector import *
-from Statistical_Topology import *
-from Gene_Gain_And_Loss_Visualization import *
+from GD_Visualizer import *
+from Ortho_Retriever import *
+from GeneDynamics_Tracker import *
+from GeneDynamics_Visualizer import *
+#from Hybrid_Tracer import *
+#from Hybrid_Visualizer import *
+
 
 from __init__ import *
 ##################################################################
@@ -51,27 +55,27 @@ class CustomHelpFormatter(argparse.HelpFormatter):
 parser = argparse.ArgumentParser(formatter_class=CustomHelpFormatter, add_help=False)
 subparsers = parser.add_subparsers(dest='command', help='available programs:')
 
-# Tree_visualization command
-tree_visualization_parser = subparsers.add_parser('Tree_Visualization', help='Tree Visualization help')
-tree_visualization_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-tree_visualization_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
-tree_visualization_parser.add_argument('--gene_categories', metavar='file', nargs='+',  help='Gene category information')
-tree_visualization_parser.add_argument('--keep_branch', type=int,  choices=[1, 0],help='[1/0] you can only input 1 or 0 Whether to preserve branch length information')
-tree_visualization_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='Tree style: [r/c] (rectangular) or (circular) (default: rectangular)')
+# Tree_Visualizer command
+Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Tree_Visualizer help')
+Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
+Tree_Visualizer_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
+Tree_Visualizer_parser.add_argument('--gene_categories', metavar='file', nargs='+',  help='Gene category information')
+Tree_Visualizer_parser.add_argument('--keep_branch', type=int,  choices=[1, 0],help='[1/0] you can only input 1 or 0 Whether to preserve branch length information')
+Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='Tree style: [r/c] (rectangular) or (circular) (default: rectangular)')
 
-# Phylo_Rooting command
-phylo_rooting_parser = subparsers.add_parser('Phylo_Rooting', help='Phylo Rooting help')
-phylo_rooting_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-phylo_rooting_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-phylo_rooting_parser.add_argument('--input_gene_length', metavar='file',  help='Input gene length list')
-phylo_rooting_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+# Phylo_Rooter command
+Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Phylo_Rooter help')
+Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+Phylo_Rooter_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='file',  help='Input gene length list')
+Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
-# Ortho_Split command
-ortho_split_parser = subparsers.add_parser('Ortho_Split', help='Ortho Split help')
-ortho_split_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-ortho_split_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-ortho_split_parser.add_argument('--input_gene_length', metavar='file',  required=True, help='Input gene length list')
-ortho_split_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+# Ortho_Retriever command
+Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help')
+Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+Ortho_Retriever_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='file',  required=True, help='Input gene length list')
+Ortho_Retriever_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
 # Statistical_Topology command
 statistical_Topology_parser = subparsers.add_parser('Statistical_Topology', help='Statistical_Topology help')
@@ -79,18 +83,18 @@ statistical_Topology_parser.add_argument('--input_GF_list', metavar='file',  req
 statistical_Topology_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 
 # GD_Detector command
-gd_detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
-gd_detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-gd_detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-gd_detector_parser.add_argument('--support', type=int,required=True, help='GD node support [50-100]')
-gd_detector_parser.add_argument('--dup_species_radio', type=float ,required=True,help='The proportion of species with species duplications under the GD node [0-1]')
-gd_detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
-gd_detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
+GD_Detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+GD_Detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+GD_Detector_parser.add_argument('--support', type=int,required=True, help='GD node support [50-100]')
+GD_Detector_parser.add_argument('--dup_species_radio', type=float ,required=True,help='The proportion of species with species duplications under the GD node [0-1]')
+GD_Detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
+GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
-# Eliminate_PhyloNoise command
-eliminate_phyloNoise_parser = subparsers.add_parser('Eliminate_PhyloNoise', help='Eliminate_PhyloNoise help')
-eliminate_phyloNoise_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-eliminate_phyloNoise_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+# PhyloNoise_Filter command
+PhyloNoise_Filter_parser = subparsers.add_parser('PhyloNoise_Filter', help='PhyloNoise_Filter help')
+PhyloNoise_Filter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+PhyloNoise_Filter_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 
 # Gene_Gain_And_Loss_Visualization command
 Gene_Gain_And_Loss_Visualization_parser = subparsers.add_parser('Gene_Gain_And_Loss_Visualization', help='Gene_Gain_And_Loss_Visualization help')
@@ -106,8 +110,8 @@ args = parser.parse_args()
 
 def main():
     # Perform the corresponding functions according to the parameters
-    if args.command == 'Tree_Visualization':
-        # Execute the Tree_visualization function
+    if args.command == 'Tree_Visualizer':
+        # Execute the Tree_Visualizer function
         if args.input_GF_list and args.input_imap :
             start_time = time.time()
             os.makedirs(os.path.join(os.getcwd(), "pdf_result"))
@@ -132,10 +136,10 @@ def main():
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for Tree_visualization command are missing.")
+            print("Required arguments for Tree_Visualizer command are missing.")
 
-    elif args.command == 'Phylo_Rooting':
-        # Execute the Phylo_Rooting function
+    elif args.command == 'Phylo_Rooter':
+        # Execute the Phylo_Rooter function
         if args.input_GF_list and args.input_imap and args.input_sps_tree and args.input_gene_length:
             start_time = time.time()
             input_GF_list = args.input_GF_list
@@ -153,10 +157,10 @@ def main():
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for Phylo_Rooting command are missing.")
+            print("Required arguments for Phylo_Rooter command are missing.")
         
-    elif args.command == 'Ortho_Split':
-        # Execute the Ortho_Split function
+    elif args.command == 'Ortho_Retriever':
+        # Execute the Ortho_Retriever function
         if args.input_GF_list and args.input_imap and args.input_sps_tree and args.input_gene_length:
             start_time = time.time()
             input_GF_list = args.input_GF_list
@@ -174,7 +178,7 @@ def main():
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for Ortho_Split command are missing.")
+            print("Required arguments for Ortho_Retriever command are missing.")
             
     elif args.command == 'Statistical_Topology':
         # Execute the Statistical_Topology function
@@ -219,8 +223,8 @@ def main():
         else:
             print("Required arguments for GD_Detector command are missing.")
             
-    elif args.command == 'Eliminate_PhyloNoise':
-        # Execute the Eliminate_PhyloNoise function
+    elif args.command == 'PhyloNoise_Filter':
+        # Execute the PhyloNoise_Filter function
         if args.input_GF_list and args.input_taxa  :
             start_time = time.time()
             os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
@@ -233,7 +237,7 @@ def main():
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for Eliminate_PhyloNoise command are missing.")
+            print("Required arguments for PhyloNoise_Filter command are missing.")
 
     elif args.command == 'Gene_Gain_And_Loss_Visualization':
         # Execute the Gene_Gain_And_Loss_Visualization function
