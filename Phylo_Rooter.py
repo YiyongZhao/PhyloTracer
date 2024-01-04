@@ -1,4 +1,4 @@
-from Ortho_Split import *
+from Ortho_Retriever import *
 from __init__ import *
 
 def filter_min_RF(RF_dic:dict)->list:#Filter RF and select the tree with the minimum value
