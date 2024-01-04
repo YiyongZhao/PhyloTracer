@@ -13,9 +13,9 @@
 # ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║ #
 # ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝ #                            
 #                                                                                             #
-#    PhyloTracer: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication             #
-#    Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species              #
-#    Hybridization Detection,and Visualization.                                               #
+#    PhyloTracer: A User-Friendly Toolkit for Gene Tree RootingGene Duplication, Expansion    #
+#    and Contraction ldentification.Ortholog Retrieval, Phylogenetic Noise Elimination,       #
+#    SpeciesHybridization Detection, and Visualization.                                       #
 #                                                                                             #
 #    Pypi: https://pypi.org/project/PhyloTracer                                               #
 #    Github: https://github.com/YiyongZhao/PhyloTracer                                        #
@@ -29,7 +29,7 @@
 
 # PhyloTracer
 
-PhyloTracer is a versatile tool for gene tree analysis, offering six major functionalities: rooting, monophyly filtering, topology statistics, phylogenetic tree visualization, detection of gene duplication events, and the splitting of multi-copy trees.
+PhyloTracer is a User-Friendly Toolkit for Gene Tree RootingGene Duplication, Expansion and Contraction ldentification.Ortholog Retrieval, Phylogenetic Noise Elimination, SpeciesHybridization Detection, and Visualization.
 
 ## Introduction
 
@@ -39,14 +39,17 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 1. **Phylo_Rooter:** Provides more accurate gene tree rooting.
 2. **PhyloNoise_Filter:** Filters based on provided labels to identify true orthologous genes.
-3. **Statistical_Topology:** Counts the occurrences of different topology types for summarizing ABAB-ABBA models.
-4. **GD_Visualizer:** Offers an intuitive visualization of phylogenetic trees.
+3. **TreeTopology_Summarizer:** Counts the occurrences of different topology types for summarizing ABAB-ABBA models.
+4. **Tree_Visualizer:** Offers an intuitive visualization of phylogenetic trees.
 5. **GD_Detector:** Assists in identifying hybridization signals in gene trees.
-6. **Ortho_Retriever:** Splits multi-copy gene trees.
-7. **GeneDynamics_Tracker:** 
-8. **GeneDynamics_Visualizer:** According to gene_gain_and_generate visualized PDF files for loss information generation.
-9. **Hybrid_Tracer:**
-10. **Hybrid_Visualizer:**
+6. **GD_Visualizer:**
+7. **GD_Loss_Tracker:**
+8. **GD_Loss_Visualizer:**
+9. **Ortho_Spliter:** Splits multi-copy gene trees.
+10. **GeneDynamics_Tracker:** 
+11. **GeneDynamics_Visualizer:** According to gene_gain_and_generate visualized PDF files for loss information generation.
+12. **Hybrid_Tracer:**
+13. **Hybrid_Visualizer:**
 
 ## Installation
 
