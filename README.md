@@ -94,10 +94,10 @@ pip install PhyloTracer
     python PhyloTracer.py PhyloNoise_Filter --input_GF_list GF.txt --input_taxa taxa
     ```
     
-3. **Statistical_Topology:**
+3. **TreeTopology_Summarizer:**
 
     ```bash
-    python PhyloTracer.py Statistical_Topology --input_GF_list GF.txt --input_imap imap.txt
+    python PhyloTracer.py TreeTopology_Summarizer --input_GF_list GF.txt --input_imap imap.txt
     ```
 
 4. **Tree_Visualizer:**
