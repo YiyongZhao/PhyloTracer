@@ -5,7 +5,7 @@ from Phylo_Rooter import *
 from PhyloNoise_Filter import *
 from Tree_Visualizer import *
 from GD_Detector import *
-from GD_Visualizer import *
+#from GD_Visualizer import *
 from Ortho_Retriever import *
 from GeneDynamics_Tracker import *
 from GeneDynamics_Visualizer import *
@@ -62,7 +62,8 @@ Tree_Visualizer_parser.add_argument('--input_imap', metavar='file', required=Tru
 Tree_Visualizer_parser.add_argument('--gene_categories', metavar='file', nargs='+',  help='Gene category information')
 Tree_Visualizer_parser.add_argument('--keep_branch', type=int,  choices=[1, 0],help='[1/0] you can only input 1 or 0 Whether to preserve branch length information')
 Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='Tree style: [r/c] (rectangular) or (circular) (default: rectangular)')
-
+Tree_Visualizer_parser.add_argument('--gene_family', metavar='file',  required=False, help='Input species tree file')
+Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='Input species tree file')
 # Phylo_Rooter command
 Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Phylo_Rooter help')
 Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
@@ -114,7 +115,11 @@ def main():
         # Execute the Tree_Visualizer function
         if args.input_GF_list and args.input_imap :
             start_time = time.time()
-            os.makedirs(os.path.join(os.getcwd(), "pdf_result"))
+            directory = "pdf_result"
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            else:
+                print(f"The directory {directory} already exists.")
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             tree_style = args.tree_style
@@ -131,6 +136,7 @@ def main():
                 mark_gene_to_sptree_main(tre_dic,gene_category_list,sptree,gene2fam)
                 view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
             else:
+                gene2fam=None
                 view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
             end_time = time.time()
             execution_time = end_time - start_time
