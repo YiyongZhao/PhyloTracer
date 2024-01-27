@@ -27,53 +27,48 @@ def get_duplicated_species_num(node):
 
     return duplicate_count
 
-def get_intraspecies_and_interspecies_node_list(dup_node_name_list,Phylo_t0):
-    intraspecies_node_list=[]
-    interspecies_node_list=[]
-    for node in dup_node_name_list:
-        clade=Phylo_t0&node
-        sps=get_species_list(clade)
-        if len(set(sps))==1 :
-            intraspecies_node_list.append(node)
-        else:
-            interspecies_node_list.append(node)
-    return intraspecies_node_list,interspecies_node_list
     
-def get_target_node_list(dup_node_name_list,Phylo_t0,dup_percent,dup_species_num):
-    target_node_list=[]
-    for node in dup_node_name_list:
-        clade=Phylo_t0&node
-        sps=get_species_list(clade)
-        if get_duplicated_species_num(clade)/len(set(sps)) >=dup_percent and get_duplicated_species_num(clade)>=dup_species_num:
-            target_node_list.append(node)
-    return target_node_list
 
-def write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num, sptree,gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic):
+
+def write_gene_duplication_events(sp_dic,filename, tre_dic, support,dup_species_percent, dup_species_num, sptree,gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic):
     with open(filename,'w') as file:
-        file.write('tree_ID'+'\t'+'gd_id'+'\t'+'gd_support'+'\t'+'sub_calde_up'+'\t'+'sub_calde_up_support'+'\t'+'sub_calde_down'+'\t'+'sub_calde_down_support'+'\t'+'sps_level'+'\t'+'GD_dup_sps'+'\t'+'dup_ratio'+'\t'+'gd_type'+'\t'+'comment'+'\n') 
+        file.write('tree_ID'+'\t'+'gd_id'+'\t'+'gd_support'+'\t'+'gene1'+'\t'+'gene2'+'\t'+'level'+'\t'+'species'+'\t'+'GD_dup_sps'+'\t'+'dup_ratio'+'\t'+'gd_type'+'\t'+'comment'+'\n') 
+        gd_num=1
+        
         for tre_ID, tre_path in tre_dic.items():
             Phylo_t0 = read_phylo_tree(tre_path)
             Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
-            Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
-            num_tre_node(Phylo_t1)
-            dup_node_name_list = find_dup_node(Phylo_t1)
+            #Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
+            num_tre_node(Phylo_t0)
+            dup_node_name_list = find_dup_node(Phylo_t0)
             #Phylo_t0.write(outfile='num_tree/' + str(tre_ID) + '.nwk', format=1)
+            tree_dic={}
             for i in dup_node_name_list:
-                file.write(tre_ID+'\t'+i+'\t')
-                clade=Phylo_t1&i
+                
+                clade=Phylo_t0&i
                 sps=get_species_list(clade)
+                parent=sptree.get_common_ancestor(sps)
                 dup_sps=get_duplicated_species_num(clade)
                 dup_percent=dup_sps/len(set(sps))
                 model=get_model(clade,sptree)
-                child1=[new_named_gene2gene_dic[i] for i in clade.get_children()[0].get_leaf_names()]
-                child2=[new_named_gene2gene_dic[i] for i in clade.get_children()[1].get_leaf_names()]
-                if len(set(sps)) ==1:
-                    file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+voucher2taxa_dic[sps[0]]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'Intraspecific_gene_duplication_event'+'\n')
-                else:
-                    if clade.support >=support and dup_sps>=dup_species_num and dup_percent>=dup_species_percent:
-                        file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+voucher2taxa_dic[sps[0]]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'Targetspecific_gene_duplication_event'+'\n')
+                gene_pair1=gene_pair(clade)
+                null='null'
+                tree_dic[parent.name]=model
+                
+                for j in gene_pair1:
+                    file.write(tre_ID+'\t'+str(gd_num)+'\t')
+                    a,b=j.split('-')
+                    if a.split('_')[0] ==b.split('_')[0]:
+                        c=a.split('_')[0]
                     else:
-                        file.write(str(clade.support)+'\t'+'-'.join(child1)+'\t'+str(clade.get_children()[0].support)+'\t'+'-'.join(child2)+'\t'+str(clade.get_children()[1].support)+'\t'+voucher2taxa_dic[sps[0]]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'Interspecific_gene_duplication_event'+'\n')
+                        if a=='null':
+                            c=b.split('_')[0]
+                        else:
+                            c=a.split('_')[0]
+        
+                    file.write(str(clade.support)+'\t'+new_named_gene2gene_dic.get(a, null)+'\t'+new_named_gene2gene_dic.get(b, null)+'\t'+parent.name+'\t'+voucher2taxa_dic[c]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'-'+'\t''\n')
+                gd_num+=1
+            sp_dic.append(tree_dic)
  
 def get_model(clade,sptree):
     sps=get_species_list(clade)
@@ -139,7 +134,7 @@ def batch_gfs_traverse(tre_dic: dict, support_value: int, empty_count_dic: dict,
     for tre_path in tre_dic.values():
         Phylo_t0 = read_phylo_tree(tre_path)
         Phylo_t1=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
-        Phylo_t1 = root_tre_with_midpoint_outgroup(Phylo_t0)
+        #Phylo_t1 = root_tre_with_midpoint_outgroup(Phylo_t0)
         tre_ParaL,GF_leaves_S =find_tre_dup(Phylo_t1)
         for dup in tre_ParaL:
             leafs=dup.replace('<=>',',')
@@ -174,6 +169,84 @@ def mark_sptree(sptree:object,empty_count_dic:dict,voucher2taxa_dic)->object:
     sptree=rename_input_tre(sptree,voucher2taxa_dic)
     return sptree.render('species_tree_GD_Detector.PDF')
     
+def rename_species_tree(sptree:object, voucher2taxa_dic:dict)->object:
+    for node in sptree:
+        key_to_find = node.name
+        if key_to_find in voucher2taxa_dic.values():
+            new_name = next(key for key, value in voucher2taxa_dic.items() if value == key_to_find)
+            node.name = new_name           
+    return sptree
+    
+def num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree.
+    i = 1
+    for node in Phylo_t.traverse():
+        if not node.is_leaf():
+            node.name = "N" + str(i)
+            i += 1
+    return Phylo_t
+
+def get_species_list(Phylo_t:object)->list:
+    leaves = Phylo_t.get_leaf_names()
+    species_lst = []
+    for leaf in leaves:
+        species = leaf.split("_")[0]  # Assuming that the species name is located in the first part of the node name (leaf) with “_” as the delimiter
+        species_lst.append(species)
+    return species_lst
+
+
+def gene_pair(clade):
+    result_pairs = set()
+
+    child1, child2 = clade.get_children()[0].get_leaf_names(), clade.get_children()[1].get_leaf_names()
+
+    for tip1 in child1:
+        matching_tips = [tip2 for tip2 in child2 if tip1.split('_')[0] == tip2.split('_')[0]]
+        
+        if matching_tips:
+            result_pairs.update(f"{tip1}-{tip2}" for tip2 in matching_tips)
+        else:
+            result_pairs.add(f"{tip1}-null")
+
+    
+    for tip2 in child2:
+        if all(tip2.split('_')[0] != tip1.split('_')[0] for tip1 in child1):
+            result_pairs.add(f"null-{tip2}")
+
+    return result_pairs
+
+def find_tre_dup(Phylo_t:object) -> list:   #seperator either "@" or "_"
+    tre_ParaL=[]
+    GF_leaves_S = set(Phylo_t.get_leaf_names())
+    events = Phylo_t.get_descendant_evol_events()
+    for ev in events:
+        if ev.etype == "D":
+            tre_ParaL.append(",".join(ev.in_seqs)+"<=>"+",".join(ev.out_seqs))
+    return tre_ParaL,GF_leaves_S    
+
+
+def count_values_in_list_of_dicts(lst_of_dicts):
+    result_dict = {}
+
+    for i in lst_of_dicts:
+        for k, v in i.items():
+            if k not in result_dict:
+                result_dict[k] = {v: 1}
+            else:
+                if v in result_dict[k]:
+                    result_dict[k][v] += 1
+                else:
+                    result_dict[k][v] = 1
+
+    return result_dict
+
+def save_matrix_to_csv(result_dict, filename='output_matrix.csv'):
+
+    df = pd.DataFrame(result_dict).fillna(0).astype(int)
+    df = df.transpose()
+
+    df.to_csv(filename, index_label='')
+    
+
 if __name__ == "__main__":
     support=50
     dup_species_percent = 0.5
@@ -184,8 +257,11 @@ if __name__ == "__main__":
     num_tre_node(sptree)
     tre_dic=read_and_return_dict('GF.txt')
     filename = 'result.txt'
-    write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
+    sp_dic=[]
+    write_gene_duplication_events(sp_dic,filename, tre_dic, support,dup_species_percent, dup_species_num,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
     empty_count_dic=get_empty_count_dict(sptree)
     empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree,gene2new_named_gene_dic) 
     mark_sptree(sptree,empty_count_dic,voucher2taxa_dic)
+    p=count_values_in_list_of_dicts(sp_dic)    
+    save_matrix_to_csv(p)
    
