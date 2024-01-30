@@ -45,7 +45,7 @@ def create_tree_style(tree_style,tre_ID):
     ts.legend_position = 1
     
     ts.mode = tree_style
-    ts.scale = 50
+    ts.scale = 20
     ts.show_border = True
     ts.margin_bottom = 20
     ts.margin_left = 20
@@ -152,7 +152,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
         if (node, column, "aligned") not in faces_added:
             if species in color_dict:
                 color = color_dict[species].split('@')[-1]
-                face = TextFace("   ▐" + '  ' + color_dict[species].split('@')[0], fgcolor=color,ftype='Arial', fstyle='italic')
+                face = TextFace("   ▐" + '  ' + color_dict[species].split('@')[0], fgcolor=color,ftype='Arial')
                 add_face_to_node(node, face, column, position="aligned")
 
     def add_species_face(node, species):
