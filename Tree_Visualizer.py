@@ -194,8 +194,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                 add_gene_face(node, gene[4:])
             else:
                 pass
-
-    return Phylo_t1.render(file_name='pdf_result/'+str(tre_ID)+'.PDF',tree_style=ts)
+    return Phylo_t1.render('nobranch/'+tre_ID+'.pdf',tree_style=ts,w=210, units="mm")
 
 
 def get_matched_value(gene, gene2fam):
