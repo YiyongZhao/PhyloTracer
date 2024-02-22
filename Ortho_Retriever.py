@@ -1,15 +1,5 @@
 from __init__ import *
 
-def count_gene_loss(gene_tree:object, sptree:object)->int:
-    recon_tree, events = gene_tree.reconcile(sptree)
-    num=len(recon_tree)-len(gene_tree)
-    return str(num)
-
-def count_gene_dup(gene_tree:object)->int:
-    tre_ParaL,GF_leaves_S = find_tre_dup(gene_tree)
-    num=len(tre_ParaL)
-    return str(num)
-
 def rename_species_tree(sptree:object, voucher2taxa_dic:dict)->object:
     for node in sptree:
         key_to_find = node.name
@@ -131,13 +121,11 @@ def rename_OGs_tre_name(principal_gene_S:list,minor_othologs_L:list,tre_ID:str)-
 ##########################################################################
 def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic):
     o=open('result.txt','w')
-    o.write('tre_name'+'\t'+'single_copy_tree'+'\t'+'gene_loss_num'+'\t'+'gene_dup_num'+'\n')
+    o.write('tre_name'+'\t'+'single_copy_tree'+'\n')
     for tre_ID,tre_path in tre_dic.items():
         Phylo_t0=read_phylo_tree(tre_path)
         Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
         Phylo_t1=rename_input_tre(Phylo_t1,gene2new_named_gene_dic)
-        gene_loss_num=count_gene_loss(Phylo_t1,sptree)
-        gene_dup_num=count_gene_dup(Phylo_t1)
         principal_gene_S,filtered_offcut_ev_seqs_L0=offcut_tre(Phylo_t1,renamed_len_dic)
         minor_othologs_L=[]
         minor_othologs_L=iterator(filtered_offcut_ev_seqs_L0,Phylo_t1,gene2new_named_gene_dic,minor_othologs_L,tre_path,renamed_len_dic)
@@ -147,7 +135,7 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed
             Phylo_t0=read_phylo_tree(tre_path)
             Phylo_t=root_tre_with_midpoint_outgroup(Phylo_t0)
             Phylo_t_OG_L=extract_tree(OG_L,Phylo_t)
-            o.write(tre_name + "\t" + Phylo_t_OG_L.write()+'\t'+gene_loss_num+'\t'+gene_dup_num+'\t'+ "\n")
+            o.write(tre_name + "\t" + Phylo_t_OG_L.write()+ "\n")
     o.close()
 
 if __name__ == "__main__":
