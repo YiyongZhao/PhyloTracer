@@ -1,15 +1,22 @@
+import sys
 import subprocess
-software_path = "./software/dolloparsimony"  
 
+def run_dolloparsimony(file1, file2, file3, output_file):
+    command_list = ["./software/dolloparsimony" , file1, file2, file3, output_file]
+    try:
+        subprocess.run(command_list, check=True)
+        print("Program executed successfully！")
+    except subprocess.CalledProcessError as e:
+        print("Program execution failed:", e)
 
-mcl_file = "input.mcl"
-other_parameters = ["--param1", "value1", "--param2", "value2"]  
-
-
-command = [software_path, mcl_file] + other_parameters
-
-try:
-    subprocess.run(command, check=True)
-    print("Program executed successfully！")
-except subprocess.CalledProcessError as e:
-    print("Program execution failed!", e)
+if __name__ == "__main__":
+    if len(sys.argv) != 6:
+        print("Usage: python GeneDynamics_Tracker.py file1 file2 file3 output_file")
+        sys.exit(1)
+    
+    file1 = sys.argv[1]
+    file2 = sys.argv[2]
+    file3 = sys.argv[3]
+    output_file = sys.argv[4]
+    
+    run_dolloparsimony(file1, file2, file3, output_file)
