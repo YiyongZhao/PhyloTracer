@@ -1,5 +1,11 @@
 from __init__ import *
 
+def get_only_sps_tree(Phylo_t):
+    Phylo_t_c=Phylo_t.copy()
+    for node in Phylo_t_c:
+        node.name=node.name.split('_')[0]
+    return Phylo_t_c
+    
 def get_max_tree(trees):
     max_leaf_count = 0
     max_leaf_count_tree = None
@@ -12,7 +18,7 @@ def get_max_tree(trees):
 
     return max_leaf_count_tree
 
-def process(trees, result_dict,dic):
+def process(trees, result_dict):
     if len(trees) == 1:
         result_dict[trees[0].write(format=9)] = 1
         return []
@@ -29,22 +35,18 @@ def process(trees, result_dict,dic):
                 different_trees.append(i)
            
             
-        max_tree = get_max_tree(same_rf_trees)
-        result_dict[max_tree.write(format=9)] = len(same_rf_trees)
-        dic[max_tree.write(format=9)] = same_rf_trees
+        #max_tree = get_max_tree(same_rf_trees)
+        #result_dict[max_tree.write(format=9)] = len(same_rf_trees)
+        result_dict[max_tree.write(format=9)] = same_rf_trees
             
         #o.write(max_tree.write(format=9)+'\t'+str(len(same_rf_trees))+'\n')
         return different_trees
       
-def process_tree(trees, output_file,dic):
-    result_dict = {}
+def process_tree(trees,result_dict):
     remaining_trees = trees
     while len(remaining_trees) >= 1:
-        remaining_trees = process(remaining_trees, result_dict,dic)
-    sorted_result = sorted(result_dict.items(), key=lambda x: len(x[0]), reverse=True)
-    with open(output_file, 'w') as file:
-        for k, v in sorted_result:
-            file.write(f"{k}\t{v}\n")
+        remaining_trees = process(remaining_trees, result_dict)
+    
     
 if __name__ == "__main__":
     tre_dic=read_and_return_dict('GF_list.txt')   
