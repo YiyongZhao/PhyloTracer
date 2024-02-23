@@ -1,22 +1,6 @@
 from __init__ import *
 import os
-
-def switch_tree(phylo_tree):
-    
-    down_child = phylo_tree.get_children()[1]
-    up_child = phylo_tree.get_children()[0]
-    
-    new_tree = Tree()
-    new_tree.add_child(down_child)
-    new_tree.add_child(up_child)
-    
-    return new_tree
-
-def switch_tree(phylo_tree):
-    new_tree=phylo_tree.copy()
-    new_tree.swap_children()
-    return new_tree
-    
+  
 def get_only_sps_tree(Phylo_t):
     for node in Phylo_t:
         node.name=node.name.split('_')[0]
@@ -89,39 +73,9 @@ def has_dup_clade(tree):
 
     return compare_branch(tree)
 
-def rejust_clade_dic(clade_dic):
-    new_dic={}
-    for k,v in clade_dic.items():
-        t=Tree(k)
-        
-        if len(t.get_children())==2:
-            t1=switch_tree(t)
-            t2=t1.write(format=9)
-            t3=t.write(format=9)
-        else:
-            tt=t.get_children()[0]
-            t1=switch_tree(tt)
-            t2=t1.write(format=9)
-            t3=tt.write(format=9)
-            
-        if t2 in new_dic  :
-            new_dic[t3]=new_dic[t3]+v
-        else:
-            new_dic[t2]=v
-        
-            
-    return new_dic
 
-def get_num(node):
-    def multiply_elements(lst):
-        result = 1
-        for num in lst:
-            result *= num
-        return result
-    lst=[]
-    for i in node.traverse():
-        lst.append(i.label)
-    return multiply_elements(lst)
+
+
 
 def get_relative_clade_dic(relative_clade_dic,Phylo_t):
     for node in Phylo_t.traverse('postorder'):
