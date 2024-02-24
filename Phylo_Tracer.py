@@ -238,7 +238,7 @@ def main():
             input_taxa=args.input_taxa
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
-            prune_main()
+            prune_main(tre_dic,taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
