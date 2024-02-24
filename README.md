@@ -44,7 +44,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 5. **GD_Detector:** Assists in identifying hybridization signals in gene trees.
 6. **GD_Visualizer:** Visualize the results of GD_Detector and summarize them on the species tree.
 7. **GD_Loss_Tracker:** Explore and summarize the situation of GD_loss.
-8. **GD_Loss_Visualizer:** Visualize and summarize the results of GD-Loss Tracker.
+8. **GD_Loss_Visualizer:** Visualize and summarize the results of GD_Loss Tracker.
 9. **Ortho_Retriever:** Splits multi-copy gene trees.
 10. **GeneDynamics_Tracker:** Explore and summarize the loss and replication of genes.
 11. **GeneDynamics_Visualizer:** According to gene_gain_and_generate visualized PDF files for loss information generation.
