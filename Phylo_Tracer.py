@@ -3,12 +3,16 @@ import argparse
 import time
 from Phylo_Rooter import *
 from PhyloNoise_Filter import *
+from TreeTopology_Summarizer import *
 from Tree_Visualizer import *
 from GD_Detector import *
-#from GD_Visualizer import *
+from GD_Visualizer import *
+from GD_Loss_Tracker import *
+from GD_Loss_Visualizer import *
 from Ortho_Retriever import *
 from GeneDynamics_Tracker import *
 from GeneDynamics_Visualizer import *
+
 #from Hybrid_Tracer import *
 #from Hybrid_Visualizer import *
 
@@ -78,10 +82,11 @@ Ortho_Retriever_parser.add_argument('--input_imap', metavar='file',  required=Tr
 Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='file',  required=True, help='Input gene length list')
 Ortho_Retriever_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
-# Statistical_Topology command
-statistical_Topology_parser = subparsers.add_parser('Statistical_Topology', help='Statistical_Topology help')
-statistical_Topology_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-statistical_Topology_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+# TreeTopology_Summarizer command
+treetopology_summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help')
+treetopology_summarizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+treetopology_summarizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+treetopology_summarizer_parser.add_argument('--outfile', metavar='file',  required=True, help='Out filename')
 
 # GD_Detector command
 GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
@@ -186,20 +191,21 @@ def main():
         else:
             print("Required arguments for Ortho_Retriever command are missing.")
             
-    elif args.command == 'Statistical_Topology':
-        # Execute the Statistical_Topology function
+    elif args.command == 'treetopology_summarizer':
+        # Execute the treetopology_summarizer function
         if args.input_GF_list and args.input_imap :
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
+            outfile=args.outfile
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
-            statistical_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic)
+            statistical_main(tre_dic,outfile,gene2new_named_gene_dic,new_named_gene2gene_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for Statistical_Topology command are missing.")
+            print("Required arguments for treetopology_summarizer command are missing.")
 
 
     elif args.command == 'GD_Detector':
@@ -266,13 +272,13 @@ def main():
             print("Required arguments for Gene_Gain_And_Loss_Visualization command are missing.")
             
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split, Statistical_Topology, GD_Detector, Eliminate_PhyloNoise}")
+        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split, treetopology_summarizer, GD_Detector, Eliminate_PhyloNoise}")
         print()
         print("optional arguments:")
         print('  -h, --help            show this help message and exit')
         print()
         print('available programs::')
-        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split, Statistical_Topology, GD_Detector, Eliminate_PhyloNoise}')
+        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split, treetopology_summarizer, GD_Detector, Eliminate_PhyloNoise}')
 
 
 if __name__ == "__main__":
