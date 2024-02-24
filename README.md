@@ -45,7 +45,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 6. **GD_Visualizer:**
 7. **GD_Loss_Tracker:**
 8. **GD_Loss_Visualizer:**
-9. **Ortho_Spliter:** Splits multi-copy gene trees.
+9. **Ortho_Retriever:** Splits multi-copy gene trees.
 10. **GeneDynamics_Tracker:** 
 11. **GeneDynamics_Visualizer:** According to gene_gain_and_generate visualized PDF files for loss information generation.
 12. **Hybrid_Tracer:**
