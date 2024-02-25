@@ -72,7 +72,7 @@ git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 
 conda env create -f environment.yml
-conda activate my_env
+conda activate phylotracer
 
 python setup.py install
 ```
