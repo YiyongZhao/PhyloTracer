@@ -35,7 +35,7 @@ PhyloTracer is a User-Friendly Toolkit for Gene Tree RootingGene Duplication, Ex
 
 PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring true orthologous genes. It also includes functionality to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
 
-## Features
+## Modlue features
 
 1. **Phylo_Rooter:** Enhances gene tree rooting accuracy.
 2. **PhyloNoise_Filter:** Employs provided labels to filter and identify putative orthologous genes.
@@ -54,7 +54,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 ## Installation
 
-### Requirements:
+### Required dependencies:
 * Python 3.0+
 * Python Modules:
   * ete3
