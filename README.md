@@ -132,9 +132,9 @@ pip install PhyloTracer
     
 
 ## Contributing
-```
-If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
-```
+  ```
+  If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
+  ```
 ## Version History
 ```
 Check the [Changelog](CHANGELOG.md) for details on different versions and updates.
