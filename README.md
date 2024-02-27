@@ -132,21 +132,20 @@ pip install PhyloTracer
     
 
 ## Contributing
-
-If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
-
-## Version History
-
-Check the [Changelog](CHANGELOG.md) for details on different versions and updates.
-
-## License
-
-PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) file for details.
-
-## Contact
-
-For any questions or suggestions, feel free to contact us via [email](mailto:your.email@example.com).
 ```
+If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
+```
+## Version History
+```
+Check the [Changelog](CHANGELOG.md) for details on different versions and updates.
+```
+## License
+```
+PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) file for details.
+```
+## Contact
+```
+For any questions or suggestions, feel free to contact us via [email](mailto:your.email@example.com).
 Feel free to customize it further according to your preferences or additional details you want to include.
 ```
 
