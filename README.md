@@ -147,8 +147,6 @@ PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) fil
 
 For any questions or suggestions, feel free to contact us via [email](mailto:your.email@example.com).
 ```
-
 Feel free to customize it further according to your preferences or additional details you want to include.
-
-`
+```
 
