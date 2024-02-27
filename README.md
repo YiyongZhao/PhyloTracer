@@ -69,13 +69,10 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 ### Clone and Install:
 
 ```bash
-
-git clone https://github.com/YiyongZhao/PhyloTracer.git  
+git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
-
 conda env create -f environment.yml
 conda activate phylotracer
-
 python setup.py install
 ```
 
