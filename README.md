@@ -13,7 +13,7 @@
  ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║ 
  ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝                             
                                                                                              
-   PhyloTracer: A Comprehensive and User-Friendly Toolkit for evolutionary genomic analsis.  
+   PhyloTracer: A Comprehensive and User-Friendly Toolkit for Evolutionary Genomic Analsis.  
                                                                                              
     Pypi: https://pypi.org/project/PhyloTracer                                               
     Github: https://github.com/YiyongZhao/PhyloTracer                                        
