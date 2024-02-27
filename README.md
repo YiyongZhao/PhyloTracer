@@ -45,8 +45,8 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 9. **Ortho_Retriever:** Splits multi-copy gene trees into distinct single orthologous groups/trees.
 10. **GeneDynamics_Tracker:** Investigates and summarizes gene expansion and contraction events.
 11. **GeneDynamics_Visualizer:** Generates visual reports detailing gene gain and loss events on nodes across species tree.
-12. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect hybridization signals.
-13. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for hybridization signal detection.
+12. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect species hybridization signals.
+13. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for species hybridization signal detection.
 14. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN predictions.
 
 
