@@ -69,7 +69,7 @@ def get_absolutely_result(outfile,trees,new_named_gene2gene_dic):
     with open(outfile+'_absolutely', 'w') as file:
         for k,v in dic2.items():
             t=Tree(k)
-            t1=rename_input_tre(t,new_named_gene2gene_dic)v
+            t1=rename_input_tre(t,new_named_gene2gene_dic)
             t1_str=t1.write(format=9)
             file.write(t1_str+'\t'+str(v)+'\n')
 
