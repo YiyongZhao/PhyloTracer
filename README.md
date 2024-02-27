@@ -40,9 +40,9 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 4. **Tree_Visualizer:** Provides an intuitive visualization for phylogenetic trees, enable labeling tips with multiple-layer annotations.
 5. **GD_Detector:**  Facilitates the identification of gene duplication events by reconciliaiton of gene trees and species tree.
 6. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
-7. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events for each tip.
+7. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events for each tips across species tree.
 8. **GD_Loss_Visualizer:** Presents a visual summary of gene duplication loss event on the context of speices tree.
-9. **Ortho_Retriever:** Splits multi-copy gene trees into distinct single orthologous groups/trees.
+9. **Ortho_Retriever:** Putative orthologs inferrenec from large-scale gene family trees across numerous species.
 10. **GeneDynamics_Tracker:** Investigates and summarizes gene expansion and contraction events.
 11. **GeneDynamics_Visualizer:** Generates visual reports detailing gene gain and loss events on nodes across species tree.
 12. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect species hybridization signals.
