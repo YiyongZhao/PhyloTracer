@@ -28,15 +28,15 @@
 
 
 # PhyloTracer
-
+```
 PhyloTracer is a User-Friendly Toolkit for Gene Tree RootingGene Duplication, Expansion and Contraction ldentification.Ortholog Retrieval, Phylogenetic Noise Elimination, SpeciesHybridization Detection, and Visualization.
-
+```
 ## Introduction
-
+```
 PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring true orthologous genes. It also includes functionality to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
-
+```
 ## Module features
-
+```
 1. **Phylo_Rooter:** Enhances gene tree rooting accuracy.
 2. **PhyloNoise_Filter:** Employs provided labels to filter and identify putative orthologous genes.
 3. **TreeTopology_Summarizer:** Counts the occurrences of both absolute and relative topologies of single-copy gene trees.
@@ -51,7 +51,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 12. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect hybridization signals.
 13. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for hybridization signal detection.
 14. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN predictions.
-
+```
 ## Installation
 
 ### Required dependencies:
