@@ -37,19 +37,20 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 ## Features
 
-1. **Phylo_Rooter:** Provides more accurate gene tree rooting.
-2. **PhyloNoise_Filter:** Filters based on provided labels to identify true orthologous genes.
-3. **TreeTopology_Summarizer:** Counts the occurrences of the absolute topology and relative topology of single copy gene tree.
-4. **Tree_Visualizer:** Offers an intuitive visualization of phylogenetic trees.
-5. **GD_Detector:** Assists in identifying hybridization signals in gene trees.
-6. **GD_Visualizer:** Visualize the results of GD_Detector and summarize them on the species tree.
-7. **GD_Loss_Tracker:** Explore and summarize the situation of GD_loss.
-8. **GD_Loss_Visualizer:** Visualize and summarize the results of GD_Loss Tracker.
-9. **Ortho_Retriever:** Splits multi-copy gene trees.
-10. **GeneDynamics_Tracker:** Explore and summarize the loss and replication of genes.
-11. **GeneDynamics_Visualizer:** According to gene_gain_and_generate visualized PDF files for loss information generation.
-12. **Hybrid_Tracer:** Detecting hybrid signals.
-13. **Hybrid_Visualizer:** Visualize the results of Hybrid_Tracer.
+1. **Phylo_Rooter:** Enhances gene tree rooting accuracy.
+2. **PhyloNoise_Filter:** Employs provided labels to filter and identify putative orthologous genes.
+3. **TreeTopology_Summarizer:** Counts the occurrences of both absolute and relative topologies of single-copy gene trees.
+4. **Tree_Visualizer:** Provides an intuitive visualization for phylogenetic trees, enable labeling tips with multiple-layer annotations.
+5. **GD_Detector:**  Facilitates the identification of gene duplication events by reconciliaiton of gene trees and species tree.
+6. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
+7. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events for each tip.
+8. **GD_Loss_Visualizer:** Presents a visual summary of gene duplication loss event on the context of speices tree.
+9. **Ortho_Retriever:** Splits multi-copy gene trees into distinct single orthologous groups/trees.
+10. **GeneDynamics_Tracker:** Investigates and summarizes gene expansion and contraction events.
+11. **GeneDynamics_Visualizer:** Generates visual reports detailing gene gain and loss events on nodes across species tree.
+12. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect hybridization signals.
+13. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for hybridization signal detection.
+14. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN predictions.
 
 ## Installation
 
