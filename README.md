@@ -53,7 +53,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 ## Installation
 
 ### Required dependencies:
-```
+
 * Python 3.0+
 * Python Modules:
   * ete3
@@ -63,7 +63,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
   * time
   * PyPDF4
   * matplotlib
-```
+
 ### Clone and Install:
 
 ```bash
@@ -131,20 +131,20 @@ python PhyloTracer.py GeneDynamics_Visualizer  --input_sps_tree sptree.nwk --inp
     
 
 ## Contributing
-```
+
 If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
-```
+
 ## Version History
-```
+
 Check the [Changelog](CHANGELOG.md) for details on different versions and updates.
-```
+
 ## License
-```
+
 PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) file for details.
-```
+
 ## Contact
-```
+
 For any questions or suggestions, feel free to contact us via [email](mailto:your.email@example.com).
 Feel free to customize it further according to your preferences or additional details you want to include.
-```
+
 
