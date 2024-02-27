@@ -73,7 +73,7 @@ def get_absolutely_result(outfile,trees,new_named_gene2gene_dic):
             t1_str=t1.write(format=9)
             file.write(t1_str+'\t'+str(v)+'\n')
 
-def statistical_main(tre_dic,outfile,gene2new_named_gene_dic,new_named_gene2gene_dic)
+def statistical_main(tre_dic,outfile,gene2new_named_gene_dic,new_named_gene2gene_dic):
     only_sptrees=[]
     for k,v in tre_dic.items():
         t=read_tree(v)
