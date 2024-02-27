@@ -13,9 +13,7 @@
 # ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║ #
 # ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝ #                            
 #                                                                                             #
-#    PhyloTracer: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication orgin and
-#loss, Gene Family Expansion and Contraction ldentification, Ortholog Retrieval, Phylogenetic Noise Elimination,        #
-#    SpeciesHybridization Detection, and Visualization.                                       #
+#   PhyloTracer: A Comprehensive and User-Friendly Toolkit for evolutionary genomic analsis.  #
 #                                                                                             #
 #    Pypi: https://pypi.org/project/PhyloTracer                                               #
 #    Github: https://github.com/YiyongZhao/PhyloTracer                                        #
@@ -28,7 +26,7 @@
 
 # PhyloTracer
 
-PhyloTracer is a User-Friendly Toolkit for Gene Tree RootingGene Duplication, Expansion and Contraction ldentification.Ortholog Retrieval, Phylogenetic Noise Elimination, SpeciesHybridization Detection, and Visualization.
+A User-Friendly Toolkit for Comprehensive inference of Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Gene Family Expansion and Contraction, Ortholog Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection, and Visualization.
 
 ## Introduction
 
