@@ -85,55 +85,55 @@ pip install PhyloTracer
 
 ## Usage
 
-### Example Scenarios:
+## Example Scenarios:
 
 1. **Phylo_Rooter:**
 
-    ```bash
-    python PhyloTracer.py Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
-    ```
+```bash
+python PhyloTracer.py Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
+```
 
 2. **PhyloNoise_Filter:**
 
-    ```bash
-    python PhyloTracer.py PhyloNoise_Filter --input_GF_list GF.txt --input_taxa taxa
-    ```
+```bash
+python PhyloTracer.py PhyloNoise_Filter --input_GF_list GF.txt --input_taxa taxa
+```
     
 3. **TreeTopology_Summarizer:**
 
-    ```bash
-    python PhyloTracer.py TreeTopology_Summarizer --input_GF_list GF.txt --input_imap imap.txt
-    ```
+```bash
+python PhyloTracer.py TreeTopology_Summarizer --input_GF_list GF.txt --input_imap imap.txt
+```
 
 4. **Tree_Visualizer:**
 
-    ```bash
-    python PhyloTracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt --gene_categories genus order --keep_branch 1 --tree_style r
-    ```
+```bash
+Python PhyloTracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt --gene_categories genus order --keep_branch 1 --tree_style r
+```
 
 5. **GD_Detector:**
 
-    ```bash
-    python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --support 50 --dup_species_radio 0.5 --dup_species_num 2
-    ```
+```bash
+python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --support 50 --dup_species_radio 0.5 --dup_species_num 2
+```
 
 6. **Ortho_Retriever:**
 
-    ```bash
-    python PhyloTracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
-    ```
+```bash
+python PhyloTracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
+```
 
 7. **GeneDynamics_Visualizer:**
 
-    ```bash
-    python PhyloTracer.py GeneDynamics_Visualizer  --input_sps_tree sptree.nwk --input_summary_tree summary_tree
-    ```
+```bash
+python PhyloTracer.py GeneDynamics_Visualizer  --input_sps_tree sptree.nwk --input_summary_tree summary_tree
+```
     
 
 ## Contributing
-  ```
-  If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
-  ```
+```
+If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
+```
 ## Version History
 ```
 Check the [Changelog](CHANGELOG.md) for details on different versions and updates.
