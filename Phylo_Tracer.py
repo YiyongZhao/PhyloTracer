@@ -83,10 +83,10 @@ Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='file',  requ
 Ortho_Retriever_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
 # TreeTopology_Summarizer command
-treetopology_summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help')
-treetopology_summarizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-treetopology_summarizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-treetopology_summarizer_parser.add_argument('--outfile', metavar='file',  required=True, help='Out filename')
+TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help')
+TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+TreeTopology_Summarizer_parser.add_argument('--outfile', metavar='file',  required=True, help='Out filename')
 
 # GD_Detector command
 GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
@@ -191,8 +191,8 @@ def main():
         else:
             print("Required arguments for Ortho_Retriever command are missing.")
             
-    elif args.command == 'treetopology_summarizer':
-        # Execute the treetopology_summarizer function
+    elif args.command == 'TreeTopology_Summarizer':
+        # Execute the TreeTopology_Summarizer function
         if args.input_GF_list and args.input_imap :
             start_time = time.time()
             input_GF_list = args.input_GF_list
@@ -200,12 +200,12 @@ def main():
             outfile=args.outfile
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
-            statistical_main(tre_dic,outfile,gene2new_named_gene_dic,new_named_gene2gene_dic)
+            statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for treetopology_summarizer command are missing.")
+            print("Required arguments for TreeTopology_Summarizer command are missing.")
 
 
     elif args.command == 'GD_Detector':
@@ -239,7 +239,8 @@ def main():
         # Execute the PhyloNoise_Filter function
         if args.input_GF_list and args.input_taxa  :
             start_time = time.time()
-            os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
+            os.makedirs(os.path.join(os.getcwd(), "pruned_tree"), exist_ok=True)
+            os.makedirs(os.path.join(os.getcwd(), "pdf"), exist_ok=True)
             input_GF_list = args.input_GF_list
             input_taxa=args.input_taxa
             tre_dic = read_and_return_dict(input_GF_list)
@@ -272,13 +273,13 @@ def main():
             print("Required arguments for Gene_Gain_And_Loss_Visualization command are missing.")
             
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split, treetopology_summarizer, GD_Detector, Eliminate_PhyloNoise}")
+        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split, TreeTopology_Summarizer, GD_Detector, Eliminate_PhyloNoise}")
         print()
         print("optional arguments:")
         print('  -h, --help            show this help message and exit')
         print()
         print('available programs::')
-        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split, treetopology_summarizer, GD_Detector, Eliminate_PhyloNoise}')
+        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split, TreeTopology_Summarizer, GD_Detector, Eliminate_PhyloNoise}')
 
 
 if __name__ == "__main__":
