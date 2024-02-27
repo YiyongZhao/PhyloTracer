@@ -222,8 +222,11 @@ def calculate_insertion_index(node):
 
 
 def prune_main(tre_dic,taxa_dic):
+    o=open('delete_gene.txt','a')
     for k,v in tre_dic.items():
+        o.write(k+'\t')
         t=Tree(v)
+        leafs_before=set(t.get_leaf_names())
         t.ladderize()
         t.resolve_polytomy(recursive=True)
         t.sort_descendants("support")
@@ -245,12 +248,18 @@ def prune_main(tre_dic,taxa_dic):
         ts1.show_leaf_name=False
         ts1.title.add_face(TextFace(k1+'_after', fsize=10), column=0)
         t.render(file_name=k1+'_after.pdf',tree_style=ts1)
-        merge_pdfs_side_by_side(k1+'_before.pdf', k1+'_after.pdf', k1+'.pdf')
+        merge_pdfs_side_by_side(k1+'_before.pdf', k1+'_after.pdf', 'pdf/'+k1+'.pdf')
         os.remove(k1+'_before.pdf')
         os.remove(k1+'_after.pdf')
 
         t1=rename_output_tre(t)
+        leafs_after=set(t1.get_leaf_names())
+        differ=leafs_before-leafs_after
+        for i in differ:
+            o.write(i+'\t')
+        o.write('\n')
         t1.write(outfile='pruned_tree/'+k1+'.nwk',format=0)
+    o.close()
     
 if __name__ == "__main__":
     os.makedirs(os.path.join(os.getcwd(), "pruned_tree"))
