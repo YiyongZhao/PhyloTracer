@@ -3,6 +3,8 @@ from ete3 import PhyloTree,Tree,NodeStyle,TreeStyle,TextFace
 import random
 import numpy as np
 import os
+import shutil
+
 def generate_sps_voucher(sps_num:int) -> list:
     characters = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)] + [str(i) for i in range(10)]
     unique_strings = set()
@@ -45,7 +47,7 @@ def read_tree(tre_path:str) -> object:
 def read_phylo_tree(tre_path:str) -> object:
     return PhyloTree(tre_path)
 ######################################################################################################################
-def isRoot_Judger(Phylo_t:object)->bool:#Translate the function that determines whether the input phylogenetic tree has a negated root.
+def is_rooted(Phylo_t:object)->bool:#Translate the function that determines whether the input phylogenetic tree has a negated root.
     if len(Phylo_t.get_children()) ==2:
         return True
 
@@ -74,12 +76,10 @@ def num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree.
     return Phylo_t
 
 def get_species_list(Phylo_t:object)->list:
-    leaves = Phylo_t.get_leaf_names()
-    species_lst = []
-    for leaf in leaves:
-        species = leaf.split("_")[0]  # Assuming that the species name is located in the first part of the node name (leaf) with “_” as the delimiter
-        species_lst.append(species)
-    return species_lst
+    return [leaf.name.split('_')[0] for leaf in Phylo_t.iter_leaves()]
+
+def get_species_set(Phylo_t:object)->set:
+    return set(leaf.name.split('_')[0] for leaf in Phylo_t.iter_leaves())
 
 class TreeNode:
     def __init__(self, val, branch_length):
@@ -121,8 +121,8 @@ def calculate_species_overlap(gene_tree:object)->int:
     return overlap_ratio
 
 def calculate_species_num(node:object)->int:# Obtain the number of species under a node
-    leaf_list=node.get_leaf_names()
-    species_num=len(set(i.split('_')[0] for i in leaf_list))    
+    
+    species_num=len(get_species_set(node))
     return species_num
 
 def calculate_gd_num(Phylo_t:object)->int:
