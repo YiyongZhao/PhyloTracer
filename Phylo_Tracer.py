@@ -2,7 +2,8 @@ import sys, textwrap
 import argparse
 import time
 from Phylo_Rooter import *
-from PhyloNoise_Filter import *
+from PhyloNoise_Filter_MC import *
+from PhyloNoise_Filter_SC import *
 from TreeTopology_Summarizer import *
 from Tree_Visualizer import *
 from GD_Detector import *
@@ -98,9 +99,16 @@ GD_Detector_parser.add_argument('--dup_species_num', type=int ,required=True,hel
 GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
 # PhyloNoise_Filter command
-PhyloNoise_Filter_parser = subparsers.add_parser('PhyloNoise_Filter', help='PhyloNoise_Filter help')
-PhyloNoise_Filter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-PhyloNoise_Filter_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+PhyloNoise_Filter_SC_parser = subparsers.add_parser('PhyloNoise_Filter_SC', help='PhyloNoise_Filter_SC help')
+PhyloNoise_Filter_SC_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+PhyloNoise_Filter_SC_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+PhyloNoise_Filter_SC_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+
+PhyloNoise_Filter_MC_parser = subparsers.add_parser('PhyloNoise_Filter_MC', help='PhyloNoise_Filter_MC help')
+PhyloNoise_Filter_MC_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+PhyloNoise_Filter_MC_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+PhyloNoise_Filter_MC_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+
 
 # Gene_Gain_And_Loss_Visualization command
 Gene_Gain_And_Loss_Visualization_parser = subparsers.add_parser('Gene_Gain_And_Loss_Visualization', help='Gene_Gain_And_Loss_Visualization help')
@@ -120,11 +128,10 @@ def main():
         # Execute the Tree_Visualizer function
         if args.input_GF_list and args.input_imap :
             start_time = time.time()
-            directory = "pdf_result"
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-            else:
-                print(f"The directory {directory} already exists.")
+            dir_path = os.path.join(os.getcwd(), "pdf_result")
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
+            os.makedirs(dir_path)
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             tree_style = args.tree_style
@@ -153,6 +160,10 @@ def main():
         # Execute the Phylo_Rooter function
         if args.input_GF_list and args.input_imap and args.input_sps_tree and args.input_gene_length:
             start_time = time.time()
+            dir_path = os.path.join(os.getcwd(), "rooted_trees")
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
+            os.makedirs(dir_path)
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             input_sps_tree = args.input_sps_tree
@@ -235,22 +246,42 @@ def main():
         else:
             print("Required arguments for GD_Detector command are missing.")
             
-    elif args.command == 'PhyloNoise_Filter':
+    elif args.command == 'PhyloNoise_Filter_SC':
         # Execute the PhyloNoise_Filter function
-        if args.input_GF_list and args.input_taxa  :
+        if args.input_GF_list and args.input_taxa  and args.long_branch_index:
             start_time = time.time()
-            os.makedirs(os.path.join(os.getcwd(), "pruned_tree"), exist_ok=True)
-            os.makedirs(os.path.join(os.getcwd(), "pdf"), exist_ok=True)
+            #os.makedirs(os.path.join(os.getcwd(), "pruned_tree"), exist_ok=True)
+            #os.makedirs(os.path.join(os.getcwd(), "pdf"), exist_ok=True)
             input_GF_list = args.input_GF_list
             input_taxa=args.input_taxa
+            long_brancch_index=args.long_branch_index
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
-            prune_main(tre_dic,taxa_dic)
+            prune_sc_main(tre_dic,taxa_dic,long_brancch_index)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for PhyloNoise_Filter command are missing.")
+            print("Required arguments for PhyloNoise_Filter_SC command are missing.")
+
+
+    elif args.command == 'PhyloNoise_Filter_MC':
+        # Execute the PhyloNoise_Filter function
+        if args.input_GF_list and args.input_taxa and args.long_branch_index :
+            start_time = time.time()
+            #os.makedirs(os.path.join(os.getcwd(), "pruned_tree"), exist_ok=True)
+            #os.makedirs(os.path.join(os.getcwd(), "pdf"), exist_ok=True)
+            input_GF_list = args.input_GF_list
+            input_taxa=args.input_taxa
+            long_brancch_index=args.long_branch_index
+            tre_dic = read_and_return_dict(input_GF_list)
+            taxa_dic=read_and_return_dict(input_taxa)
+            prune_mc_main(tre_dic,taxa_dic,long_brancch_index)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print("Program execution time:", execution_time, "s")
+        else:
+            print("Required arguments for PhyloNoise_Filter_MC command are missing.")
 
     elif args.command == 'Gene_Gain_And_Loss_Visualization':
         # Execute the Gene_Gain_And_Loss_Visualization function
