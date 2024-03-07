@@ -64,14 +64,13 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
   * pypdf4
   * matplotlib
 
-### Clone and Install:
+### Clone and Install Environment:
 
 ```bash
 git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 conda env create -f environment.yml
 conda activate phylotracer
-python setup.py install
 ```
 
 ### Install from PyPI with pip:
