@@ -4,6 +4,8 @@ import time
 from Phylo_Rooter import *
 from PhyloNoise_Filter_MC import *
 from PhyloNoise_Filter_SC import *
+from Phylo_Collapse import *
+from Phylo_Collapse_Visualizer import*
 from TreeTopology_Summarizer import *
 from Tree_Visualizer import *
 from GD_Detector import *
@@ -93,7 +95,8 @@ TreeTopology_Summarizer_parser.add_argument('--outfile', metavar='file',  requir
 GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
 GD_Detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 GD_Detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-GD_Detector_parser.add_argument('--support', type=int,required=True, help='GD node support [50-100]')
+GD_Detector_parser.add_argument('--gd_support', type=int,required=True, help='GD node support [50-100]')
+GD_Detector_parser.add_argument('--clade_support', type=int,required=True, help='The children support of GD node [50-100]')
 GD_Detector_parser.add_argument('--dup_species_radio', type=float ,required=True,help='The proportion of species with species duplications under the GD node [0-1]')
 GD_Detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
 GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
@@ -108,6 +111,16 @@ PhyloNoise_Filter_MC_parser = subparsers.add_parser('PhyloNoise_Filter_MC', help
 PhyloNoise_Filter_MC_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 PhyloNoise_Filter_MC_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 PhyloNoise_Filter_MC_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+
+
+Phylo_Collapse_parser = subparsers.add_parser('Phylo_Collapse', help='Phylo_Collapse help')
+Phylo_Collapse_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+Phylo_Collapse_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+Phylo_Collapse_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+
+Phylo_Collapse_Visualizer_parser = subparsers.add_parser('Phylo_Collapse_Visualizer', help='Phylo_Collapse_Visualizer help')
+#Phylo_Collapse_Visualizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+#Phylo_Collapse_Visualizer_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 
 
 # Gene_Gain_And_Loss_Visualization command
@@ -221,25 +234,25 @@ def main():
 
     elif args.command == 'GD_Detector':
         # Execute the GD_Detector function
-        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.support and args.dup_species_radio and args.dup_species_num :
+        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.gd_support and args.clade_support and args.dup_species_radio and args.dup_species_num :
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             input_sps_tree = args.input_sps_tree
-            support=args.support
+            gd_support=args.gd_support
+            clade_support=args.clade_support
             dup_species_percent = args.dup_species_radio
             dup_species_num = args.dup_species_num
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
-            sptree=PhyloTree(input_sps_tree)
-            sptree=rename_species_tree(sptree, voucher2taxa_dic)
-            sptree=num_tre_node(sptree)
-            empty_count_dic= {node.name: 0 for node in sptree.traverse()}
-            sps_tree=sptree.copy()
-            tre_dic = read_and_return_dict(input_GF_list)
-            empty_count_dic=batch_gfs_traverse(tre_dic, support, empty_count_dic,sptree,gene2new_named_gene_dic) 
-            mark_sptree(sptree,empty_count_dic,voucher2taxa_dic)
-            filename = 'result.txt'
-            write_gene_duplication_events(filename, tre_dic, support,dup_species_percent, dup_species_num,sps_tree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
+            sptree=PhyloTree(args.input_sps_tree)
+            num_tre_node(sptree)
+            print(sptree.write(format=1))
+            renamed_sptree=rename_species_tree(sptree, voucher2taxa_dic)
+            
+            
+            #tre_dic = read_and_return_dict(input_GF_list)
+            #filename = 'result.txt'
+            #write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
@@ -283,6 +296,45 @@ def main():
         else:
             print("Required arguments for PhyloNoise_Filter_MC command are missing.")
 
+
+    elif args.command == 'Phylo_Collapse':
+        # Execute the PhyloNoise_Filter function
+        if args.input_GF_list and args.input_taxa and args.input_sps_tree :
+            start_time = time.time()
+            #os.makedirs(os.path.join(os.getcwd(), "pruned_tree"), exist_ok=True)
+            #os.makedirs(os.path.join(os.getcwd(), "pdf"), exist_ok=True)
+            input_GF_list = args.input_GF_list
+            input_taxa=args.input_taxa
+            sptree=Tree(args.input_sps_tree)
+            tre_dic = read_and_return_dict(input_GF_list)
+            taxa_dic=read_and_return_dict(input_taxa)
+            collapse_main(tre_dic,taxa_dic,sptree)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print("Program execution time:", execution_time, "s")
+        else:
+            print("Required arguments for Phylo_Collapse command are missing.")
+
+    elif args.command == 'Phylo_Collapse_Visualizer':
+        # Execute the PhyloNoise_Filter function
+        #if args.input_GF_list and args.input_taxa :
+        start_time = time.time()
+        if not os.path.exists('collapse_tree'):
+            print("Error: 'collapse_tree' folder does not exist in the current directory. Please perform Phylo_Collapse processing first")
+        else:
+                #input_GF_list = args.input_GF_list
+                #input_taxa=args.input_taxa
+            
+            tre_dic = {i.split('.')[0]:'collapse_tree/'+i for i in os.listdir('collapse_tree')}
+            taxa_dic=read_and_return_dict('node2taxa.txt')
+            c_color_dic=get_taxa_to_color_dict(taxa_dic)
+            collapse_visual_main(tre_dic,c_color_dic)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print("Program execution time:", execution_time, "s")
+        #else:
+            #print("Required arguments for Phylo_Collapse_Visualizer command are missing.")
+
     elif args.command == 'Gene_Gain_And_Loss_Visualization':
         # Execute the Gene_Gain_And_Loss_Visualization function
         if args.input_sps_tree and args.input_summary_tree :
@@ -304,13 +356,13 @@ def main():
             print("Required arguments for Gene_Gain_And_Loss_Visualization command are missing.")
             
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {Tree_Visualization, Phylo_Rooting, Ortho_Split, TreeTopology_Summarizer, GD_Detector, Eliminate_PhyloNoise}")
+        print("Usage: python PhyloTracer.py  [-h]  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, PhyloNoise_Filter_MC, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, PhyloNoise_Filter_SC, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}")
         print()
         print("optional arguments:")
         print('  -h, --help            show this help message and exit')
         print()
         print('available programs::')
-        print('  {Tree_Visualization, Phylo_Rooting, Ortho_Split, TreeTopology_Summarizer, GD_Detector, Eliminate_PhyloNoise}')
+        print('  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, PhyloNoise_Filter_MC, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, PhyloNoise_Filter_SC, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}')
 
 
 if __name__ == "__main__":
