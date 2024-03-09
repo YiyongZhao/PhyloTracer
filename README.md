@@ -63,6 +63,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
   * time
   * pypdf4
   * matplotlib
+  * pyqt5
 
 ### Clone and Install Environment:
 
