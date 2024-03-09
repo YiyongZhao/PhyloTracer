@@ -71,6 +71,9 @@ git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 conda env create -f environment.yml
 conda activate phylotracer
+❗️
+chmod +x install_packages.sh
+bash install_package.sh
 ```
 
 ### Install from PyPI with pip:
