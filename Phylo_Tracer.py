@@ -1,9 +1,12 @@
 import sys, textwrap
 import argparse
 import time
+from PhyloTree_CollapseExpand import *
+from PhyloSupport_Scaler import *
+from BranchLength_NumericConverter import *
 from Phylo_Rooter import *
-from PhyloNoise_Filter_MC import *
-from PhyloNoise_Filter_SC import *
+from OrthoFilter_Multi import *
+from OrthoFilter_Single import *
 from Phylo_Collapse import *
 from Phylo_Collapse_Visualizer import*
 from TreeTopology_Summarizer import *
@@ -13,8 +16,8 @@ from GD_Visualizer import *
 from GD_Loss_Tracker import *
 from GD_Loss_Visualizer import *
 from Ortho_Retriever import *
-from GeneDynamics_Tracker import *
-from GeneDynamics_Visualizer import *
+from Gene_GainLoss_Finder import *
+from Gene_GainLoss_Visualizer import *
 
 #from Hybrid_Tracer import *
 #from Hybrid_Visualizer import *
@@ -71,6 +74,7 @@ Tree_Visualizer_parser.add_argument('--keep_branch', type=int,  choices=[1, 0],h
 Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='Tree style: [r/c] (rectangular) or (circular) (default: rectangular)')
 Tree_Visualizer_parser.add_argument('--gene_family', metavar='file',  required=False, help='Input species tree file')
 Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='Input species tree file')
+
 # Phylo_Rooter command
 Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Phylo_Rooter help')
 Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
@@ -102,15 +106,15 @@ GD_Detector_parser.add_argument('--dup_species_num', type=int ,required=True,hel
 GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
 # PhyloNoise_Filter command
-PhyloNoise_Filter_SC_parser = subparsers.add_parser('PhyloNoise_Filter_SC', help='PhyloNoise_Filter_SC help')
-PhyloNoise_Filter_SC_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-PhyloNoise_Filter_SC_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-PhyloNoise_Filter_SC_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+OrthoFilter_Single_parser = subparsers.add_parser('OrthoFilter_Single', help='OrthoFilter_Single help')
+OrthoFilter_Single_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+OrthoFilter_Single_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+OrthoFilter_Single_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
 
-PhyloNoise_Filter_MC_parser = subparsers.add_parser('PhyloNoise_Filter_MC', help='PhyloNoise_Filter_MC help')
-PhyloNoise_Filter_MC_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-PhyloNoise_Filter_MC_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-PhyloNoise_Filter_MC_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+OrthoFilter_Multi_parser = subparsers.add_parser('OrthoFilter_Multi', help='OrthoFilter_Multi help')
+OrthoFilter_Multi_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+OrthoFilter_Multi_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+OrthoFilter_Multi_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
 
 
 Phylo_Collapse_parser = subparsers.add_parser('Phylo_Collapse', help='Phylo_Collapse help')
@@ -123,10 +127,10 @@ Phylo_Collapse_Visualizer_parser = subparsers.add_parser('Phylo_Collapse_Visuali
 #Phylo_Collapse_Visualizer_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 
 
-# Gene_Gain_And_Loss_Visualization command
-Gene_Gain_And_Loss_Visualization_parser = subparsers.add_parser('Gene_Gain_And_Loss_Visualization', help='Gene_Gain_And_Loss_Visualization help')
-Gene_Gain_And_Loss_Visualization_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
-Gene_Gain_And_Loss_Visualization_parser.add_argument('--input_summary_tree', metavar='file',  required=True, help='Input summary_species tree file')
+# Gene_GainLoss_Visualizer command
+Gene_GainLoss_Visualizer_parser = subparsers.add_parser('Gene_GainLoss_Visualizer', help='Gene_GainLoss_Visualizer help')
+Gene_GainLoss_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+Gene_GainLoss_Visualizer_parser.add_argument('--input_summary_tree', metavar='file',  required=True, help='Input summary_species tree file')
 
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
@@ -259,7 +263,7 @@ def main():
         else:
             print("Required arguments for GD_Detector command are missing.")
             
-    elif args.command == 'PhyloNoise_Filter_SC':
+    elif args.command == 'OrthoFilter_Single':
         # Execute the PhyloNoise_Filter function
         if args.input_GF_list and args.input_taxa  and args.long_branch_index:
             start_time = time.time()
@@ -275,10 +279,10 @@ def main():
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for PhyloNoise_Filter_SC command are missing.")
+            print("Required arguments for OrthoFilter_Single command are missing.")
 
 
-    elif args.command == 'PhyloNoise_Filter_MC':
+    elif args.command == 'OrthoFilter_Multi':
         # Execute the PhyloNoise_Filter function
         if args.input_GF_list and args.input_taxa and args.long_branch_index :
             start_time = time.time()
@@ -294,7 +298,7 @@ def main():
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for PhyloNoise_Filter_MC command are missing.")
+            print("Required arguments for OrthoFilter_Multi command are missing.")
 
 
     elif args.command == 'Phylo_Collapse':
@@ -335,8 +339,8 @@ def main():
         #else:
             #print("Required arguments for Phylo_Collapse_Visualizer command are missing.")
 
-    elif args.command == 'Gene_Gain_And_Loss_Visualization':
-        # Execute the Gene_Gain_And_Loss_Visualization function
+    elif args.command == 'Gene_GainLoss_Visualizer':
+        # Execute the Gene_GainLoss_Visualizer function
         if args.input_sps_tree and args.input_summary_tree :
             start_time = time.time()
             input_sps_tree = args.input_sps_tree
@@ -353,16 +357,16 @@ def main():
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
         else:
-            print("Required arguments for Gene_Gain_And_Loss_Visualization command are missing.")
+            print("Required arguments for Gene_GainLoss_Visualizer command are missing.")
             
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, PhyloNoise_Filter_MC, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, PhyloNoise_Filter_SC, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}")
+        print("Usage: python PhyloTracer.py  [-h]  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, OrthoFilter_Multi, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, OrthoFilter_Single, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}")
         print()
         print("optional arguments:")
         print('  -h, --help            show this help message and exit')
         print()
         print('available programs::')
-        print('  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, PhyloNoise_Filter_MC, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, PhyloNoise_Filter_SC, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}')
+        print('  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, OrthoFilter_Multi, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, OrthoFilter_Single, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}')
 
 
 if __name__ == "__main__":
