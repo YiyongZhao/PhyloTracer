@@ -34,9 +34,9 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 
 ## Module features
-1. **TreeTopology_Collapse_Sweller:** Collapse a newic format tree into a "comb" by a threshhood of suport value, or swell a collapsed tree ("comb") into a completed binary tree.
-2. **Tree_support_value_Scaling:** convert a [0,1] supoort value into a [1,100] scale, or convert a [0,100] supoort value into a [0,1] scale.
-3. **Tree_branch_len_value_converter:** Convert tree branch lenght value from string to numerrical format. 
+1. **PhyloTree_CollapseExpand:** This function enables the transformation of a phylogenetic tree in Newick format into a ‘comb’ structure, contingent upon a predefined threshold of support values. Conversely, it can also expand a ‘comb’ structure into a fully resolved binary tree, thus facilitating dynamic topology adjustments based on support value thresholds.
+2. **PhyloSupport_Scaler:** This algorithm is designed to recalibrate support values within a phylogenetic tree. It can scale a support value from a normalized range of [0,1] to a broader range of [1,100], or inversely scale down a support value from [0,100] to a normalized range of [0,1], thereby accommodating different analytical requirements.
+3. **BranchLength_NumericConverter:** This utility converts the branch length values of a phylogenetic tree from a string type to a numerical format. This conversion is essential for subsequent quantitative analyses and computational operations on the tree.
 4. **Phylo_Rooter:** Enhances gene tree rooting accuracy.
 5. **PhyloNoise_Filter_SC:** Employs provided labels to filter and identify putative orthologous genes with removing long-branched and phylogenomic noise tips for single-copy gene family tree.
 6. **PhyloNoise_Filter_MC:** Employs provided labels to filter phylogenomic noise tips and removing long-branched noise tips for multi-copy gene family tree.
