@@ -1,12 +1,18 @@
 #!/bin/bash
 
-# 检查 pip 是否已安装
 if ! command -v pip &> /dev/null; then
     echo "Error: pip is not installed."
     exit 1
 fi
 
-# 安装所需的 Python 包
-pip install ete3 pandas numpy tqdm matplotlib pypdf4
+packages=("ete3" "pandas" "numpy" "tqdm" "matplotlib" "pypdf4" "pyqt5")
+failed_packages=()
+for package in "${packages[@]}"; do
+    pip install $package || failed_packages+=($package)
+done
 
-echo "Installation complete."
+if [ ${#failed_packages[@]} -eq 0 ]; then
+    echo "All packages installed successfully."
+else
+    echo "Some packages failed to install: ${failed_packages[@]}"
+fi
