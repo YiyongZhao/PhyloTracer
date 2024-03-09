@@ -34,21 +34,24 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 
 ## Module features
-1. **Phylo_Rooter:** Enhances gene tree rooting accuracy.
-2. **PhyloNoise_Filter_SC:** Employs provided labels to filter and identify putative orthologous genes with removing long-branched and phylogenomic noise tips for single-copy gene family tree.
-3. **PhyloNoise_Filter_MC:** Employs provided labels to filter phylogenomic noise tips and removing long-branched noise tips for multi-copy gene family tree.
-4. **TreeTopology_Summarizer:** Counts the occurrences of both absolute and relative topologies of single-copy gene trees.
-5. **Tree_Visualizer:** Provides an intuitive visualization for phylogenetic trees, enable labeling tips with multiple-layer annotations.
-6. **GD_Detector:**  Facilitates the identification of gene duplication events by reconciliaiton of gene trees and species tree.
-7. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
-8. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events for each tips across species tree.
-9. **GD_Loss_Visualizer:** Presents a visual summary of gene duplication loss event on the context of speices tree.
-10. **Ortho_Retriever:** Putative orthologs inferrenec from large-scale gene family trees across numerous species.
-11. **GeneDynamics_Tracker:** Investigates and summarizes gene expansion and contraction events.
-12. **GeneDynamics_Visualizer:** Generates visual reports detailing gene gain and loss events on nodes across species tree.
-13. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect species hybridization signals.
-14. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for species hybridization signal detection.
-15. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN predictions.
+1. **TreeTopology_Collapse_Sweller:** Collapse a newic format tree into a "comb" by a threshhood of suport value, or swell a collapsed tree ("comb") into a completed binary tree.
+2. **Tree_support_value_Scaling:** convert a [0,1] supoort value into a [1,100] scale, or convert a [0,100] supoort value into a [0,1] scale.
+3. **Tree_branch_len_value_converter:** Convert tree branch lenght value from string to numerrical format. 
+4. **Phylo_Rooter:** Enhances gene tree rooting accuracy.
+5. **PhyloNoise_Filter_SC:** Employs provided labels to filter and identify putative orthologous genes with removing long-branched and phylogenomic noise tips for single-copy gene family tree.
+6. **PhyloNoise_Filter_MC:** Employs provided labels to filter phylogenomic noise tips and removing long-branched noise tips for multi-copy gene family tree.
+7. **TreeTopology_Summarizer:** Counts the occurrences of both absolute and relative topologies of single-copy gene trees.
+8. **Tree_Visualizer:** Provides an intuitive visualization for phylogenetic trees, enable labeling tips with multiple-layer annotations.
+9. **GD_Detector:**  Facilitates the identification of gene duplication events by reconciliaiton of gene trees and species tree.
+10. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
+11. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events for each tips across species tree.
+12. **GD_Loss_Visualizer:** Presents a visual summary of gene duplication loss event on the context of speices tree.
+13. **Ortho_Retriever:** Putative orthologs inferrenec from large-scale gene family trees across numerous species.
+14. **GeneDynamics_Tracker:** Investigates and summarizes gene expansion and contraction events.
+15. **GeneDynamics_Visualizer:** Generates visual reports detailing gene gain and loss events on nodes across species tree.
+16. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect species hybridization signals.
+17. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for species hybridization signal detection.
+18. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN predictions.
 
 
 ## Installation
