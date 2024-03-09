@@ -34,24 +34,24 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 
 ## Module features
-1. **PhyloTree_CollapseExpand:** This function enables the transformation of a phylogenetic tree in Newick format into a ‘comb’ structure, contingent upon a predefined threshold of support values. Conversely, it can also expand a ‘comb’ structure into a fully resolved binary tree, thus facilitating dynamic topology adjustments based on support value thresholds.
-2. **PhyloSupport_Scaler:** This algorithm is designed to recalibrate support values within a phylogenetic tree. It can scale a support value from a normalized range of [0,1] to a broader range of [1,100], or inversely scale down a support value from [0,100] to a normalized range of [0,1], thereby accommodating different analytical requirements.
-3. **BranchLength_NumericConverter:** This utility converts the branch length values of a phylogenetic tree from a string type to a numerical format. This conversion is essential for subsequent quantitative analyses and computational operations on the tree.
-4. **Phylo_Rooter:** Enhances gene tree rooting accuracy.
-5. **PhyloNoise_Filter_SC:** Employs provided labels to filter and identify putative orthologous genes with removing long-branched and phylogenomic noise tips for single-copy gene family tree.
-6. **PhyloNoise_Filter_MC:** Employs provided labels to filter phylogenomic noise tips and removing long-branched noise tips for multi-copy gene family tree.
-7. **TreeTopology_Summarizer:** Counts the occurrences of both absolute and relative topologies of single-copy gene trees.
-8. **Tree_Visualizer:** Provides an intuitive visualization for phylogenetic trees, enable labeling tips with multiple-layer annotations.
-9. **GD_Detector:**  Facilitates the identification of gene duplication events by reconciliaiton of gene trees and species tree.
+1. **PhyloTree_CollapseExpand:** This module enables the transformation of a phylogenetic tree in Newick format into a ‘comb’ structure, contingent upon a predefined threshold of support values. Conversely, it can also expand a ‘comb’ structure into a fully resolved binary tree, thus facilitating dynamic topology adjustments based on support value thresholds.
+2. **PhyloSupport_Scaler:** This module is designed to recalibrate support values within a phylogenetic tree. It can scale a support value from a normalized range of [0,1] to a broader range of [1,100], or inversely scale down a support value from [0,100] to a normalized range of [0,1], thereby accommodating different analytical requirements.
+3. **BranchLength_NumericConverter:** This module converts the branch length values of a phylogenetic tree from a string type to a numerical format. This conversion is essential for subsequent quantitative analyses and computational operations on the tree.
+4. **Phylo_Rooter:** This module enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
+5. **OrthoFilter_Single:** Employs provided labels to filter and identify putative orthologous genes with excising long-branched outliers and phylogenomic noise tips for single-copy gene family tree; Finally, make all the pre-knowledeged labeled taxa (such as family, order etc.) is a monophyletic. 
+6. **OrthoFilter_Multi:** Applies provided labels to filter out phylogenomic noise and extricate long-branched outliers from multi-copy gene family trees.
+7. **TreeTopology_Summarizer:** Enumerates the frequency  of  both absolute and relative topologies for single-copy gene trees and interested clades.
+8. **Tree_Visualizer:** Provides an intuitive visualization for phylogenetic trees, enable labeling tips with multi-layered annotation labeling.
+9. **GD_Detector:**  Facilitates the identification of gene duplication events by reconciliaiton of gene and species trees.
 10. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
 11. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events for each tips across species tree.
 12. **GD_Loss_Visualizer:** Presents a visual summary of gene duplication loss event on the context of speices tree.
 13. **Ortho_Retriever:** Putative orthologs inferrenec from large-scale gene family trees across numerous species.
-14. **GeneDynamics_Tracker:** Investigates and summarizes gene expansion and contraction events.
-15. **GeneDynamics_Visualizer:** Generates visual reports detailing gene gain and loss events on nodes across species tree.
+14. **Gene_GainLoss_Finder:** Investigates and summarizes gene expansion and contraction events.
+15. **Gene_GainLoss_Visualizer:** Generates visual reports detailing gene gain and loss events on nodes across species tree.
 16. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect species hybridization signals.
 17. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for species hybridization signal detection.
-18. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN predictions.
+18. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN-based predictions.
 
 
 ## Installation
