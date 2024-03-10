@@ -11,14 +11,16 @@ def scale_support(Phylo_t:object,scale=True):
             return Phylo_t
                 
         else:
-        	print('there is no need to scale_down_support ,because the tree node support is all <1')
             return Phylo_t
+            print('there is no need to scale_down_support ,because the tree node support is all <1')
+            
             
     else:
         if scale:
-        	print('there is no need to scale_support ,because the tree node support is in range of [1,100]')
+            
             
             return Phylo_t
+            print('there is no need to scale_support ,because the tree node support is in range of [1,100]')
         else:
             for node in Phylo_t.traverse():
                 node.support=node.support/100
@@ -26,7 +28,7 @@ def scale_support(Phylo_t:object,scale=True):
             return Phylo_t
 
 def support_scaler_main(tre_dic):
-	dir_path1 = os.path.join(os.getcwd(), "support_scaler_tree")
+    dir_path1 = os.path.join(os.getcwd(), "support_scaler_tree")
     if os.path.exists(dir_path1):
         shutil.rmtree(dir_path1)
     os.makedirs(dir_path1)
@@ -36,10 +38,9 @@ def support_scaler_main(tre_dic):
         write_tree_to_newick(t1,tre_ID,dir_path1)
 
 if __name__ == "__main__":
-	scale=True
-	t=Tree('tree.newick')
-	t1=scale_support(t,scale)
-	tre_ID='test'
-	dir_path1=os.path.join(os.getcwd(), "support_scaler_tree")
-	write_tree_to_newick(t1,tre_ID,dir_path1)
-			
+    scale=True
+    t=Tree('tree.newick')
+    t1=scale_support(t,scale)
+    tre_ID='test'
+    dir_path1=os.path.join(os.getcwd(), "support_scaler_tree")
+    write_tree_to_newick(t1,tre_ID,dir_path1)
