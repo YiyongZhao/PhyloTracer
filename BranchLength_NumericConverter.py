@@ -1,19 +1,7 @@
 from __init__ import *
 
-def get_scientific_to_float_dic(Phylo_t:object)->dict:
-    scientific_to_float_dic={}
-    for node in Phylo_t.traverse():
-        if 'e' in str(node.dist):
-            float_num="{:.10f}".format(node.dist)
-            scientific_to_float_dic[str(node.dist)]=str(float_num)
-    return scientific_to_float_dic
-
 def trans_branch_length(Phylo_t:object)->str:
-    tree_str=Phylo_t.write()
-    scientific_to_float_dic=get_scientific_to_float_dic(Phylo_t)
-    for scientific_str in scientific_to_float_dic :
-        if scientific_str in tree_str :
-            tree_str=tree_str.replace(scientific_str,scientific_to_float_dic[scientific_str])
+    tree_str=Phylo_t.write(format=0,dist_formatter='%.10f')
     return tree_str
 
 def write_tree_to_newick(Phylo_t:object,tre_ID,dir_path1):
