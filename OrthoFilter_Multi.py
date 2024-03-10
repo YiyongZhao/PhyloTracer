@@ -284,8 +284,10 @@ def prune_mc_main(tre_dic,taxa_dic,long_brancch_index):
             total_leafs_set=set(t.get_leaf_names())
             diff=total_leafs_set - rm_set
 
-            t.prune(diff)
+            t.prune(diff,preserve_branch_length=True)
                      
+            
+
             
             ts1=TreeStyle()
             ts1.show_leaf_name=False
