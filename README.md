@@ -76,7 +76,7 @@ git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 conda env create -f environment.yml
 conda activate phylotracer
-⚠️ If Conda is unable to create an environment, please use the following command to download the dependency library.
+# ⚠️ If Conda is unable to create an environment, please use the following command to download the dependency library.
 chmod +x install_packages.sh
 bash install_package.sh
 ```
