@@ -2,7 +2,7 @@ from __init__ import *
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from PyPDF4 import PdfFileReader, PdfFileWriter
-
+from BranchLength_NumericConverter import write_tree_to_newick,trans_branch_length
 
 def rename_input_single_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
     for node in Phylo_t :
@@ -266,6 +266,7 @@ def prune_mc_main(tre_dic,taxa_dic,long_brancch_index):
             ts.title.add_face(TextFace(k+'_before', fsize=10), column=0)
             t.render(file_name=k+'_before.pdf',tree_style=ts)
 
+            rm_set=set()
             avg_length=sum([leaf.dist for leaf in t])/len(t)
             for leaf in t :
                 sps_gene='_'.join(leaf.name.split('_')[1:])
@@ -275,9 +276,15 @@ def prune_mc_main(tre_dic,taxa_dic,long_brancch_index):
                
                 if a  >long_brancch_index or b >long_brancch_index :
                      o.write(k+'\t'+'*'+'\t'+sps_gene+'\t'+str(a)+'\t'+str(b)+'\t'+'\n')
-                     leaf.delete()
+                     rm_set.add(leaf.name)
                 else:
                      o.write(k+'\t'+'\t'+'\t'+sps_gene+'\t'+str(a)+'\t'+str(b)+'\t'+'\n')
+                 
+            
+            total_leafs_set=set(t.get_leaf_names())
+            diff=total_leafs_set - rm_set
+
+            t.prune(diff)
                      
             
             ts1=TreeStyle()
@@ -289,8 +296,10 @@ def prune_mc_main(tre_dic,taxa_dic,long_brancch_index):
             os.remove(k+'_after.pdf')
 
             t1=rename_output_tre(t)
-            t1.write(outfile=os.path.join(dir_path1, k + '.nwk'),format=0,dist_formatter='%.10f')
+            write_tree_to_newick(t1,k,dir_path1)
             o.close()
+
+            
 
         else:
             print(k+' is not multi copy tree')
