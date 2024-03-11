@@ -265,6 +265,7 @@ def prune_sc_main(tre_dic,taxa_dic,long_brancch_index):
             ts.title.add_face(TextFace(k+'_before', fsize=10), column=0)
             t.render(file_name=k+'_before.pdf',tree_style=ts)
 
+            rm_set=set()
             avg_length=sum([leaf.dist for leaf in t])/len(t)
             for leaf in t :
                 sps_gene='_'.join(leaf.name.split('_')[1:])
@@ -274,11 +275,16 @@ def prune_sc_main(tre_dic,taxa_dic,long_brancch_index):
                
                 if a  >long_brancch_index or b >long_brancch_index :
                      o.write(k+'\t'+'*'+'\t'+sps_gene+'\t'+str(a)+'\t'+str(b)+'\t'+'\n')
-                     leaf.delete()
+                     rm_set.add(leaf.name)
                 else:
                      o.write(k+'\t'+'\t'+'\t'+sps_gene+'\t'+str(a)+'\t'+str(b)+'\t'+'\n')
-                     
+                 
             
+            total_leafs_set=set(t.get_leaf_names())
+            diff=total_leafs_set - rm_set
+
+            t.prune(diff,preserve_branch_length=True)
+                     
             while not is_single_tree(t):
                 prune_single(t)
                 pass
