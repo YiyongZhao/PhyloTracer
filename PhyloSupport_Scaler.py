@@ -1,7 +1,6 @@
 
 from __init__ import *
-from BranchLength_NumericConverter import write_tree_to_newick,trans_branch_length
-
+from BranchLength_NumericConverter import write_tree_to_newick
 def scale_support(Phylo_t:object,scale=True):
     max_support=max([i.support for i in Phylo_t.traverse()])
     if max_support<1:
@@ -27,7 +26,7 @@ def scale_support(Phylo_t:object,scale=True):
             
             return Phylo_t
 
-def support_scaler_main(tre_dic):
+def support_scaler_main(tre_dic,scale):
     dir_path1 = os.path.join(os.getcwd(), "support_scaler_tree")
     if os.path.exists(dir_path1):
         shutil.rmtree(dir_path1)
@@ -39,8 +38,5 @@ def support_scaler_main(tre_dic):
 
 if __name__ == "__main__":
     scale=True
-    t=Tree('tree.newick')
-    t1=scale_support(t,scale)
-    tre_ID='test'
-    dir_path1=os.path.join(os.getcwd(), "support_scaler_tree")
-    write_tree_to_newick(t1,tre_ID,dir_path1)
+    tre_dic=read_and_return_dict('100_nosingle_GF_list.txt')
+    support_scaler_main(tre_dic,scale)
