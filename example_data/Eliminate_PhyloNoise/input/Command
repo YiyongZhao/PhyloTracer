@@ -1,1 +1,0 @@
-python PhyloTracer.py  Eliminate_PhyloNoise --input_GF_list GF_list.txt --input_taxa taxa
