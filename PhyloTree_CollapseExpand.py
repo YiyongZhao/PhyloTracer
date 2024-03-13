@@ -1,5 +1,6 @@
 from __init___ import *
-from BranchLength_NumericConverter import write_tree_to_newick
+from BranchLength_NumericConverter import write_tree_to_newick,trans_branch_length
+
 
 def collapse_expand(Phylo_t:object,support_value:int)->:object:
 	for node in Phylo_t.tranverse():
