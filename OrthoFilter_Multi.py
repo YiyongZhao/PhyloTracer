@@ -234,7 +234,135 @@ def calculate_insertion_index(node):
     return insertion_index
 
 
-def prune_mc_main(tre_dic,taxa_dic,long_brancch_index):
+def calculate_insertion_depth(clade: object, node: object) -> int:
+    if clade is None:
+        return 0
+    return clade.get_distance(node, topology_only=True)
+
+
+def calculate_insertion_coverage(clade: object, node: object) -> float:
+    if clade is None or node is None:
+        return 0.0  # or any other appropriate default value
+    return len(node) / len(clade)
+
+
+def calculate_insertion(clade, node):
+    depth = calculate_insertion_depth(clade, node)
+    coverage = calculate_insertion_coverage(clade, node)
+    return depth / coverage if coverage != 0 else 0
+
+
+def get_target_clade(clade):
+    node2root = clade.get_ancestors()
+    
+    target_clade = None
+
+    for ancestor in node2root:
+        if len(get_species_set(ancestor)) > 2:
+            break
+        elif len(get_species_set(ancestor)) == 2:
+            target_clade = ancestor 
+            
+    return target_clade
+
+
+def is_max_species(node, target_clade):
+    sps = get_species_list(node)[0]
+    sps_dic = get_species_counts_dic(target_clade)
+    
+    if sps_dic is None:
+        return False
+    
+    max_species = max(sps_dic, key=sps_dic.get)
+    return sps == max_species
+
+
+def get_species_counts_dic(node):
+    species_repeats = {}
+    nodes=get_species_list(node)
+    for leaf in nodes:
+
+        if leaf in species_repeats:
+            species_repeats[leaf] += 1
+        else:
+            species_repeats[leaf] = 1
+    return species_repeats
+
+
+def is_ancestor_sister_same(node):
+    sps = get_species_list(node)[0]
+    sis=node.get_sisters()[0]
+    sis_name=get_species_list(sis)[0]
+    if sps==sis_name:
+        return False
+    else:
+        an=node.up
+        if an.is_root():
+            return False
+        else:
+            an_si=an.get_sisters()[0]
+            an_name=get_species_list(an_si)[0]
+            return sis_name==an_name
+
+def remove_long_gene(Phylo_t,long_branch_index,outfile,tre_ID):
+    Phylo_t1=Phylo_t.copy()
+    remove_gene_set=set()
+    avg_length=sum([leaf.dist for leaf in Phylo_t1])/len(Phylo_t1)
+    for leaf in Phylo_t1 :
+        sps_gene='_'.join(leaf.name.split('_')[1:])
+        sister=leaf.get_sisters()[0] if not leaf.is_root() else None
+        root2clade_radio=get_root_relative_branch_ratio(leaf,avg_length)
+        sister2clade_radio=get_sister_relative_branch_ratio(leaf,sister)
+
+        if  root2clade_radio  >long_branch_index or sister2clade_radio >long_branch_index :
+            outfile.write(tre_ID+'\t'+'*'+'\t'+sps_gene+'\t'+str(root2clade_radio)+'\t'+str(sister2clade_radio)+'\t'+'\n')
+            remove_gene_set.add(leaf.name)
+        else:
+            
+            outfile.write(tre_ID+'\t'+'\t'+'\t'+sps_gene+'\t'+str(root2clade_radio)+'\t'+str(sister2clade_radio)+'\t'+'\n')
+
+    total_leafs_set=set(Phylo_t1.get_leaf_names())
+    diff=total_leafs_set - remove_gene_set
+
+    Phylo_t1.prune(diff,preserve_branch_length=True)
+    return Phylo_t1
+
+def remove_insert_gene(Phylo_t,insert_branch_index,outfile,tre_ID):
+    Phylo_t1 = Phylo_t.copy()    
+    taxa_clade = set()
+    get_single_clades(Phylo_t1, taxa_clade)
+    remove_gene_set = set()
+
+    for clade in taxa_clade:
+        if is_ancestor_sister_same(clade):
+            target_clade = get_target_clade(clade)
+            if target_clade==None:
+                continue
+            else:
+                
+                index_num = calculate_insertion_depth(target_clade, clade)
+                index_over = calculate_insertion_coverage(target_clade, clade)
+                insert=calculate_insertion(target_clade, clade)
+            #if is_max_species(clade, target_clade):
+                #continue
+            #else:
+                outfile.write(tre_ID+'\t'+'@'+'\t'+clade.name+'\t'+str(index_num)+'\t'+str(index_over)+'\t'+str(insert)+'\n')   
+                
+                    
+                remove_gene_set.add(clade.name)
+                    
+               
+
+
+                    
+    total_leafs_set=set(Phylo_t1.get_leaf_names())
+    diff=total_leafs_set - remove_gene_set
+
+    Phylo_t1.prune(diff,preserve_branch_length=True)
+    return Phylo_t1
+    
+
+def prune_mc_main(tre_dic,taxa_dic,long_branch_index,insert_branch_index):
     color_dic=get_color_dict(taxa_dic)
     dir_path1 = os.path.join(os.getcwd(), "pruned_tree")
     if os.path.exists(dir_path1):
@@ -257,7 +385,7 @@ def prune_mc_main(tre_dic,taxa_dic,long_brancch_index):
         if is_multi_copy_tree(t):
             
             o = open(os.path.join(dir_path3, k + '_delete_gene.txt'), 'w')
-            o.write('tre_ID'+'\t'+'delete_label'+'\t'+'gene'+'\t'+'root_relative_branch_ratio'+'\t'+'sister_relative_branch_ratio'+'\n')
+            o.write('tre_ID'+'\t'+'long_branch_label'+'\t'+'gene'+'\t'+'root_relative_branch_ratio'+'\t'+'sister_relative_branch_ratio'+'\n')
             rename_input_single_tre(t,taxa_dic)
 
             set_style(t,color_dic)
@@ -266,40 +394,27 @@ def prune_mc_main(tre_dic,taxa_dic,long_brancch_index):
             ts.title.add_face(TextFace(k+'_before', fsize=10), column=0)
             t.render(file_name=k+'_before.pdf',tree_style=ts)
 
-            rm_set=set()
-            avg_length=sum([leaf.dist for leaf in t])/len(t)
-            for leaf in t :
-                sps_gene='_'.join(leaf.name.split('_')[1:])
-                sister=leaf.get_sisters()[0] if not leaf.is_root() else None
-                a=get_root_relative_branch_ratio(leaf,avg_length)
-                b=get_sister_relative_branch_ratio(leaf,sister)
-               
-                if a  >long_brancch_index or b >long_brancch_index :
-                     o.write(k+'\t'+'*'+'\t'+sps_gene+'\t'+str(a)+'\t'+str(b)+'\t'+'\n')
-                     rm_set.add(leaf.name)
-                else:
-                     o.write(k+'\t'+'\t'+'\t'+sps_gene+'\t'+str(a)+'\t'+str(b)+'\t'+'\n')
-                 
             
-            total_leafs_set=set(t.get_leaf_names())
-            diff=total_leafs_set - rm_set
-
-            t.prune(diff,preserve_branch_length=True)
-                     
+            t1=remove_long_gene(t,long_branch_index,o,k)
+            #t1.render(k+'_1.pdf',tree_style=ts)
+            o.write('\n')
+            o.write('tre_ID'+'\t'+'insert_branch_label'+'\t'+'gene'+'\t'+'insertion_depth'+'\t'+'insertion_coverage'+'\t'+'calculate_insertion'+'\n')
+            t2=remove_insert_gene(t1,insert_branch_index,o,k)
+            
+            o.close()
             
 
-            
             ts1=TreeStyle()
             ts1.show_leaf_name=False
             ts1.title.add_face(TextFace(k+'_after', fsize=10), column=0)
-            t.render(file_name=k+'_after.pdf',tree_style=ts1)
+            t2.render(file_name=k+'_after.pdf',tree_style=ts1)
             merge_pdfs_side_by_side(k+'_before.pdf', k+'_after.pdf', os.path.join(dir_path2, k + '.pdf'))
             os.remove(k+'_before.pdf')
             os.remove(k+'_after.pdf')
 
-            t1=rename_output_tre(t)
-            write_tree_to_newick(t1,k,dir_path1)
-            o.close()
+            t3=rename_output_tre(t2)
+            write_tree_to_newick(t3,k,dir_path1)
+            
 
             
 
@@ -312,6 +427,6 @@ if __name__ == "__main__":
     taxa_dic=read_and_return_dict('taxa.txt')
     tre_dic=read_and_return_dict('100_nosingle_GF_list.txt')
     long_brancch_index=5
-    prune_main(tre_dic,taxa_dic,long_brancch_index)
+    prune_main(tre_dic,taxa_dic,long_brancch_index,insert_branch_index)
    
 
