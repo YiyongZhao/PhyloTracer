@@ -1,12 +1,12 @@
-from __init___ import *
-from BranchLength_NumericConverter import write_tree_to_newick,trans_branch_length
 
+from __init__ import *
+from BranchLength_NumericConverter import write_tree_to_newick
 
-def collapse_expand(Phylo_t:object,support_value:int)->:object:
+def collapse_expand(Phylo_t:object,support_value:int)->object:
 	for node in Phylo_t.tranverse():
 		if not node.is_leaf():
 			if node.support >support_value:
-			i.delete()
+			     node.delete()
 
 	return Phylo_t
 
@@ -21,4 +21,3 @@ if __name__ == "__main__":
     	t=Tree(v)
     	t1=collapse_expand(t)
     	write_tree_to_newick(t1,k,dir_path1)
-
