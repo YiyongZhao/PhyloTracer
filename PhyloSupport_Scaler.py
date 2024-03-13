@@ -1,6 +1,7 @@
 
 from __init__ import *
-from BranchLength_NumericConverter import write_tree_to_newick
+from BranchLength_NumericConverter import write_tree_to_newick,trans_branch_length
+
 def scale_support(Phylo_t:object,scale=True):
     max_support=max([i.support for i in Phylo_t.traverse()])
     if max_support<1:
