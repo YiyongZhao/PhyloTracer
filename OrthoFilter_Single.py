@@ -84,29 +84,73 @@ def is_single_tree(Phylo_t:object)->bool:
 
     return check_single(single_taxa_dict)
 
-   
-def prune_single(Phylo_t:object):
+ 
+def calculate_branch_length_relative_score(node):
+    if not node.is_leaf():
+        avg_length=calculate_avg_length(node)
+        sister = node.get_sisters()[0] if not node.is_root() else None
+        if not sister.is_leaf():
+            sister_length = calculate_avg_length(sister) if sister else 0.0
+        else:
+            sister_length=sister.dist
+        if sister_length != 0:
+            return avg_length / sister_length
+        
+        else:
+            return 0.0
+       
+    else:
+        branch_length=node.dist
+        sister = node.get_sisters()[0] if not node.is_root() else None
+        if not sister.is_leaf():
+            sister_length = calculate_avg_length(sister) if sister else 0.0
+        else:
+            sister_length=sister.dist
+        if sister_length != 0:
+            return branch_length / sister_length
+        else:
+            return 0.0
+
+def calculate_insertion_index(node):
+    insertion_index = 1.0 
+    current_node = node
+    while current_node.up:
+        current_tips = len(current_node.get_leaves())
+        parent_node = current_node.up
+        parent_tips = len(parent_node.get_leaves())
+        
+        if parent_tips == 0:
+            insertion_index = 0.0  
+            break
+        current_insertion_index = len(node.get_leaves())/ current_tips
+        insertion_index = min(insertion_index, current_insertion_index)
+        
+        current_node = parent_node  
+    
+    return insertion_index
+
+  
+def prune_single(Phylo_t):
     rm_list=[]
     single_taxa_dict=get_node_single_taxa_dict(Phylo_t)
-    total_leafs=Phylo_t.get_leaf_names()
-    for taxa,clades in single_taxa_dict.items():
-        if len(clades) ==1 :
+    for k,v in single_taxa_dict.items():
+        if len(v) ==1 :
             pass
-        elif len(clades)==2:
-            clade1=clades[0]
-            clade2=clades[1]
-            if len(clade1)>len(clade2):
-                leafs=clade2.get_leaf_names()
-                diff = [leaf for leaf in total_leafs if leaf not in leafs]
+        elif len(v)==2:
+            if len(v[0])>len(v[1]):
+                leafs=v[1].get_leaf_names()
+                total_leafs=Phylo_t.get_leaf_names()
+                diff = [a for a in total_leafs if a not in set(leafs)]
                 Phylo_t.prune(diff)
 
             else:
-                leafs=clade1.get_leaf_names()
-                diff = [leaf for leaf in total_leafs if leaf not in leafs]
+                leafs=v[0].get_leaf_names()
+                total_leafs=Phylo_t.get_leaf_names()
+                diff = [a for a in total_leafs if a not in set(leafs)]
                 Phylo_t.prune(diff)
         else:
             result=[]
-            for clade in clades :
+            for i in v :
                 insertion_index=calculate_insertion_index(i)
                 result.append(insertion_index)
             min_score=min(result)
@@ -114,11 +158,11 @@ def prune_single(Phylo_t:object):
             for j in v :
                 insertion_index1=calculate_insertion_index(j)
                 if insertion_index1 ==min_score:
-                    branch_length_relative_score=calculate_branch_length_relative_score(Phylo_t,j)
+                    branch_length_relative_score=calculate_branch_length_relative_score(j)
                     d.append(branch_length_relative_score)
             min_score1=min(d)
             for h in v :
-                branch_length_relative_score1=calculate_branch_length_relative_score(Phylo_t,h)
+                branch_length_relative_score1=calculate_branch_length_relative_score(h)
                 if branch_length_relative_score1 ==min_score1:
                     rm_list.append(h.name)
                     
@@ -128,6 +172,7 @@ def prune_single(Phylo_t:object):
             clade.delete()
         else:
             leafs=clade.get_leaf_names()
+            total_leafs=Phylo_t.get_leaf_names()
             diff = [a for a in total_leafs if a not in set(leafs)]
             Phylo_t.prune(diff)
     
@@ -169,32 +214,6 @@ def calculate_avg_length(node):
 
     return avg_length+(node.dist/leaf_count)
     
-def calculate_branch_length_relative_score(node):
-    if not node.is_leaf():
-        avg_length=calculate_avg_length(node)
-        sister = node.get_sisters()[0] if not node.is_root() else None
-        if not sister.is_leaf():
-            sister_length = calculate_avg_length(sister) if sister else 0.0
-        else:
-            sister_length=sister.dist
-        if sister_length != 0:
-            return avg_length / sister_length
-        
-        else:
-            return 0.0
-       
-    else:
-        branch_length=node.dist
-        sister = node.get_sisters()[0] if not node.is_root() else None
-        if not sister.is_leaf():
-            sister_length = calculate_avg_length(sister) if sister else 0.0
-        else:
-            sister_length=sister.dist
-        if sister_length != 0:
-            return branch_length / sister_length
-        else:
-            return 0.0
-
             
         
 def get_root_relative_branch_ratio(leaf,avg_length):
@@ -212,29 +231,135 @@ def get_sister_relative_branch_ratio(leaf,sister):
     else:
         return 0.0
     
+
+def calculate_insertion_depth(clade: object, node: object) -> int:
+    if clade is None:
+        return 0
+    return clade.get_distance(node, topology_only=True)
+
+
+def calculate_insertion_coverage(clade: object, node: object) -> float:
+    if clade is None or node is None:
+        return 0.0  # or any other appropriate default value
+    return len(node) / len(clade)
+
+
+def calculate_insertion(clade, node):
+    depth = calculate_insertion_depth(clade, node)
+    coverage = calculate_insertion_coverage(clade, node)
+    return depth / coverage if coverage != 0 else 0
+
+def get_target_clade(clade):
+    node2root = clade.get_ancestors()
     
+    target_clade = None
 
-
-def calculate_insertion_index(node):
-    insertion_index = 1.0 
-    current_node = node
-    while current_node.up:
-        current_tips = len(current_node.get_leaves())
-        parent_node = current_node.up
-        parent_tips = len(parent_node.get_leaves())
-        
-        if parent_tips == 0:
-            insertion_index = 0.0  
+    for ancestor in node2root:
+        if len(get_species_set(ancestor)) > 2:
             break
-        current_insertion_index = len(node.get_leaves())/ current_tips
-        insertion_index = min(insertion_index, current_insertion_index)
-        
-        current_node = parent_node  
+        elif len(get_species_set(ancestor)) == 2:
+            target_clade = ancestor 
+            
+    return target_clade
+
+
+def is_max_species(node, target_clade):
+    sps = get_species_list(node)[0]
+    sps_dic = get_species_counts_dic(target_clade)
     
-    return insertion_index
+    if sps_dic is None:
+        return False
+    
+    max_species = max(sps_dic, key=sps_dic.get)
+    return sps == max_species
 
 
-def prune_sc_main(tre_dic,taxa_dic,long_brancch_index):
+def get_species_counts_dic(node):
+    species_repeats = {}
+    nodes=get_species_list(node)
+    for leaf in nodes:
+
+        if leaf in species_repeats:
+            species_repeats[leaf] += 1
+        else:
+            species_repeats[leaf] = 1
+    return species_repeats
+
+
+def is_ancestor_sister_same(node):
+    sps = get_species_list(node)[0]
+    sis=node.get_sisters()[0]
+    sis_name=get_species_list(sis)[0]
+    if sps==sis_name:
+        return False
+    else:
+        an=node.up
+        if an.is_root():
+            return False
+        else:
+            an_si=an.get_sisters()[0]
+            an_name=get_species_list(an_si)[0]
+            return sis_name==an_name
+
+def remove_long_gene(Phylo_t,long_branch_index,outfile,tre_ID):
+    Phylo_t1=Phylo_t.copy()
+    remove_gene_set=set()
+    avg_length=sum([leaf.dist for leaf in Phylo_t1])/len(Phylo_t1)
+    for leaf in Phylo_t1 :
+        sps_gene='_'.join(leaf.name.split('_')[1:])
+        sister=leaf.get_sisters()[0] if not leaf.is_root() else None
+        root2clade_radio=get_root_relative_branch_ratio(leaf,avg_length)
+        sister2clade_radio=get_sister_relative_branch_ratio(leaf,sister)
+
+        if  root2clade_radio  >long_branch_index or sister2clade_radio >long_branch_index :
+            outfile.write(tre_ID+'\t'+'*'+'\t'+sps_gene+'\t'+str(root2clade_radio)+'\t'+str(sister2clade_radio)+'\t'+'\n')
+            remove_gene_set.add(leaf.name)
+        else:
+            
+            outfile.write(tre_ID+'\t'+'\t'+'\t'+sps_gene+'\t'+str(root2clade_radio)+'\t'+str(sister2clade_radio)+'\t'+'\n')
+
+    total_leafs_set=set(Phylo_t1.get_leaf_names())
+    diff=total_leafs_set - remove_gene_set
+
+    Phylo_t1.prune(diff,preserve_branch_length=True)
+    return Phylo_t1
+
+def remove_insert_gene(Phylo_t,insert_branch_index,outfile,tre_ID):
+    Phylo_t1 = Phylo_t.copy()    
+    taxa_clade = set()
+    get_single_clades(Phylo_t1, taxa_clade)
+    remove_gene_set = set()
+
+    for clade in taxa_clade:
+        if is_ancestor_sister_same(clade):
+            target_clade = get_target_clade(clade)
+            if target_clade==None:
+                continue
+            else:
+                
+                index_num = calculate_insertion_depth(target_clade, clade)
+                index_over = calculate_insertion_coverage(target_clade, clade)
+                insert=calculate_insertion(target_clade, clade)
+            #if is_max_species(clade, target_clade):
+                #continue
+            #else:
+                outfile.write(tre_ID+'\t'+'@'+'\t'+clade.name+'\t'+str(index_num)+'\t'+str(index_over)+'\t'+str(insert)+'\n')   
+                
+                    
+                remove_gene_set.add(clade.name)
+                    
+               
+
+
+                    
+    total_leafs_set=set(Phylo_t1.get_leaf_names())
+    diff=total_leafs_set - remove_gene_set
+
+    Phylo_t1.prune(diff,preserve_branch_length=True)
+    return Phylo_t1
+    
+
+def prune_sc_main(tre_dic,taxa_dic,long_branch_index,insert_branch_index):
     color_dic=get_color_dict(taxa_dic)
     dir_path1 = os.path.join(os.getcwd(), "pruned_tree")
     if os.path.exists(dir_path1):
@@ -265,40 +390,41 @@ def prune_sc_main(tre_dic,taxa_dic,long_brancch_index):
             ts.title.add_face(TextFace(k+'_before', fsize=10), column=0)
             t.render(file_name=k+'_before.pdf',tree_style=ts)
 
-            rm_set=set()
-            avg_length=sum([leaf.dist for leaf in t])/len(t)
-            for leaf in t :
-                sps_gene='_'.join(leaf.name.split('_')[1:])
-                sister=leaf.get_sisters()[0] if not leaf.is_root() else None
-                a=get_root_relative_branch_ratio(leaf,avg_length)
-                b=get_sister_relative_branch_ratio(leaf,sister)
-               
-                if a  >long_brancch_index or b >long_brancch_index :
-                     o.write(k+'\t'+'*'+'\t'+sps_gene+'\t'+str(a)+'\t'+str(b)+'\t'+'\n')
-                     rm_set.add(leaf.name)
-                else:
-                     o.write(k+'\t'+'\t'+'\t'+sps_gene+'\t'+str(a)+'\t'+str(b)+'\t'+'\n')
-                 
+
+            if is_single_tree(t):
+                ts1=TreeStyle()
+                ts1.show_leaf_name=False
+                ts1.title.add_face(TextFace(k+'_after', fsize=10), column=0)
+                t.render(file_name=k+'_after.pdf',tree_style=ts1)
+                merge_pdfs_side_by_side(k+'_before.pdf', k+'_after.pdf', os.path.join(dir_path2, k + '.pdf'))
+                os.remove(k+'_before.pdf')
+                os.remove(k+'_after.pdf')
+                t2=rename_output_tre(t)
+                write_tree_to_newick(t2,k,dir_path1)
             
-            total_leafs_set=set(t.get_leaf_names())
-            diff=total_leafs_set - rm_set
+            else:
+                t1=remove_long_gene(t,long_branch_index,o,k)
+            
+                o.write('\n')
+                o.write('tre_ID'+'\t'+'insert_branch_label'+'\t'+'gene'+'\t'+'insertion_depth'+'\t'+'insertion_coverage'+'\t'+'calculate_insertion'+'\n')
+                t2=remove_insert_gene(t1,insert_branch_index,o,k)
+            
+                
+            
+                while not is_single_tree(t2):
+                    prune_single(t2)
+                    pass
 
-            t.prune(diff,preserve_branch_length=True)
-                     
-            while not is_single_tree(t):
-                prune_single(t)
-                pass
+                ts1=TreeStyle()
+                ts1.show_leaf_name=False
+                ts1.title.add_face(TextFace(k+'_after', fsize=10), column=0)
+                t2.render(file_name=k+'_after.pdf',tree_style=ts1)
+                merge_pdfs_side_by_side(k+'_before.pdf', k+'_after.pdf', os.path.join(dir_path2, k + '.pdf'))
+                os.remove(k+'_before.pdf')
+                os.remove(k+'_after.pdf')
 
-            ts1=TreeStyle()
-            ts1.show_leaf_name=False
-            ts1.title.add_face(TextFace(k+'_after', fsize=10), column=0)
-            t.render(file_name=k+'_after.pdf',tree_style=ts1)
-            merge_pdfs_side_by_side(k+'_before.pdf', k+'_after.pdf', os.path.join(dir_path2, k + '.pdf'))
-            os.remove(k+'_before.pdf')
-            os.remove(k+'_after.pdf')
-
-            t1=rename_output_tre(t)
-            t1.write(outfile=os.path.join(dir_path1, k + '.nwk'),format=0,dist_formatter='%.10f')
+                t3=rename_output_tre(t2)
+                write_tree_to_newick(t3,k,dir_path1)
             o.close()
         else:
             print(k+' is not single copy tree')
