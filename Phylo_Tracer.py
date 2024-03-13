@@ -110,12 +110,13 @@ OrthoFilter_Single_parser = subparsers.add_parser('OrthoFilter_Single', help='Or
 OrthoFilter_Single_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 OrthoFilter_Single_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 OrthoFilter_Single_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+OrthoFilter_Single_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
 
 OrthoFilter_Multi_parser = subparsers.add_parser('OrthoFilter_Multi', help='OrthoFilter_Multi help')
 OrthoFilter_Multi_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 OrthoFilter_Multi_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 OrthoFilter_Multi_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
-
+OrthoFilter_Multi_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
 
 Phylo_Collapse_parser = subparsers.add_parser('Phylo_Collapse', help='Phylo_Collapse help')
 Phylo_Collapse_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
@@ -265,16 +266,17 @@ def main():
             
     elif args.command == 'OrthoFilter_Single':
         # Execute the PhyloNoise_Filter function
-        if args.input_GF_list and args.input_taxa  and args.long_branch_index:
+        if args.input_GF_list and args.input_taxa  and args.long_branch_index and args.insert_branch_index:
             start_time = time.time()
             #os.makedirs(os.path.join(os.getcwd(), "pruned_tree"), exist_ok=True)
             #os.makedirs(os.path.join(os.getcwd(), "pdf"), exist_ok=True)
             input_GF_list = args.input_GF_list
             input_taxa=args.input_taxa
-            long_brancch_index=args.long_branch_index
+            long_branch_index=args.long_branch_index
+            insert_branch_index=args.insert_branch_index
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
-            prune_sc_main(tre_dic,taxa_dic,long_brancch_index)
+            prune_sc_main(tre_dic,taxa_dic,long_branch_index,insert_branch_index)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
@@ -284,16 +286,17 @@ def main():
 
     elif args.command == 'OrthoFilter_Multi':
         # Execute the PhyloNoise_Filter function
-        if args.input_GF_list and args.input_taxa and args.long_branch_index :
+        if args.input_GF_list and args.input_taxa and args.long_branch_index and args.insert_branch_index:
             start_time = time.time()
             #os.makedirs(os.path.join(os.getcwd(), "pruned_tree"), exist_ok=True)
             #os.makedirs(os.path.join(os.getcwd(), "pdf"), exist_ok=True)
             input_GF_list = args.input_GF_list
             input_taxa=args.input_taxa
             long_brancch_index=args.long_branch_index
+            insert_branch_index=args.insert_branch_index
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
-            prune_mc_main(tre_dic,taxa_dic,long_brancch_index)
+            prune_mc_main(tre_dic,taxa_dic,long_brancch_index,insert_branch_index)
             end_time = time.time()
             execution_time = end_time - start_time
             print("Program execution time:", execution_time, "s")
@@ -326,9 +329,6 @@ def main():
         if not os.path.exists('collapse_tree'):
             print("Error: 'collapse_tree' folder does not exist in the current directory. Please perform Phylo_Collapse processing first")
         else:
-                #input_GF_list = args.input_GF_list
-                #input_taxa=args.input_taxa
-            
             tre_dic = {i.split('.')[0]:'collapse_tree/'+i for i in os.listdir('collapse_tree')}
             taxa_dic=read_and_return_dict('node2taxa.txt')
             c_color_dic=get_taxa_to_color_dict(taxa_dic)
