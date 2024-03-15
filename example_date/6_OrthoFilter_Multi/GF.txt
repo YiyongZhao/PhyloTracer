@@ -1,0 +1,10 @@
+OG10000_1	10tree/OG10000_1.treefile
+OG10001_1	10tree/OG10001_1.treefile
+OG10002_1	10tree/OG10002_1.treefile
+OG10003_1	10tree/OG10003_1.treefile
+OG10004_1	10tree/OG10004_1.treefile
+OG10005_1	10tree/OG10005_1.treefile
+OG10006_1	10tree/OG10006_1.treefile
+OG10007_1	10tree/OG10007_1.treefile
+OG10008_1	10tree/OG10008_1.treefile
+OG10009_1	10tree/OG10009_1.treefile
