@@ -23,9 +23,26 @@ def realign_branch_length(Phylo_t1:object)->object:
     
     return Phylo_t1
 
+def rejust_root_dist(sptree):
+    clade_up=sptree.get_children()[0]
+    clade_down=sptree.get_children()[1]
+    if len(clade_up)>len(clade_down):
+        clade_up.dist=1 
+        if clade_down.is_leaf():
+            clade_down.dist=get_max_deepth(sptree)-1
+        else:
+            clade_down.dist=get_max_deepth(sptree)-get_max_deepth(clade_down)
+    else:
+        clade_down.dist=1 
+        if clade_up.is_leaf():
+            clade_up.dist=get_max_deepth(sptree)-1
+        else:
+            clade_up.dist=get_max_deepth(sptree)-get_max_deepth(clade_up)
+
+    return sptree
 #############################################################################################################
 def Dup_NodeIDs_from_Numbered_GFs(Phylo_t:object)->object:
-    if not isRoot_Judger(Phylo_t):
+    if not is_rooted(Phylo_t):
         Phylo_t = root_tre_with_midpoint_outgroup(Phylo_t)
     Phylo_t = num_tre_node(Phylo_t)
     dup_node_name_list = find_dup_node(Phylo_t)
@@ -136,7 +153,7 @@ def get_new_sorted_dict(gene2fam):
 def fuzzy_match(search_string, key):
     return re.search(search_string, key)
 
-def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,ts,new_named_gene2gene_dic:dict,gene2fam=None)->object:
+def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,ts,new_named_gene2gene_dic:dict,dir_path,gene2fam=None)->object:
     sps_color_dict=get_color_dict(voucher2taxa_dic)
     if gene2fam is not None:
         gene_color_dict=get_color_dict(gene2fam)
@@ -194,7 +211,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                 add_gene_face(node, gene[4:])
             else:
                 pass
-    return Phylo_t1.render('nobranch/'+tre_ID+'.pdf',tree_style=ts,w=210, units="mm")
+    return Phylo_t1.render(dir_path+tre_ID+'.pdf',tree_style=ts,w=210, units="mm")
 
 
 def get_matched_value(gene, gene2fam):
@@ -314,6 +331,10 @@ def rename_sptree(sptree):
         #    i.name=sp[i.name]
 
 def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic,gene2fam=None):
+    dir_path = os.path.join(os.getcwd(), "output/pdf_result/")
+    if os.path.exists(dir_path):
+        shutil.rmtree(dir_path)
+    os.makedirs(dir_path)
     for tre_ID,tre_path in tre_dic.items():
         Phylo_t0=read_phylo_tree(tre_path)
         Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
@@ -321,9 +342,10 @@ def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,t
         Phylo_t1.ladderize()
         Phylo_t1.resolve_polytomy(recursive=True)
         Phylo_t1.sort_descendants("support")
-        if keep_branch !=1 :
+        if keep_branch !='1' :
             realign_branch_length(Phylo_t1)
-        tips_mark(Phylo_t1,voucher2taxa_dic,gene_categories,tre_ID,ts,new_named_gene2gene_dic,gene2fam)
+            rejust_root_dist(Phylo_t1)
+        tips_mark(Phylo_t1,voucher2taxa_dic,gene_categories,tre_ID,ts,new_named_gene2gene_dic,dir_path,gene2fam)
 
 def mark_gene_to_sptree_main(tre_dic,gene_categories,sptree,gene2fam):
     sorted_dict=get_new_sorted_dict(gene2fam)
