@@ -2,7 +2,7 @@ from __init__ import *
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from PyPDF4 import PdfFileReader, PdfFileWriter
-
+from BranchLength_NumericConverter import write_tree_to_newick
 
 def rename_input_single_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
     for node in Phylo_t :
@@ -361,15 +361,15 @@ def remove_insert_gene(Phylo_t,insert_branch_index,outfile,tre_ID):
 
 def prune_sc_main(tre_dic,taxa_dic,long_branch_index,insert_branch_index):
     color_dic=get_color_dict(taxa_dic)
-    dir_path1 = os.path.join(os.getcwd(), "pruned_tree")
+    dir_path1 = os.path.join(os.getcwd(), "output/pruned_tree/")
     if os.path.exists(dir_path1):
         shutil.rmtree(dir_path1)
     os.makedirs(dir_path1)
-    dir_path2 = os.path.join(os.getcwd(), "pruned_tree_pdf")
+    dir_path2 = os.path.join(os.getcwd(), "output/pruned_tree_pdf/")
     if os.path.exists(dir_path2):
          shutil.rmtree(dir_path2)
     os.makedirs(dir_path2)
-    dir_path3 = os.path.join(os.getcwd(), "long_branch_gene")
+    dir_path3 = os.path.join(os.getcwd(), "output/long_branch_gene/")
     if os.path.exists(dir_path3):
         shutil.rmtree(dir_path3)
     os.makedirs(dir_path3)
@@ -400,7 +400,9 @@ def prune_sc_main(tre_dic,taxa_dic,long_branch_index,insert_branch_index):
                 os.remove(k+'_before.pdf')
                 os.remove(k+'_after.pdf')
                 t2=rename_output_tre(t)
-                write_tree_to_newick(t2,k,dir_path1)
+                tree_str=t2.write(format=0)
+                write_tree_to_newick(tree_str,k,dir_path1)  
+                
             
             else:
                 t1=remove_long_gene(t,long_branch_index,o,k)
@@ -424,7 +426,9 @@ def prune_sc_main(tre_dic,taxa_dic,long_branch_index,insert_branch_index):
                 os.remove(k+'_after.pdf')
 
                 t3=rename_output_tre(t2)
-                write_tree_to_newick(t3,k,dir_path1)
+                tree_str=t3.write(format=0)
+                write_tree_to_newick(tree_str,k,dir_path1)
+                
             o.close()
         else:
             print(k+' is not single copy tree')
