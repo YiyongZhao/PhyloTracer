@@ -75,11 +75,13 @@ def num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree.
             i += 1
     return Phylo_t
 
-def get_species_list(Phylo_t:object)->list:
-    return [leaf.name.split('_')[0] for leaf in Phylo_t.iter_leaves()]
+def get_species_list(node):
+    if node is None:
+        return []  # or any other appropriate default value
+    return [leaf.name.split('_')[0] for leaf in node.iter_leaves()]
 
 def get_species_set(Phylo_t:object)->set:
-    return set(leaf.name.split('_')[0] for leaf in Phylo_t.iter_leaves())
+    return set(get_species_list(Phylo_t))
 
 class TreeNode:
     def __init__(self, val, branch_length):
