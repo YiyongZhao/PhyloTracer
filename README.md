@@ -50,9 +50,9 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 14. **Gene_GainLoss_Finder:** Investigates and summarizes gene expansion and contraction events.
 15. **Gene_GainLoss_Visualizer:** Generates visual reports detailing gene gain and loss events on nodes across species tree.
 16. **Hybrid_Tracer_ABAB_BABA:** Utilizes the ABAB-BABA test to detect species hybridization signals.
-17. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for species hybridization signal detection.
 18. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN-based predictions.
 
+# **Hybrid_Tracer_GCN:** Employs a graph neural network approach for species hybridization signal detection.
 
 ## Installation
 
