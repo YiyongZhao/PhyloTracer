@@ -83,7 +83,7 @@ bash install_package.sh
 #This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix #this problem.
 #Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb.
 #Aborted (core dumped)
-Please try this commond
+Please try this command
 export QT_QPA_PLATFORM=linuxfb
 
 ```
