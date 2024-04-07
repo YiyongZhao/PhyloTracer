@@ -5,8 +5,7 @@ from PhyloTree_CollapseExpand import *
 from PhyloSupport_Scaler import *
 from BranchLength_NumericConverter import *
 from Phylo_Rooter import *
-from OrthoFilter_Single import *
-from OrthoFilter_Multi import *
+from OrthoFilter import *
 from TreeTopology_Summarizer import *
 from Tree_Visualizer import *
 from GD_Detector import *
@@ -21,6 +20,7 @@ from Hybrid_Tracer_GCN import *
 from Hybrid_Visualizer import *
 from Phylo_Collapse import *
 from Phylo_Collapse_Visualizer import*
+from Phylo_GeneExpression_Visualizer import *
 
 
 
@@ -88,20 +88,14 @@ Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='file',  required=Tr
 Phylo_Rooter_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='file',  help='Input gene length list')
 Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+Phylo_Rooter_parser.add_argument('--threads', type=int, default=8, help='Thread Number')
 
-# OrthoFilter_Single command
-OrthoFilter_Single_parser = subparsers.add_parser('OrthoFilter_Single', help='OrthoFilter_Single help')
-OrthoFilter_Single_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-OrthoFilter_Single_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-OrthoFilter_Single_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
-OrthoFilter_Single_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
-
-# OrthoFilter_Multi command
-OrthoFilter_Multi_parser = subparsers.add_parser('OrthoFilter_Multi', help='OrthoFilter_Multi help')
-OrthoFilter_Multi_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-OrthoFilter_Multi_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-OrthoFilter_Multi_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
-OrthoFilter_Multi_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
+# OrthoFilter command
+OrthoFilter_parser = subparsers.add_parser('OrthoFilter', help='OrthoFilter help')
+OrthoFilter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+OrthoFilter_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+OrthoFilter_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+OrthoFilter_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
 
 # TreeTopology_Summarizer command
 TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help')
@@ -145,6 +139,11 @@ Phylo_Collapse_parser.add_argument('--input_sps_tree', metavar='file',  required
 # Phylo_Collapse_Visualizer command
 Phylo_Collapse_Visualizer_parser = subparsers.add_parser('Phylo_Collapse_Visualizer', help='Phylo_Collapse_Visualizer help')
 
+# Phylo_GeneExpression_Visualizer
+Phylo_GeneExpression_Visualizer_parser = subparsers.add_parser('Phylo_GeneExpression_Visualizer', help='Phylo_GeneExpression_Visualizer help')
+Phylo_GeneExpression_Visualizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+Phylo_GeneExpression_Visualizer_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+Phylo_GeneExpression_Visualizer_parser.add_argument('--input_gene_expression_gf', metavar='file',  required=True, help='Input gene expression file')
 
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
@@ -152,11 +151,17 @@ parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 
 args = parser.parse_args()
 
+def format_time(seconds):
+    days = seconds // (24 * 3600)
+    hours = (seconds % (24 * 3600)) // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    return f"{int(days)} d, {int(hours)} h, {int(minutes)} m, {seconds:.2f} s"
 
 def main():
     if args.command == 'PhyloTree_CollapseExpand':
         # Execute the PhyloTree_CollapseExpand function
-        if args.input_GF_list and args.support_value :
+        if args.input_GF_list and args.support_value:
             start_time = time.time()
             input_GF_list = args.input_GF_list
             support_value = args.support_value
@@ -164,7 +169,8 @@ def main():
             collapse_expand_main(tre_dic, support_value)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for PhyloTree_CollapseExpand command are missing.")
 
@@ -179,7 +185,8 @@ def main():
             support_scaler_main(tre_dic,scale)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for PhyloSupport_Scaler command are missing.")
 
@@ -194,7 +201,8 @@ def main():
             branch_length_numeric_converter_main(tre_dic,decimal_place)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for BranchLength_NumericConverter command are missing.")
 
@@ -207,55 +215,38 @@ def main():
             input_imap = args.input_imap
             input_sps_tree = args.input_sps_tree
             input_gene_length = args.input_gene_length
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
+            num_threads=args.threads
+            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer(input_imap)
             len_dic = read_and_return_dict(input_gene_length)
             renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
             sptree = PhyloTree(input_sps_tree)
+            renamed_sptree=rename_input_tre(sptree,taxa2voucher_dic)
             tre_dic = read_and_return_dict(input_GF_list)
-            root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, sptree,voucher2taxa_dic)
+            root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, renamed_sptree,voucher2taxa_dic,num_threads)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for Phylo_Rooter command are missing.")
         
-
-    elif args.command == 'OrthoFilter_Single':
-        # Execute the OrthoFilter_Single function
-        if args.input_GF_list and args.input_taxa  and args.long_branch_index and args.insert_branch_index:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_taxa=args.input_taxa
-            long_branch_index=args.long_branch_index
-            insert_branch_index=args.insert_branch_index
-            tre_dic = read_and_return_dict(input_GF_list)
-            taxa_dic=read_and_return_dict(input_taxa)
-            prune_sc_main(tre_dic,taxa_dic,long_branch_index,insert_branch_index)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
-        else:
-            print("Required arguments for OrthoFilter_Single command are missing.")
-
-
-    elif args.command == 'OrthoFilter_Multi':
+    elif args.command == 'OrthoFilter':
         # Execute the PhyloNoise_Filter function
         if args.input_GF_list and args.input_taxa and args.long_branch_index and args.insert_branch_index:
             start_time = time.time()
-            #os.makedirs(os.path.join(os.getcwd(), "pruned_tree"), exist_ok=True)
-            #os.makedirs(os.path.join(os.getcwd(), "pdf"), exist_ok=True)
             input_GF_list = args.input_GF_list
             input_taxa=args.input_taxa
             long_brancch_index=args.long_branch_index
             insert_branch_index=args.insert_branch_index
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
-            prune_mc_main(tre_dic,taxa_dic,long_brancch_index,insert_branch_index)
+            prune_main(tre_dic,taxa_dic,long_brancch_index,insert_branch_index)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
-            print("Required arguments for OrthoFilter_Multi command are missing.")
+            print("Required arguments for OrthoFilter command are missing.")
 
 
     elif args.command == 'TreeTopology_Summarizer':
@@ -270,7 +261,8 @@ def main():
             statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for TreeTopology_Summarizer command are missing.")
 
@@ -300,7 +292,8 @@ def main():
                 view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for Tree_Visualizer command are missing.")
 
@@ -319,16 +312,14 @@ def main():
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
             sptree=PhyloTree(args.input_sps_tree)
             num_tre_node(sptree)
-            print(sptree.write(format=1))
             renamed_sptree=rename_species_tree(sptree, voucher2taxa_dic)
-            
-            
-            #tre_dic = read_and_return_dict(input_GF_list)
-            #filename = 'result.txt'
-            #write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
+            tre_dic = read_and_return_dict(input_GF_list)
+            filename = 'result.txt'
+            write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for GD_Detector command are missing.")
 
@@ -350,7 +341,8 @@ def main():
             split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for Ortho_Retriever command are missing.")
             
@@ -367,7 +359,8 @@ def main():
             collapse_main(tre_dic,taxa_dic,sptree)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         else:
             print("Required arguments for Phylo_Collapse command are missing.")
 
@@ -383,9 +376,30 @@ def main():
             collapse_visual_main(tre_dic,c_color_dic)
             end_time = time.time()
             execution_time = end_time - start_time
-            print("Program execution time:", execution_time, "s")
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
         #else:
             #print("Required arguments for Phylo_Collapse_Visualizer command are missing.")
+
+    elif args.command == 'Phylo_GeneExpression_Visualizer':
+        # Execute the PhyloNoise_Filter function
+        if args.input_GF_list and args.input_taxa and args.input_gene_expression_gf :
+            start_time = time.time()
+            input_GF_list = args.input_GF_list
+            input_taxa=args.input_taxa
+            gene_expression=args.input_gene_expression_gf
+            tre_dic = read_and_return_dict(input_GF_list)
+            taxa_dic=read_and_return_dict(input_taxa)
+            color_dic=get_color_dict(taxa_dic)
+            expression_dic=read_and_return_dict(gene_expression)
+            gene_expression_main(tre_dic,expression_dic,color_dic)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
+        else:
+            print("Required arguments for Phylo_GeneExpression_Visualizer command are missing.")
+
             
     else:
         print("Usage: python PhyloTracer.py  [-h]  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, OrthoFilter_Multi, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, OrthoFilter_Single, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}")
