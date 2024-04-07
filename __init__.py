@@ -83,12 +83,6 @@ def get_species_list(node):
 def get_species_set(Phylo_t:object)->set:
     return set(get_species_list(Phylo_t))
 
-class TreeNode:
-    def __init__(self, val, branch_length):
-        self.val = val
-        self.branch_length = branch_length
-        self.children = []
-
 def get_max_deepth(root:object)->int:
     if not root:
         return 0
