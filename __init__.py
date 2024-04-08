@@ -28,7 +28,7 @@ def gene_id_transfer(gene2taxa_list:str) -> dict:
     new_gene_names = [f"{taxa2voucher_dic[species]}_{i}" for species, count in gene_count.items() for i in range(1, count + 1)]
     gene2new_named_gene_dic = dict(zip(gene2taxa_dic.keys(), new_gene_names))
     new_named_gene2gene_dic = {value: key for key, value in gene2new_named_gene_dic.items()}
-    return gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic
+    return gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic
 #gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("gene2taxa.list")
 
 def read_and_return_dict(filename, separator="\t") -> dict:
