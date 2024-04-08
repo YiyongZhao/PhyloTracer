@@ -1,3 +1,0 @@
-ADC	ADC.xlsx
-ANR	ANR.xlsx
-TCS	TCS.xlsx

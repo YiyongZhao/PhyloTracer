@@ -1,3 +1,0 @@
-ADC	ADC.trimal.fas_IQ_TREE.treefile
-ANR	ANR.trimal.fas_IQ_TREE.treefile
-TCS	TCS.trimal.fas_IQ_TREE.treefile
