@@ -20,7 +20,6 @@ from Hybrid_Tracer_GCN import *
 from Hybrid_Visualizer import *
 from Phylo_Collapse import *
 from Phylo_Collapse_Visualizer import*
-from Phylo_GeneExpression_Visualizer import *
 
 
 
@@ -112,6 +111,7 @@ Tree_Visualizer_parser.add_argument('--keep_branch', type=str,  choices=['1', '0
 Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='Tree style: [r/c] (rectangular) or (circular) (default: rectangular)')
 Tree_Visualizer_parser.add_argument('--gene_family', metavar='file',  required=False, help='Input species tree file')
 Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='Input species tree file')
+Tree_Visualizer_parser.add_argument('--gene_expression', metavar='file',  required=False, help='gene_expression')
 
 # GD_Detector command
 GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
@@ -138,12 +138,6 @@ Phylo_Collapse_parser.add_argument('--input_sps_tree', metavar='file',  required
 
 # Phylo_Collapse_Visualizer command
 Phylo_Collapse_Visualizer_parser = subparsers.add_parser('Phylo_Collapse_Visualizer', help='Phylo_Collapse_Visualizer help')
-
-# Phylo_GeneExpression_Visualizer
-Phylo_GeneExpression_Visualizer_parser = subparsers.add_parser('Phylo_GeneExpression_Visualizer', help='Phylo_GeneExpression_Visualizer help')
-Phylo_GeneExpression_Visualizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-Phylo_GeneExpression_Visualizer_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-Phylo_GeneExpression_Visualizer_parser.add_argument('--input_gene_expression_gf', metavar='file',  required=True, help='Input gene expression file')
 
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
@@ -278,7 +272,7 @@ def main():
             gene_categories = args.gene_categories
             keep_branch = args.keep_branch
             gene_category_list = [read_and_return_dict(i) for i in gene_categories]
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
+            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             if args.gene_family and args.input_sps_tree:
                 input_gene2fam = args.gene_family
@@ -287,6 +281,10 @@ def main():
                 sptree = Tree(input_sps_tree)
                 mark_gene_to_sptree_main(tre_dic,gene_category_list,sptree,gene2fam)
                 view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
+            if args.gene_expression:
+                gene2fam=None
+                df=pd.read_excel(args.gene_expression, index_col=0) 
+                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam,df)
             else:
                 gene2fam=None
                 view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
@@ -380,27 +378,7 @@ def main():
             print("Program execution time:", formatted_time)
         #else:
             #print("Required arguments for Phylo_Collapse_Visualizer command are missing.")
-
-    elif args.command == 'Phylo_GeneExpression_Visualizer':
-        # Execute the PhyloNoise_Filter function
-        if args.input_GF_list and args.input_taxa and args.input_gene_expression_gf :
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_taxa=args.input_taxa
-            gene_expression=args.input_gene_expression_gf
-            tre_dic = read_and_return_dict(input_GF_list)
-            taxa_dic=read_and_return_dict(input_taxa)
-            color_dic=get_color_dict(taxa_dic)
-            expression_dic=read_and_return_dict(gene_expression)
-            gene_expression_main(tre_dic,expression_dic,color_dic)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Phylo_GeneExpression_Visualizer command are missing.")
-
-            
+     
     else:
         print("Usage: python PhyloTracer.py  [-h]  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, OrthoFilter_Multi, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, OrthoFilter_Single, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}")
         print()
