@@ -1,5 +1,5 @@
 import pandas as pd
-from ete3 import PhyloTree,Tree,NodeStyle,TreeStyle,TextFace
+from ete3 import PhyloTree,Tree,NodeStyle,TreeStyle,TextFace,RectFace
 import random
 import numpy as np
 import os
