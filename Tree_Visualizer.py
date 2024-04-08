@@ -53,13 +53,12 @@ def Dup_NodeIDs_from_Numbered_GFs(Phylo_t:object)->object:
 
 def create_tree_style(tree_style,tre_ID):
     ts = TreeStyle()
-    ts.legend.add_face(TextFace("★", fsize=20, fgcolor="red"), column=0)
-    ts.legend.add_face(TextFace("Interspecific gene duplication event", fsize=20), column=1)
-    ts.legend.add_face(TextFace("★", fsize=20, fgcolor="blue"), column=0)
-    ts.legend.add_face(TextFace("Intraspecific gene duplication event", fsize=20), column=1)
-    ts.title.add_face(TextFace(tre_ID, fsize=30), column=2)
-    
-    ts.legend_position = 1
+    ts.title.add_face(TextFace(' ', fsize=20), column=1)
+    ts.title.add_face(TextFace(tre_ID, fsize=20), column=0)
+    ts.title.add_face(TextFace("★", fsize=20, fgcolor="red"), column=0)
+    ts.title.add_face(TextFace("Interspecific gene duplication event", fsize=20), column=1)
+    ts.title.add_face(TextFace("★", fsize=20, fgcolor="blue"), column=0)
+    ts.title.add_face(TextFace("Intraspecific gene duplication event", fsize=20), column=1)
     
     ts.mode = tree_style
     ts.scale = 20
@@ -153,7 +152,7 @@ def get_new_sorted_dict(gene2fam):
 def fuzzy_match(search_string, key):
     return re.search(search_string, key)
 
-def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,ts,new_named_gene2gene_dic:dict,dir_path,gene2fam=None)->object:
+def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,ts,new_named_gene2gene_dic:dict,dir_path,gene2fam=None,df=None)->object:
     sps_color_dict=get_color_dict(voucher2taxa_dic)
     if gene2fam is not None:
         gene_color_dict=get_color_dict(gene2fam)
@@ -175,7 +174,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
     def add_species_face(node, species):
         if species in sps_color_dict:
             color = sps_color_dict[species].split('@')[-1]
-            face = TextFace(' ' + gene, fgcolor=color,ftype='Arial', fstyle='italic')
+            face = TextFace(' ' + only_gene, fgcolor=color,ftype='Arial', fstyle='italic')
             node.add_face(face, column=-1)
 
         if species in sps_color_dict:
@@ -202,6 +201,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
             gene = new_named_gene2gene_dic[node.name]
             species = voucher2taxa_dic[node.name.split("_")[0]]
             rename_species=node.name.split("_")[0]
+            only_gene='_'.join(gene.split('_')[1:])
             add_species_face(node, rename_species)
             column = 1
             for color_dict in color_dicts:
@@ -211,7 +211,77 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                 add_gene_face(node, gene[4:])
             else:
                 pass
-    return Phylo_t1.render(dir_path+tre_ID+'.pdf',tree_style=ts,w=210, units="mm")
+
+    def get_color(value):
+        if np.isnan(value): 
+            return 'white'
+        else:
+            if 0 <= value <= 5:
+                return '#006599'
+            elif 5 < value <= 10:
+                return '#408ca6'
+            elif 10 < value <= 15:
+                return '#7fb2b2'
+            elif 15 < value <= 20:
+                return '#bfd9bf'
+            elif 20 < value <= 25:
+                return '#ffffcc'
+            elif 25 < value <= 30:
+                return '#f7deab'
+            elif 30 < value <= 35:
+                return '#eebc88'
+            elif 35 < value <= 40:
+                return '#e69966'
+            elif 40 < value <= 45:
+                return '#dc7845'
+            elif 45 < value <= 50:
+                return '#d55623'
+            else:
+                return '#cc3300'
+        
+    def add_heat_map_to_node(tree,df,new_named_gene2gene_dic,gene_categories):
+        for node in tree:
+            gene = new_named_gene2gene_dic[node.name]
+            only_gene='_'.join(gene.split('_')[1:])
+            if node.is_leaf() and only_gene in df.index:
+                n=len(gene_categories)+1
+                for i in df.columns.tolist():
+                    color = get_color(df[i][only_gene])
+                    face=RectFace(width=10, height=10, fgcolor=color,bgcolor=color)
+                    node.add_face(face, column=n, position='aligned')
+                    n+=1
+                    
+    def add_header_to_tree(ts,df,gene_categories):
+        labels = df.columns.to_list()
+        n=len(gene_categories)+1
+        for i in labels:
+            face=TextFace(' '+i,fgcolor='black',fsize=9)
+            face.rotation=-90
+            face.vt_align =2
+            ts.aligned_header.add_face(face,n)
+            n+=1
+            
+    def add_color_bar(ts):
+        ts.legend.add_face(TextFace(' '), column=0)
+        bar_face=TextFace('Color Bar Title ')
+        ts.legend.add_face(bar_face, column=0)
+        cols=['#006599', '#408ca6', '#7fb2b2', '#bfd9bf', '#ffffcc','#f7deab', '#eebc88', '#e69966', '#dc7845', '#d55623', '#cc3300']
+        bounds = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+        col_dic=dict(zip(bounds,cols))
+        n=1
+        for k,v in col_dic.items():
+            colorbar_face = RectFace(width=20, height=20, fgcolor=v,bgcolor=v)
+            ts.legend.add_face(TextFace(' '+str(k)), column=n)
+            ts.legend.add_face(colorbar_face, column=n)
+            n+=1
+            
+        ts.legend_position=2
+
+    if df is not None:
+        add_heat_map_to_node(Phylo_t1,df,new_named_gene2gene_dic,gene_categories)
+        add_header_to_tree(ts,df,gene_categories)
+        add_color_bar(ts)
+    return Phylo_t1.render(dir_path+tre_ID+'.pdf',tree_style=ts)
 
 
 def get_matched_value(gene, gene2fam):
@@ -330,12 +400,14 @@ def rename_sptree(sptree):
         #if i.name in sp:
         #    i.name=sp[i.name]
 
-def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic,gene2fam=None):
+def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic,gene2fam=None,df=None):
     dir_path = os.path.join(os.getcwd(), "output/pdf_result/")
     if os.path.exists(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path)
+    pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
     for tre_ID,tre_path in tre_dic.items():
+        pbar.set_description(f"Processing {tre_ID}")
         Phylo_t0=read_phylo_tree(tre_path)
         Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
         Phylo_t1,ts=get_treestyle(Phylo_t0,tree_style,tre_ID)
@@ -345,7 +417,9 @@ def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,t
         if keep_branch !='1' :
             realign_branch_length(Phylo_t1)
             rejust_root_dist(Phylo_t1)
-        tips_mark(Phylo_t1,voucher2taxa_dic,gene_categories,tre_ID,ts,new_named_gene2gene_dic,dir_path,gene2fam)
+        tips_mark(Phylo_t1,voucher2taxa_dic,gene_categories,tre_ID,ts,new_named_gene2gene_dic,dir_path,gene2fam,df)
+        pbar.update(1)
+    pbar.close()
 
 def mark_gene_to_sptree_main(tre_dic,gene_categories,sptree,gene2fam):
     sorted_dict=get_new_sorted_dict(gene2fam)
