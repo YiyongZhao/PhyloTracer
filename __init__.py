@@ -4,6 +4,7 @@ import random
 import numpy as np
 import os
 import shutil
+from tqdm import tqdm
 
 def generate_sps_voucher(sps_num:int) -> list:
     characters = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)] + [str(i) for i in range(10)]
@@ -36,10 +37,11 @@ def read_and_return_dict(filename, separator="\t") -> dict:
     return df.set_index([0])[1].to_dict()
 
 def rename_input_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
-    for node in Phylo_t.traverse():
+    Phylo_t1=Phylo_t.copy()
+    for node in Phylo_t1.traverse():
         if node.name in gene2new_named_gene_dic.keys():
             node.name = gene2new_named_gene_dic[node.name]
-    return Phylo_t
+    return Phylo_t1
 
 def read_tree(tre_path:str) -> object:
     return Tree(tre_path)
@@ -52,9 +54,10 @@ def is_rooted(Phylo_t:object)->bool:#Translate the function that determines whet
         return True
 
 def root_tre_with_midpoint_outgroup(Phylo_t:object)->object:#Rooting the phylogenetic tree using the midpoint outgroup method.
-    mid_node=Phylo_t.get_midpoint_outgroup()
-    Phylo_t.set_outgroup(mid_node)
-    return Phylo_t
+    Phylo_t1=Phylo_t.copy()
+    mid_node=Phylo_t1.get_midpoint_outgroup()
+    Phylo_t1.set_outgroup(mid_node)
+    return Phylo_t1
 
 def find_dup_node(Phylo_t:object)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
     events = Phylo_t.get_descendant_evol_events()
@@ -68,8 +71,8 @@ def find_dup_node(Phylo_t:object)->list:#After searching for duplication events,
     return dup_node_name_list
 
 def num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree.
-    i = 1
-    for node in Phylo_t.traverse():
+    i = 0
+    for node in Phylo_t.traverse('postorder'):
         if not node.is_leaf():
             node.name = "N" + str(i)
             i += 1
@@ -117,7 +120,6 @@ def calculate_species_overlap(gene_tree:object)->int:
     return overlap_ratio
 
 def calculate_species_num(node:object)->int:# Obtain the number of species under a node
-    
     species_num=len(get_species_set(node))
     return species_num
 
