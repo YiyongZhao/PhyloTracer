@@ -128,7 +128,6 @@ Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Re
 Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 Ortho_Retriever_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='file',  required=True, help='Input gene length list')
-Ortho_Retriever_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
 # Phylo_Collapse command
 Phylo_Collapse_parser = subparsers.add_parser('Phylo_Collapse', help='Phylo_Collapse help')
@@ -324,19 +323,16 @@ def main():
 
     elif args.command == 'Ortho_Retriever':
         # Execute the Ortho_Retriever function
-        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.input_gene_length:
+        if args.input_GF_list and args.input_imap  and args.input_gene_length:
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
-            input_sps_tree = args.input_sps_tree
             input_gene_length = args.input_gene_length
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             len_dic = read_and_return_dict(input_gene_length)
             renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
-            sptree = PhyloTree(input_sps_tree)
-            sptree=rename_species_tree(sptree,voucher2taxa_dic)
-            split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic)
+            split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
