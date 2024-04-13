@@ -1,1 +1,0 @@
-tre_ID	delete_label	gene	root_relative_branch_ratio	sister_relative_branch_ratio
