@@ -1,28 +1,11 @@
 from __init__ import *
 
-def rename_species_tree(sptree:object, voucher2taxa_dic:dict)->object:
-    for node in sptree:
-        key_to_find = node.name
-        if key_to_find in voucher2taxa_dic.values():
-            new_name = next(key for key, value in voucher2taxa_dic.items() if value == key_to_find)
-            node.name = new_name           
-    return sptree
-
 def rename_len_dic(len_dic:dict, gene2new_named_gene_dic:dict) -> dict:
     return {gene2new_named_gene_dic[key]: value for key,value in len_dic.items() if key in gene2new_named_gene_dic.keys()}
 
 def count_sps_num(ev_seqs:set)->int:
     sps_set={gene[0:3] for gene in ev_seqs }
     return len(sps_set) 
-  
-def find_tre_dup(Phylo_t:object) -> list:   #seperator either "@" or "_"
-    tre_ParaL=[]
-    GF_leaves_S = set(Phylo_t.get_leaf_names())
-    events = Phylo_t.get_descendant_evol_events()
-    for ev in events:
-        if ev.etype == "D":
-            tre_ParaL.append(",".join(ev.in_seqs)+"<=>"+",".join(ev.out_seqs))
-    return tre_ParaL,GF_leaves_S
   
 def extract_tree(ev_seqs:set,Phylo_t:object)-> object:
     Phylo_t.prune(ev_seqs)
@@ -88,12 +71,15 @@ def split_offcut_ev_seqs(offcut_ev_seqs_L0:list) ->list:  #[{1,2},{2,3}]
     return othologs_L,paralogs_L
 
 def iterator(offcut_ev_seqs_L0:list,Phylo_t:object,new_named_gene2gene_dic:dict,minor_othologs_L:list,tre_path:str,renamed_len_dic:dict) ->list:
-    
     othologs_L,paralogs_L=split_offcut_ev_seqs(offcut_ev_seqs_L0)
     minor_othologs_L+=(othologs_L)
     if paralogs_L !=[]:    
         for i,ev_seqs in enumerate(paralogs_L):
             Phylo_t=read_phylo_tree(tre_path)
+            if is_rooted(Phylo_t):
+                pass
+            else:
+                Phylo_t=root_tre_with_midpoint_outgroup(Phylo_t)
             Phylo_t=rename_input_tre(Phylo_t,new_named_gene2gene_dic)
             Phylo_t = extract_tree(ev_seqs,Phylo_t)
             principal_gene_S,offcut_ev_seqs_L0=offcut_tre(Phylo_t,renamed_len_dic)
@@ -117,24 +103,43 @@ def rename_OGs_tre_name(principal_gene_S:list,minor_othologs_L:list,tre_ID:str)-
         index+=1
         ordered_name_OG_L.append((str(tre_ID)+"_"+tre_name_L[index]+"_"+str(count),tre_name2OG_dict[name]))
     return ordered_name_OG_L
+
+def get_single_copy_trees(Phylo_t1:object,renamed_len_dic:dict,gene2new_named_gene_dic:dict,new_named_gene2gene_dic:dict,tre_path:str,tre_ID:str)->list:
+    trees=[]
+    principal_gene_S,filtered_offcut_ev_seqs_L0=offcut_tre(Phylo_t1,renamed_len_dic)
+    minor_othologs_L=[]
+    minor_othologs_L=iterator(filtered_offcut_ev_seqs_L0,Phylo_t1,gene2new_named_gene_dic,minor_othologs_L,tre_path,renamed_len_dic)
+    print(minor_othologs_L)
+    ordered_name_OG_L=rename_OGs_tre_name(principal_gene_S,minor_othologs_L,tre_ID)
+    for tre_name,OG_S in ordered_name_OG_L:
+
+        OG_L = [new_named_gene2gene_dic[OG] for OG in OG_S]
+        Phylo_t0=read_phylo_tree(tre_path)
+        if is_rooted(Phylo_t0):
+            Phylo_t=Phylo_t0
+        else:
+            Phylo_t=root_tre_with_midpoint_outgroup(Phylo_t0)
+        Phylo_t_OG_L=extract_tree(OG_L,Phylo_t)
+        trees.append((tre_name,Phylo_t_OG_L))
+    return trees
+
 #ordered_name_OG_L=rename_OGs_tre_name(principal_gene_S,minor_othologs_L,tre_ID)
 ##########################################################################
-def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic):
+def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic):
     o=open('result.txt','w')
     o.write('tre_name'+'\t'+'single_copy_tree'+'\n')
     for tre_ID,tre_path in tre_dic.items():
         Phylo_t0=read_phylo_tree(tre_path)
-        Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
-        Phylo_t1=rename_input_tre(Phylo_t1,gene2new_named_gene_dic)
-        principal_gene_S,filtered_offcut_ev_seqs_L0=offcut_tre(Phylo_t1,renamed_len_dic)
-        minor_othologs_L=[]
-        minor_othologs_L=iterator(filtered_offcut_ev_seqs_L0,Phylo_t1,gene2new_named_gene_dic,minor_othologs_L,tre_path,renamed_len_dic)
-        ordered_name_OG_L=rename_OGs_tre_name(principal_gene_S,minor_othologs_L,tre_ID)
-        for tre_name,OG_S in ordered_name_OG_L: 
-            OG_L = [new_named_gene2gene_dic[OG] for OG in OG_S]
-            Phylo_t0=read_phylo_tree(tre_path)
-            Phylo_t=root_tre_with_midpoint_outgroup(Phylo_t0)
-            Phylo_t_OG_L=extract_tree(OG_L,Phylo_t)
+        if is_rooted(Phylo_t0):
+            Phylo_t1=Phylo_t0
+        else:
+            Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
+
+        Phylo_t2=rename_input_tre(Phylo_t1,gene2new_named_gene_dic)
+        trees=get_single_copy_trees(Phylo_t2,renamed_len_dic,gene2new_named_gene_dic,new_named_gene2gene_dic,tre_path,tre_ID)
+        for clade in trees:
+            tre_name=clade[0]
+            Phylo_t_OG_L=clade[1]
             o.write(tre_name + "\t" + Phylo_t_OG_L.write()+ "\n")
     o.close()
 
@@ -143,6 +148,4 @@ if __name__ == "__main__":
     len_dic=read_and_return_dict('length')
     renamed_len_dic=rename_len_dic(len_dic,gene2new_named_gene_dic)
     tre_dic=read_and_return_dict('GF_list.txt')   
-    sptree=PhyloTree('30sps.nwk')
-    sptree=rename_species_tree(sptree,voucher2taxa_dic)
-    split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic,sptree,voucher2taxa_dic)
+    split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic)
