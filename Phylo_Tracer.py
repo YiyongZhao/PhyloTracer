@@ -250,7 +250,7 @@ def main():
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             outfile=args.outfile
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
+            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic)
             end_time = time.time()
@@ -307,7 +307,7 @@ def main():
             clade_support=args.clade_support
             dup_species_percent = args.dup_species_radio
             dup_species_num = args.dup_species_num
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
+            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             sptree=PhyloTree(args.input_sps_tree)
             num_tre_node(sptree)
             renamed_sptree=rename_species_tree(sptree, voucher2taxa_dic)
@@ -330,7 +330,7 @@ def main():
             input_imap = args.input_imap
             input_sps_tree = args.input_sps_tree
             input_gene_length = args.input_gene_length
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer(input_imap)
+            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             len_dic = read_and_return_dict(input_gene_length)
             renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
