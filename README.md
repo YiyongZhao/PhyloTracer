@@ -157,7 +157,7 @@ PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) fil
 
 ## Contact
 
-For any questions or suggestions, feel free to contact us via [email](mailto: yiyongzhao1991@gmail.com).
+For any questions or suggestions, feel free to contact us via email: yiyongzhao1991@gmail.com (Yiyong Zhao) and l948777439@163.com (Tao Li).
 Feel free to customize it further according to your preferences or additional details you want to include.
 
 
