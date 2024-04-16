@@ -30,7 +30,7 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 
 ## Introduction
 
-PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring putative orthologous genes. It also includes functions to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
+`PhyloTracer` aims to provide more accurate rooting of gene trees, serving as a foundation for inferring putative orthologous genes. It also includes functions to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
 
 
 ## Module features
@@ -67,6 +67,8 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
   * pypdf4
   * matplotlib
   * pyqt5
+    
+`PhyloTracer`use Python framework ([ete3](http://etetoolkit.org/)) for the analysis and visualization of trees. Hyde ([seqwish](https://github.com/pblischak/HyDe)) was used to detect species hybridizaiotn signals by ABAB-BABA test.
 
 ### Clone and install environment:
 
@@ -85,16 +87,13 @@ bash install_package.sh
 #Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
 #Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
 export QT_QPA_PLATFORM=linuxfb
-
-`PhyloTracer`use Python framework ([ete3](http://etetoolkit.org/)) for the analysis and visualization of trees. Hyde ([seqwish](https://github.com/pblischak/HyDe)) was used to detect species hybridizaiotn signals by ABAB-BABA test.
-
 ```
 
 
 ### Install from PyPI with pip:
 
 ```bash
-pip install PhyloTracer
+pip install `PhyloTracer`
 ```
 
 ## Usage
