@@ -40,18 +40,18 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 4. **Phylo_Rooter:** Enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
 5. **OrthoFilter_LB:** Prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length.
 6. **OrthoFilter_Mono:** Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives.
-14. Handle the process of single-copy and multi-copy gene families. It utilizes provided labels to filter gene trees, identify potential orthologous genes, and remove long-branchoutliers and phylogenomic noise. Additionally, OrthoFilter ensures that known labeled taxa (such as family, order, etc.) form monophyletic groups in the gene tree.
-15. **TreeTopology_Summarizer:** Enumerates the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
-16. **Tree_Visualizer:** Visualizes and integrates gene duplication detection results into the species tree.
-17. **GD_Detector:** identification of gene duplication events by reconciliaiton of gene and species trees.
-18. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
-19. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
-20. **GD_Loss_Visualizer:** Visualizes the summary of gene duplication loss event on the context of speices tree.
-21. **Ortho_Retriever:** Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple species.
-22. **Hybrid_Tracer:** Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree
-23. detect species hybridization events for .
-24. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
-25. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
+7. Handle the process of single-copy and multi-copy gene families. It utilizes provided labels to filter gene trees, identify potential orthologous genes, and remove long-branchoutliers and phylogenomic noise. Additionally, OrthoFilter ensures that known labeled taxa (such as family, order, etc.) form monophyletic groups in the gene tree.
+8. **TreeTopology_Summarizer:** Enumerates the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
+9. **Tree_Visualizer:** Visualizes and integrates gene duplication detection results into the species tree.
+10. **GD_Detector:** identification of gene duplication events by reconciliaiton of gene and species trees.
+11. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
+12. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
+13. **GD_Loss_Visualizer:** Visualizes the summary of gene duplication loss event on the context of speices tree.
+14. **Ortho_Retriever:** Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple species.
+15. **Hybrid_Tracer:** Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree
+16. detect species hybridization events for .
+17. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
+18. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
     
 ## Installation
 
