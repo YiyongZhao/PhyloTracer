@@ -24,7 +24,7 @@
 ###############################################################################################
 ```
 
-![version](https://img.shields.io/badge/any_text-you_like-blue)
+|![version](https://img.shields.io/badge/Version-1.0.0-blue)|
 
 # PhyloTracer
 
