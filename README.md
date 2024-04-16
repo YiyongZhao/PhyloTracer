@@ -34,22 +34,22 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 
 ## Module features
-1. **PhyloTree_CollapseExpand:** enables transformation of a phylogenetic tree in Newick format into a ‘comb’ structure, contingent upon a predefined threshold of support values. Conversely, it can also expand a ‘comb’ structure into a fully resolved binary tree, thus facilitating dynamic topology adjustments based on support value thresholds.
-2. **PhyloSupport_Scaler:** recalibrate support values within a phylogenetic tree. It can scale a support value PP from a range of [0,1] to a Bootstrap range of [1,100], or inversely scale down a support value from [0,100] to a range of [0,1], thereby accommodating different analytical requirements.
-3. **BranchLength_NumericConverter:** converts the branch length values of a phylogenetic tree from a string type to a numerical format. This conversion is essential for subsequent quantitative analyses and computational operations on the tree.
-4. **Phylo_Rooter:** enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
-5. **OrthoFilter:** handle the process of single-copy and multi-copy gene families. It utilizes provided labels to filter gene trees, identify potential orthologous genes, and remove long-branch outliers and phylogenomic noise. Additionally, OrthoFilter ensures that known labeled taxa (such as family, order, etc.) form monophyletic groups in the gene tree.
+1. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree in Newick format into a ‘comb’ structure based on predefined support value threshold. It can also revert this 'comb' structure back to a fully resolved binary tree, allowing dynamic topology adjustments.
+2. **PhyloSupport_Scaler:** Recalibrate support values from bootstrap or posterior probability in a phylogenetic tree, scaling them between \[0,1] and \[1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.
+3. **BranchLength_NumericConverter:** Converts branch length values of a phylogenetic tree from string to numerical format, critical for quantitative analysis and computational operations.
+4. **Phylo_Rooter:** Enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
+5. **OrthoFilter:** Handle the process of single-copy and multi-copy gene families. It utilizes provided labels to filter gene trees, identify potential orthologous genes, and remove long-branchoutliers and phylogenomic noise. Additionally, OrthoFilter ensures that known labeled taxa (such as family, order, etc.) form monophyletic groups in the gene tree.
 6. **TreeTopology_Summarizer:** enumerates the frequency of both absolute and relative topologies for single-copy gene trees and interested clades.
 7. **Tree_Visualizer:** Visualizes and integrates gene duplication detection results into the species tree.
 8. **GD_Detector:** identification of gene duplication events by reconciliaiton of gene and species trees.
 9. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
-10. **GD_Loss_Tracker:** analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
+10. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
 11. **GD_Loss_Visualizer:** Visualizes the summary of gene duplication loss event on the context of speices tree.
 12. **Ortho_Retriever:** Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple species.
 13. **Hybrid_Tracer:** Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree
 14. detect species hybridization events for .
 15. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
-26. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
+16. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
     
 ## Installation
 
