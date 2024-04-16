@@ -147,7 +147,7 @@ If you are interested in contributing code or reporting bugs, please check the [
 
 ## Version History
 
-Check the [Changelog](CHANGELOG.md) for details on different versions and updates.
+Check the [Changelog][https://github.com/YiyongZhao/PhyloTracer/commits/PhyloTracer_v1.0.0] for details on different versions and updates.
 
 ## License
 
