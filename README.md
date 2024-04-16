@@ -73,14 +73,17 @@ git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 conda env create -f environment.yml
 conda activate phylotracer
-# ⚠️ If Conda is unable to create an environment, please use the following command to download the dependency library.
+# ⚠️ Alternatively, we also provide a convenient one-click installation script using pip (the package installer for Python) to install those dependencies with the following command:
 chmod +x install_packages.sh
 bash install_package.sh
+
 # qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-#This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix #this problem.
+#This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+
 #Available platform plugins are: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb.
 #Aborted (core dumped)
-Please try this command
+
+Please try this command before run PhyloTracer:
 export QT_QPA_PLATFORM=linuxfb
 
 ```
