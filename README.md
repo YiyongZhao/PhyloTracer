@@ -32,7 +32,6 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 
 PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring putative orthologous genes. It also includes functions to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
 
-`PhyloTracer` use Python framework ([ete3](http://etetoolkit.org/)) for the analysis and visualization of trees. Hyde ([seqwish](https://doi.org/10.1101/2022.02.14.480413)) was used to detect species hybridizaiotn signals by ABAB-BABA test.
 
 ## Module features
 1. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree in Newick format into a ‘comb’ structure based on predefined support value threshold. It can also revert this 'comb' structure back to a fully resolved binary tree, allowing dynamic topology adjustments.
@@ -60,6 +59,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 * Python 3.0+
 * Python modules:
   * ete3
+  * HyDe
   * pandas
   * numpy
   * tqdm
@@ -85,6 +85,8 @@ bash install_package.sh
 #Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
 #Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
 export QT_QPA_PLATFORM=linuxfb
+
+`PhyloTracer`use Python framework ([ete3](http://etetoolkit.org/)) for the analysis and visualization of trees. Hyde ([seqwish](https://github.com/pblischak/HyDe)) was used to detect species hybridizaiotn signals by ABAB-BABA test.
 
 ```
 
