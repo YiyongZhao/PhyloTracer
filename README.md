@@ -67,7 +67,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
   * matplotlib
   * pyqt5
 
-### Clone and Install Environment:
+### Clone and install environment:
 
 ```bash
 #A convenient one-click installation by using conda (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) with the following commands:
@@ -147,7 +147,7 @@ If you are interested in contributing code or reporting bugs, please check the [
 
 ## Version History
 
-Check the [Changelog][https://github.com/YiyongZhao/PhyloTracer/commits/PhyloTracer_v1.0.0] for details on different versions and updates.
+Check the Changelog: https://github.com/YiyongZhao/PhyloTracer/commits/PhyloTracer_v1.0.0 for details on different versions and updates.
 
 ## License
 
