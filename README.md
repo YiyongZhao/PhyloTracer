@@ -56,7 +56,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 ### Required dependencies:
 
 * Python 3.0+
-* Python Modules:
+* Python modules:
   * ete3
   * pandas
   * numpy
