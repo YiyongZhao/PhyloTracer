@@ -26,7 +26,7 @@
 
 # PhyloTracer
 
-A User-Friendly Toolkit for Comprehensive inference for Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Gene Family Expansion and Contraction, Ortholog Retrieval, Phylogenetic Noise Elimination, Species Hybridization Detection, and Visualization.
+A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree Foramt, Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Ortholog Retrieval, Phylogenetic Noise Elimination, Gene Tree Topology Summary, Species Hybridization Detection, and Visualization.
 
 ## Introduction
 
