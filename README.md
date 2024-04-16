@@ -1,7 +1,7 @@
 
 <div align="center">
   
-# <img src="logo/PhyloTracer_logo.png" width="80" height="80" align="center"> PhyloTracer V1.0.0 </div> 
+# <img src="logo/PhyloTracer_logo.png" width="80" height="80" align="center"> PhyloTracer ![version](https://img.shields.io/badge/Version-1.0.0-blue) </div> 
 
 ```
 ###############################################################################################
@@ -20,11 +20,11 @@
     Licence: MIT license                                                                     
     Release Date: 2023-7                                                                     
     Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yiyongzhao1991@gmail.com)
-    release version: ![version](https://img.shields.io/badge/version-1.0.0-blue)                                                                          
+                                                                         
 ###############################################################################################
 ```
 
-|![version](https://img.shields.io/badge/Version-1.0.0-blue)|
+
 
 # PhyloTracer
 
