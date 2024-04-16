@@ -69,27 +69,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 ### Clone and Install Environment:
 
 ```bash
-git clone https://github.com/YiyongZhao/PhyloTracer.git
-cd PhyloTracer
-conda env create -f environment.yml
-conda activate phylotracer
-# Alternatively, we also provide a convenient one-click installation script using pip (the package installer for Python) to install those dependencies with the following command:
-chmod +x install_packages.sh
-bash install_package.sh
-
-# ⚠️ A reminder for disfunction with vissualization: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-# This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-
-#Alternatively, available platform plugins including: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb.
-Please run the following bash command before run PhyloTracer:
-export QT_QPA_PLATFORM=linuxfb
-
-```
-
-
-
-
-```bash
+# we provide a convenient one-click installation script using conda ([the package installer for Python](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)) with the following command:
 git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 conda env create -f environment.yml
