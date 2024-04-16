@@ -30,7 +30,7 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 
 ## Introduction
 
-PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring true orthologous genes. It also includes functionality to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
+PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring putative orthologous genes. It also includes functions to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
 
 
 ## Module features
