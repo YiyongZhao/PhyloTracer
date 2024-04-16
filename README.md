@@ -32,6 +32,7 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 
 PhyloTracer aims to provide more accurate rooting of gene trees, serving as a foundation for inferring putative orthologous genes. It also includes functions to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
 
+`PhyloTracer` use Python framework ([ete3](http://etetoolkit.org/)) for the analysis and visualization of trees. Hyde ([seqwish](https://doi.org/10.1101/2022.02.14.480413)) was used to detect species hybridizaiotn signals by ABAB-BABA test.
 
 ## Module features
 1. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree in Newick format into a ‘comb’ structure based on predefined support value threshold. It can also revert this 'comb' structure back to a fully resolved binary tree, allowing dynamic topology adjustments.
