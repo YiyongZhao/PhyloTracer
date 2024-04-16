@@ -180,3 +180,10 @@ Feel free to customize it further according to your preferences or additional de
 .. |PhyloTracer Issues| image:: https://img.shields.io/badge/PhyloTracer-Issues-blue.svg
    :target: https://github.com/YiyongZhao/PhyloTracer/issues
 
+.. |License Name| replace:: MIT license
+   :class: license-replace
+
+.. |Contact Email| replace:: yiyongzhao1991@gmail.com (Yiyong Zhao) and l948777439@163.com (Tao Li)
+   :class: contact-replace
+
+
