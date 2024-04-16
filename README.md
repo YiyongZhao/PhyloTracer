@@ -27,12 +27,13 @@
 ###############################################################################################
 ```
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue)
-![Build Status](https://travis-ci.org/YiyongZhao/PhyloTracer.svg?branch=master)
 [![Documentation Status](http://readthedocs.org/projects/hybridization-detection/badge/?version=latest)](http://hybridization-detection.readthedocs.io)
-[![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
 [![PhyloTracer Issues](https://img.shields.io/badge/PhyloTracer-Issues-blue.svg)](https://github.com/YiyongZhao/PhyloTracer/issues)
+![Build Status](https://travis-ci.org/YiyongZhao/PhyloTracer.svg?branch=master)
+[![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
 
-# PhyloTracer ![version](https://img.shields.io/badge/Version-1.0.0-blue)
+
+# PhyloTracer
 
 A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree Foramt, Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Ortholog Retrieval, Phylogenetic Noise Elimination, Gene Tree Topology Summary, Species Hybridization Detection, and Visualization.
 
