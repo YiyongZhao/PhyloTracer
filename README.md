@@ -24,6 +24,8 @@
 ###############################################################################################
 ```
 
+[version](https://img.shields.io/badge/any_text-you_like-blue)
+
 # PhyloTracer
 
 A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree Foramt, Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Ortholog Retrieval, Phylogenetic Noise Elimination, Gene Tree Topology Summary, Species Hybridization Detection, and Visualization.
