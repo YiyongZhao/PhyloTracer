@@ -1,7 +1,3 @@
-
-|Build Status| |Documentation|  |PyPI Badge|
-
-
 <div align="center">
   
 # <img src="logo/PhyloTracer_logo.png" width="80" height="80" align="center"> PhyloTracer </div> 
