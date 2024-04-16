@@ -49,7 +49,7 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 15. **Hybrid_Tracer:** Utilizes the ABAB-BABA test to detect species hybridization signals.
 16. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN-based predictions.
 17. **HaploFinder:** Distinguishing Gene Conversion by Tracing Subgenome Haplotypes through Phylogenomic Profiling.
-18. **Hybrid_Tracer_GCN:** Employs a graph neural network approach for species hybridization signal detection.
+18. 
 ## Installation
 
 ### Required dependencies:
