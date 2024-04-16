@@ -75,9 +75,10 @@ cd PhyloTracer
 conda env create -f environment.yml
 conda activate phylotracer
 
-#Alternatively, A convenient one-click installation by using pip (the package installer for Python) with the following commands:
+#Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:
 chmod +x install_packages.sh
 bash install_package.sh
+
 
 #Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
 #Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
