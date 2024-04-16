@@ -27,7 +27,10 @@
 ###############################################################################################
 ```
 
-
+![Build Status](https://travis-ci.org/YiyongZhao/PhyloTracer.svg?branch=master)
+[![Documentation Status](http://readthedocs.org/projects/hybridization-detection/badge/?version=latest)](http://hybridization-detection.readthedocs.io)
+[![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
+[![PhyloTracer Issues](https://img.shields.io/badge/PhyloTracer-Issues-blue.svg)](https://github.com/YiyongZhao/PhyloTracer/issues)
 
 # PhyloTracer ![version](https://img.shields.io/badge/Version-1.0.0-blue)
 
