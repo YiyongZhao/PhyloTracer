@@ -93,7 +93,7 @@ export QT_QPA_PLATFORM=linuxfb
 ### Install from PyPI with pip:
 
 ```bash
-pip install `PhyloTracer`
+pip install PhyloTracer
 ```
 
 ## Usage
