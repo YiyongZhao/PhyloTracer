@@ -69,21 +69,18 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 ### Clone and Install Environment:
 
 ```bash
-# we provide a convenient one-click installation script using conda ([the package installer for Python](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)) with the following command:
+#A convenient one-click installation by using conda (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) with the following commands:
 git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 conda env create -f environment.yml
 conda activate phylotracer
 
-# Alternatively, we provide a convenient one-click installation script using pip (the package installer for Python) with the following command:
+#Alternatively, A convenient one-click installation by using pip (the package installer for Python) with the following commands:
 chmod +x install_packages.sh
 bash install_package.sh
 
-# ⚠️ Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.
-# This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-
-# Alternatively, available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb.
-Before running PhyloTracer, please execute the following bash command:
+#Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+#Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
 export QT_QPA_PLATFORM=linuxfb
 
 ```
