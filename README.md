@@ -1,7 +1,7 @@
 
 <div align="center">
   
-# <img src="logo/PhyloTracer_logo.png" width="80" height="80" align="center"> PhyloTracer ![version](https://img.shields.io/badge/Version-1.0.0-blue) </div> 
+# <img src="logo/PhyloTracer_logo.png" width="80" height="80" align="center"> PhyloTracer </div> 
 
 ```
 ###############################################################################################
@@ -26,7 +26,7 @@
 
 
 
-# PhyloTracer
+# PhyloTracer ![version](https://img.shields.io/badge/Version-1.0.0-blue)
 
 A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree Foramt, Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Ortholog Retrieval, Phylogenetic Noise Elimination, Gene Tree Topology Summary, Species Hybridization Detection, and Visualization.
 
