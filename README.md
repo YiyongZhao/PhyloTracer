@@ -19,8 +19,8 @@
     Github: https://github.com/YiyongZhao/PhyloTracer                                        
     Licence: MIT license                                                                     
     Release Date: 2023-7                                                                     
-    Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yiyongzhao1991@gmail.com)                  
-                                                                                             
+    Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yiyongzhao1991@gmail.com)
+    release version: ![version](https://img.shields.io/badge/version-1.0.0-blue)                                                                          
 ###############################################################################################
 ```
 
