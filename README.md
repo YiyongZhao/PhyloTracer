@@ -1,3 +1,4 @@
+
 |Build Status| |Documentation|  |PyPI Badge|
 
 
@@ -162,7 +163,7 @@ PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) fil
 ## Contact
 
 For any questions or suggestions, feel free to contact us via email: yiyongzhao1991@gmail.com (Yiyong Zhao) and l948777439@163.com (Tao Li).
-Feel free to customize it further according to your preferences or additional details you want to include.
+Feel free to customize it further according to your preferences or additional details you want to include. |HyDe Issues|
 
 .. |Build Status| image:: https://travis-ci.org/pblischak/HyDe.svg?branch=master
    :target: https://github.com/YiyongZhao/PhyloTracer
