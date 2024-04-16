@@ -1,3 +1,5 @@
+|Build Status| |Documentation|  |PyPI Badge|
+
 
 <div align="center">
   
@@ -161,5 +163,18 @@ PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) fil
 
 For any questions or suggestions, feel free to contact us via email: yiyongzhao1991@gmail.com (Yiyong Zhao) and l948777439@163.com (Tao Li).
 Feel free to customize it further according to your preferences or additional details you want to include.
+
+.. |Build Status| image:: https://travis-ci.org/pblischak/HyDe.svg?branch=master
+   :target: https://github.com/YiyongZhao/PhyloTracer
+
+.. |Documentation| image:: http://readthedocs.org/projects/hybridization-detection/badge/?version=latest
+   :target: http://hybridization-detection.readthedocs.io
+
+.. |HyDe Badge| image:: https://img.shields.io/pypi/v/phyde.svg
+   :target: https://pypi.python.org/pypi/PhyloTracer
+
+
+.. |PhyloTracer Issues| image:: https://img.shields.io/badge/PhyloTracer-Issues-blue.svg
+   :target: https://github.com/YiyongZhao/PhyloTracer/issues
 
 
