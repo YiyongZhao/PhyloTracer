@@ -34,21 +34,21 @@ PhyloTracer aims to provide more accurate rooting of gene trees, serving as a fo
 
 
 ## Module features
-1. **PhyloTree_CollapseExpand:** This module enables the transformation of a phylogenetic tree in Newick format into a ‘comb’ structure, contingent upon a predefined threshold of support values. Conversely, it can also expand a ‘comb’ structure into a fully resolved binary tree, thus facilitating dynamic topology adjustments based on support value thresholds.
-2. **PhyloSupport_Scaler:** This module is designed to recalibrate support values within a phylogenetic tree. It can scale a support value PP from a range of [0,1] to a Bootstrap range of [1,100], or inversely scale down a support value from [0,100] to a range of [0,1], thereby accommodating different analytical requirements.
-3. **BranchLength_NumericConverter:** This module converts the branch length values of a phylogenetic tree from a string type to a numerical format. This conversion is essential for subsequent quantitative analyses and computational operations on the tree.
-4. **Phylo_Rooter:** This module enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
-5. **OrthoFilter:** This module is designed to handle the process of single-copy and multi-copy gene families. It utilizes provided labels to filter gene trees, identify potential orthologous genes, and remove long-branch outliers and phylogenomic noise. Additionally, OrthoFilter ensures that known labeled taxa (such as family, order, etc.) form monophyletic groups in the gene tree.
-6. **TreeTopology_Summarizer:** Enumerates the frequency  of  both absolute and relative topologies for single-copy gene trees and interested clades.
-7. **Tree_Visualizer:** Provides an intuitive visualization for phylogenetic trees, enable labeling tips with multi-layered annotation labeling.
-8. **GD_Detector:**  Facilitates the identification of gene duplication events by reconciliaiton of gene and species trees.
-9. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
-10. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events for each tips across species tree.
-11. **GD_Loss_Visualizer:** Presents a visual summary of gene duplication loss event on the context of speices tree.
-12. **Ortho_Retriever:** Putative orthologs inferrenec from large-scale gene family trees across numerous species.
-15. **Hybrid_Tracer:** Utilizes the ABAB-BABA test to detect species hybridization signals.
-16. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting gene tree topology ratios (ABB+BAA) that support allopolyploidy, D-statistic signals, and GCN-based predictions.
-17. **HaploFinder:** Distinguishing Gene Conversion by Tracing Subgenome Haplotypes through Phylogenomic Profiling.
+1. **PhyloTree_CollapseExpand:** enables transformation of a phylogenetic tree in Newick format into a ‘comb’ structure, contingent upon a predefined threshold of support values. Conversely, it can also expand a ‘comb’ structure into a fully resolved binary tree, thus facilitating dynamic topology adjustments based on support value thresholds.
+2. **PhyloSupport_Scaler:** recalibrate support values within a phylogenetic tree. It can scale a support value PP from a range of [0,1] to a Bootstrap range of [1,100], or inversely scale down a support value from [0,100] to a range of [0,1], thereby accommodating different analytical requirements.
+3. **BranchLength_NumericConverter:** converts the branch length values of a phylogenetic tree from a string type to a numerical format. This conversion is essential for subsequent quantitative analyses and computational operations on the tree.
+4. **Phylo_Rooter:** enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
+5. **OrthoFilter:** handle the process of single-copy and multi-copy gene families. It utilizes provided labels to filter gene trees, identify potential orthologous genes, and remove long-branch outliers and phylogenomic noise. Additionally, OrthoFilter ensures that known labeled taxa (such as family, order, etc.) form monophyletic groups in the gene tree.
+6. **TreeTopology_Summarizer:** enumerates the frequency of both absolute and relative topologies for single-copy gene trees and interested clades.
+7. **Tree_Visualizer:** visualization for phylogenetic trees, enable labeling tips with multi-layered annotation labeling.
+8. **GD_Detector:** identification of gene duplication events by reconciliaiton of gene and species trees.
+9. **GD_Visualizer:** visualizes gene duplication detection results and integrates these findings into the species tree.
+10. **GD_Loss_Tracker:** analyzes and summarizes gene duplication loss events for each tips across species tree.
+11. **GD_Loss_Visualizer:** visualizes the summary of gene duplication loss event on the context of speices tree.
+12. **Ortho_Retriever:** putative orthologs inferrenec from large-scale gene family trees across numerous species.
+15. **Hybrid_Tracer:** utilizes the ABAB-BABA test to detect species hybridization events for iterating each potential hybridization event across species tree.
+16. **Hybrid_Visualizer:** Visualizes and summarize the hybridization signals, highlighting supporting from gene tree topology and D-statistic signals.
+17. **HaploFinder:** distinguishing gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
     
 ## Installation
 
