@@ -89,7 +89,7 @@ export QT_QPA_PLATFORM=linuxfb
 
 
 
-
+```bash
 git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 conda env create -f environment.yml
@@ -106,6 +106,7 @@ bash install_package.sh
 Before running PhyloTracer, please execute the following bash command:
 export QT_QPA_PLATFORM=linuxfb
 
+```
 
 
 ### Install from PyPI with pip:
