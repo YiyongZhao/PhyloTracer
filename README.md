@@ -150,7 +150,7 @@ python PhyloTracer.py GeneDynamics_Visualizer  --input_sps_tree sptree.nwk --inp
 
 ## Contributing
 
-If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](CONTRIBUTING.md).
+If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](https://docs.github.com/en/issues).
 
 ## Version History
 
