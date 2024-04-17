@@ -147,7 +147,7 @@ python PhyloTracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.t
 python PhyloTracer.py GeneDynamics_Visualizer  --input_sps_tree sptree.nwk --input_summary_tree summary_tree
 ```
 
-## Bug reports
+## Bug Reports
 
 You can report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues). If you have any questions, suggestions, or encounter any issues, please do not hesitate to contact us.
 
