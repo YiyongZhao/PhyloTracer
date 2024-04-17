@@ -150,7 +150,8 @@ python PhyloTracer.py GeneDynamics_Visualizer  --input_sps_tree sptree.nwk --inp
 
 ## Contributing
 
-If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](https://docs.github.com/en/issues).
+If you are interested in contributing code or reporting bugs, please check the [Contribution Guidelines](https://docs.github.com/en/issues). 
+If you have any questions, suggestions, or encounter any issues, please do not hesitate to contact us.
 
 ## Version History
 
@@ -161,9 +162,8 @@ Check the [Changelog](https://github.com/YiyongZhao/PhyloTracer/commits/PhyloTra
 PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) file for details.
 
 
-## Contact
+## Bug reports
 
 You can report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues).
-If you have any questions, suggestions, or encounter any issues, please do not hesitate to contact us.
 
 
