@@ -73,7 +73,7 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
   * matplotlib
   * pyqt5
     
-PhyloTracer use basic funcitons of analysis and visualization of trees from Python framework [ete3](http://etetoolkit.org/) and [HyDe](https://github.com/pblischak/HyDe) was used to detect species hybridizaiotn signals by using ABAB-BABA test.
+Note: PhyloTracer use basic funcitons of analysis and visualization of trees from Python framework [ete3](http://etetoolkit.org/) and detect species hybridizaiotn signals using ABAB-BABA test by [HyDe](https://github.com/pblischak/HyDe).
 
 ### Clone and install environment:
 
