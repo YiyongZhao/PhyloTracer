@@ -162,28 +162,6 @@ PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) fil
 
 ## Contact
 
-For any questions or suggestions, feel free to contact us via email: yiyongzhao1991@gmail.com (Yiyong Zhao) and l948777439@163.com (Tao Li).
-Feel free to customize it further according to your preferences or additional details you want to include. |HyDe Issues|
-
-
-
-
-.. |Build Status| image:: https://travis-ci.org/YiyongZhao/PhyloTracer.svg?branch=master
-   :target: https://github.com/YiyongZhao/PhyloTracer
-
-.. |Documentation| image:: http://readthedocs.org/projects/hybridization-detection/badge/?version=latest
-   :target: http://hybridization-detection.readthedocs.io
-
-.. |PyPI Badge| image:: https://img.shields.io/pypi/v/PhyloTracer.svg
-   :target: https://pypi.python.org/pypi/PhyloTracer
-
-.. |PhyloTracer Issues| image:: https://img.shields.io/badge/PhyloTracer-Issues-blue.svg
-   :target: https://github.com/YiyongZhao/PhyloTracer/issues
-
-.. |License Name| replace:: MIT license
-   :class: license-replace
-
-.. |Contact Email| replace:: yiyongzhao1991@gmail.com (Yiyong Zhao) and l948777439@163.com (Tao Li)
-   :class: contact-replace
-
+For any questions or suggestions, feel free to contact us via email: yiyongzhao1991@gmail.com (Yiyong Zhao) and l948777439@163.com (Tao Li). or post the bugs in (issues)[(https://github.com/YiyongZhao/PhyloTracer/issues)]
+Feel free to customize it further according to your preferences or additional details you want to include.
 
