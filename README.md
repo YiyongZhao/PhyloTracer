@@ -161,7 +161,7 @@ Check the [Changelog](https://github.com/YiyongZhao/PhyloTracer/commits/PhyloTra
 
 ## License
 
-PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) file for details.
+PhyloTracer is licensed under the [MIT LICENSE](LICENSE).
 
 
 
