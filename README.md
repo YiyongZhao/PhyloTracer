@@ -163,11 +163,7 @@ PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) fil
 
 ## Contact
 
-If you have any questions, suggestions, or encounter any issues, please do not hesitate to contact us:
-
-- **Yiyong Zhao**: [yiyongzhao1991@gmail.com](mailto:yiyongzhao1991@gmail.com)
-- **Tao Li**: [l948777439@163.com](mailto:l948777439@163.com)
-
-You can also report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues).
+You can report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues).
+If you have any questions, suggestions, or encounter any issues, please do not hesitate to contact us.
 
 
