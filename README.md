@@ -160,8 +160,14 @@ Check the [Changelog](https://github.com/YiyongZhao/PhyloTracer/commits/PhyloTra
 
 PhyloTracer is licensed under the [License Name]. See the [LICENSE](LICENSE) file for details.
 
+
 ## Contact
 
-For any questions or suggestions, feel free to contact us via email: yiyongzhao1991@gmail.com (Yiyong Zhao) and l948777439@163.com (Tao Li). or post the bugs in [issues](https://github.com/YiyongZhao/PhyloTracer/issues).
-Feel free to customize it further according to your preferences or additional details you want to include.
+If you have any questions, suggestions, or encounter any issues, please do not hesitate to contact us:
+
+- **Yiyong Zhao**: [yiyongzhao1991@gmail.com](mailto:yiyongzhao1991@gmail.com)
+- **Tao Li**: [l948777439@163.com](mailto:l948777439@163.com)
+
+You can also report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues).
+
 
