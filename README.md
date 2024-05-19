@@ -52,10 +52,9 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 11. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
 12. **GD_Loss_Visualizer:** Visualizes the summary of gene duplication loss event on the context of speices tree.
 13. **Ortho_Retriever:** Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple species.
-14. **Hybrid_Tracer:** Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree
-15. detect species hybridization events for .
-16. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
-17. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
+14. **Hybrid_Tracer:** Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree detect species hybridization events for .
+15. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
+16. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
     
 ## Installation
 
