@@ -5,7 +5,8 @@ from PhyloTree_CollapseExpand import *
 from PhyloSupport_Scaler import *
 from BranchLength_NumericConverter import *
 from Phylo_Rooter import *
-from OrthoFilter import *
+from OrthoFilter_LB import *
+from OrthoFilter_Mono import *
 from TreeTopology_Summarizer import *
 from Tree_Visualizer import *
 from GD_Detector import *
@@ -13,13 +14,9 @@ from GD_Visualizer import *
 from GD_Loss_Tracker import *
 from GD_Loss_Visualizer import *
 from Ortho_Retriever import *
-from Gene_GainLoss_Finder import *
-from Gene_GainLoss_Visualizer import *
-from Hybrid_Tracer_ABAB_BABA import *
-from Hybrid_Tracer_GCN import *
+from Hybrid_Tracer import *
 from Hybrid_Visualizer import *
-from Phylo_Collapse import *
-from Phylo_Collapse_Visualizer import*
+from HaploFinder import *
 
 
 
@@ -89,12 +86,20 @@ Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='file',  help='I
 Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 Phylo_Rooter_parser.add_argument('--threads', type=int, default=8, help='Thread Number')
 
-# OrthoFilter command
-OrthoFilter_parser = subparsers.add_parser('OrthoFilter', help='OrthoFilter help')
-OrthoFilter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-OrthoFilter_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-OrthoFilter_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
-OrthoFilter_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
+# OrthoFilter_LB command
+OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='OrthoFilter_LBr help')
+OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+OrthoFilter_LB_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+OrthoFilter_LB_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='Visualize the results if set')
+
+# OrthoFilter_Mono command
+OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='OrthoFilter_Mono help')
+OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
+OrthoFilter_Mono_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+OrthoFilter_Mono_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
+OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize the results if set')
 
 # TreeTopology_Summarizer command
 TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help')
@@ -123,20 +128,34 @@ GD_Detector_parser.add_argument('--dup_species_radio', type=float ,required=True
 GD_Detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
 GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
+# GD_Visualizer command
+GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='GD_Visualizer help')
+GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree filet')
+GD_Visualizer_parser.add_argument('--gd_result', metavar='file',  required=True, help='The output of GD_Detector')
+
+# GD_Loss_Tracker command
+GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_Tracker help')
+GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gf list')
+GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree filet')
+GD_Loss_Tracker_parser.add_argument('--outfile', metavar='file',  required=True, help='Out filename')
+
+# GD_Loss_Visualizer command
+GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
+GD_Loss_Visualizer_parser.add_argument('--input_folder', metavar='file',  required=True, help='Input folder')
+GD_Loss_Visualizer_parser.add_argument('--outfile', metavar='file',  required=True, help='Out filename')
+
 # Ortho_Retriever command
 Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help')
 Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 Ortho_Retriever_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='file',  required=True, help='Input gene length list')
 
-# Phylo_Collapse command
-Phylo_Collapse_parser = subparsers.add_parser('Phylo_Collapse', help='Phylo_Collapse help')
-Phylo_Collapse_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-Phylo_Collapse_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-Phylo_Collapse_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
-
-# Phylo_Collapse_Visualizer command
-Phylo_Collapse_Visualizer_parser = subparsers.add_parser('Phylo_Collapse_Visualizer', help='Phylo_Collapse_Visualizer help')
+# Hybrid_Tracer
+Hybrid_Tracer_parser = subparsers.add_parser('Hybrid_Tracer', help='Hybrid_Tracer help')
+Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='file',  required=True, help='Seq file list')
+Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+Hybrid_Tracer_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
@@ -223,8 +242,26 @@ def main():
         else:
             print("Required arguments for Phylo_Rooter command are missing.")
         
-    elif args.command == 'OrthoFilter':
-        # Execute the PhyloNoise_Filter function
+    elif args.command == 'OrthoFilter_LB':
+        # Execute the OrthoFilter_LB function
+        if args.input_GF_list and args.input_taxa and args.long_branch_index :
+            start_time = time.time()
+            input_GF_list = args.input_GF_list
+            input_taxa=args.input_taxa
+            long_brancch_index=args.long_branch_index
+            tre_dic = read_and_return_dict(input_GF_list)
+            taxa_dic=read_and_return_dict(input_taxa)
+            prune_main_LB(tre_dic,taxa_dic,long_brancch_index,visual=args.visual)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
+        else:
+            print("Required arguments for OrthoFilter_LB command are missing.")
+
+
+    elif args.command == 'OrthoFilter_Mono':
+        # Execute the OrthoFilter_Mono function
         if args.input_GF_list and args.input_taxa and args.long_branch_index and args.insert_branch_index:
             start_time = time.time()
             input_GF_list = args.input_GF_list
@@ -233,13 +270,13 @@ def main():
             insert_branch_index=args.insert_branch_index
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
-            prune_main(tre_dic,taxa_dic,long_brancch_index,insert_branch_index)
+            prune_main_Mono(tre_dic,taxa_dic,long_brancch_index,insert_branch_index,visual=args.visual)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
             print("Program execution time:", formatted_time)
         else:
-            print("Required arguments for OrthoFilter command are missing.")
+            print("Required arguments for OrthoFilter_Mono command are missing.")
 
 
     elif args.command == 'TreeTopology_Summarizer':
@@ -309,7 +346,8 @@ def main():
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             sptree=PhyloTree(args.input_sps_tree)
             num_tre_node(sptree)
-            renamed_sptree=rename_species_tree(sptree, voucher2taxa_dic)
+            sptree.write(outfile='numed_sptree.nwk',format=1)
+            renamed_sptree=rename_input_tre(sptree, taxa2voucher_dic)
             tre_dic = read_and_return_dict(input_GF_list)
             filename = 'result.txt'
             write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
@@ -320,6 +358,59 @@ def main():
         else:
             print("Required arguments for GD_Detector command are missing.")
 
+
+    elif args.command == 'GD_Visualizer':
+        # Execute the GD_Visualizer function
+        if args.input_sps_tree and args.gd_result :
+            start_time = time.time()
+            sptree=Tree(args.input_sps_tree,format=1)
+            gd_result = args.gd_result
+            gd_visualizer_main(sptree,gd_result)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
+        else:
+            print("Required arguments for GD_Visualizer command are missing.")
+
+
+    elif args.command == 'GD_Loss_Tracker':
+        # Execute the GD_Loss_Tracker function
+        if args.input_GF_list and args.input_sps_tree and args.outfile :
+            start_time = time.time()
+            input_GF_list = args.input_GF_list
+            input_sps_tree = args.input_sps_tree
+            out_dir=args.outfile
+            sptree=PhyloTree(input_sps_tree,format=1)
+            num_sptree(sptree)
+            tre_dic=read_and_return_dict(input_GF_list)
+
+            os.makedirs(out_dir, exist_ok=True)
+            sp_dic=get_path_str_num_dic(tre_dic,sptree)
+            split_dicts=split_dict_by_first_last_char(sp_dic)
+            divide_path_results_into_individual_files_by_species(split_dicts,out_dir)
+            write_total_lost_path_counts_result(sp_dic)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
+        else:
+            print("Required arguments for GD_Loss_Tracker command are missing.")
+
+    elif args.command == 'GD_Loss_Visualizer':
+        # Execute the GD_Loss_Visualizer function
+        if args.input_folder and  args.outfile :
+            start_time = time.time()
+            input_dir=args.input_folder
+            out_dir=args.outfile
+            os.makedirs(out_dir, exist_ok=True)
+            generate_plt(input_dir,out_dir)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
+        else:
+            print("Required arguments for GD_Loss_Visualizer command are missing.")
 
     elif args.command == 'Ortho_Retriever':
         # Execute the Ortho_Retriever function
@@ -339,50 +430,41 @@ def main():
             print("Program execution time:", formatted_time)
         else:
             print("Required arguments for Ortho_Retriever command are missing.")
-            
 
-    elif args.command == 'Phylo_Collapse':
-        # Execute the PhyloNoise_Filter function
-        if args.input_GF_list and args.input_taxa and args.input_sps_tree :
+
+    elif args.command == 'Hybrid_Tracer':
+        # Execute the Hybrid_Tracer function
+        if args.input_GF_list and args.input_Seq_GF_list  and args.input_sps_tree and args.input_imap:
             start_time = time.time()
             input_GF_list = args.input_GF_list
-            input_taxa=args.input_taxa
-            sptree=Tree(args.input_sps_tree)
+            input_Seq_GF_list = args.input_Seq_GF_list
+            input_sps_tree = args.input_sps_tree
+            input_imap= args.input_imap
             tre_dic = read_and_return_dict(input_GF_list)
-            taxa_dic=read_and_return_dict(input_taxa)
-            collapse_main(tre_dic,taxa_dic,sptree)
+            seq_path_dic = read_and_return_dict(input_Seq_GF_list)
+            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
+            sptree=read_phylo_tree(input_sps_tree)
+            rename_sptree=rename_input_tre(sptree,taxa2voucher_dic)
+            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
             print("Program execution time:", formatted_time)
         else:
-            print("Required arguments for Phylo_Collapse command are missing.")
+            print("Required arguments for Hybrid_Tracer command are missing.")
 
+            
 
-    elif args.command == 'Phylo_Collapse_Visualizer':
-        start_time = time.time()
-        if not os.path.exists('output/collapse_tree/'):
-            print("Error: 'output/collapse_tree' folder does not exist in the current directory. Please perform Phylo_Collapse processing first")
-        else:
-            tre_dic = {i.split('.')[0]:'output/collapse_tree/'+i for i in os.listdir('output/collapse_tree/')}
-            taxa_dic=read_and_return_dict('node2taxa.txt')
-            c_color_dic=get_taxa_to_color_dict(taxa_dic)
-            collapse_visual_main(tre_dic,c_color_dic)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        #else:
-            #print("Required arguments for Phylo_Collapse_Visualizer command are missing.")
+    
      
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, OrthoFilter_Multi, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, OrthoFilter_Single, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}")
+        print("Usage: python PhyloTracer.py  [-h]  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}")
         print()
         print("optional arguments:")
         print('  -h, --help            show this help message and exit')
         print()
         print('available programs::')
-        print('  {GeneDynamics_Tracker, Hybrid_Visualizer, Ortho_Retriever, GD_Visualizer, GeneDynamics_Visualizer, Hybrid_Tracer, OrthoFilter_Multi, TreeTopology_Summarizer, Tree_Visualizer, GD_Loss_Tracker, Phylo_Collapse, GD_Detector, OrthoFilter_Single, Phylo_Rooter, Phylo_Tracer, GD_Loss_Visualizer, Phylo_Collapse_Visualizer}')
+        print('  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}')
 
 
 if __name__ == "__main__":
