@@ -101,13 +101,13 @@ pip install PhyloTracer
 ```
 
 ## Usage
-### Example Data:
-#### GF.txt:the path of genetrees
-1  path/1.nwk
+## Example Data:
+### GF.txt:the path of genetrees
+1  path/1.nwk  
 2  path/2.nwk
 
 
-### Example Scenarios:
+## Example Scenarios:
 1. **PhyloTree_CollapseExpand:**
 
 ```bash
