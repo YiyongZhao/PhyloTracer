@@ -107,7 +107,7 @@ pip install PhyloTracer
 2&nbsp;&nbsp;&nbsp;&nbsp;/absolute/path/to/file2  
 3&nbsp;&nbsp;&nbsp;&nbsp;/absolute/path/to/file3  
 
-## imap.txt: Geneid correspongding species
+## imap.txt: Geneid correspongding species and the imap file must be sorted
 gene1&nbsp;&nbsp;&nbsp;&nbsp;Species_A  
 gene2&nbsp;&nbsp;&nbsp;&nbsp;Species_B  
 gene3&nbsp;&nbsp;&nbsp;&nbsp;Species_C  
