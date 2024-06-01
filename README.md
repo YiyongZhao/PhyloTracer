@@ -102,17 +102,17 @@ pip install PhyloTracer
 
 ## Usage
 ## Example Data:Generally, it is divided into two middle tabs.
-### GF.txt:The path of genetrees
+## GF.txt:The path of genetrees
 1    /absolute/path/to/file1  
 2    /absolute/path/to/file2  
 3    /absolute/path/to/file3  
 
-### imap.txt:Geneid correspongding species
+## imap.txt:Geneid correspongding species
 gene1    Species_A  
 gene2    Species_B  
 gene3    Species_C  
 
-### taxa,genus,order:S correspongding vouncher
+## taxa,genus,order:Scorrespongding vouncher
 Species_A    Vouncher_1  
 Species_B    Vouncher_2  
 Species_C    Vouncher_3  
