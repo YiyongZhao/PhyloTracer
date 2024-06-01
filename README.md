@@ -103,47 +103,82 @@ pip install PhyloTracer
 ## Usage
 
 ## Example Scenarios:
-
-1. **Phylo_Rooter:**
+1. **PhyloTree_CollapseExpand:**
 
 ```bash
-python PhyloTracer.py Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
+python Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF.txt --support_value support
 ```
 
-2. **PhyloNoise_Filter:**
+2. **PhyloSupport_Scaler:**
 
 ```bash
-python PhyloTracer.py PhyloNoise_Filter --input_GF_list GF.txt --input_taxa taxa
+python Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list GF.txt --scale scale_switch
+```
+
+3. **BranchLength_NumericConverter:**
+
+```bash
+python Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF.txt --decimal_place decimal_place_num
+```
+
+4. **Phylo_Rooter:**
+
+```bash
+python Phylo_Tracer.py Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree sptree.nwk --input_gene_length length.txt --threads 8
+```
+
+5. **OrthoFilter_LB:**
+
+```bash
+python Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF.txt --input_taxa taxa --long_branch_index 10 --visual
 ```
     
-3. **TreeTopology_Summarizer:**
+6. **OrthoFilter_Mono:**
 
 ```bash
-python PhyloTracer.py TreeTopology_Summarizer --input_GF_list GF.txt --input_imap imap.txt
+python Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF.txt  --input_taxa taxa --long_branch_index 10 --insert_branch_index 10 --visual
 ```
 
-4. **Tree_Visualizer:**
+7. **TreeTopology_Summarizer:**
 
 ```bash
-Python PhyloTracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt --gene_categories genus order --keep_branch 1 --tree_style r
+python Phylo_Tracer.py TreeTopology_Summarizer --input_GF_list GF.txt  --input_imap imap.txt --outfile filename
 ```
 
-5. **GD_Detector:**
+8. **Tree_Visualizer:**
 
 ```bash
-python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --support 50 --dup_species_radio 0.5 --dup_species_num 2
+Python Phylo_Tracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt --gene_categories genus order --keep_branch 1 --tree_style r
 ```
 
-6. **Ortho_Retriever:**
+9. **GD_Detector:**
 
 ```bash
-python PhyloTracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree 30sptree.nwk --input_gene_length length.txt
+python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree sptree.nwk --gd_support 50 --clade_support 50 --dup_species_radio 0.5 --dup_species_num 2
 ```
 
-7. **GeneDynamics_Visualizer:**
+10. **GD_Visualizer:**
 
 ```bash
-python PhyloTracer.py GeneDynamics_Visualizer  --input_sps_tree sptree.nwk --input_summary_tree summary_tree
+python Phylo_Tracer.py GD_Visualizer --input_GF_list GF.txt --input_sps_tree sptree.nwk 
+```
+
+11. **GD_Loss_Tracker:**
+
+```bash
+python Phylo_Tracer.py GD_Loss_Tracker  --input_GF_list GF.txt  --input_sps_tree sptree.nwk --outfile foldername
+```
+
+12. **GD_Loss_Visualizer:**
+
+```bash
+python Phylo_Tracer.py GD_Loss_Visualizer  --input_folder GD_Loss_Tracker_out_folder  --outfile  foldername
+```
+
+13. **Ortho_Retriever:**
+
+```bash
+python Phylo_Tracer.py Ortho_Retriever  --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt
 ```
 
 ## Bug Reports
