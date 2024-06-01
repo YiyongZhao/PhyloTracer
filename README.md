@@ -181,6 +181,12 @@ python Phylo_Tracer.py GD_Loss_Visualizer  --input_folder GD_Loss_Tracker_out_fo
 python Phylo_Tracer.py Ortho_Retriever  --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt
 ```
 
+14. **Hybrid_Tracer:**
+
+```bash
+python Phylo_Tracer.py Hybrid_Tracer  --input_GF_list GF.txt --input_Seq_GF_list Seq_GF.txt --input_sps_tree sptree.nwk --input_imap imap.txt
+```
+
 ## Bug Reports
 
 You can report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues). If you have any questions, suggestions, or encounter any issues, please do not hesitate to contact us.
