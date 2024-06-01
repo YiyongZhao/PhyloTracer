@@ -103,7 +103,7 @@ pip install PhyloTracer
 ## Usage
 ## Example Data: Generally, it is divided into two middle tabs.
 ## GF.txt: The path of genetrees
-1	/absolute/path/to/file1  
+1&nbsp;/absolute/path/to/file1  
 2	/absolute/path/to/file2  
 3	/absolute/path/to/file3  
 
