@@ -108,14 +108,14 @@ pip install PhyloTracer
 3&nbsp;&nbsp;&nbsp;&nbsp;/absolute/path/to/file3  
 
 ## imap.txt: Geneid correspongding species
-gene1    Species_A  
-gene2    Species_B  
-gene3    Species_C  
+gene1&nbsp;&nbsp;&nbsp;&nbsp;Species_A  
+gene2&nbsp;&nbsp;&nbsp;&nbsp;Species_B  
+gene3&nbsp;&nbsp;&nbsp;&nbsp;Species_C  
 
 ## taxa,genus,order: Species correspongding vouncher
-Species_A    Vouncher_1  
-Species_B    Vouncher_2  
-Species_C    Vouncher_3  
+Species_A&nbsp;&nbsp;&nbsp;&nbsp;Vouncher_1  
+Species_B&nbsp;&nbsp;&nbsp;&nbsp;Vouncher_2  
+Species_C&nbsp;&nbsp;&nbsp;&nbsp;Vouncher_3  
 
 ## Example Scenarios:
 1. **PhyloTree_CollapseExpand:**
