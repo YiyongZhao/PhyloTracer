@@ -99,9 +99,9 @@ AQU_0000003  1131
 .
 
 --taxa.txt or or family.txt or order.txt or class.txt----------------------------------------------------
-ACT  Actinidia_chinensis	| ACT  Actinidiaceae	|	ACT  Ericales			| ACT  Magnoliopsida
-AMB  Amborella_trichopoda	|	AMB  Amborellaceae	| AMB  Amborellales	|	AMB  Magnoliopsida
-AQU  Aquilegia_coerulea		| AQU  Ranunculaceae	| AQU  Ranunculales	| AQU  Magnoliopsida
+ACT  Actinidia_chinensis | ACT  Actinidiaceae  |  ACT  Ericales       | ACT  Magnoliopsida
+AMB  Amborella_trichopoda  |  AMB  Amborellaceae  |  AMB  Amborellales  |  AMB  Magnoliopsida
+AQU  Aquilegia_coerulea  | AQU  Ranunculaceae | AQU  Ranunculales | AQU  Magnoliopsida
 .
 .
 .
