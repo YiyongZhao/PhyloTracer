@@ -59,6 +59,7 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 ## Input file requirements
 
 The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
+```bash
 - **GF.txt**   
   OG_104001&nbsp;&nbsp;&nbsp;&nbsp;example_data/Phylo_Rooter/OG_104001.treefile   
   OG_104002&nbsp;&nbsp;&nbsp;&nbsp;example_data/Phylo_Rooter/OG_104002.treefile    
@@ -91,7 +92,8 @@ The following input files must strictly comply with the requirements, with tabs 
   AQU_0000003&nbsp;&nbsp;&nbsp;&nbsp;1131   
   .   
   .   
-  .   
+  .
+```  
 ## Installation
 
 ### Required dependencies:
