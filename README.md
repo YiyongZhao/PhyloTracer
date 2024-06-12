@@ -59,6 +59,7 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 ## Input file requirements
 
 The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
+
 ```bash
 --GF.txt--
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
@@ -67,6 +68,8 @@ OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
 .   
 .   
 .
+```
+```bash
 ❗️: this file must be sorted
 --imap.txt--
 ACT_0000001  ACT   
