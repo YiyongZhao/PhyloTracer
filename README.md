@@ -60,9 +60,9 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 
 The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
 - **GF.txt**
-OG_104001  example_data/Phylo_Rooter/OG_104001.treefile
-OG_104002  example_data/Phylo_Rooter/OG_104002.treefile
-OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
+OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
+OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
+OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
 
 - **imap.txt**
 - ⚠: 该文件必须排序
