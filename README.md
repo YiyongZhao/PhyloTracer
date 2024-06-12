@@ -61,17 +61,16 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
 
 ```bash
---GF.txt--
+--GF.txt----------------------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
 .   
 .   
 .
-```
-```bash
+--------------------------------------------------------------------------------------------------------
 ❗️: this file must be sorted
---imap.txt--
+--imap.txt----------------------------------------------------------------------------------------------
 ACT_0000001  ACT   
 ACT_0000002  ACT   
 ACT_0000003  ACT   
@@ -83,8 +82,9 @@ AQU_0000002  AQU
 AQU_0000003  AQU   
 .   
 .   
-.   
---length.txt--
+.
+-------------------------------------------------------------------------------------------------------- 
+--length.txt--------------------------------------------------------------------------------------------
 ACT_0000001  501   
 ACT_0000002  267   
 ACT_0000003  903   
