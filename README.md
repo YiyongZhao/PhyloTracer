@@ -55,7 +55,19 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 14. **Hybrid_Tracer:** Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree detect species hybridization events for .
 15. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
 16. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
-    
+
+## Input file requirements
+
+The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
+- **GF.txt**
+OG_104001  example_data/Phylo_Rooter/OG_104001.treefile
+OG_104002  example_data/Phylo_Rooter/OG_104002.treefile
+OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
+
+- **imap.txt**
+- ⚠: 该文件必须排序
+
+
 ## Installation
 
 ### Required dependencies:
