@@ -60,39 +60,40 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 
 The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
 ```bash
-- **GF.txt**   
-  OG_104001&nbsp;&nbsp;&nbsp;&nbsp;example_data/Phylo_Rooter/OG_104001.treefile   
-  OG_104002&nbsp;&nbsp;&nbsp;&nbsp;example_data/Phylo_Rooter/OG_104002.treefile    
-  OG_104003&nbsp;&nbsp;&nbsp;&nbsp;example_data/Phylo_Rooter/OG_104003.treefile   
-  .   
-  .   
-  .   
-- **imap.txt** ❗️: this file must be sorted
-  ACT_0000001&nbsp;&nbsp;&nbsp;&nbsp;ACT   
-  ACT_0000002&nbsp;&nbsp;&nbsp;&nbsp;ACT   
-  ACT_0000003&nbsp;&nbsp;&nbsp;&nbsp;ACT   
-  AMB_0000001&nbsp;&nbsp;&nbsp;&nbsp;AMB   
-  AMB_0000002&nbsp;&nbsp;&nbsp;&nbsp;AMB   
-  AMB_0000003&nbsp;&nbsp;&nbsp;&nbsp;AMB   
-  AQU_0000001&nbsp;&nbsp;&nbsp;&nbsp;AQU   
-  AQU_0000002&nbsp;&nbsp;&nbsp;&nbsp;AQU   
-  AQU_0000003&nbsp;&nbsp;&nbsp;&nbsp;AQU   
-  .   
-  .   
-  .   
-- **length.txt**
-  ACT_0000001&nbsp;&nbsp;&nbsp;&nbsp;501   
-  ACT_0000002&nbsp;&nbsp;&nbsp;&nbsp;267   
-  ACT_0000003&nbsp;&nbsp;&nbsp;&nbsp;903   
-  AMB_0000001&nbsp;&nbsp;&nbsp;&nbsp;339   
-  AMB_0000002&nbsp;&nbsp;&nbsp;&nbsp;756   
-  AMB_0000003&nbsp;&nbsp;&nbsp;&nbsp;1275   
-  AQU_0000001&nbsp;&nbsp;&nbsp;&nbsp;2733   
-  AQU_0000002&nbsp;&nbsp;&nbsp;&nbsp;219   
-  AQU_0000003&nbsp;&nbsp;&nbsp;&nbsp;1131   
-  .   
-  .   
-  .
+**GF.txt**   
+OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
+OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
+OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
+.   
+.   
+.
+❗️: this file must be sorted
+**imap.txt** 
+ACT_0000001  ACT   
+ACT_0000002  ACT   
+ACT_0000003  ACT   
+AMB_0000001  AMB   
+AMB_0000002  AMB   
+AMB_0000003  AMB   
+AQU_0000001  AQU   
+AQU_0000002  AQU   
+AQU_0000003  AQU   
+.   
+.   
+.   
+**length.txt**
+ACT_0000001  501   
+ACT_0000002  267   
+ACT_0000003  903   
+AMB_0000001  339   
+AMB_0000002  756   
+AMB_0000003  1275   
+AQU_0000001  2733   
+AQU_0000002  219   
+AQU_0000003  1131   
+.   
+.   
+.
 ```  
 ## Installation
 
@@ -131,29 +132,12 @@ bash install_package.sh
 export QT_QPA_PLATFORM=linuxfb
 ```
 
-
 ### Install from PyPI with pip:
 
 ```bash
 pip install PhyloTracer
 ```
 
-## Usage
-## Example Data: Generally, it is divided into two middle tabs.
-## GF.txt: The path of genetrees
-1&nbsp;&nbsp;&nbsp;&nbsp;/absolute/path/to/file1  
-2&nbsp;&nbsp;&nbsp;&nbsp;/absolute/path/to/file2  
-3&nbsp;&nbsp;&nbsp;&nbsp;/absolute/path/to/file3  
-
-## imap.txt: Geneid correspongding species and the imap file must be sorted
-gene1&nbsp;&nbsp;&nbsp;&nbsp;Species_A  
-gene2&nbsp;&nbsp;&nbsp;&nbsp;Species_B  
-gene3&nbsp;&nbsp;&nbsp;&nbsp;Species_C  
-
-## taxa,genus,order: Species correspongding vouncher
-Species_A&nbsp;&nbsp;&nbsp;&nbsp;Vouncher_1  
-Species_B&nbsp;&nbsp;&nbsp;&nbsp;Vouncher_2  
-Species_C&nbsp;&nbsp;&nbsp;&nbsp;Vouncher_3  
 
 ## Example Scenarios:
 1. **PhyloTree_CollapseExpand:**
