@@ -60,22 +60,22 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 
 The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
 - **GF.txt**   
-OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
-OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
-OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
+OG_104001&nbsp;&nbsp;&nbsp;&nbsp;example_data/Phylo_Rooter/OG_104001.treefile   
+OG_104002&nbsp;&nbsp;&nbsp;&nbsp;example_data/Phylo_Rooter/OG_104002.treefile    
+OG_104003&nbsp;&nbsp;&nbsp;&nbsp;example_data/Phylo_Rooter/OG_104003.treefile   
 .   
 .   
 .   
-- **imap.txt** ⚠: this file must be sorted
-ACT_0000001	ACT   
-ACT_0000002	ACT   
-ACT_0000003	ACT   
-AMB_0000001	AMB   
-AMB_0000002	AMB   
-AMB_0000003	AMB   
-AQU_0000001	AQU   
-AQU_0000002	AQU   
-AQU_0000003	AQU   
+- **imap.txt** ❗️: this file must be sorted
+ACT_0000001&nbsp;&nbsp;&nbsp;&nbsp;ACT   
+ACT_0000002&nbsp;&nbsp;&nbsp;&nbsp;ACT   
+ACT_0000003&nbsp;&nbsp;&nbsp;&nbsp;ACT   
+AMB_0000001&nbsp;&nbsp;&nbsp;&nbsp;AMB   
+AMB_0000002&nbsp;&nbsp;&nbsp;&nbsp;AMB   
+AMB_0000003&nbsp;&nbsp;&nbsp;&nbsp;AMB   
+AQU_0000001&nbsp;&nbsp;&nbsp;&nbsp;AQU   
+AQU_0000002&nbsp;&nbsp;&nbsp;&nbsp;AQU   
+AQU_0000003&nbsp;&nbsp;&nbsp;&nbsp;AQU   
 .   
 .   
 .   
