@@ -175,7 +175,7 @@ Usage
     Phylo_Tracer.py PhyloSupport_Scaler  --input_GF_list  GF.txt  --scale  1
 Arguement
     --input_GF_list		File containing paths to gene tree files, one per line.
-    --scale				1 to scale up (0 to 1 to 1 to 100), 0 to scale down (1 to 100 to 0 to 1).
+    --scale				    1 to scale up (0 to 1 to 1 to 100), 0 to scale down (1 to 100 to 0 to 1).
 ```
 ### BranchLength_NumericConverter
 ```bash
@@ -195,8 +195,8 @@ Description
 Usage
     Phylo_Tracer.py  Phylo_Rooter  --input_GF_list  GF.txt  --input_imap  imap.txt  --input_gene_length length.txt  --input_sps_tree  sptree.nwk 
 Arguement
-    --input_GF_list		File containing paths to gene tree files, one per line.
-    --input_imap      File with classification information of species corresponding to genes.
+    --input_GF_list		  File containing paths to gene tree files, one per line.
+    --input_imap        File with classification information of species corresponding to genes.
     --input_gene_length	File with information corresponding to gene lengths.
     --input_sps_tree		Species tree file.
 ```
@@ -207,24 +207,25 @@ Description
 Usage
     Phylo_Tracer.py  OrthoFilter_LB  --input_GF_list  GF.txt  --input_taxa  taxa.txt  --long_branch_index 	10  [ --visual ]
 Arguement
-    --input_GF_list		File containing paths to gene tree files, one per line.
-    --input_taxa			File with taxonomic information for species.
+    --input_GF_list		    File containing paths to gene tree files, one per line.
+    --input_taxa			    File with taxonomic information for species.
     --long_branch_index 	Long branch index
 Optional arguement
-    --visual				Visualize the results if set
-
-OrthoFilter_Mono
+    --visual				      Visualize the results if set
+```
+### OrthoFilter_Mono
+```bash
 Description
-Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and 	paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or 	orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing 	well-established relationships unless otherwise required for specific objectives.
+  Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing 	well-established relationships unless otherwise required for specific objectives.
 Usage
-Phylo_Tracer.py  OrthoFilter_Mono  --input_GF_list  GF.txt  --input_taxa  taxa.txt  	--long_branch_index 	10  --insert_branch_index  10  [ --visual ]
+    Phylo_Tracer.py  OrthoFilter_Mono  --input_GF_list  GF.txt  --input_taxa  taxa.txt  	--long_branch_index 	10  --insert_branch_index  10  [ --visual ]
 Arguement
---input_GF_list		File containing paths to gene tree files, one per line.
---input_taxa			File with taxonomic information for species.
---long_branch_index 	Long branch index
---insert_branch_index	Insert_branch_index
+    --input_GF_list		    File containing paths to gene tree files, one per line.
+    --input_taxa			    File with taxonomic information for species.
+    --long_branch_index 	Long branch index
+    --insert_branch_index	Insert_branch_index
 Optional arguement
---visual				Visualize the results if set
+    --visual				      Visualize the results if set
 
 TreeTopology_Summarizer
 Description
