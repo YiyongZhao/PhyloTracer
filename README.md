@@ -175,7 +175,7 @@ Usage
     Phylo_Tracer.py PhyloSupport_Scaler  --input_GF_list  GF.txt  --scale  1
 Arguement
     --input_GF_list  File containing paths to gene tree files, one per line.
-    --scale  1 to scale up (0 to 1 to 1 to 100), 0 to scale down (1 to 100 to 0 to 1).
+    --scale          1 to scale up (0 to 1 to 1 to 100), 0 to scale down (1 to 100 to 0 to 1).
 ```
 ### BranchLength_NumericConverter
 ```bash
