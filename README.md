@@ -196,7 +196,7 @@ Usage
     Phylo_Tracer.py  Phylo_Rooter  --input_GF_list  GF.txt  --input_imap  imap.txt  --input_gene_length length.txt  --input_sps_tree  sptree.nwk 
 Arguement
     --input_GF_list		File containing paths to gene tree files, one per line.
-    --input_imap			File with classification information of species corresponding to genes.
+    --input_imap      File with classification information of species corresponding to genes.
     --input_gene_length	File with information corresponding to gene lengths.
     --input_sps_tree		Species tree file.
 ```
