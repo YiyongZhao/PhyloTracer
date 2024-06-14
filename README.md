@@ -160,12 +160,12 @@ pip install PhyloTracer
 PhyloTree_CollapseExpand
 ```bash
 Description
-Collapse the branches in the gene tree whose support is equal to a specific value and convert the 	comb structure into a binary tree structure
+    Collapse the branches in the gene tree whose support is equal to a specific value and convert the 	comb structure     into a binary tree structure
 Usage
-Phylo_Tracer.py PhyloTree_CollapseExpand  --input_GF_list  GF.txt  --support_value  50
+    Phylo_Tracer.py PhyloTree_CollapseExpand  --input_GF_list  GF.txt  --support_value  50
 Arguement
---input_GF_list		File containing paths to gene tree files, one per line.
---support_value		Nodes with support values less than or equal to this value will be collapsed.
+    --input_GF_list		File containing paths to gene tree files, one per line.
+    --support_value		Nodes with support values less than or equal to this value will be collapsed.
 ```
 
 ## Bug Reports
