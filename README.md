@@ -238,28 +238,23 @@ Arguement
     --input_imap       File with classification information of species corresponding to genes.
     --outfile          Output filename
 ```
-
-
-
-
-
-
-Tree_Visualizer
+### Tree_Visualizer
+```bash
 Description
-Visualizes and integrates gene duplication detection results into the species tree.
+    Visualizes and integrates gene duplication detection results into the species tree.
 Usage
-Phylo_Tracer.py Tree_Visualizer  --input_GF_list  GF.txt  --input_imap  imap.txt  [ --gene_categories 	[ taxa.txt  family.txt  order.txt  class.txt ]  --keep_branch {1,0}  --tree_style {r,c}  --gene_family  	gene2family.txt  --input_sps_tree  sptree.nwk  --gene_expression  gene_expression.csv ]
+    Phylo_Tracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt [--gene_categories [taxa.txt family.txt  order.txt class.txt] --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.txt --input_sps_tree sptree.nwk  --gene_expression gene_expression.csv ]
 Arguement
---input_GF_list		File containing paths to gene tree files, one per line.
---input_imap			File with classification information of species corresponding to genes.
---keep_branch		1 or 0 indicates whether or not to preserve branch length information
---tree_style			The treestyle, ‘r’ is meaning rectangular, ‘c’ is meaning circular
+    --input_GF_list    File containing paths to gene tree files, one per line.
+    --input_imap       File with classification information of species corresponding to genes.
+    --keep_branch      1 or 0 indicates whether or not to preserve branch length information
+    --tree_style       The treestyle, ‘r’ is meaning rectangular, ‘c’ is meaning circular
 Optional arguement
---gene_categories	File with taxonomic information for species.
---gene_family		If you want to mark gene families you need to provide this file
---input_sps_tree		If you provide the --gene_family parameter, you must provide the species tree
---gene_expression	Gene expression level files
-
+    --gene_categories	File with taxonomic information for species.
+    --gene_family      If you want to mark gene families you need to provide this file
+    --input_sps_tree   If you provide the --gene_family parameter, you must provide the species tree
+    --gene_expression  Gene expression level files
+```
 GD_Detector
 Description
 identification of gene duplication events by reconciliaiton of gene and species trees.
