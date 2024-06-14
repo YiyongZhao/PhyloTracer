@@ -216,16 +216,16 @@ Optional arguement
 ### OrthoFilter_Mono
 ```bash
 Description
-  Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing 	well-established relationships unless otherwise required for specific objectives.
+    Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing 	well-established relationships unless otherwise required for specific objectives.
 Usage
     Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF.txt --input_taxa taxa.txt --long_branch_index 10 --insert_branch_index 10 [--visual]
 Arguement
-    --input_GF_list		    File containing paths to gene tree files, one per line.
-    --input_taxa			    File with taxonomic information for species.
-    --long_branch_index 	Long branch index
-    --insert_branch_index	Insert_branch_index
+    --input_GF_list        File containing paths to gene tree files, one per line.
+    --input_taxa           File with taxonomic information for species.
+    --long_branch_index    Long branch index
+    --insert_branch_index  Insert_branch_index
 Optional arguement
-    --visual				      Visualize the results if set
+    --visual               Visualize the results if set
 ```
 ### TreeTopology_Summarizer
 ```bash
@@ -234,10 +234,10 @@ Description
 Usage
     Phylo_Tracer.py TreeTopology_Summarizer --input_GF_list GF.txt --input_imap imap.txt --outfile filename
 Arguement
-    --input_GF_list		File containing paths to gene tree files, one per line.
-    --input_imap			File with classification information of species corresponding to genes.
-    --outfile 				Output filename
-
+    --input_GF_list    File containing paths to gene tree files, one per line.
+    --input_imap       File with classification information of species corresponding to genes.
+    --outfile          Output filename
+```
 
 
 
