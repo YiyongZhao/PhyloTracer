@@ -250,67 +250,68 @@ Arguement
     --keep_branch      1 or 0 indicates whether or not to preserve branch length information
     --tree_style       The treestyle, ‘r’ is meaning rectangular, ‘c’ is meaning circular
 Optional arguement
-    --gene_categories	File with taxonomic information for species.
+    --gene_categories  File with taxonomic information for species.
     --gene_family      If you want to mark gene families you need to provide this file
     --input_sps_tree   If you provide the --gene_family parameter, you must provide the species tree
     --gene_expression  Gene expression level files
 ```
-GD_Detector
+### GD_Detector
+```bash
 Description
-identification of gene duplication events by reconciliaiton of gene and species trees.
+    identification of gene duplication events by reconciliaiton of gene and species trees.
 Usage
-Phylo_Tracer.py  GD_Detector  --input_GF_list  GF.txt  --input_imap  imap.txt  --gd_support 	50 	--clade_support  50  --dup_species_radio  0.5  --dup_species_num  2  --input_sps_tree  sptree.nwk
+    Phylo_Tracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --gd_support	50 --clade_support 50 --dup_species_radio 0.5 --dup_species_num 2 --input_sps_tree sptree.nwk
 Arguement
---input_GF_list		File containing paths to gene tree files, one per line.
---input_imap			File with classification information of species corresponding to genes.
---gd_support			GD node support [50-100]
---clade_support		The children support of GD node [0-100]
---dup_species_radio	The proportion of species with species duplications under the GD node [0-1]
---dup_species_num	The number of species with species duplications under the GD node
---input_sps_tree		Species tree file
-
-GD_Visualizer
+    --input_GF_list      File containing paths to gene tree files, one per line.
+    --input_imap         File with classification information of species corresponding to genes.
+    --gd_support         GD node support [50-100]
+    --clade_support      The children support of GD node [0-100]
+    --dup_species_radio  The proportion of species with species duplications under the GD node [0-1]
+    --dup_species_num    The number of species with species duplications under the GD node
+    --input_sps_tree     Species tree file
+```
+### GD_Visualizer
+```bash
 Description
-Visualizes gene duplication detection results and integrates these findings into the species tree.
+    Visualizes gene duplication detection results and integrates these findings into the species tree.
 Usage
-Phylo_Tracer.py  GD_Visualizer  --input_sps_tree  sptree.nwk  --gd_result  gd_result.txt
+    Phylo_Tracer.py GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt
 Arguement
---input_sps_tree		Species tree file
---gd_result			Result file of GD_Detector
-
-
-
-
-GD_Loss_Tracker
+    --input_sps_tree  Species tree file
+    --gd_result       Result file of GD_Detector
+```
+### GD_Loss_Tracker
+```bash
 Description
-Analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
+    Analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
 Usage
-Phylo_Tracer.py  GD_Loss_Tracker   --input_GF_list  GF.txt  --input_sps_tree  sptree.nwk  		--output_folder 	filename
+    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF.txt --input_sps_tree sptree.nwk --output_folder filename
 Arguement
---input_GF_list		File containing paths to gene tree files, one per line.
---input_sps_tree		Species tree file
---output_folder		Output foldername
-
-GD_Loss_Visualizer
+    --input_GF_list      File containing paths to gene tree files, one per line.
+    --input_sps_tree     Species tree file
+    --output_folder      Output foldername
+```
+### GD_Loss_Visualizer
+```bash
 Description
-Visualizes the summary of gene duplication loss event on the context of speices tree.
-Ortho_Retriever: Infers single-copy putative orthologs by spliting paralogs from large-scale gene family 	trees across multiple species.
+    Visualizes the summary of gene duplication loss event on the context of speices tree.Ortho_Retriever: Infers single copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple species.
 Usage
-Phylo_Tracer.py  GD_Loss_Visualizer  --input_folder  input_foldername  --output_folder  	output_foldername
+    Phylo_Tracer.py GD_Loss_Visualizer --input_folder input_foldername --output_folder output_foldername
 Arguement
---input_folder			Input foldername
---output_folder		Output foldername
-
-Ortho_Retriever
+    --input_folder     Input foldername
+    --output_folder    Output foldername
+```
+### Ortho_Retriever
+```bash
 Description
-Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple 	species.
+    Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple 	species.
 Usage
-Phylo_Tracer.py  Ortho_Retriever  --input_GF_list  GF.txt  --input_imap  imap.txt  	--input_gene_length  sptree.nwk  
+    Phylo_Tracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.txt --input_gene_length sptree.nwk  
 Arguement
---input_GF_list		File containing paths to gene tree files, one per line.
---input_imap			File with classification information of species corresponding to genes.
---input_gene_length	File with information corresponding to gene lengths.
-
+    --input_GF_list     File containing paths to gene tree files, one per line.
+    --input_imap        File with classification information of species corresponding to genes.
+    --input_gene_length	File with information corresponding to gene lengths.
+```
 Hybrid_Tracer
 Description
 Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species 	tree detect species hybridization events for.
