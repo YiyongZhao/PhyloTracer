@@ -162,7 +162,7 @@ pip install PhyloTracer
 Description
     Collapse the branches in the gene tree whose support is equal to a specific value and convert the comb structure into a binary tree structure
 Usage
-    Phylo_Tracer.py PhyloTree_CollapseExpand  --input_GF_list  GF.txt  --support_value  50
+    Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF.txt --support_value 50
 Arguement
     --input_GF_list  File containing paths to gene tree files, one per line.
     --support_value  Nodes with support values less than or equal to this value will be collapsed.
@@ -172,7 +172,7 @@ Arguement
 Description
     Recalibrate support values from bootstrap or posterior probability in a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.
 Usage
-    Phylo_Tracer.py PhyloSupport_Scaler  --input_GF_list  GF.txt  --scale  1
+    Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list GF.txt --scale 1
 Arguement
     --input_GF_list  File containing paths to gene tree files, one per line.
     --scale          1 to scale up (0 to 1 to 1 to 100), 0 to scale down (1 to 100 to 0 to 1).
@@ -182,7 +182,7 @@ Arguement
 Description
     Normalize the branch length of the gene tree, retaining specific decimal places
 Usage
-    Phylo_Tracer.py BranchLength_NumericConverter  --input_GF_list  GF.txt  [ --decimal_place  10 ]
+    Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF.txt [--decimal_place 10]
 Arguement
     --input_GF_list  File containing paths to gene tree files, one per line.
 Optional arguement
@@ -193,7 +193,7 @@ Optional arguement
 Description
     Enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
 Usage
-    Phylo_Tracer.py  Phylo_Rooter  --input_GF_list  GF.txt  --input_imap  imap.txt  --input_gene_length length.txt  --input_sps_tree  sptree.nwk 
+    Phylo_Tracer.py  Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt --input_sps_tree sptree.nwk 
 Arguement
     --input_GF_list      File containing paths to gene tree files, one per line.
     --input_imap         File with classification information of species corresponding to genes.
@@ -205,13 +205,13 @@ Arguement
 Description
     Prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length.
 Usage
-    Phylo_Tracer.py  OrthoFilter_LB  --input_GF_list  GF.txt  --input_taxa  taxa.txt  --long_branch_index 	10  [ --visual ]
+    Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF.txt --input_taxa taxa.txt --long_branch_index 10 [ --visual ]
 Arguement
-    --input_GF_list		    File containing paths to gene tree files, one per line.
-    --input_taxa			    File with taxonomic information for species.
-    --long_branch_index 	Long branch index
+    --input_GF_list       File containing paths to gene tree files, one per line.
+    --input_taxa          File with taxonomic information for species.
+    --long_branch_index   Long branch index
 Optional arguement
-    --visual				      Visualize the results if set
+    --visual              Visualize the results if set
 ```
 ### OrthoFilter_Mono
 ```bash
