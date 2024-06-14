@@ -182,11 +182,11 @@ Arguement
 Description
     Normalize the branch length of the gene tree, retaining specific decimal places
 Usage
-    Phylo_Tracer.py  BranchLength_NumericConverter  --input_GF_list  GF.txt  [ --decimal_place  10 ]
+    Phylo_Tracer.py BranchLength_NumericConverter  --input_GF_list  GF.txt  [ --decimal_place  10 ]
 Arguement
-    --input_GF_list		File containing paths to gene tree files, one per line.
+    --input_GF_list  File containing paths to gene tree files, one per line.
 Optional arguement
-    --decimal_place		Set how many decimal places to keep(default=10)
+    --decimal_place  Set how many decimal places to keep(default=10)
 ```
 ### Phylo_Rooter
 ```bash
@@ -195,10 +195,10 @@ Description
 Usage
     Phylo_Tracer.py  Phylo_Rooter  --input_GF_list  GF.txt  --input_imap  imap.txt  --input_gene_length length.txt  --input_sps_tree  sptree.nwk 
 Arguement
-    --input_GF_list		  File containing paths to gene tree files, one per line.
-    --input_imap        File with classification information of species corresponding to genes.
-    --input_gene_length	File with information corresponding to gene lengths.
-    --input_sps_tree		Species tree file.
+    --input_GF_list      File containing paths to gene tree files, one per line.
+    --input_imap         File with classification information of species corresponding to genes.
+    --input_gene_length  File with information corresponding to gene lengths.
+    --input_sps_tree     Species tree file.
 ```
 ### OrthoFilter_LB
 ```bash
