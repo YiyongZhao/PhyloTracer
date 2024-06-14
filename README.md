@@ -218,7 +218,7 @@ Optional arguement
 Description
   Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing 	well-established relationships unless otherwise required for specific objectives.
 Usage
-    Phylo_Tracer.py  OrthoFilter_Mono  --input_GF_list  GF.txt  --input_taxa  taxa.txt  	--long_branch_index 	10  --insert_branch_index  10  [ --visual ]
+    Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF.txt --input_taxa taxa.txt --long_branch_index 10 --insert_branch_index 10 [--visual]
 Arguement
     --input_GF_list		    File containing paths to gene tree files, one per line.
     --input_taxa			    File with taxonomic information for species.
@@ -226,16 +226,17 @@ Arguement
     --insert_branch_index	Insert_branch_index
 Optional arguement
     --visual				      Visualize the results if set
-
-TreeTopology_Summarizer
+```
+### TreeTopology_Summarizer
+```bash
 Description
-Enumerates the frequency of both absolute and relative topologies for single-copy gene trees or interested 	predefined clades.
+    Enumerates the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
 Usage
-Phylo_Tracer.py  TreeTopology_Summarizer  --input_GF_list  GF.txt  --input_imap  imap.txt  --outfile 	filename
+    Phylo_Tracer.py TreeTopology_Summarizer --input_GF_list GF.txt --input_imap imap.txt --outfile filename
 Arguement
---input_GF_list		File containing paths to gene tree files, one per line.
---input_imap			File with classification information of species corresponding to genes.
---outfile 				Output filename
+    --input_GF_list		File containing paths to gene tree files, one per line.
+    --input_imap			File with classification information of species corresponding to genes.
+    --outfile 				Output filename
 
 
 
