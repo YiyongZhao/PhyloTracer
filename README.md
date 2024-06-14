@@ -319,10 +319,10 @@ Description
 Usage
     Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF.txt --input_Seq_GF_list Seq_GF.txt --input_sps_tree sptree.nwk input_imap imap.txt
 Arguement
-    --input_GF_list		  File containing paths to gene tree files, one per line.
-    --input_Seq_GF_list	File containing paths to sequence alignment files corresponding to the gene trees.
-    --input_imap			  File with classification information of species corresponding to genes.
-    --input_sps_tree 		Species tree file
+    --input_GF_list      File containing paths to gene tree files, one per line.
+    --input_Seq_GF_list  File containing paths to sequence alignment files corresponding to the gene trees.
+    --input_imap         File with classification information of species corresponding to genes.
+    --input_sps_tree     Species tree file
 ```
 ### Hybrid_Visualizer
 ```bash
