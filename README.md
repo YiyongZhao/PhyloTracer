@@ -107,6 +107,7 @@ AQU  Aquilegia_coerulea  | AQU  Ranunculaceae | AQU  Ranunculales | AQU  Magnoli
 .
 ----------------------------------------------------------------------------------------------------------
 ```
+
 ## Installation
 
 ### Required dependencies:
@@ -150,91 +151,10 @@ export QT_QPA_PLATFORM=linuxfb
 pip install PhyloTracer
 ```
 
-
-## Example Scenarios:
-1. **PhyloTree_CollapseExpand:**
-
-```bash
-python Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF.txt --support_value support
-```
-
-2. **PhyloSupport_Scaler:**
-
-```bash
-python Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list GF.txt --scale scale_switch
-```
-
-3. **BranchLength_NumericConverter:**
-
-```bash
-python Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF.txt --decimal_place decimal_place_num
-```
-
-4. **Phylo_Rooter:**
-
-```bash
-python Phylo_Tracer.py Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree sptree.nwk --input_gene_length length.txt --threads 8
-```
-
-5. **OrthoFilter_LB:**
-
-```bash
-python Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF.txt --input_taxa taxa --long_branch_index 10 --visual
-```
-    
-6. **OrthoFilter_Mono:**
-
-```bash
-python Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF.txt  --input_taxa taxa --long_branch_index 10 --insert_branch_index 10 --visual
-```
-
-7. **TreeTopology_Summarizer:**
-
-```bash
-python Phylo_Tracer.py TreeTopology_Summarizer --input_GF_list GF.txt  --input_imap imap.txt --outfile filename
-```
-
-8. **Tree_Visualizer:**
-
-```bash
-Python Phylo_Tracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt --gene_categories genus order --keep_branch 1 --tree_style r
-```
-
-9. **GD_Detector:**
-
-```bash
-python PhyloTracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --input_sps_tree sptree.nwk --gd_support 50 --clade_support 50 --dup_species_radio 0.5 --dup_species_num 2
-```
-
-10. **GD_Visualizer:**
-
-```bash
-python Phylo_Tracer.py GD_Visualizer --input_GF_list GF.txt --input_sps_tree sptree.nwk 
-```
-
-11. **GD_Loss_Tracker:**
-
-```bash
-python Phylo_Tracer.py GD_Loss_Tracker  --input_GF_list GF.txt  --input_sps_tree sptree.nwk --outfile foldername
-```
-
-12. **GD_Loss_Visualizer:**
-
-```bash
-python Phylo_Tracer.py GD_Loss_Visualizer  --input_folder GD_Loss_Tracker_out_folder  --outfile  foldername
-```
-
-13. **Ortho_Retriever:**
-
-```bash
-python Phylo_Tracer.py Ortho_Retriever  --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt
-```
-
-14. **Hybrid_Tracer:**
-
-```bash
-python Phylo_Tracer.py Hybrid_Tracer  --input_GF_list GF.txt --input_Seq_GF_list Seq_GF.txt --input_sps_tree sptree.nwk --input_imap imap.txt
-```
+## Features
+*Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroups' branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
+*Introducing the concept of long-branch genes for noise filtration in gene trees.   
+*Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.   
 
 ## Bug Reports
 
