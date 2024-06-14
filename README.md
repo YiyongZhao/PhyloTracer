@@ -152,9 +152,21 @@ pip install PhyloTracer
 ```
 
 ## Features
-*Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroups' branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
-*Introducing the concept of long-branch genes for noise filtration in gene trees.   
-*Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.   
+* Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroups' branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
+* Introducing the concept of long-branch genes for noise filtration in gene trees.   
+* Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.   
+
+## Usage
+PhyloTree_CollapseExpand
+```bash
+Description
+Collapse the branches in the gene tree whose support is equal to a specific value and convert the 	comb structure into a binary tree structure
+Usage
+Phylo_Tracer.py PhyloTree_CollapseExpand  --input_GF_list  GF.txt  --support_value  50
+Arguement
+--input_GF_list		File containing paths to gene tree files, one per line.
+--support_value		Nodes with support values less than or equal to this value will be collapsed.
+```
 
 ## Bug Reports
 
