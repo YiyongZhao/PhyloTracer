@@ -167,7 +167,172 @@ Arguement
     --input_GF_list		File containing paths to gene tree files, one per line.
     --support_value		Nodes with support values less than or equal to this value will be collapsed.
 ```
+### PhyloSupport_Scaler
+```bash
+Description
+    Recalibrate support values from bootstrap or posterior probability in a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.
+Usage
+    Phylo_Tracer.py PhyloSupport_Scaler  --input_GF_list  GF.txt  --scale  1
+Arguement
+    --input_GF_list		File containing paths to gene tree files, one per line.
+    --scale				1 to scale up (0 to 1 to 1 to 100), 0 to scale down (1 to 100 to 0 to 1).
+```
+### BranchLength_NumericConverter
+```bash
+Description
+    Normalize the branch length of the gene tree, retaining specific decimal places
+Usage
+    Phylo_Tracer.py  BranchLength_NumericConverter  --input_GF_list  GF.txt  [ --decimal_place  10 ]
+Arguement
+    --input_GF_list		File containing paths to gene tree files, one per line.
+Optional arguement
+    --decimal_place		Set how many decimal places to keep(default=10)
+```
+### Phylo_Rooter
+```bash
+Description
+    Enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
+Usage
+    Phylo_Tracer.py  Phylo_Rooter  --input_GF_list  GF.txt  --input_imap  imap.txt  --input_gene_length length.txt  --input_sps_tree  sptree.nwk 
+Arguement
+    --input_GF_list		File containing paths to gene tree files, one per line.
+    --input_imap			File with classification information of species corresponding to genes.
+    --input_gene_length	File with information corresponding to gene lengths.
+    --input_sps_tree		Species tree file.
+```
+### OrthoFilter_LB
+```bash
+Description
+    Prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length.
+Usage
+    Phylo_Tracer.py  OrthoFilter_LB  --input_GF_list  GF.txt  --input_taxa  taxa.txt  --long_branch_index 	10  [ --visual ]
+Arguement
+    --input_GF_list		File containing paths to gene tree files, one per line.
+    --input_taxa			File with taxonomic information for species.
+    --long_branch_index 	Long branch index
+Optional arguement
+    --visual				Visualize the results if set
 
+OrthoFilter_Mono
+Description
+Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and 	paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or 	orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing 	well-established relationships unless otherwise required for specific objectives.
+Usage
+Phylo_Tracer.py  OrthoFilter_Mono  --input_GF_list  GF.txt  --input_taxa  taxa.txt  	--long_branch_index 	10  --insert_branch_index  10  [ --visual ]
+Arguement
+--input_GF_list		File containing paths to gene tree files, one per line.
+--input_taxa			File with taxonomic information for species.
+--long_branch_index 	Long branch index
+--insert_branch_index	Insert_branch_index
+Optional arguement
+--visual				Visualize the results if set
+
+TreeTopology_Summarizer
+Description
+Enumerates the frequency of both absolute and relative topologies for single-copy gene trees or interested 	predefined clades.
+Usage
+Phylo_Tracer.py  TreeTopology_Summarizer  --input_GF_list  GF.txt  --input_imap  imap.txt  --outfile 	filename
+Arguement
+--input_GF_list		File containing paths to gene tree files, one per line.
+--input_imap			File with classification information of species corresponding to genes.
+--outfile 				Output filename
+
+
+
+
+
+
+
+Tree_Visualizer
+Description
+Visualizes and integrates gene duplication detection results into the species tree.
+Usage
+Phylo_Tracer.py Tree_Visualizer  --input_GF_list  GF.txt  --input_imap  imap.txt  [ --gene_categories 	[ taxa.txt  family.txt  order.txt  class.txt ]  --keep_branch {1,0}  --tree_style {r,c}  --gene_family  	gene2family.txt  --input_sps_tree  sptree.nwk  --gene_expression  gene_expression.csv ]
+Arguement
+--input_GF_list		File containing paths to gene tree files, one per line.
+--input_imap			File with classification information of species corresponding to genes.
+--keep_branch		1 or 0 indicates whether or not to preserve branch length information
+--tree_style			The treestyle, ‘r’ is meaning rectangular, ‘c’ is meaning circular
+Optional arguement
+--gene_categories	File with taxonomic information for species.
+--gene_family		If you want to mark gene families you need to provide this file
+--input_sps_tree		If you provide the --gene_family parameter, you must provide the species tree
+--gene_expression	Gene expression level files
+
+GD_Detector
+Description
+identification of gene duplication events by reconciliaiton of gene and species trees.
+Usage
+Phylo_Tracer.py  GD_Detector  --input_GF_list  GF.txt  --input_imap  imap.txt  --gd_support 	50 	--clade_support  50  --dup_species_radio  0.5  --dup_species_num  2  --input_sps_tree  sptree.nwk
+Arguement
+--input_GF_list		File containing paths to gene tree files, one per line.
+--input_imap			File with classification information of species corresponding to genes.
+--gd_support			GD node support [50-100]
+--clade_support		The children support of GD node [0-100]
+--dup_species_radio	The proportion of species with species duplications under the GD node [0-1]
+--dup_species_num	The number of species with species duplications under the GD node
+--input_sps_tree		Species tree file
+
+GD_Visualizer
+Description
+Visualizes gene duplication detection results and integrates these findings into the species tree.
+Usage
+Phylo_Tracer.py  GD_Visualizer  --input_sps_tree  sptree.nwk  --gd_result  gd_result.txt
+Arguement
+--input_sps_tree		Species tree file
+--gd_result			Result file of GD_Detector
+
+
+
+
+GD_Loss_Tracker
+Description
+Analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
+Usage
+Phylo_Tracer.py  GD_Loss_Tracker   --input_GF_list  GF.txt  --input_sps_tree  sptree.nwk  		--output_folder 	filename
+Arguement
+--input_GF_list		File containing paths to gene tree files, one per line.
+--input_sps_tree		Species tree file
+--output_folder		Output foldername
+
+GD_Loss_Visualizer
+Description
+Visualizes the summary of gene duplication loss event on the context of speices tree.
+Ortho_Retriever: Infers single-copy putative orthologs by spliting paralogs from large-scale gene family 	trees across multiple species.
+Usage
+Phylo_Tracer.py  GD_Loss_Visualizer  --input_folder  input_foldername  --output_folder  	output_foldername
+Arguement
+--input_folder			Input foldername
+--output_folder		Output foldername
+
+Ortho_Retriever
+Description
+Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple 	species.
+Usage
+Phylo_Tracer.py  Ortho_Retriever  --input_GF_list  GF.txt  --input_imap  imap.txt  	--input_gene_length  sptree.nwk  
+Arguement
+--input_GF_list		File containing paths to gene tree files, one per line.
+--input_imap			File with classification information of species corresponding to genes.
+--input_gene_length	File with information corresponding to gene lengths.
+
+Hybrid_Tracer
+Description
+Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species 	tree detect species hybridization events for.
+Usage
+Phylo_Tracer.py  Hybrid_Tracer  --input_GF_list  GF.txt  --input_Seq_GF_list  Seq_GF.txt 		--input_sps_tree  sptree.nwk  --input_imap  imap.txt
+Arguement
+--input_GF_list		File containing paths to gene tree files, one per line.
+--input_Seq_GF_list	File containing paths to sequence alignment files corresponding to the gene trees.
+--input_imap			File with classification information of species corresponding to genes.
+--input_sps_tree 		Species tree file
+
+
+
+Hybrid_Visualizer
+Description
+Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
+HaploFinder
+Description
+Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
 
 ## Bug Reports
 
