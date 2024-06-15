@@ -268,7 +268,7 @@ Arguement
     --dup_species_num    The number of species with species duplications under the GD node
     --input_sps_tree     Species tree file
 Usage
-    Phylo_Tracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --gd_support	50 --clade_support 50 --dup_species_radio 0.5 --dup_species_num 2 --input_sps_tree sptree.nwk
+    Phylo_Tracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --gd_support 50 --clade_support 50 --dup_species_radio 0.5 --dup_species_num 2 --input_sps_tree sptree.nwk
 ```
 ### GD_Visualizer
 ```bash
