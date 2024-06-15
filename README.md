@@ -61,16 +61,16 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
 
 ```bash
---GF.txt-------------------------------------------------------------------------------------------------
+--GF.txt-------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
 .   
 .   
 .
----------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 ❗️: this file must be sorted, the command is: sort -k2,2 imap.txt
---imap.txt-----------------------------------------------------------------------------------------------
+--imap.txt-----------------------------------------------------------------------------
 ACT_0000001  ACT   
 ACT_0000002  ACT   
 ACT_0000003  ACT   
@@ -83,8 +83,8 @@ AQU_0000003  AQU
 .   
 .   
 .
---------------------------------------------------------------------------------------------------------- 
---length.txt---------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
+--length.txt---------------------------------------------------------------------------
 ACT_0000001  501   
 ACT_0000002  267   
 ACT_0000003  903   
@@ -97,15 +97,14 @@ AQU_0000003  1131
 .   
 .   
 .
-
---taxa.txt or or family.txt or order.txt or class.txt-----------------------------------------------------
+--taxa.txt or or family.txt or order.txt or class.txt----------------------------------
 ACT  Actinidia_chinensis | ACT  Actinidiaceae | ACT  Ericales     | ACT  Magnoliopsida
 AMB  Amborella_trichopoda| AMB  Amborellaceae | AMB  Amborellales | AMB  Magnoliopsida
 AQU  Aquilegia_coerulea  | AQU  Ranunculaceae | AQU  Ranunculales | AQU  Magnoliopsida
 .
 .
 .
-----------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 ```
 
 ## Installation
@@ -216,7 +215,7 @@ Usage
 ### OrthoFilter_Mono
 ```bash
 Description
-    Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing 	well-established relationships unless otherwise required for specific objectives.
+    Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing     well-established relationships unless otherwise required for specific objectives.
 Arguement
     --input_GF_list        File containing paths to gene tree files, one per line.
     --input_taxa           File with taxonomic information for species.
