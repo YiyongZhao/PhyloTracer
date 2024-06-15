@@ -5,7 +5,7 @@ from BranchLength_NumericConverter import write_tree_to_newick
 def scale_support(Phylo_t:object,scale:int):
     max_support=max([i.support for i in Phylo_t.traverse()])
     if max_support<1:
-        if scale=='1':
+        if scale=='100':
             for node in Phylo_t.traverse():
                 node.support=node.support*100
             return Phylo_t
@@ -16,7 +16,7 @@ def scale_support(Phylo_t:object,scale:int):
             
             
     else:
-        if scale=='1':
+        if scale=='100':
             
             
             return Phylo_t
