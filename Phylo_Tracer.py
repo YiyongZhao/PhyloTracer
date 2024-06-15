@@ -71,7 +71,7 @@ PhyloTree_CollapseExpand_parser.add_argument('--support_value', type=int,require
 # PhyloSupport_Scaler command
 PhyloSupport_Scaler_parser = subparsers.add_parser('PhyloSupport_Scaler', help='PhyloSupport_Scaler help')
 PhyloSupport_Scaler_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-PhyloSupport_Scaler_parser.add_argument('--scale', type=str,  choices=['1', '0'],help='[1/0] you can only input 1 or 0 Whether to scale branch support information')
+PhyloSupport_Scaler_parser.add_argument('--scale_to', type=str,  choices=['1', '100'],help='[1/100] you can only input 1 or 100 Whether to scale branch support information')
 
 # BranchLength_NumericConverter command
 BranchLength_NumericConverter_parser = subparsers.add_parser('BranchLength_NumericConverter', help='BranchLength_NumericConverter help')
