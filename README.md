@@ -90,7 +90,7 @@ Amborella_trichopoda  Angiosperm
 Arabidopsis_thaliana  Malvids
 Glycine_max           Fabids
 
-------------gene2label.imap #you can put any labes at second column to marker the gene with one more layer-----------------------
+------------gene2label.imap #you can put any labels at second column to marker the gene with one more layer-----------------------
 AMTR_s00796p00010580  no_expreesion
 ATCG00500.1           no_expreesion
 Glyma.07G273800.2     expreesion
