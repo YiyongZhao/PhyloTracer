@@ -187,7 +187,7 @@ Required parameter:
     --input_imap         File with classification information of species corresponding to genes
     --input_gene_length  File with information corresponding to gene lengths
     --input_sps_tree     A species tree file with Newick
-Usage
+Usage:
     Phylo_Tracer.py Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt --input_sps_tree sptree.nwk 
 ```
 ### OrthoFilter_LB
@@ -205,7 +205,7 @@ Usage:
 ```
 ### OrthoFilter_Mono
 ```
-Description
+Description:
     To prune phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives
 Required parameter:
     --input_GF_list        File containing paths to gene tree files, one per line
@@ -219,7 +219,7 @@ Usage:
 ```
 ### TreeTopology_Summarizer
 ```
-Description
+Description:
     To enumerate the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades
 Required parameter:
     --input_GF_list    File containing paths to gene tree files, one per line
