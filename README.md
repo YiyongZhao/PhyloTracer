@@ -65,9 +65,6 @@ The following input files must strictly comply with the requirements, with tabs 
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
-.   
-.   
-.
 ---------------------------------------------------------------------------------------
 ❗️: this file must be sorted, the command is: sort -k2,2 imap.txt
 --imap.txt-----------------------------------------------------------------------------
@@ -80,9 +77,6 @@ AMB_0000003  AMB
 AQU_0000001  AQU   
 AQU_0000002  AQU   
 AQU_0000003  AQU   
-.   
-.   
-.
 ---------------------------------------------------------------------------------------
 --length.txt---------------------------------------------------------------------------
 ACT_0000001  501   
@@ -94,16 +88,25 @@ AMB_0000003  1275
 AQU_0000001  2733   
 AQU_0000002  219   
 AQU_0000003  1131   
-.   
-.   
-.
---taxa.txt or or family.txt or order.txt or class.txt----------------------------------
-ACT  Actinidia_chinensis | ACT  Actinidiaceae | ACT  Ericales     | ACT  Magnoliopsida
-AMB  Amborella_trichopoda| AMB  Amborellaceae | AMB  Amborellales | AMB  Magnoliopsida
-AQU  Aquilegia_coerulea  | AQU  Ranunculaceae | AQU  Ranunculales | AQU  Magnoliopsida
-.
-.
-.
+--taxa.txt-----------------------------------------------------------------------------
+ACT  Actinidia_chinensis
+AMB  Amborella_trichopoda
+AQU  Aquilegia_coerulea
+---------------------------------------------------------------------------------------
+--family.txt---------------------------------------------------------------------------
+ACT  Actinidiaceae
+AMB  Amborellaceae
+AQU  Ranunculaceae
+---------------------------------------------------------------------------------------
+--order.txt----------------------------------------------------------------------------
+ACT  Ericales
+AMB  Amborellales
+AQU  Ranunculales
+---------------------------------------------------------------------------------------
+--class.txt----------------------------------------------------------------------------
+ACT  Magnoliopsida
+AMB  Magnoliopsida
+AQU  Magnoliopsida
 ---------------------------------------------------------------------------------------
 ```
 
