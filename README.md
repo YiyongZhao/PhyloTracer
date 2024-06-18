@@ -33,11 +33,12 @@
 
 A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree Foramt, Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Ortholog Retrieval, Phylogenetic Noise Elimination, Gene Tree Topology Summary, Species Hybridization Detection, and Visualization.
 
+---
 ## Introduction
 
 `PhyloTracer` aims to provide more accurate rooting of gene trees, serving as a foundation for inferring putative orthologous genes. It also includes functions to statistically summarize the topology types for models like ABAB-ABBA, aiding in the identification of hybridization signals.
 
-
+---
 ## Module features
 1. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree in Newick format into a ‘comb’ structure based on predefined support value threshold. It can also revert this 'comb' structure back to a fully resolved binary tree, allowing dynamic topology adjustments.
 2. **PhyloSupport_Scaler:** Recalibrate support values from bootstrap or posterior probability in a phylogenetic tree, scaling them between \[0,1] and \[1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.
@@ -55,10 +56,10 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 14. **Hybrid_Tracer:** Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree detect species hybridization events for .
 15. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
 16. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
-
+---
 ## Input file requirements
 The following input file should have two columns in each line, and each column should be separated by one `tab`
-```bash
+```test
 --GF.txt-------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
@@ -66,45 +67,33 @@ OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
 ---------------------------------------------------------------------------------------
 ❗️This file needs to be sorted using the following command: `sort -k2,2 imap.txt`
 --imap.txt-----------------------------------------------------------------------------
-ACT_0000001  ACT   
-ACT_0000002  ACT   
-ACT_0000003  ACT   
-AMB_0000001  AMB   
-AMB_0000002  AMB   
-AMB_0000003  AMB   
-AQU_0000001  AQU   
-AQU_0000002  AQU   
-AQU_0000003  AQU   
+AMTR_s00796p00010580  Amborella_trichopoda
+ATCG00500.1	          Arabidopsis_thaliana
+Glyma.07G273800.2	    Glycine_max
 ---------------------------------------------------------------------------------------
 --length.txt---------------------------------------------------------------------------
-ACT_0000001  501   
-ACT_0000002  267   
-ACT_0000003  903   
-AMB_0000001  339   
-AMB_0000002  756   
-AMB_0000003  1275   
-AQU_0000001  2733   
-AQU_0000002  219   
-AQU_0000003  1131   
+AMTR_s00796p00010580	201
+ATCG00500.1	          1467
+Glyma.07G273800.2     3417
 --taxa.txt-----------------------------------------------------------------------------
-ACT  Actinidia_chinensis
-AMB  Amborella_trichopoda
-AQU  Aquilegia_coerulea
+Amborella_trichopoda  Basal Magnoliophyta
+Arabidopsis_thaliana  Malvids
+Glycine_max           Fabids
 ---------------------------------------------------------------------------------------
 --family.txt---------------------------------------------------------------------------
-ACT  Actinidiaceae
-AMB  Amborellaceae
-AQU  Ranunculaceae
+Amborella_trichopoda  Amborellaceae
+Arabidopsis_thaliana  Brassicaceae
+Glycine_max           Fabaceae
 ---------------------------------------------------------------------------------------
 --order.txt----------------------------------------------------------------------------
-ACT  Ericales
-AMB  Amborellales
-AQU  Ranunculales
+Amborella_trichopoda  Amborellales
+Arabidopsis_thaliana  Brassicales
+Glycine_max           Fabales
 ---------------------------------------------------------------------------------------
 --class.txt----------------------------------------------------------------------------
-ACT  Magnoliopsida
-AMB  Magnoliopsida
-AQU  Magnoliopsida
+Amborella_trichopoda  Magnoliopsida
+Arabidopsis_thaliana  Magnoliopsida
+Glycine_max           Magnoliopsida
 ---------------------------------------------------------------------------------------
 ```
 
@@ -191,19 +180,19 @@ Usage
     Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF.txt [--decimal_place 10]
 ```
 ### Phylo_Rooter
-```bash
+```test
 Description
-    Enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
+    Enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference
 Arguement
-    --input_GF_list      File containing paths to gene tree files, one per line.
-    --input_imap         File with classification information of species corresponding to genes.
-    --input_gene_length  File with information corresponding to gene lengths.
-    --input_sps_tree     Species tree file.
+    --input_GF_list      File containing paths to gene tree files, one per line
+    --input_imap         File with classification information of species corresponding to genes
+    --input_gene_length  File with information corresponding to gene lengths
+    --input_sps_tree     A species tree file with newick
 Usage
     Phylo_Tracer.py Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt --input_sps_tree sptree.nwk 
 ```
 ### OrthoFilter_LB
-```bash
+```test
 Description
     Prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length.
 Arguement
