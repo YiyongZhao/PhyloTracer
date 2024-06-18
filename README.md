@@ -207,10 +207,10 @@ Usage
 ### OrthoFilter_Mono
 ```
 Description
-    Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives.
+    Prunes phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives
 Arguement
     --input_GF_list        File containing paths to gene tree files, one per line
-    --input_taxa           File with taxonomic information for species.
+    --input_taxa           File with taxonomic information for species
     --long_branch_index    Tips whose branch length is greater than or equal to the long branch index will be removed
     --insert_branch_index  Nodes with insertion coverage ratio and insertion depth greater than or equal to the insert branch index will be removed
 Optional arguement
