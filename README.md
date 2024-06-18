@@ -60,32 +60,32 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 ## Input file requirements
 The following input file should have two columns and separated by tab key.
 ```
------------------------------------------------GF2path.imap-----------------------------------------------------------------------
+------------GF2path.imap--------------------------------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
 
------------------------------------------------gene2length.imap--------------------------------------------------------------
+------------gene2length.imap---------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  201
 ATCG00500.1           1467
 Glyma.07G273800.2     3417
 
-------------gene2sps.imap #should sort by second column by recommended bash command: sort -k2,2 gene2sps.imap----------------
+------------gene2sps.imap #should sort by second column by recommended bash command: sort -k2,2 gene2sps.imap-------------------
 AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
 
------------------------------------------------sps2family.imap----------------------------------------------------------------
+------------sps2family.imap------------------------------------------------------------------------------------------------------
 Amborella_trichopoda  Amborellaceae
 Arabidopsis_thaliana  Brassicaceae
 Glycine_max           Fabaceae
 
------------------------------------------------sps2order.txt-------------------------------------------------------------------
+------------sps2order.txt--------------------------------------------------------------------------------------------------------
 Amborella_trichopoda  Amborellales
 Arabidopsis_thaliana  Brassicales
 Glycine_max           Fabales
 
--------------------------------------------------sps2taxa.imap------------------------------------------------------------------
+------------sps2taxa.imap--------------------------------------------------------------------------------------------------------
 Amborella_trichopoda  Angiosperm
 Arabidopsis_thaliana  Malvids
 Glycine_max           Fabids
