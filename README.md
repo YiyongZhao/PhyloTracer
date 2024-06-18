@@ -306,7 +306,7 @@ Usage
 ### Hybrid_Tracer
 ```
 Description
-    Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst event across species tree detect species hybridization events for
+    To use the ABAB-BABA test to detect hybridization signals for each potential GD burst event across species tree detect species hybridization events for
 Parameter
     --input_GF_list      File containing paths to gene tree files, one per line
     --input_Seq_GF_list  File containing paths to sequence alignment files corresponding to the gene trees
@@ -318,17 +318,17 @@ Usage
 ### Hybrid_Visualizer
 ```
 Description
-    Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals
+    To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals
 ```
 ### HaploFinder
 ```
 Description
-    Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling
+    To distinguish gene conversion by tracing subgenome haplotypes through phylogenomic profiling
 ```
 
 ## Bug Reports
 
-You can report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues). If you have any questions, or suggestions, or encounter any issues, please do not hesitate to contact us.
+You can report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues). If you have any questions, suggestions, or issues, please do not hesitate to contact us.
 
 ## Contributing
 
