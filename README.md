@@ -160,33 +160,33 @@ pip install PhyloTracer
 ### PhyloTree_CollapseExpand
 ```test
 Description
-    Transforms a phylogenetic tree in Newick format into a `comb` structure based on predefined support value threshold. It can also revert this `comb` structure back to a fully resolved binary tree, allowing dynamic topology adjustments.
+    Transforms a phylogenetic tree in Newick format into a 'comb' structure based on predefined support value threshold. It can also revert this `comb` structure back to a fully resolved binary tree, allowing dynamic topology adjustments
 Arguement
     --input_GF_list  File containing paths to gene tree files, one per line
-    --support_value  Nodes whose support is less than or equal to `support_value` will be converted
+    --support_value  Nodes whose support is less than or equal to 'support_value' will be converted
 Optional arguement
-    --revert         Revert this `comb` structure back to a fully resolved binary tree
+    --revert         Revert this 'comb' structure back to a fully resolved binary tree
 Usage
     Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF.txt --support_value 50 [--revert]
 ```
 ### PhyloSupport_Scaler
-```bash
+```test
 Description
-    Recalibrate support value from bootstrap or posterior probability in a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.
+    Recalibrate support value from bootstrap or posterior probability in a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational compatibility, and vice versa to meet various analytical needs
 Arguement
-    --input_GF_list  File containing paths to gene tree files, one per line.
-    --scale_to       Input `1` to scale support values from 1-100 to 0-1, or `100` to scale from 0-1 to 1-100
+    --input_GF_list  File containing paths to gene tree files, one per line
+    --scale_to       Input '1' to scale support values from 1-100 to 0-1, or '100' to scale from 0-1 to 1-100
 Usage
     Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list GF.txt --scale_to 1
 ```
 ### BranchLength_NumericConverter
-```bash
+```test
 Description
-    Normalize the branch length of the gene tree, retaining specific decimal places
+    Converts branch length values of a phylogenetic tree from string to numerical format
 Arguement
-    --input_GF_list  File containing paths to gene tree files, one per line.
+    --input_GF_list  File containing paths to gene tree files, one per line
 Optional arguement
-    --decimal_place  Set how many decimal places to keep(default=10)
+    --decimal_place  Default=10, return the branch length values to 10 decimal places
 Usage
     Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF.txt [--decimal_place 10]
 ```
