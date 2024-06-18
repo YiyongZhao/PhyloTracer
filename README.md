@@ -58,7 +58,7 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 16. **HaploFinder:** Distinguishing ancient genome recombination events including gene conversions and crossovers by tracing subgenome haplotypes through phylogenomic profiling.
 ---
 ## Input file requirements
-The following input file should have two columns in each line, and each column should be separated by one `tab`
+The following input file should have two columns and separated by tab key.
 ```
 -----------------------------------------------GF.txt------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
@@ -94,7 +94,6 @@ Glycine_max           Fabids
 AMTR_s00796p00010580  Marker_gene
 ATCG00500.1           Marker_gene
 Glyma.07G273800.2     DEGs
------------------------------------------------------------------------------------------------------------------------
 ```
 ---
 ## Installation
