@@ -241,7 +241,7 @@ Arguement
 Optional arguement
     --species_categories  File with taxonomic information for species
     --gene_family         If you want to mark gene families you need to provide this file
-    --input_sps_tree      If you provide the --gene_family parameter, you shoule provide the species tree
+    --input_sps_tree      If you provide the --gene_family parameter, you shoule provide a species tree file with newick
     --gene_expression     Gene expression level files
 Usage
     Phylo_Tracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt [--species_categories [taxa.txt family.txt  order.txt class.txt] --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.txt --input_sps_tree sptree.nwk  --gene_expression gene_expression.csv ]
@@ -274,44 +274,44 @@ Usage
 ### GD_Loss_Tracker
 ```
 Description
-    Analyzes and summarizes gene duplication loss events across each node from species tree for each tips .
+    Analyzes and summarizes gene duplication loss events across each node from species tree for each tips
 Arguement
-    --input_GF_list      File containing paths to gene tree files, one per line.
-    --input_sps_tree     Species tree file
-    --output_folder      Output foldername
+    --input_GF_list      File containing paths to gene tree files, one per line
+    --input_sps_tree     A species tree file with newick
+    --output_folder      Output folder name
 Usage
     Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF.txt --input_sps_tree sptree.nwk --output_folder filename
 ```
 ### GD_Loss_Visualizer
 ```
 Description
-    Visualizes the summary of gene duplication loss event on the context of speices tree.Ortho_Retriever: Infers single copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple species.
+    Visualizes the summary of gene duplication loss event on the context of speices tree
 Arguement
-    --input_folder     Input foldername
-    --output_folder    Output foldername
+    --input_folder     The result folder name of GD_Loss_Tracker
+    --output_folder    Output folder name
 Usage
     Phylo_Tracer.py GD_Loss_Visualizer --input_folder input_foldername --output_folder output_foldername
 ```
 ### Ortho_Retriever
 ```
 Description
-    Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple 	species.
+    Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple species
 Arguement
-    --input_GF_list     File containing paths to gene tree files, one per line.
-    --input_imap        File with classification information of species corresponding to genes.
-    --input_gene_length	File with information corresponding to gene lengths.
+    --input_GF_list     File containing paths to gene tree files, one per line
+    --input_imap        File with classification information of species corresponding to genes
+    --input_gene_length	File with information corresponding to gene lengths
 Usage
     Phylo_Tracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.txt --input_gene_length sptree.nwk  
 ```
 ### Hybrid_Tracer
 ```
 Description
-    Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree detect species hybridization events for.
+    Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst events across species tree detect species hybridization events for
 Arguement
-    --input_GF_list      File containing paths to gene tree files, one per line.
-    --input_Seq_GF_list  File containing paths to sequence alignment files corresponding to the gene trees.
-    --input_imap         File with classification information of species corresponding to genes.
-    --input_sps_tree     Species tree file
+    --input_GF_list      File containing paths to gene tree files, one per line
+    --input_Seq_GF_list  File containing paths to sequence alignment files corresponding to the gene trees
+    --input_imap         File with classification information of species corresponding to genes
+    --input_sps_tree     A species tree file with newick
 Usage
     Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF.txt --input_Seq_GF_list Seq_GF.txt --input_sps_tree sptree.nwk input_imap imap.txt
 ```
