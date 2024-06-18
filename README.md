@@ -57,16 +57,14 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 16. **HaploFinder:** Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
 
 ## Input file requirements
-
-The following input file should be one row and two columns, with each column separated by one `tab`.
-
+The following input file should have two columns in each line, and each column should be separated by one `tab`
 ```bash
 --GF.txt-------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
 ---------------------------------------------------------------------------------------
-❗️: this file must be sorted, the command is: sort -k2,2 imap.txt
+❗️: This file needs to be sorted using the following command: `sort -k2,2 imap.txt`
 --imap.txt-----------------------------------------------------------------------------
 ACT_0000001  ACT   
 ACT_0000002  ACT   
