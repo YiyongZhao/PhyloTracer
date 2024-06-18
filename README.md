@@ -68,12 +68,12 @@ OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
 ❗️This file needs to be sorted using the following command: `sort -k2,2 imap.txt`
 --imap.txt-----------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborella_trichopoda
-ATCG00500.1	          Arabidopsis_thaliana
-Glyma.07G273800.2	    Glycine_max
+ATCG00500.1           Arabidopsis_thaliana
+Glyma.07G273800.2     Glycine_max
 ---------------------------------------------------------------------------------------
 --length.txt---------------------------------------------------------------------------
-AMTR_s00796p00010580	201
-ATCG00500.1	          1467
+AMTR_s00796p00010580  201
+ATCG00500.1           1467
 Glyma.07G273800.2     3417
 --taxa.txt-----------------------------------------------------------------------------
 Amborella_trichopoda  Basal Magnoliophyta
