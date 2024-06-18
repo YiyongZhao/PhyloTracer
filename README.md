@@ -28,7 +28,7 @@
 ![Build Status](https://travis-ci.org/YiyongZhao/PhyloTracer.svg?branch=master)
 [![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
 
-
+---
 # PhyloTracer
 
 A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree Format, Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Ortholog Retrieval, Phylogenetic Noise Elimination, Gene Tree Topology Summary, Species Hybridization Detection, and Visualization.
@@ -56,7 +56,7 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 14. **Hybrid_Tracer:** To detect hybridization signals for each potential GD burst event across species tree by using the D-statistic (ABAB-BABA) test.
 15. **Hybrid_Visualizer:** To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
 16. **HaploFinder:** Distinguishing ancient genome recombination events including gene conversions and crossovers by tracing subgenome haplotypes through phylogenomic profiling.
-
+---
 ### Clone and install environment:
 
 ```bash
