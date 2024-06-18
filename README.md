@@ -56,6 +56,36 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 14. **Hybrid_Tracer:** To detect hybridization signals for each potential GD burst event across species tree by using the D-statistic (ABAB-BABA) test.
 15. **Hybrid_Visualizer:** To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
 16. **HaploFinder:** Distinguishing ancient genome recombination events including gene conversions and crossovers by tracing subgenome haplotypes through phylogenomic profiling.
+
+### Clone and install environment:
+
+```bash
+#A convenient one-click installation by using conda (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) with the following commands:
+git clone https://github.com/YiyongZhao/PhyloTracer.git
+cd PhyloTracer
+conda env create -f environment.yml
+conda activate phylotracer
+
+#Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:
+chmod +x install_packages.sh
+bash install_package.sh
+
+#Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
+#Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
+export QT_QPA_PLATFORM=linuxfb
+```
+---
+### Install from PyPI with pip:
+
+```bash
+pip install PhyloTracer
+```
+---
+## Features
+* Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroup branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
+* Introducing the concept of long-branch genes for noise filtration in gene trees.   
+* Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.   
+---
 ---
 ## Example input files
 The following input file should have two columns and separated by tab key.
@@ -114,35 +144,6 @@ Glyma.07G273800.2     expreesion
     
 Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](http://etetoolkit.org/) and detects species hybridization signals using ABAB-BABA test by [HyDe](https://github.com/pblischak/HyDe).
 
----
-### Clone and install environment:
-
-```bash
-#A convenient one-click installation by using conda (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) with the following commands:
-git clone https://github.com/YiyongZhao/PhyloTracer.git
-cd PhyloTracer
-conda env create -f environment.yml
-conda activate phylotracer
-
-#Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:
-chmod +x install_packages.sh
-bash install_package.sh
-
-#Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-#Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
-export QT_QPA_PLATFORM=linuxfb
-```
----
-### Install from PyPI with pip:
-
-```bash
-pip install PhyloTracer
-```
----
-## Features
-* Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroup branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
-* Introducing the concept of long-branch genes for noise filtration in gene trees.   
-* Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.   
 ---
 ## Usage
 ### PhyloTree_CollapseExpand
