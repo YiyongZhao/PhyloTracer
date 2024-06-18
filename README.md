@@ -64,6 +64,7 @@ The following input file should have two columns in each line, and each column s
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
+
 -----------------------------------------------gene_length.imap--------------------------------------------------------------
 AMTR_s00796p00010580  201
 ATCG00500.1           1467
@@ -78,10 +79,12 @@ Glyma.07G273800.2     Glycine_max
 Amborella_trichopoda  Amborellaceae
 Arabidopsis_thaliana  Brassicaceae
 Glycine_max           Fabaceae
+
 -----------------------------------------------sps2order.txt-------------------------------------------------------------------
 Amborella_trichopoda  Amborellales
 Arabidopsis_thaliana  Brassicales
 Glycine_max           Fabales
+
 -------------------------------------------------sps2taxa.imap------------------------------------------------------------
 Amborella_trichopoda  Angiosperm
 Arabidopsis_thaliana  Malvids
