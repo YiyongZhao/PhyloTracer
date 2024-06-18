@@ -64,7 +64,7 @@ OG_104001  example_data/Phylo_Rooter/OG_104001.treefile
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
 ---------------------------------------------------------------------------------------
-❗️: This file needs to be sorted using the following command: `sort -k2,2 imap.txt`
+❗️This file needs to be sorted using the following command: `sort -k2,2 imap.txt`
 --imap.txt-----------------------------------------------------------------------------
 ACT_0000001  ACT   
 ACT_0000002  ACT   
@@ -152,7 +152,7 @@ pip install PhyloTracer
 ```
 
 ## Features
-* Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroups' branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
+* Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroups branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
 * Introducing the concept of long-branch genes for noise filtration in gene trees.   
 * Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.   
 
@@ -160,20 +160,22 @@ pip install PhyloTracer
 ### PhyloTree_CollapseExpand
 ```bash
 Description
-    Collapse the branches in the gene tree whose support is equal to a specific value and convert the comb structure into a binary tree structure
+    Transforms a phylogenetic tree in Newick format into a `comb` structure based on predefined support value threshold. It can also revert this `comb` structure back to a fully resolved binary tree, allowing dynamic topology adjustments.
 Arguement
-    --input_GF_list  File containing paths to gene tree files, one per line.
-    --support_value  Nodes with support values less than or equal to this value will be collapsed.
+    --input_GF_list  File containing paths to gene tree files, one per line
+    --support_value  Nodes whose support is less than or equal to `support_value` will be converted
+Optional arguement
+    --revert         Revert this `comb` structure back to a fully resolved binary tree
 Usage
-    Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF.txt --support_value 50
+    Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF.txt --support_value 50 [--revert]
 ```
 ### PhyloSupport_Scaler
 ```bash
 Description
-    Recalibrate support values from bootstrap or posterior probability in a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.
+    Recalibrate support value from bootstrap or posterior probability in a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.
 Arguement
     --input_GF_list  File containing paths to gene tree files, one per line.
-    --scale_to       1 to scale donw (1 to 100 to 0 to 1), 100 to scale up (0 to 1 to 1 to 100).
+    --scale_to       Input `1` to scale support values from 1-100 to 0-1, or `100` to scale from 0-1 to 1-100
 Usage
     Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list GF.txt --scale_to 1
 ```
