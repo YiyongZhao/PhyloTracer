@@ -40,60 +40,57 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 
 ---
 ## Module features
-1. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree in Newick format into a ‘comb’ structure based on a predefined support value threshold. It can also revert this 'comb' structure to a fully resolved binary tree, allowing dynamic topology adjustments.
-2. **PhyloSupport_Scaler:** Recalibrate support values from bootstrap or posterior probability in a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.
-3. **BranchLength_NumericConverter:** Converts branch length values of a phylogenetic tree from string to numerical format, critical for quantitative analysis and computational operations.
-4. **Phylo_Rooter:** Enhances the accuracy of gene tree rooting, providing a robust framework for phylogenetic inference.
-5. **OrthoFilter_LB:** Prune phylogenomic noises from single-copy and multi-copy gene family trees by removing the tips with long branch lengths.
-6. **OrthoFilter_Mono:** Prunes phylogenomic noise from single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives.
-7. **TreeTopology_Summarizer:** Enumerates the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
-8. **Tree_Visualizer:** Visualizes and integrates gene duplication detection results into the species tree.
-9. **GD_Detector:** identification of gene duplication events by reconciliation of gene and species trees.
-10. **GD_Visualizer:** Visualizes gene duplication detection results and integrates these findings into the species tree.
-11. **GD_Loss_Tracker:** Analyzes and summarizes gene duplication loss events across each node from the species tree for each tips.
-12. **GD_Loss_Visualizer:** Visualizes the summary of gene duplication loss event on the context of the species tree.
-13. **Ortho_Retriever:** Infers single-copy putative orthologs by splitting paralogs from large-scale gene family trees across multiple species.
-14. **Hybrid_Tracer:** Uses the ABAB-BABA test to detect hybridization signals for each potential GD burst event across species tree detect species hybridization events for.
-15. **Hybrid_Visualizer:** Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
-16. **HaploFinder:** Distinguish gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
+1. **PhyloTree_CollapseExpand:** To transform a phylogenetic tree with Newick format into a ‘comb’ structure based on a predefined support value threshold. It can also revert the 'comb' structure to the binary tree, allowing meet the standard software analysis requiredments.
+2. **PhyloSupport_Scaler:** To recalibrate support values (bootstrap/posterior probability) for a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational requiredments.
+3. **BranchLength_NumericConverter:** To convert values of branch length with string format to numeric format for a phylogenetic tree, critical for quantitative analysis and computational operations.
+4. **Phylo_Rooter:** Enables an accuracy method for gene tree rooting and enhancing the downstream evolutionarly genomic analysis.
+5. **OrthoFilter_LB:** To prune phylogenomic noises from single-copy and multi-copy gene family trees by removing the tips with long branch lengths.
+6. **OrthoFilter_Mono:** To prune phylogenomic noise from single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives.
+7. **TreeTopology_Summarizer:** To enumerate the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
+8. **Tree_Visualizer:** To visualize and integrate gene duplication detection results into the species tree.
+9. **GD_Detector:** To identify gene duplication events by reconciliation of gene family trees to a species tree.
+10. **GD_Visualizer:** To visualize gene duplication detection on the context of a species tree.
+11. **GD_Loss_Tracker:** To track the gene duplication loss event starting across each nodes/tips from a specific GD burst event in the species tree.
+12. **GD_Loss_Visualizer:** To visualize the summary of gene duplication loss event counts for each nodes/tips on the context of the species tree.
+13. **Ortho_Retriever:** To rapid infer putative single-copy orthologs by splitting paralogs from large-scale gene family trees across multiple species.
+14. **Hybrid_Tracer:** To detect hybridization signals for each potential GD burst event across species tree by using the D-statistic (ABAB-BABA) test.
+15. **Hybrid_Visualizer:** To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
+16. **HaploFinder:** Distinguishing ancient genome recombination events including gene conversions and crossovers by tracing subgenome haplotypes through phylogenomic profiling.
 ---
 ## Input file requirements
 The following input file should have two columns in each line, and each column should be separated by one `tab`
 ```
---GF.txt---------------------------------------------------------------------------------------------------------------
+-----------------------------------------------GF.txt------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
-OG_104003  example_data/Phylo_Rooter/OG_104003.treefile   
------------------------------------------------------------------------------------------------------------------------
-❗️This file needs to be sorted using the following command: `sort -k2,2 imap.txt`
---imap.txt-------------------------------------------------------------------------------------------------------------
-AMTR_s00796p00010580  Amborella_trichopoda
-ATCG00500.1           Arabidopsis_thaliana
-Glyma.07G273800.2     Glycine_max
------------------------------------------------------------------------------------------------------------------------
---length.txt-----------------------------------------------------------------------------------------------------------
+OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
+-----------------------------------------------gene_length.imap--------------------------------------------------------------
 AMTR_s00796p00010580  201
 ATCG00500.1           1467
 Glyma.07G273800.2     3417
---taxa.txt-------------------------------------------------------------------------------------------------------------
-Amborella_trichopoda  Basal Magnoliophyta
-Arabidopsis_thaliana  Malvids
-Glycine_max           Fabids
------------------------------------------------------------------------------------------------------------------------
---family.txt-----------------------------------------------------------------------------------------------------------
+
+------------gene2sps.imap (should sort by second column by recommended bash command: sort -k2,2 gene2sps.imap)-------------------
+AMTR_s00796p00010580  Amborella_trichopoda
+ATCG00500.1           Arabidopsis_thaliana
+Glyma.07G273800.2     Glycine_max
+
+-----------------------------------------------sps2family.imap--------------------------------------------------------------
 Amborella_trichopoda  Amborellaceae
 Arabidopsis_thaliana  Brassicaceae
 Glycine_max           Fabaceae
------------------------------------------------------------------------------------------------------------------------
---order.txt------------------------------------------------------------------------------------------------------------
+-----------------------------------------------sps2order.txt-------------------------------------------------------------------
 Amborella_trichopoda  Amborellales
 Arabidopsis_thaliana  Brassicales
 Glycine_max           Fabales
------------------------------------------------------------------------------------------------------------------------
---class.txt------------------------------------------------------------------------------------------------------------
-Amborella_trichopoda  Magnoliopsida
-Arabidopsis_thaliana  Magnoliopsida
-Glycine_max           Magnoliopsida
+-------------------------------------------------sps2taxa.imap------------------------------------------------------------
+Amborella_trichopoda  Angiosperm
+Arabidopsis_thaliana  Malvids
+Glycine_max           Fabids
+
+------------gene2label.imap (any label you can put at second column to marker the gene )-------------------
+AMTR_s00796p00010580  Marker_gene
+ATCG00500.1           Arabidopsis_thaliana
+Glyma.07G273800.2     Glycine_max
 -----------------------------------------------------------------------------------------------------------------------
 ```
 ---
