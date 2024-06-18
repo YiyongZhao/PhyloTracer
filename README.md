@@ -60,22 +60,22 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 ## Input file requirements
 The following input file should have two columns and separated by tab key.
 ```
------------------------------------------------GF.txt------------------------------------------------------------------
+-----------------------------------------------GF2path.imap-----------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
 
------------------------------------------------gene_length.imap--------------------------------------------------------------
+-----------------------------------------------gene2length.imap--------------------------------------------------------------
 AMTR_s00796p00010580  201
 ATCG00500.1           1467
 Glyma.07G273800.2     3417
 
-------------gene2sps.imap (should sort by second column by recommended bash command: sort -k2,2 gene2sps.imap)-------------------
+------------gene2sps.imap #should sort by second column by recommended bash command: sort -k2,2 gene2sps.imap----------------
 AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
 
------------------------------------------------gene2family.imap--------------------------------------------------------------
+-----------------------------------------------sps2family.imap----------------------------------------------------------------
 Amborella_trichopoda  Amborellaceae
 Arabidopsis_thaliana  Brassicaceae
 Glycine_max           Fabaceae
@@ -85,15 +85,15 @@ Amborella_trichopoda  Amborellales
 Arabidopsis_thaliana  Brassicales
 Glycine_max           Fabales
 
--------------------------------------------------sps2taxa.imap------------------------------------------------------------
+-------------------------------------------------sps2taxa.imap------------------------------------------------------------------
 Amborella_trichopoda  Angiosperm
 Arabidopsis_thaliana  Malvids
 Glycine_max           Fabids
 
-------------gene2label.imap (any label you can put at second column to marker the gene )-------------------
-AMTR_s00796p00010580  Marker_gene
-ATCG00500.1           Marker_gene
-Glyma.07G273800.2     DEGs
+------------gene2label.imap #you can put any labes at second column to marker the gene with one more layer-----------------------
+AMTR_s00796p00010580  no_expreesion
+ATCG00500.1           no_expreesion
+Glyma.07G273800.2     expreesion
 ```
 ---
 ## Installation
