@@ -244,7 +244,7 @@ Optional arguement
     --input_sps_tree      If you provide the --gene_family parameter, you shoule provide a species tree file with newick
     --gene_expression     Gene expression level files
 Usage
-    Phylo_Tracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt [--species_categories [taxa.txt family.txt  order.txt class.txt] --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.txt --input_sps_tree sptree.nwk  --gene_expression gene_expression.csv ]
+    Phylo_Tracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt [--species_categories [taxa.txt family.txt  order.txt class.txt] --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.txt --input_sps_tree sptree.nwk  --gene_expression gene_expression.csv]
 ```
 ### GD_Detector
 ```
