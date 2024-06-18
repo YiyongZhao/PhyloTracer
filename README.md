@@ -86,6 +86,24 @@ pip install PhyloTracer
 * Introducing the concept of long-branch genes for noise filtration in gene trees.   
 * Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.   
 ---
+## Installation
+
+### Required dependencies:
+
+* Python 3.0+
+* Python modules:
+  * ete3
+  * HyDe
+  * pandas
+  * numpy
+  * tqdm
+  * time
+  * pypdf4
+  * matplotlib
+  * pyqt5
+    
+Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](http://etetoolkit.org/) and detects species hybridization signals using ABAB-BABA test by [HyDe](https://github.com/pblischak/HyDe).
+
 ---
 ## Example input files
 The following input file should have two columns and separated by tab key.
@@ -125,25 +143,6 @@ AMTR_s00796p00010580  no_expreesion
 ATCG00500.1           no_expreesion
 Glyma.07G273800.2     expreesion
 ```
----
-## Installation
-
-### Required dependencies:
-
-* Python 3.0+
-* Python modules:
-  * ete3
-  * HyDe
-  * pandas
-  * numpy
-  * tqdm
-  * time
-  * pypdf4
-  * matplotlib
-  * pyqt5
-    
-Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](http://etetoolkit.org/) and detects species hybridization signals using ABAB-BABA test by [HyDe](https://github.com/pblischak/HyDe).
-
 ---
 ## Usage
 ### PhyloTree_CollapseExpand
