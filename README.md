@@ -58,7 +58,7 @@ A User-Friendly Toolkit for Comprehensive inference for Manipunation of Tree For
 
 ## Input file requirements
 
-The following input files must strictly comply with the requirements, with tabs separating each column; otherwise, an error will occur:
+The following input file should be one row and two columns, with each column separated by one `tab`.
 
 ```bash
 --GF.txt-------------------------------------------------------------------------------
