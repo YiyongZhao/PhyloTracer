@@ -70,7 +70,7 @@ AMTR_s00796p00010580  201
 ATCG00500.1           1467
 Glyma.07G273800.2     3417
 
-------------gene2sps.imap #should sort by second column by recommended bash command: sort -k2,2 gene2sps.imap-------------------
+------------gene2sps.imap #should sorted by second column with recommended bash command: sort -k2,2 gene2sps.imap-------------------
 AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
