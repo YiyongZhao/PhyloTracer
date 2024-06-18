@@ -295,7 +295,7 @@ Usage
 ### Ortho_Retriever
 ```
 Description
-    Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees across multiple species
+    Infers single-copy putative orthologs by spliting paralogs from large-scale gene family trees for multiple species
 Arguement
     --input_GF_list     File containing paths to gene tree files, one per line
     --input_imap        File with classification information of species corresponding to genes
@@ -318,12 +318,12 @@ Usage
 ### Hybrid_Visualizer
 ```
 Description
-    Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
+    Visualizes hybridization signals, highlighting support from gene tree topologies and D-statistic signals
 ```
 ### HaploFinder
 ```
 Description
-    Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
+    Distinguishes gene conversion by tracing subgenome haplotypes through phylogenomic profiling
 ```
 
 ## Bug Reports
