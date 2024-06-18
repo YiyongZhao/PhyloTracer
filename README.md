@@ -75,7 +75,7 @@ AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
 
------------------------------------------------sps2family.imap--------------------------------------------------------------
+-----------------------------------------------gene2family.imap--------------------------------------------------------------
 Amborella_trichopoda  Amborellaceae
 Arabidopsis_thaliana  Brassicaceae
 Glycine_max           Fabaceae
@@ -92,8 +92,8 @@ Glycine_max           Fabids
 
 ------------gene2label.imap (any label you can put at second column to marker the gene )-------------------
 AMTR_s00796p00010580  Marker_gene
-ATCG00500.1           Arabidopsis_thaliana
-Glyma.07G273800.2     Glycine_max
+ATCG00500.1           Marker_gene
+Glyma.07G273800.2     DEGs
 -----------------------------------------------------------------------------------------------------------------------
 ```
 ---
