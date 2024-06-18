@@ -158,7 +158,7 @@ pip install PhyloTracer
 
 ## Usage
 ### PhyloTree_CollapseExpand
-```bash
+```test
 Description
     Transforms a phylogenetic tree in Newick format into a `comb` structure based on predefined support value threshold. It can also revert this `comb` structure back to a fully resolved binary tree, allowing dynamic topology adjustments.
 Arguement
