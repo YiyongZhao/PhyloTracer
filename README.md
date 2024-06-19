@@ -138,10 +138,15 @@ AMTR_s00796p00010580  Angiosperm
 ATCG00500.1           Malvids
 Glyma.07G273800.2     Fabids
 
-------------gene2label.imap #you can put any labels in the second column to mark the gene with one more layer-----------------------
-AMTR_s00796p00010580  no_expreesion
-ATCG00500.1           no_expreesion
-Glyma.07G273800.2     expression
+------------gene2clade.imap--------------------------------------------------------------------------------------------------------
+AMTR_s00796p00010580  Nitrogen-fixing
+ATCG00500.1           Nitrogen-fixing
+Glyma.07G273800.2     non-Nitrogen-fixing
+
+------------gene2expression.imap---------------------------------------------------------------------------------------------------
+AMTR_s00796p00010580  5.0
+ATCG00500.1           12.0
+Glyma.07G273800.2     0.0
 
 #Note: You can add any number of imap files. They will sequentially provide annotations to the right of the gene tips according to the order of input.
 ```
