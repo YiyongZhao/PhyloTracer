@@ -108,7 +108,7 @@ Note: PhyloTracer uses basic functions of analysis and visualization of trees fr
 ## Example input files
 The following input file should have two columns and be separated by a tab key.
 ```
-------------GF2path.imap--------------------------------------------------------------------------------------------------------
+------------GF_ID2path.imap--------------------------------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
