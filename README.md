@@ -260,12 +260,12 @@ Required parameter:
     --input_GF_list      File containing paths to gene tree files, one per line
     --input_imap         File with classification information of species corresponding to genes
     --gd_support         GD node support [50-100]
-    --clade_support      The children support of GD node [0-100]
-    --dup_species_radio  The proportion of species with species duplications under the GD node [0-1]
+    --subclade_support   The subclade support of GD node [0-100]
+    --dup_species_ratio  The proportion of species with species duplications under the GD node [0-1]
     --dup_species_num    The number of species with species duplications under the GD node
     --input_sps_tree     A species tree file with Newick
 Usage:
-    Phylo_Tracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --gd_support 50 --clade_support 50 --dup_species_radio 0.5 --dup_species_num 2 --input_sps_tree sptree.nwk
+    Phylo_Tracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --gd_support 50 --subclade_support 50 --dup_species_ratio 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk
 ```
 ### GD_Visualizer
 ```
