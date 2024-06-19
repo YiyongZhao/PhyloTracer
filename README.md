@@ -141,7 +141,9 @@ Glycine_max           Fabids
 ------------gene2label.imap #you can put any labels in the second column to mark the gene with one more layer-----------------------
 AMTR_s00796p00010580  no_expreesion
 ATCG00500.1           no_expreesion
-Glyma.07G273800.2     expreesion
+Glyma.07G273800.2     expression
+
+#Note: You can add any number of imap files. They will sequentially provide annotations to the right of the gene tips according to the order of input.
 ```
 ---
 ## Usage
