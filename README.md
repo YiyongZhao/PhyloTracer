@@ -124,19 +124,19 @@ ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
 
 ------------gene2family.imap------------------------------------------------------------------------------------------------------
-Amborella_trichopoda  Amborellaceae
-Arabidopsis_thaliana  Brassicaceae
-Glycine_max           Fabaceae
+AMTR_s00796p00010580  Amborellaceae
+ATCG00500.1           Brassicaceae
+Glyma.07G273800.2     Fabaceae
 
 ------------gene2order.imap--------------------------------------------------------------------------------------------------------
-Amborella_trichopoda  Amborellales
-Arabidopsis_thaliana  Brassicales
-Glycine_max           Fabales
+AMTR_s00796p00010580  Amborellales
+ATCG00500.1           Brassicales
+Glyma.07G273800.2     Fabales
 
 ------------gene2taxa.imap--------------------------------------------------------------------------------------------------------
-Amborella_trichopoda  Angiosperm
-Arabidopsis_thaliana  Malvids
-Glycine_max           Fabids
+AMTR_s00796p00010580  Angiosperm
+ATCG00500.1           Malvids
+Glyma.07G273800.2     Fabids
 
 ------------gene2label.imap #you can put any labels in the second column to mark the gene with one more layer-----------------------
 AMTR_s00796p00010580  no_expreesion
