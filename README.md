@@ -123,17 +123,17 @@ AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
 
-------------sps2family.imap------------------------------------------------------------------------------------------------------
+------------gene2family.imap------------------------------------------------------------------------------------------------------
 Amborella_trichopoda  Amborellaceae
 Arabidopsis_thaliana  Brassicaceae
 Glycine_max           Fabaceae
 
-------------sps2order.imap--------------------------------------------------------------------------------------------------------
+------------gene2order.imap--------------------------------------------------------------------------------------------------------
 Amborella_trichopoda  Amborellales
 Arabidopsis_thaliana  Brassicales
 Glycine_max           Fabales
 
-------------sps2taxa.imap--------------------------------------------------------------------------------------------------------
+------------gene2taxa.imap--------------------------------------------------------------------------------------------------------
 Amborella_trichopoda  Angiosperm
 Arabidopsis_thaliana  Malvids
 Glycine_max           Fabids
