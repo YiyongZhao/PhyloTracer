@@ -118,7 +118,7 @@ AMTR_s00796p00010580  201
 ATCG00500.1           1467
 Glyma.07G273800.2     3417
 
-------------gene2sps.imap #should sorted by second column with recommended bash command: sort -k2,2 gene2sps.imap-------------------
+------------gene2sps.imap #should sorted by second column with the recommended bash command: sort -k2,2 gene2sps.imap-------------------
 AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
@@ -138,7 +138,7 @@ Amborella_trichopoda  Angiosperm
 Arabidopsis_thaliana  Malvids
 Glycine_max           Fabids
 
-------------gene2label.imap #you can put any labels at the second column to mark the gene with one more layer-----------------------
+------------gene2label.imap #you can put any labels in the second column to mark the gene with one more layer-----------------------
 AMTR_s00796p00010580  no_expreesion
 ATCG00500.1           no_expreesion
 Glyma.07G273800.2     expreesion
