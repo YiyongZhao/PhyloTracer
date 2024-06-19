@@ -106,7 +106,7 @@ Note: PhyloTracer uses basic functions of analysis and visualization of trees fr
 
 ---
 ## Example input files
-The following input file should have two columns and separated by tab key.
+The following input file should have two columns and be separated by a tab key.
 ```
 ------------GF2path.imap--------------------------------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
@@ -128,7 +128,7 @@ Amborella_trichopoda  Amborellaceae
 Arabidopsis_thaliana  Brassicaceae
 Glycine_max           Fabaceae
 
-------------sps2order.txt--------------------------------------------------------------------------------------------------------
+------------sps2order.imap--------------------------------------------------------------------------------------------------------
 Amborella_trichopoda  Amborellales
 Arabidopsis_thaliana  Brassicales
 Glycine_max           Fabales
@@ -138,7 +138,7 @@ Amborella_trichopoda  Angiosperm
 Arabidopsis_thaliana  Malvids
 Glycine_max           Fabids
 
-------------gene2label.imap #you can put any labels at second column to marker the gene with one more layer-----------------------
+------------gene2label.imap #you can put any labels at the second column to mark the gene with one more layer-----------------------
 AMTR_s00796p00010580  no_expreesion
 ATCG00500.1           no_expreesion
 Glyma.07G273800.2     expreesion
