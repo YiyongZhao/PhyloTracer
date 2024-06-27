@@ -164,13 +164,13 @@ def prune_single(Phylo_t):
                 leafs=v[1].get_leaf_names()
                 total_leafs=Phylo_t.get_leaf_names()
                 diff = [a for a in total_leafs if a not in set(leafs)]
-                Phylo_t.prune(diff)
+                Phylo_t.prune(diff,preserve_branch_length=True)
 
             else:
                 leafs=v[0].get_leaf_names()
                 total_leafs=Phylo_t.get_leaf_names()
                 diff = [a for a in total_leafs if a not in set(leafs)]
-                Phylo_t.prune(diff)
+                Phylo_t.prune(diff,preserve_branch_length=True)
         else:
             result=[]
             for i in v :
