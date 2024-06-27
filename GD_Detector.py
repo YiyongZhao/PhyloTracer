@@ -16,7 +16,12 @@ def mapp_gene_tree_to_species(sp_set,sptree):
 
     return clade
 
-def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_support:int=0) -> list:
+def are_sister_supports_greater_than_num(sister1, sister2, clade_support):
+    support1 = sister1.support if hasattr(sister1, 'support') else 0
+    support2 = sister2.support if hasattr(sister2, 'support') else 0
+    return support1 > clade_support and support2 > clade_support
+
+def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_support:int=0,dup_species_num:int=2,dup_species_percent:int=0) -> list:
     dup_node_name_list = []
     events = Phylo_t.get_descendant_evol_events()
     for ev in events:
@@ -24,39 +29,57 @@ def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_supp
             i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
             events_node_name_list = i.split(',')
             common_ancestor_node = Phylo_t.get_common_ancestor(events_node_name_list)
+            child1,child2=common_ancestor_node.get_children()
             sp_set=get_species_set(common_ancestor_node)
             mapp_sp_node=mapp_gene_tree_to_species(sp_set,sptree)
             common_ancestor_node.add_feature('map',mapp_sp_node.name)
-            if common_ancestor_node.support >= gd_support:
+
+            if judge_support(common_ancestor_node.support,gd_support):
                 child1, child2 = common_ancestor_node.get_children()
-                if not child1.is_leaf() and not child2.is_leaf():
-                    if child1.support >= clade_support and child2.support >= clade_support:
-                        if abs(calculate_depth(Phylo_t,child1) - calculate_depth(Phylo_t,child2)) <= 1:
-                            dup_node_name_list.append(common_ancestor_node)
-                elif child1.is_leaf() and child2.is_leaf():
-                    if common_ancestor_node.support >= clade_support:
-                        dup_node_name_list.append(common_ancestor_node)
-                else:
-                    if child1.support >= clade_support or child2.support >= clade_support:
-                        dup_node_name_list.append(common_ancestor_node)
+                c1=mapp_gene_tree_to_species(get_species_set(child1),sptree)
+                c2=mapp_gene_tree_to_species(get_species_set(child2),sptree)
+                #dup_sps=sps_dup_num(get_species_list(common_ancestor_node),get_species_set(common_ancestor_node))
+                #dup_percent=dup_sps/len(get_species_set(common_ancestor_node))
+
+                if sptree.get_distance(c1,c2, topology_only=True) <=1:
+                #if dup_sps>=dup_species_num and dup_percent>=dup_species_percent:
+                #if are_sister_supports_greater_than_num(child1,child2,clade_support):
+                    dup_node_name_list.append(common_ancestor_node)
     return dup_node_name_list
 
 def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic):
     with open(filename,'w') as file:
         file.write('#tree_ID'+'\t'+'gd_id'+'\t'+'gd_support'+'\t'+'gene1'+'\t'+'gene2'+'\t'+'level'+'\t'+'species'+'\t'+'GD_dup_sps'+'\t'+'dup_ratio'+'\t'+'gd_type'+'\t'+'comment'+'\n') 
         gd_num=1
+
         for tre_ID, tre_path in tre_dic.items():
             Phylo_t0 = read_phylo_tree(tre_path)
             Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
             #Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
             num_tre_node(Phylo_t0)
-            dup_node_name_list = find_dup_node(Phylo_t0,sptree,gd_support,clade_support)
+            dup_node_name_list = find_dup_node(Phylo_t0,sptree,gd_support,clade_support,dup_species_num,dup_species_percent)
             #Phylo_t0.write(outfile='num_tree/' + str(tre_ID) + '.nwk', format=1)
-            tree_dic={}
-            for i in dup_node_name_list:
+            # if tre_ID=='OG_104386_20':
+            # for i in dup_node_name_list:
                 
+            #     clade=i
+            #     parent=clade.map
+            #     if parent=='N3':
+            #         s=rename_input_tre(clade,new_named_gene2gene_dic)
+            #         print(s)
+            #         # child1, child2 = clade.get_children()
+            #         # c1=mapp_gene_tree_to_species(get_species_set(child1),sptree)
+            #         # c2=mapp_gene_tree_to_species(get_species_set(child2),sptree)
+            #         # if c1.get_distance(c2, topology_only=True) ==2:
+            #         s=rename_input_tre(clade,new_named_gene2gene_dic)
+            #         print(tre_ID)
+            #         print(s)
+
+            for i in dup_node_name_list:
+
                 clade=i
-                parent=i.map
+                parent=clade.map
+                child1,child2=clade.get_children()
                 dup_sps=sps_dup_num(get_species_list(clade),get_species_set(clade))
                 dup_percent=dup_sps/len(get_species_set(clade))
                 model=get_model(clade,sptree)
@@ -78,7 +101,7 @@ def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_perc
                     file.write(str(clade.support)+'\t'+new_named_gene2gene_dic.get(a, null)+'\t'+new_named_gene2gene_dic.get(b, null)+'\t'+voucher2taxa_dic.get(parent,parent)+'\t'+voucher2taxa_dic[c]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'-'+'\t''\n')
                 gd_num+=1
             
- 
+        
 def get_model(clade, sptree):
     sps = get_species_list(clade)
     sps_clade = sptree.get_common_ancestor(set(sps))
@@ -164,25 +187,25 @@ def get_empty_count_dict(sptree: object) -> dict:
 
 def judge_support(support,support_value):
     if  support <=1 and 0.5 <=support_value <=1:
-        if support>support_value:
+        if support>=support_value:
             return True
         else:
             return False
         
     elif support <=1 and 50 <= support_value <=100:
         support_value=support_value/100
-        if support>support_value:
+        if support>=support_value:
             return True
         else:
             return False
     elif support > 1 and 0.5 <=support_value <=1:
         support_value=support_value*100
-        if support>support_value:
+        if support>=support_value:
             return True
         else:
             return False
     elif support > 1 and 50 <=support_value <=100:
-        if support>support_value:
+        if support>=support_value:
             return True
         else:
             return False
@@ -190,24 +213,24 @@ def judge_support(support,support_value):
 def gene_pair(clade):
     result_pairs = set()
 
-    child1, child2 = clade.get_children()[0].get_leaf_names(), clade.get_children()[1].get_leaf_names()
+    children = clade.get_children()
+    child1, child2 = sorted(children, key=lambda c: len(c.get_leaf_names()), reverse=True)
+    
+    leaves1, leaves2 = child1.get_leaf_names(), child2.get_leaf_names()
 
-    for tip1 in child1:
-        matching_tips = [tip2 for tip2 in child2 if tip1.split('_')[0] == tip2.split('_')[0]]
+    for tip1 in leaves1:
+        matching_tips = [tip2 for tip2 in leaves2 if tip1.split('_')[0] == tip2.split('_')[0]]
         
         if matching_tips:
             result_pairs.update(f"{tip1}-{tip2}" for tip2 in matching_tips)
         else:
             result_pairs.add(f"{tip1}-null")
 
-    
-    for tip2 in child2:
-        if all(tip2.split('_')[0] != tip1.split('_')[0] for tip1 in child1):
+    for tip2 in leaves2:
+        if all(tip2.split('_')[0] != tip1.split('_')[0] for tip1 in leaves1):
             result_pairs.add(f"null-{tip2}")
 
     return result_pairs
-
-  
 
 if __name__ == "__main__":
     support=50
