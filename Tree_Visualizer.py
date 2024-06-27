@@ -53,12 +53,12 @@ def Dup_NodeIDs_from_Numbered_GFs(Phylo_t:object)->object:
 
 def create_tree_style(tree_style,tre_ID):
     ts = TreeStyle()
-    ts.title.add_face(TextFace(' ', fsize=20), column=1)
-    ts.title.add_face(TextFace(tre_ID, fsize=20), column=0)
-    ts.title.add_face(TextFace("★", fsize=20, fgcolor="red"), column=0)
-    ts.title.add_face(TextFace("Interspecific gene duplication event", fsize=20), column=1)
-    ts.title.add_face(TextFace("★", fsize=20, fgcolor="blue"), column=0)
-    ts.title.add_face(TextFace("Intraspecific gene duplication event", fsize=20), column=1)
+    ts.title.add_face(TextFace("★",fgcolor="white"), column=0)
+    ts.title.add_face(TextFace(tre_ID), column=1)
+    ts.title.add_face(TextFace("★", fgcolor="red"), column=0)
+    ts.title.add_face(TextFace("Interspecific gene duplication event"), column=1)
+    ts.title.add_face(TextFace("★", fgcolor="blue"), column=0)
+    ts.title.add_face(TextFace("Intraspecific gene duplication event"), column=1)
     
     ts.mode = tree_style
     ts.scale = 20
@@ -72,7 +72,7 @@ def create_tree_style(tree_style,tre_ID):
     ts.extra_branch_line_type =0
     ts.extra_branch_line_color='black'
     ts.branch_vertical_margin = -1
-    
+
     
     return ts
 
@@ -174,7 +174,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
     def add_species_face(node, species):
         if species in sps_color_dict:
             color = sps_color_dict[species].split('@')[-1]
-            face = TextFace(' ' + only_gene, fgcolor=color,ftype='Arial', fstyle='italic')
+            face = TextFace(' ' + gene, fgcolor=color,ftype='Arial', fstyle='italic')
             node.add_face(face, column=-1)
 
         if species in sps_color_dict:
@@ -281,7 +281,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
         add_heat_map_to_node(Phylo_t1,df,new_named_gene2gene_dic,gene_categories)
         add_header_to_tree(ts,df,gene_categories)
         add_color_bar(ts)
-    return Phylo_t1.render(dir_path+tre_ID+'.pdf',tree_style=ts)
+    return Phylo_t1.render(dir_path+tre_ID+'.pdf',w=210, units="mm",tree_style=ts)
 
 
 def get_matched_value(gene, gene2fam):
@@ -401,7 +401,7 @@ def rename_sptree(sptree):
         #    i.name=sp[i.name]
 
 def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic,gene2fam=None,df=None):
-    dir_path = os.path.join(os.getcwd(), "output/pdf_result/")
+    dir_path = os.path.join(os.getcwd(), "tree_visualizer/")
     if os.path.exists(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path)
