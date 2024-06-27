@@ -307,7 +307,7 @@ Required parameter:
     --input_imap        File with classification information of species corresponding to genes
     --input_gene_length	File with information corresponding to gene lengths
 Usage:
-    Phylo_Tracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.txt --input_gene_length sptree.nwk  
+    Phylo_Tracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt
 ```
 ### Hybrid_Tracer
 ```
