@@ -67,6 +67,7 @@ subparsers = parser.add_subparsers(dest='command', help='available programs:')
 PhyloTree_CollapseExpand_parser = subparsers.add_parser('PhyloTree_CollapseExpand', help='PhyloTree_CollapseExpand help')
 PhyloTree_CollapseExpand_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
 PhyloTree_CollapseExpand_parser.add_argument('--support_value', type=int,required=True, help='If the support of the node is less than this value, it will be folded')
+PhyloTree_CollapseExpand_parser.add_argument('--revert', action='store_true', help='Revert this comb structure back to a fully resolved binary tree')
 
 # PhyloSupport_Scaler command
 PhyloSupport_Scaler_parser = subparsers.add_parser('PhyloSupport_Scaler', help='PhyloSupport_Scaler help')
@@ -84,7 +85,6 @@ Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='file',  required=Tr
 Phylo_Rooter_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='file',  help='Input gene length list')
 Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
-Phylo_Rooter_parser.add_argument('--threads', type=int, default=8, help='Thread Number')
 
 # OrthoFilter_LB command
 OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='OrthoFilter_LBr help')
@@ -111,7 +111,7 @@ TreeTopology_Summarizer_parser.add_argument('--outfile', metavar='file',  requir
 Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Tree_Visualizer help')
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
 Tree_Visualizer_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
-Tree_Visualizer_parser.add_argument('--gene_categories', metavar='file', nargs='+',  help='Gene category information')
+Tree_Visualizer_parser.add_argument('--species_categories', metavar='file', nargs='+',  help='Species category information')
 Tree_Visualizer_parser.add_argument('--keep_branch', type=str,  choices=['1', '0'],help='[1/0] you can only input 1 or 0 Whether to preserve branch length information')
 Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='Tree style: [r/c] (rectangular) or (circular) (default: rectangular)')
 Tree_Visualizer_parser.add_argument('--gene_family', metavar='file',  required=False, help='Input species tree file')
@@ -123,7 +123,7 @@ GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help
 GD_Detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 GD_Detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 GD_Detector_parser.add_argument('--gd_support', type=int,required=True, help='GD node support [50-100]')
-GD_Detector_parser.add_argument('--clade_support', type=int,required=True, help='The children support of GD node [50-100]')
+GD_Detector_parser.add_argument('--clade_support', type=int,required=True, help='The children support of GD node [0-100]')
 GD_Detector_parser.add_argument('--dup_species_radio', type=float ,required=True,help='The proportion of species with species duplications under the GD node [0-1]')
 GD_Detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
 GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
@@ -137,12 +137,12 @@ GD_Visualizer_parser.add_argument('--gd_result', metavar='file',  required=True,
 GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_Tracker help')
 GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gf list')
 GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree filet')
-GD_Loss_Tracker_parser.add_argument('--outfile', metavar='file',  required=True, help='Out filename')
+GD_Loss_Tracker_parser.add_argument('--output_folder', type=str,  required=True, help='Output foldername')
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
-GD_Loss_Visualizer_parser.add_argument('--input_folder', metavar='file',  required=True, help='Input folder')
-GD_Loss_Visualizer_parser.add_argument('--outfile', metavar='file',  required=True, help='Out filename')
+GD_Loss_Visualizer_parser.add_argument('--input_folder', type=str,  required=True, help='Input foldername')
+GD_Loss_Visualizer_parser.add_argument('--output_folder', type=str,  required=True, help='Output foldername')
 
 # Ortho_Retriever command
 Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help')
@@ -156,6 +156,12 @@ Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='file',  required=T
 Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='file',  required=True, help='Seq file list')
 Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 Hybrid_Tracer_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+
+# Hybrid_Visualizer
+Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybrid_Visualizer help')
+Hybrid_Visualizer_parser.add_argument('--input_hybrid_folder', type=str,  required=True, help='The results of Hybrid_Tracer')
+Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+
 
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
@@ -178,7 +184,7 @@ def main():
             input_GF_list = args.input_GF_list
             support_value = args.support_value
             tre_dic = read_and_return_dict(input_GF_list)
-            collapse_expand_main(tre_dic, support_value)
+            collapse_expand_main(tre_dic, support_value,revert=args.revert)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -189,10 +195,10 @@ def main():
 
     elif args.command == 'PhyloSupport_Scaler':
         # Execute the PhyloSupport_Scaler function
-        if args.input_GF_list and args.scale :
+        if args.input_GF_list and args.scale_to :
             start_time = time.time()
             input_GF_list = args.input_GF_list
-            scale = args.scale
+            scale = args.scale_to
             tre_dic = read_and_return_dict(input_GF_list)
             support_scaler_main(tre_dic,scale)
             end_time = time.time()
@@ -227,14 +233,13 @@ def main():
             input_imap = args.input_imap
             input_sps_tree = args.input_sps_tree
             input_gene_length = args.input_gene_length
-            num_threads=args.threads
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer(input_imap)
             len_dic = read_and_return_dict(input_gene_length)
             renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
             sptree = PhyloTree(input_sps_tree)
             renamed_sptree=rename_input_tre(sptree,taxa2voucher_dic)
             tre_dic = read_and_return_dict(input_GF_list)
-            root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, renamed_sptree,voucher2taxa_dic,num_threads)
+            root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, renamed_sptree,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -305,9 +310,9 @@ def main():
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             tree_style = args.tree_style
-            gene_categories = args.gene_categories
+            species_categories = args.species_categories
             keep_branch = args.keep_branch
-            gene_category_list = [read_and_return_dict(i) for i in gene_categories]
+            species_category_list = [read_and_return_dict(i) for i in species_categories]
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             if args.gene_family and args.input_sps_tree:
@@ -315,15 +320,15 @@ def main():
                 gene2fam = read_and_return_dict(input_gene2fam)
                 input_sps_tree = args.input_sps_tree
                 sptree = Tree(input_sps_tree)
-                mark_gene_to_sptree_main(tre_dic,gene_category_list,sptree,gene2fam)
-                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
+                mark_gene_to_sptree_main(tre_dic,species_category_list,sptree,gene2fam)
+                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
             if args.gene_expression:
                 gene2fam=None
                 df=pd.read_excel(args.gene_expression, index_col=0) 
-                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam,df)
+                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam,df)
             else:
                 gene2fam=None
-                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, gene_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
+                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -334,7 +339,7 @@ def main():
     
     elif args.command == 'GD_Detector':
         # Execute the GD_Detector function
-        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.gd_support and args.clade_support and args.dup_species_radio and args.dup_species_num :
+        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.gd_support and args.clade_support is not None and args.dup_species_radio is not None and args.dup_species_num :
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
@@ -349,7 +354,7 @@ def main():
             sptree.write(outfile='numed_sptree.nwk',format=1)
             renamed_sptree=rename_input_tre(sptree, taxa2voucher_dic)
             tre_dic = read_and_return_dict(input_GF_list)
-            filename = 'result.txt'
+            filename = 'gd_detector_result.txt'
             write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
@@ -376,11 +381,11 @@ def main():
 
     elif args.command == 'GD_Loss_Tracker':
         # Execute the GD_Loss_Tracker function
-        if args.input_GF_list and args.input_sps_tree and args.outfile :
+        if args.input_GF_list and args.input_sps_tree and args.output_folder :
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_sps_tree = args.input_sps_tree
-            out_dir=args.outfile
+            out_dir=args.output_folder
             sptree=PhyloTree(input_sps_tree,format=1)
             num_sptree(sptree)
             tre_dic=read_and_return_dict(input_GF_list)
@@ -399,10 +404,10 @@ def main():
 
     elif args.command == 'GD_Loss_Visualizer':
         # Execute the GD_Loss_Visualizer function
-        if args.input_folder and  args.outfile :
+        if args.input_folder and  args.output_folder :
             start_time = time.time()
             input_dir=args.input_folder
-            out_dir=args.outfile
+            out_dir=args.output_folder
             os.makedirs(out_dir, exist_ok=True)
             generate_plt(input_dir,out_dir)
             end_time = time.time()
@@ -445,7 +450,8 @@ def main():
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             sptree=read_phylo_tree(input_sps_tree)
             rename_sptree=rename_input_tre(sptree,taxa2voucher_dic)
-            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic)
+            num_tre_node(rename_sptree)
+            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -453,7 +459,20 @@ def main():
         else:
             print("Required arguments for Hybrid_Tracer command are missing.")
 
-            
+    elif args.command == 'Hybrid_Visualizer':
+        # Execute the Hybrid_Visualizer function
+        if args.input_hybrid_folder  and args.input_sps_tree :
+            start_time = time.time()
+            input_hybrid_folder=args.input_hybrid_folder
+            input_sps_tree = args.input_sps_tree
+            sptree=read_tree(input_sps_tree)
+            hyde_visual_main(input_hybrid_folder,sptree)
+            end_time = time.time()
+            execution_time = end_time - start_time
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
+        else:
+            print("Required arguments for Hybrid_Visualizer command are missing.")
 
     
      
