@@ -65,4 +65,3 @@ if __name__ == "__main__":
     os.makedirs(out, exist_ok=True)
     enerate_plt(input_folder,out)
 
-
