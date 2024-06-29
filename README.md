@@ -162,7 +162,7 @@ Required parameter:
 Optional parameter:
     --revert         Revert this 'comb' structure to a fully resolved binary tree
 Usage:
-    Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF.txt --support_value 50 [--revert]
+    Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
 ```
 ### PhyloSupport_Scaler
 ```
@@ -172,7 +172,7 @@ Required parameter:
     --input_GF_list  File containing paths to gene tree files, one per line
     --scale_to       Input '1' to scale support values from 1-100 to 0-1, or '100' to scale from 0-1 to 1-100
 Usage:
-    Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list GF.txt --scale_to 1
+    Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1
 ```
 ### BranchLength_NumericConverter
 ```
@@ -183,7 +183,7 @@ Required parameter:
 Optional parameter:
     --decimal_place  Default=10, return the branch length values to 10 decimal places
 Usage:
-    Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF.txt [--decimal_place 10]
+    Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
 ```
 ### Phylo_Rooter
 ```
@@ -195,7 +195,7 @@ Required parameter:
     --input_gene_length  File with information corresponding to gene lengths
     --input_sps_tree     A species tree file with Newick
 Usage:
-    Phylo_Tracer.py Phylo_Rooter --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt --input_sps_tree sptree.nwk 
+    Phylo_Tracer.py Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk 
 ```
 ### OrthoFilter_LB
 ```
@@ -208,7 +208,7 @@ Required parameter:
 Optional parameter:
     --visual              Visualize the results of gene family trees before and after removing long branches
 Usage:
-    Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF.txt --input_taxa taxa.txt --long_branch_index 10 [--visual]
+    Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --long_branch_index 10 [--visual]
 ```
 ### OrthoFilter_Mono
 ```
@@ -222,7 +222,7 @@ Required parameter:
 Optional parameter:
     --visual               Visualize the results of gene family trees before and after removing outliers and paralogs
 Usage:
-    Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF.txt --input_taxa taxa.txt --long_branch_index 10 --insert_branch_index 10 [--visual]
+    Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --long_branch_index 10 --insert_branch_index 10 [--visual]
 ```
 ### TreeTopology_Summarizer
 ```
@@ -233,7 +233,7 @@ Required parameter:
     --input_imap       File with classification information of species corresponding to genes
     --outfile          Output filename
 Usage:
-    Phylo_Tracer.py TreeTopology_Summarizer --input_GF_list GF.txt --input_imap imap.txt --outfile filename
+    Phylo_Tracer.py TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --outfile filename
 ```
 ### Tree_Visualizer
 ```
@@ -250,7 +250,7 @@ Optional parameter:
     --input_sps_tree      If you provide the --gene_family parameter, you should provide a species tree file with Newick
     --gene_expression     Gene expression level files
 Usage:
-    Phylo_Tracer.py Tree_Visualizer --input_GF_list GF.txt --input_imap imap.txt [--species_categories [taxa.txt family.txt  order.txt class.txt] --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.txt --input_sps_tree sptree.nwk  --gene_expression gene_expression.csv]
+    Phylo_Tracer.py Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--species_categories [gene2sps.imap gene2order.imap  gene2taxa.imap gene2clade.imap] --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.imap --input_sps_tree sptree.nwk  --gene_expression gene2expression.imap]
 ```
 ### GD_Detector
 ```
@@ -265,7 +265,7 @@ Required parameter:
     --dup_species_num          The number of species with species duplications under the GD node
     --input_sps_tree           A species tree file with Newick
 Usage:
-    Phylo_Tracer.py GD_Detector --input_GF_list GF.txt --input_imap imap.txt --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk
+    Phylo_Tracer.py GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk
 ```
 ### GD_Visualizer
 ```
@@ -286,7 +286,7 @@ Required parameter:
     --input_sps_tree     A species tree file with Newick
     --output_folder      Output folder name
 Usage:
-    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF.txt --input_sps_tree sptree.nwk --output_folder filename
+    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --output_folder filename
 ```
 ### GD_Loss_Visualizer
 ```
@@ -307,7 +307,7 @@ Required parameter:
     --input_imap        File with classification information of species corresponding to genes
     --input_gene_length	File with information corresponding to gene lengths
 Usage:
-    Phylo_Tracer.py Ortho_Retriever --input_GF_list GF.txt --input_imap imap.txt --input_gene_length length.txt
+    Phylo_Tracer.py Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
 ```
 ### Hybrid_Tracer
 ```
@@ -319,7 +319,7 @@ Required parameter:
     --input_imap         File with classification information of species corresponding to genes
     --input_sps_tree     A species tree file with Newick
 Usage:
-    Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF.txt --input_Seq_GF_list Seq_GF.txt --input_sps_tree sptree.nwk input_imap imap.txt
+    Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk input_imap gene2sps.imap
 ```
 ### Hybrid_Visualizer
 ```
@@ -348,7 +348,7 @@ Required parameter:
     --synteny_result     Synteny result between species A and species B
     --blastp_limit       Limit number of targets per gene pair in the BLASTp result
 Usage:
-    Phylo_Tracer.py HaploFinder --input_GF_list GF.list --input_imap imap.txt --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --blastp_result blastp.txt --synteny_result synteny.txt --blastp_limit 5
+    Phylo_Tracer.py HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --blastp_result blastp.txt --synteny_result synteny.txt --blastp_limit 5
 ```
 
 ## Bug Reports
