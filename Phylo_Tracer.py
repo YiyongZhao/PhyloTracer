@@ -162,6 +162,19 @@ Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybr
 Hybrid_Visualizer_parser.add_argument('--input_hybrid_folder', type=str,  required=True, help='The results of Hybrid_Tracer')
 Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
 
+#HaploFinder
+HaploFinder = subparsers.add_parser('HaploFinder', help='HaploFinder help')
+HaploFinder.add_argument('--gene_tree_list', metavar='FILE', required=True, help='Input gene tree list file')
+HaploFinder.add_argument('--imap_file', metavar='FILE', required=True, help='Input imap file')
+HaploFinder.add_argument('--species_a', type=str, required=True, help='Name of species A')
+HaploFinder.add_argument('--species_b', type=str, required=True, help='Name of species B')
+HaploFinder.add_argument('--species_a_gff', metavar='FILE', required=True, help='GFF file of species A')
+HaploFinder.add_argument('--species_b_gff', metavar='FILE', required=True, help='GFF file of species B')
+HaploFinder.add_argument('--species_a_lens', metavar='FILE', required=True, help='Lens file of species A')
+HaploFinder.add_argument('--species_b_lens', metavar='FILE', required=True, help='Lens file of species B')
+HaploFinder.add_argument('--blastp_result', metavar='FILE', required=True, help='Blastp result between species A and species B')
+HaploFinder.add_argument('--synteny_result', metavar='FILE', required=True, help='Synteny result between species A and species B')
+HaploFinder.add_argument('--blastp_limit', type=int, required=True, help='Limit number of targets per gene pair in the BLASTp result')
 
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
@@ -474,7 +487,44 @@ def main():
         else:
             print("Required arguments for Hybrid_Visualizer command are missing.")
 
+    elif args.command == 'HaploFinder':
+        required_args = [args.gene_tree_list, args.imap_file, args.species_a, args.species_b,
+                     args.species_a_gff, args.species_b_gff, args.species_a_lens, args.species_b_lens,
+                     args.blastp_result, args.synteny_result, args.blastp_limit]
     
+        if all(required_args):
+            start_time = time.time()
+            
+            # Process results
+            process_blastp_pairs = process_blastp_result(args.blastp_result, args.blastp_limit)
+            process_synteny_pairs = process_synteny_result(args.synteny_result)
+            process_gd_pairs = process_gd_result(args.gene_tree_list, args.imap_file, args.species_a, args.species_b)
+            
+            # GFF and lens variables
+            gff1, gff2 = args.species_a_gff, args.species_b_gff
+            lens1, lens2 = args.species_a_lens, args.species_b_lens
+            spe1, spe2 = args.species_a, args.species_b
+            
+            # Helper function to generate dotplots
+            def generate_and_print_dotplot(pairs, label):
+                generate_dotplot(gff1, gff2, lens1, lens2, pairs, spe1, spe2, label)
+                print('-' * 30)
+            
+            # Generate dotplots
+            generate_and_print_dotplot(process_blastp_pairs, 'blastp_pairs')
+            generate_and_print_dotplot(process_synteny_pairs, 'synteny_pairs')
+            generate_and_print_dotplot(process_gd_pairs, 'gd_pairs')
+            
+            total_pairs = process_blastp_pairs + process_synteny_pairs + process_gd_pairs
+            generate_and_print_dotplot(total_pairs, 'total_pairs')
+            
+            # Calculate and print execution time
+            end_time = time.time()
+            execution_time = end_time - start_time
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
+        else:
+            print("Required arguments for HaploFinder command are missing.")
      
     else:
         print("Usage: python PhyloTracer.py  [-h]  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}")
