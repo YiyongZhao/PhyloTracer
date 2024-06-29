@@ -325,11 +325,30 @@ Usage:
 ```
 Description:
     To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals
+Required parameter:
+    --input_hybrid_folder  The result folder name of Hybrid_Tracer
+    --input_sps_tree       A species tree file with Newick
+Usage:
+    Phylo_Tracer.py Hybrid_Visualizer --input_hybrid_folder input_foldername --input_sps_tree sptree.nwk 
 ```
 ### HaploFinder
 ```
 Description:
     To distinguish gene conversion by tracing subgenome haplotypes through phylogenomic profiling
+Required parameter:
+    --input_GF_list      File containing paths to gene tree files, one per line
+    --input_imap         File with classification information of species corresponding to genes
+    --species_a          Name of species A
+    --species_b          Name of species B
+    --species_a_gff      GFF file of species A
+    --species_b_gff      GFF file of species B
+    --species_a_lens     Lens file of species A
+    --species_b_lens     Lens file of species B
+    --blastp_result      Blastp result between species A and species B
+    --synteny_result     Synteny result between species A and species B
+    --blastp_limit       Limit number of targets per gene pair in the BLASTp result
+Usage:
+    Phylo_Tracer.py HaploFinder --input_GF_list GF.list --input_imap imap.txt --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --blastp_result blastp.txt --synteny_result synteny.txt --blastp_limit 5
 ```
 
 ## Bug Reports
