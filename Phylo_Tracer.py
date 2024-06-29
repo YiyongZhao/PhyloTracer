@@ -164,8 +164,8 @@ Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  requi
 
 #HaploFinder
 HaploFinder = subparsers.add_parser('HaploFinder', help='HaploFinder help')
-HaploFinder.add_argument('--gene_tree_list', metavar='FILE', required=True, help='Input gene tree list file')
-HaploFinder.add_argument('--imap_file', metavar='FILE', required=True, help='Input imap file')
+HaploFinder.add_argument('--input_GF_list', metavar='FILE', required=True, help='Input gene tree list file')
+HaploFinder.add_argument('--input_imap', metavar='FILE', required=True, help='Input imap file')
 HaploFinder.add_argument('--species_a', type=str, required=True, help='Name of species A')
 HaploFinder.add_argument('--species_b', type=str, required=True, help='Name of species B')
 HaploFinder.add_argument('--species_a_gff', metavar='FILE', required=True, help='GFF file of species A')
@@ -488,7 +488,7 @@ def main():
             print("Required arguments for Hybrid_Visualizer command are missing.")
 
     elif args.command == 'HaploFinder':
-        required_args = [args.gene_tree_list, args.imap_file, args.species_a, args.species_b,
+        required_args = [args.input_GF_list, args.input_imap, args.species_a, args.species_b,
                      args.species_a_gff, args.species_b_gff, args.species_a_lens, args.species_b_lens,
                      args.blastp_result, args.synteny_result, args.blastp_limit]
     
@@ -498,7 +498,7 @@ def main():
             # Process results
             process_blastp_pairs = process_blastp_result(args.blastp_result, args.blastp_limit)
             process_synteny_pairs = process_synteny_result(args.synteny_result)
-            process_gd_pairs = process_gd_result(args.gene_tree_list, args.imap_file, args.species_a, args.species_b)
+            process_gd_pairs = process_gd_result(args.input_GF_list, args.input_imap, args.species_a, args.species_b)
             
             # GFF and lens variables
             gff1, gff2 = args.species_a_gff, args.species_b_gff
