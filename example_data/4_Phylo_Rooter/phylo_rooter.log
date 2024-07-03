@@ -1,0 +1,375 @@
+2024-07-03 15:57:34,733 - DEBUG - matplotlib data path: /Users/apple/anaconda3/lib/python3.11/site-packages/matplotlib/mpl-data
+2024-07-03 15:57:34,736 - DEBUG - CONFIGDIR=/Users/apple/.matplotlib
+2024-07-03 15:57:34,737 - DEBUG - interactive is False
+2024-07-03 15:57:34,737 - DEBUG - platform is darwin
+2024-07-03 15:57:34,763 - DEBUG - CACHEDIR=/Users/apple/.matplotlib
+2024-07-03 15:57:34,764 - DEBUG - Using fontManager instance from /Users/apple/.matplotlib/fontlist-v330.json
+2024-07-03 15:57:35,162 - DEBUG - Loaded backend agg version v2.2.
+2024-07-03 15:57:35,206 - INFO - Starting main script
+2024-07-03 15:57:35,206 - INFO - 
+==================== Start Processing Tree: OG_100000_200 ====================
+
+2024-07-03 15:57:35,411 - INFO - Starting filter_min_GD
+2024-07-03 15:57:35,743 - DEBUG - GD values: [195, 195, 195, 195, 195, 195, 196, 196, 195, 195, 195, 195, 195, 194, 194, 193, 193, 194, 194, 195, 195, 194, 194, 193, 193, 193, 193, 194, 194, 193, 194, 194]
+2024-07-03 15:57:35,743 - DEBUG - Minimum GD value: 193
+2024-07-03 15:57:35,743 - DEBUG - Trees with minimum GD: ['N193', 'N174', 'N192', 'VIT_218s0001g14000.1', 'N191', 'N183', 'N190']
+2024-07-03 15:57:35,743 - INFO - Finished filter_min_GD
+2024-07-03 15:57:35,743 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:35,744 - DEBUG - Overlap values: [1.0, 0.75, 0.75, 0.25, 0.75, 0.5, 0.5]
+2024-07-03 15:57:35,744 - DEBUG - Maximum overlap value: 1.0
+2024-07-03 15:57:35,744 - DEBUG - Trees with maximum overlap: ['N193']
+2024-07-03 15:57:35,744 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:35,746 - INFO - Finished Processing Tree: OG_100000_200
+
+2024-07-03 15:57:35,746 - INFO - 
+==================== Start Processing Tree: OG_100029_68 ====================
+
+2024-07-03 15:57:35,789 - INFO - Starting filter_min_GD
+2024-07-03 15:57:35,853 - DEBUG - GD values: [61, 61, 61, 61, 61, 62, 62, 63, 63, 61, 61, 60, 60, 60, 61, 61, 61, 61, 61, 61, 62, 62, 61, 61, 61, 62, 62, 61]
+2024-07-03 15:57:35,853 - DEBUG - Minimum GD value: 60
+2024-07-03 15:57:35,853 - DEBUG - Trees with minimum GD: ['N65', 'AT3G43800.1', 'N64']
+2024-07-03 15:57:35,853 - INFO - Finished filter_min_GD
+2024-07-03 15:57:35,853 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:35,853 - DEBUG - Overlap values: [0.6666666666666666, 0.16666666666666666, 0.6666666666666666]
+2024-07-03 15:57:35,853 - DEBUG - Maximum overlap value: 0.6666666666666666
+2024-07-03 15:57:35,853 - DEBUG - Trees with maximum overlap: ['N65', 'N64']
+2024-07-03 15:57:35,853 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:35,853 - INFO - Starting filter_min_var
+2024-07-03 15:57:35,855 - DEBUG - Variance values: [0.005021389712896316, 0.005083236984670624]
+2024-07-03 15:57:35,855 - DEBUG - Minimum variance value: 0.005021389712896316
+2024-07-03 15:57:35,855 - DEBUG - Trees with minimum variance: ['N65']
+2024-07-03 15:57:35,855 - INFO - Finished filter_min_var
+2024-07-03 15:57:35,856 - INFO - Finished Processing Tree: OG_100029_68
+
+2024-07-03 15:57:35,856 - INFO - 
+==================== Start Processing Tree: OG_100090_49 ====================
+
+2024-07-03 15:57:35,930 - INFO - Starting filter_min_GD
+2024-07-03 15:57:35,972 - DEBUG - GD values: [39, 40, 41, 41, 40, 39, 39, 39, 40, 40, 39, 40, 41, 41, 40, 39, 39, 40, 41, 41, 40, 41, 41, 39, 39, 39, 39, 39, 40, 40]
+2024-07-03 15:57:35,972 - DEBUG - Minimum GD value: 39
+2024-07-03 15:57:35,972 - DEBUG - Trees with minimum GD: ['N4', 'N47', 'N28', 'N23', 'N27', 'N46', 'N33', 'N45', 'N37', 'N44', 'AMTR_s00059p00202900', 'N43']
+2024-07-03 15:57:35,972 - INFO - Finished filter_min_GD
+2024-07-03 15:57:35,972 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:35,973 - DEBUG - Overlap values: [0.6, 0.6, 0.6, 0.4, 0.6, 0.8, 0.8, 0.4, 0.2, 0.4, 0.0, 0.4]
+2024-07-03 15:57:35,973 - DEBUG - Maximum overlap value: 0.8
+2024-07-03 15:57:35,973 - DEBUG - Trees with maximum overlap: ['N46', 'N33']
+2024-07-03 15:57:35,973 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:35,973 - INFO - Starting filter_min_var
+2024-07-03 15:57:35,974 - DEBUG - Variance values: [0.011258631139140664, 0.011737715565381812]
+2024-07-03 15:57:35,974 - DEBUG - Minimum variance value: 0.011258631139140664
+2024-07-03 15:57:35,974 - DEBUG - Trees with minimum variance: ['N46']
+2024-07-03 15:57:35,974 - INFO - Finished filter_min_var
+2024-07-03 15:57:35,974 - INFO - Finished Processing Tree: OG_100090_49
+
+2024-07-03 15:57:35,975 - INFO - 
+==================== Start Processing Tree: OG_103412_8 ====================
+
+2024-07-03 15:57:35,978 - INFO - Starting filter_min_GD
+2024-07-03 15:57:35,979 - DEBUG - GD values: [4, 4, 4, 4, 4, 4, 4, 4]
+2024-07-03 15:57:35,979 - DEBUG - Minimum GD value: 4
+2024-07-03 15:57:35,979 - DEBUG - Trees with minimum GD: ['N5', 'N2', 'N1', 'AT5G23760.1', 'N4', 'N6', 'AMTR_s00076p00094880', 'VIT_216s0050g00140.1']
+2024-07-03 15:57:35,979 - INFO - Finished filter_min_GD
+2024-07-03 15:57:35,979 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:35,979 - DEBUG - Overlap values: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+2024-07-03 15:57:35,979 - DEBUG - Maximum overlap value: 0.0
+2024-07-03 15:57:35,979 - DEBUG - Trees with maximum overlap: ['N5', 'N2', 'N1', 'AT5G23760.1', 'N4', 'N6', 'AMTR_s00076p00094880', 'VIT_216s0050g00140.1']
+2024-07-03 15:57:35,979 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:35,979 - INFO - Starting filter_min_var
+2024-07-03 15:57:35,980 - DEBUG - Variance values: [0.016840703285635052, 0.05439486475779305, 0.04748932881037066, 0.037234171798374634, 0.03937428573188472, 0.016840703285635052, 0.0314103580529268, 0.02091016251220867]
+2024-07-03 15:57:35,980 - DEBUG - Minimum variance value: 0.016840703285635052
+2024-07-03 15:57:35,980 - DEBUG - Trees with minimum variance: ['N5', 'N6']
+2024-07-03 15:57:35,980 - INFO - Finished filter_min_var
+2024-07-03 15:57:35,981 - INFO - Starting filter_min_RF
+2024-07-03 15:57:35,981 - DEBUG - RF values: dict_values([6, 6])
+2024-07-03 15:57:35,981 - DEBUG - Minimum RF value: 6
+2024-07-03 15:57:35,981 - DEBUG - Trees with minimum RF: ['N5', 'N6']
+2024-07-03 15:57:35,981 - INFO - Finished filter_min_RF
+2024-07-03 15:57:35,981 - INFO - Finished Processing Tree: OG_103412_8
+
+2024-07-03 15:57:35,981 - INFO - 
+==================== Start Processing Tree: OG_100015_89 ====================
+
+2024-07-03 15:57:36,106 - INFO - Starting filter_min_GD
+2024-07-03 15:57:36,322 - DEBUG - GD values: [71, 71, 70, 70, 70, 71, 71, 72, 72, 73, 73, 73, 73, 74, 74, 75, 75, 73, 73, 70, 70, 71, 71, 72, 72, 71, 72, 72, 73, 73, 71, 70, 70, 70, 71, 72, 72, 72, 73, 74, 74, 73, 74, 74, 72, 72, 72, 71, 70, 71, 71, 71, 71, 71, 71, 71, 72, 72, 71, 71, 72, 72, 72, 72, 73, 73]
+2024-07-03 15:57:36,322 - DEBUG - Minimum GD value: 70
+2024-07-03 15:57:36,322 - DEBUG - Trees with minimum GD: ['N39', 'N37', 'N14', 'N36', 'N22', 'N35', 'N23', 'N34', 'N38']
+2024-07-03 15:57:36,322 - INFO - Finished filter_min_GD
+2024-07-03 15:57:36,322 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:36,322 - DEBUG - Overlap values: [0.8333333333333334, 0.8333333333333334, 1.0, 1.0, 0.8333333333333334, 1.0, 0.16666666666666666, 1.0, 0.3333333333333333]
+2024-07-03 15:57:36,322 - DEBUG - Maximum overlap value: 1.0
+2024-07-03 15:57:36,322 - DEBUG - Trees with maximum overlap: ['N14', 'N36', 'N35', 'N34']
+2024-07-03 15:57:36,322 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:36,322 - INFO - Starting filter_min_var
+2024-07-03 15:57:36,326 - DEBUG - Variance values: [0.017488246386249018, 0.023197676251903495, 0.023584583239010443, 0.034654383985761525]
+2024-07-03 15:57:36,326 - DEBUG - Minimum variance value: 0.017488246386249018
+2024-07-03 15:57:36,326 - DEBUG - Trees with minimum variance: ['N14']
+2024-07-03 15:57:36,326 - INFO - Finished filter_min_var
+2024-07-03 15:57:36,327 - INFO - Finished Processing Tree: OG_100015_89
+
+2024-07-03 15:57:36,327 - INFO - 
+==================== Start Processing Tree: OG_100294_29 ====================
+
+2024-07-03 15:57:36,350 - INFO - Starting filter_min_GD
+2024-07-03 15:57:36,377 - DEBUG - GD values: [17, 18, 18, 19, 20, 21, 21, 20, 19, 18, 18, 17, 17, 17, 18, 18, 19, 19, 19, 19, 20, 20, 21, 21, 19, 20, 21, 21, 20, 19, 19, 20, 20, 19]
+2024-07-03 15:57:36,377 - DEBUG - Minimum GD value: 17
+2024-07-03 15:57:36,377 - DEBUG - Trees with minimum GD: ['N7', 'N27', 'AT3G17390.1', 'N26']
+2024-07-03 15:57:36,377 - INFO - Finished filter_min_GD
+2024-07-03 15:57:36,377 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:36,377 - DEBUG - Overlap values: [0.8333333333333334, 0.8333333333333334, 0.16666666666666666, 0.8333333333333334]
+2024-07-03 15:57:36,377 - DEBUG - Maximum overlap value: 0.8333333333333334
+2024-07-03 15:57:36,377 - DEBUG - Trees with maximum overlap: ['N7', 'N27', 'N26']
+2024-07-03 15:57:36,377 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:36,377 - INFO - Starting filter_min_var
+2024-07-03 15:57:36,378 - DEBUG - Variance values: [0.0017467286090028411, 0.0017467286090028411, 0.0016192141178719113]
+2024-07-03 15:57:36,378 - DEBUG - Minimum variance value: 0.0016192141178719113
+2024-07-03 15:57:36,378 - DEBUG - Trees with minimum variance: ['N26']
+2024-07-03 15:57:36,378 - INFO - Finished filter_min_var
+2024-07-03 15:57:36,378 - INFO - Finished Processing Tree: OG_100294_29
+
+2024-07-03 15:57:36,379 - INFO - 
+==================== Start Processing Tree: OG_100009_98 ====================
+
+2024-07-03 15:57:36,618 - INFO - Starting filter_min_GD
+2024-07-03 15:57:36,939 - DEBUG - GD values: [63, 63, 63, 64, 65, 65, 65, 65, 66, 67, 67, 66, 67, 67, 64, 63, 63, 64, 64, 65, 66, 67, 67, 66, 65, 63, 63, 64, 64, 64, 64, 64, 65, 65, 66, 66, 67, 67, 64, 65, 65, 64, 65, 65, 64, 64, 65, 66, 66, 65, 64, 63, 63, 63, 64, 65, 66, 67, 68, 68, 67, 66, 65, 64, 63, 64, 65, 66, 66, 65, 64, 63, 63, 64, 65, 65, 66, 67, 68, 68, 67, 66, 64, 63, 64, 64, 65, 65, 66, 67, 67, 68, 68, 66]
+2024-07-03 15:57:36,939 - DEBUG - Minimum GD value: 63
+2024-07-03 15:57:36,939 - DEBUG - Trees with minimum GD: ['N23', 'N11', 'N7', 'N10', 'N22', 'N96', 'N56', 'N95', 'N79', 'N65', 'N78', 'N94', 'N88', 'N93']
+2024-07-03 15:57:36,939 - INFO - Finished filter_min_GD
+2024-07-03 15:57:36,939 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:36,940 - DEBUG - Overlap values: [1.0, 1.0, 1.0, 0.16666666666666666, 0.8333333333333334, 1.0, 0.8333333333333334, 1.0, 1.0, 1.0, 0.6666666666666666, 1.0, 1.0, 1.0]
+2024-07-03 15:57:36,940 - DEBUG - Maximum overlap value: 1.0
+2024-07-03 15:57:36,940 - DEBUG - Trees with maximum overlap: ['N23', 'N11', 'N7', 'N96', 'N95', 'N79', 'N65', 'N94', 'N88', 'N93']
+2024-07-03 15:57:36,940 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:36,940 - INFO - Starting filter_min_var
+2024-07-03 15:57:36,949 - DEBUG - Variance values: [0.03567279237340639, 0.03386475424370165, 0.0413971806219145, 0.03567279237340639, 0.0453810629159527, 0.04252300629671053, 0.03859969183201612, 0.039289049976616065, 0.04097728553297066, 0.03751759386874785]
+2024-07-03 15:57:36,949 - DEBUG - Minimum variance value: 0.03386475424370165
+2024-07-03 15:57:36,949 - DEBUG - Trees with minimum variance: ['N11']
+2024-07-03 15:57:36,949 - INFO - Finished filter_min_var
+2024-07-03 15:57:36,950 - INFO - Finished Processing Tree: OG_100009_98
+
+2024-07-03 15:57:36,950 - INFO - 
+==================== Start Processing Tree: OG_100017_79 ====================
+
+2024-07-03 15:57:37,065 - INFO - Starting filter_min_GD
+2024-07-03 15:57:37,260 - DEBUG - GD values: [59, 59, 60, 61, 61, 62, 62, 61, 61, 61, 62, 63, 63, 62, 63, 63, 61, 60, 59, 59, 59, 59, 59, 60, 60, 60, 60, 61, 62, 63, 63, 62, 61, 60, 60, 60, 61, 61, 62, 62, 60, 59, 59, 60, 61, 61, 61, 61, 61, 62, 62, 61, 62, 62, 61, 62, 62, 61, 61, 62, 62, 61, 60, 59, 60, 60, 60, 60, 61, 61]
+2024-07-03 15:57:37,260 - DEBUG - Minimum GD value: 59
+2024-07-03 15:57:37,260 - DEBUG - Trees with minimum GD: ['N16', 'N15', 'Os02t0722400-01', 'N77', 'N71', 'N42', 'N40', 'N41', 'N70', 'N76']
+2024-07-03 15:57:37,260 - INFO - Finished filter_min_GD
+2024-07-03 15:57:37,260 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:37,260 - DEBUG - Overlap values: [1.0, 1.0, 0.16666666666666666, 1.0, 1.0, 1.0, 1.0, 0.16666666666666666, 1.0, 0.5]
+2024-07-03 15:57:37,260 - DEBUG - Maximum overlap value: 1.0
+2024-07-03 15:57:37,260 - DEBUG - Trees with maximum overlap: ['N16', 'N15', 'N77', 'N71', 'N42', 'N40', 'N70']
+2024-07-03 15:57:37,260 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:37,260 - INFO - Starting filter_min_var
+2024-07-03 15:57:37,265 - DEBUG - Variance values: [0.0394644473997842, 0.043383202508224916, 0.0394644473997842, 0.039218938490146966, 0.04637804087852813, 0.050984514815991276, 0.0385557758779909]
+2024-07-03 15:57:37,265 - DEBUG - Minimum variance value: 0.0385557758779909
+2024-07-03 15:57:37,265 - DEBUG - Trees with minimum variance: ['N70']
+2024-07-03 15:57:37,265 - INFO - Finished filter_min_var
+2024-07-03 15:57:37,266 - INFO - Finished Processing Tree: OG_100017_79
+
+2024-07-03 15:57:37,266 - INFO - 
+==================== Start Processing Tree: OG_107021_5 ====================
+
+2024-07-03 15:57:37,268 - INFO - Starting filter_min_GD
+2024-07-03 15:57:37,268 - DEBUG - GD values: [1, 1, 1, 1, 1, 1, 1, 1]
+2024-07-03 15:57:37,269 - DEBUG - Minimum GD value: 1
+2024-07-03 15:57:37,269 - DEBUG - Trees with minimum GD: ['AMTR_s00074p00135900', 'N3', 'N0', 'VIT_212s0059g01570.1', 'Solyc05g043350.4.1', 'N2', 'N1', 'AT2G32900.1']
+2024-07-03 15:57:37,269 - INFO - Finished filter_min_GD
+2024-07-03 15:57:37,269 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:37,269 - DEBUG - Overlap values: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+2024-07-03 15:57:37,269 - DEBUG - Maximum overlap value: 0.0
+2024-07-03 15:57:37,269 - DEBUG - Trees with maximum overlap: ['AMTR_s00074p00135900', 'N3', 'N0', 'VIT_212s0059g01570.1', 'Solyc05g043350.4.1', 'N2', 'N1', 'AT2G32900.1']
+2024-07-03 15:57:37,269 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:37,269 - INFO - Starting filter_min_var
+2024-07-03 15:57:37,269 - DEBUG - Variance values: [0.007680092701331999, 0.007680092701331999, 0.017156786523745002, 0.014329365742010403, 0.028217910028474402, 0.0023454489180422234, 0.028043208636636882, 0.03151885702515201]
+2024-07-03 15:57:37,269 - DEBUG - Minimum variance value: 0.0023454489180422234
+2024-07-03 15:57:37,269 - DEBUG - Trees with minimum variance: ['N2']
+2024-07-03 15:57:37,269 - INFO - Finished filter_min_var
+2024-07-03 15:57:37,269 - INFO - Finished Processing Tree: OG_107021_5
+
+2024-07-03 15:57:37,269 - INFO - 
+==================== Start Processing Tree: OG_103775_7 ====================
+
+2024-07-03 15:57:37,272 - INFO - Starting filter_min_GD
+2024-07-03 15:57:37,273 - DEBUG - GD values: [2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
+2024-07-03 15:57:37,273 - DEBUG - Minimum GD value: 2
+2024-07-03 15:57:37,273 - DEBUG - Trees with minimum GD: ['N4', 'N2', 'VIT_201s0010g03300.1', 'N1', 'N0', 'Solyc05g015220.3.1', 'N3', 'N5', 'AMTR_s00013p00235370', 'Os01t0921200-01']
+2024-07-03 15:57:37,273 - INFO - Finished filter_min_GD
+2024-07-03 15:57:37,273 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:37,273 - DEBUG - Overlap values: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+2024-07-03 15:57:37,273 - DEBUG - Maximum overlap value: 0.0
+2024-07-03 15:57:37,273 - DEBUG - Trees with maximum overlap: ['N4', 'N2', 'VIT_201s0010g03300.1', 'N1', 'N0', 'Solyc05g015220.3.1', 'N3', 'N5', 'AMTR_s00013p00235370', 'Os01t0921200-01']
+2024-07-03 15:57:37,273 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:37,273 - INFO - Starting filter_min_var
+2024-07-03 15:57:37,274 - DEBUG - Variance values: [0.017255812584302217, 0.0214300975326675, 0.014906544423566934, 0.0329014802934696, 0.029206681708088877, 0.02402566070701346, 0.022401269556458884, 0.017255812584302217, 0.014959524034789794, 0.017457703229516324]
+2024-07-03 15:57:37,274 - DEBUG - Minimum variance value: 0.014906544423566934
+2024-07-03 15:57:37,274 - DEBUG - Trees with minimum variance: ['VIT_201s0010g03300.1']
+2024-07-03 15:57:37,274 - INFO - Finished filter_min_var
+2024-07-03 15:57:37,274 - INFO - Finished Processing Tree: OG_103775_7
+
+2024-07-03 15:57:37,274 - INFO - 
+==================== Start Processing Tree: OG_100646_20 ====================
+
+2024-07-03 15:57:37,283 - INFO - Starting filter_min_GD
+2024-07-03 15:57:37,292 - DEBUG - GD values: [14, 14, 14, 15, 15, 16, 16, 13, 13, 13, 14, 14, 14, 15, 16, 16, 15, 14]
+2024-07-03 15:57:37,292 - DEBUG - Minimum GD value: 13
+2024-07-03 15:57:37,292 - DEBUG - Trees with minimum GD: ['N17', 'N8', 'N16']
+2024-07-03 15:57:37,292 - INFO - Finished filter_min_GD
+2024-07-03 15:57:37,292 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:37,292 - DEBUG - Overlap values: [0.8, 0.0, 0.8]
+2024-07-03 15:57:37,292 - DEBUG - Maximum overlap value: 0.8
+2024-07-03 15:57:37,292 - DEBUG - Trees with maximum overlap: ['N17', 'N16']
+2024-07-03 15:57:37,292 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:37,292 - INFO - Starting filter_min_var
+2024-07-03 15:57:37,292 - DEBUG - Variance values: [0.017046221897974976, 0.018107108697496394]
+2024-07-03 15:57:37,292 - DEBUG - Minimum variance value: 0.017046221897974976
+2024-07-03 15:57:37,292 - DEBUG - Trees with minimum variance: ['N17']
+2024-07-03 15:57:37,292 - INFO - Finished filter_min_var
+2024-07-03 15:57:37,292 - INFO - Finished Processing Tree: OG_100646_20
+
+2024-07-03 15:57:37,293 - INFO - 
+==================== Start Processing Tree: OG_100006_115 ====================
+
+2024-07-03 15:57:37,580 - INFO - Starting filter_min_GD
+2024-07-03 15:57:38,058 - DEBUG - GD values: [79, 79, 80, 81, 81, 81, 82, 83, 84, 84, 83, 82, 81, 80, 79, 80, 80, 81, 81, 82, 83, 83, 82, 80, 81, 81, 80, 79, 79, 80, 81, 81, 82, 82, 83, 83, 80, 79, 79, 79, 80, 80, 81, 81, 81, 82, 82, 81, 82, 82, 83, 83, 81, 82, 82, 83, 83, 81, 79, 80, 80, 79, 79, 80, 80, 81, 81, 82, 83, 83, 82, 83, 83, 81, 82, 82, 81, 79, 80, 80, 81, 81, 81, 82, 83, 83, 82, 82, 82, 83, 83, 81, 82, 83, 83, 82, 81, 82, 82, 81]
+2024-07-03 15:57:38,058 - DEBUG - Minimum GD value: 79
+2024-07-03 15:57:38,058 - DEBUG - Trees with minimum GD: ['N20', 'N10', 'N19', 'N113', 'N28', 'N112', 'N54', 'N50', 'N53', 'N111', 'N62', 'N110']
+2024-07-03 15:57:38,059 - INFO - Finished filter_min_GD
+2024-07-03 15:57:38,059 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:38,060 - DEBUG - Overlap values: [1.0, 1.0, 0.8333333333333334, 1.0, 0.8333333333333334, 1.0, 1.0, 1.0, 0.3333333333333333, 1.0, 1.0, 1.0]
+2024-07-03 15:57:38,060 - DEBUG - Maximum overlap value: 1.0
+2024-07-03 15:57:38,060 - DEBUG - Trees with maximum overlap: ['N20', 'N10', 'N113', 'N112', 'N54', 'N50', 'N111', 'N62', 'N110']
+2024-07-03 15:57:38,060 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:38,060 - INFO - Starting filter_min_var
+2024-07-03 15:57:38,069 - DEBUG - Variance values: [0.007415271075329803, 0.007557476755247718, 0.007415271075329803, 0.00663361850740374, 0.013118723957134166, 0.012822065834030949, 0.006600172121629848, 0.01849357109467591, 0.013082033587810467]
+2024-07-03 15:57:38,069 - DEBUG - Minimum variance value: 0.006600172121629848
+2024-07-03 15:57:38,069 - DEBUG - Trees with minimum variance: ['N111']
+2024-07-03 15:57:38,069 - INFO - Finished filter_min_var
+2024-07-03 15:57:38,070 - INFO - Finished Processing Tree: OG_100006_115
+
+2024-07-03 15:57:38,070 - INFO - 
+==================== Start Processing Tree: OG_100005_132 ====================
+
+2024-07-03 15:57:38,548 - INFO - Starting filter_min_GD
+2024-07-03 15:57:39,302 - DEBUG - GD values: [77, 78, 78, 79, 80, 81, 81, 80, 79, 77, 77, 77, 77, 77, 77, 78, 78, 79, 80, 80, 79, 78, 79, 80, 80, 81, 81, 79, 78, 77, 77, 78, 79, 80, 81, 82, 82, 81, 80, 79, 78, 77, 78, 79, 80, 81, 81, 80, 79, 78, 77, 77, 78, 79, 79, 80, 81, 81, 80, 78, 77, 77, 78, 78, 79, 79, 80, 80, 78, 78, 77, 77, 77, 78, 79, 79, 80, 80, 78, 77, 77, 77, 78, 79, 79, 79, 79, 80, 80, 81, 81, 80, 81, 81, 80, 79, 80, 80, 79, 79, 79, 79, 80, 80, 79, 78, 77, 78, 78, 79, 79, 80, 81, 81, 80, 78, 78, 79, 79, 78, 79, 80, 80, 79, 78, 77, 77, 78, 78, 79, 79, 80, 81, 81, 80, 78, 79, 80, 80, 81, 81, 79, 78, 77, 77, 77, 78, 78, 79, 80, 81, 81, 80, 81, 81, 79]
+2024-07-03 15:57:39,302 - DEBUG - Minimum GD value: 77
+2024-07-03 15:57:39,302 - DEBUG - Trees with minimum GD: ['N6', 'N130', 'N61', 'N40', 'N31', 'N19', 'N17', 'N18', 'N30', 'N39', 'N60', 'N46', 'N59', 'N51', 'N58', 'VIT_205s0062g00840.1', 'N57', 'N129', 'N101', 'N86', 'N100', 'N128', 'N117', 'N127', 'N118', 'N126']
+2024-07-03 15:57:39,302 - INFO - Finished filter_min_GD
+2024-07-03 15:57:39,302 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:39,305 - DEBUG - Overlap values: [0.8333333333333334, 0.8333333333333334, 1.0, 1.0, 1.0, 0.8333333333333334, 0.8333333333333334, 0.16666666666666666, 1.0, 0.8333333333333334, 1.0, 0.8333333333333334, 1.0, 0.6666666666666666, 0.6666666666666666, 0.16666666666666666, 0.6666666666666666, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.16666666666666666, 1.0]
+2024-07-03 15:57:39,305 - DEBUG - Maximum overlap value: 1.0
+2024-07-03 15:57:39,305 - DEBUG - Trees with maximum overlap: ['N61', 'N40', 'N31', 'N30', 'N60', 'N59', 'N129', 'N101', 'N86', 'N100', 'N128', 'N117', 'N127', 'N126']
+2024-07-03 15:57:39,305 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:39,305 - INFO - Starting filter_min_var
+2024-07-03 15:57:39,322 - DEBUG - Variance values: [0.04084484136249895, 0.05807419628432449, 0.05543074937594442, 0.073189748877972, 0.03526766062982969, 0.060144533011605286, 0.010412403605642804, 0.10204356691750002, 0.15179279033924054, 0.16422565036089337, 0.12809133612909973, 0.14180179386582423, 0.13888571351842668, 0.14410459627829056]
+2024-07-03 15:57:39,322 - DEBUG - Minimum variance value: 0.010412403605642804
+2024-07-03 15:57:39,322 - DEBUG - Trees with minimum variance: ['N129']
+2024-07-03 15:57:39,322 - INFO - Finished filter_min_var
+2024-07-03 15:57:39,323 - INFO - Finished Processing Tree: OG_100005_132
+
+2024-07-03 15:57:39,323 - INFO - 
+==================== Start Processing Tree: OG_100004_140 ====================
+
+2024-07-03 15:57:39,329 - INFO - 
+==================== Start Processing Tree: OG_102327_10 ====================
+
+2024-07-03 15:57:39,333 - INFO - Starting filter_min_GD
+2024-07-03 15:57:39,335 - DEBUG - GD values: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
+2024-07-03 15:57:39,335 - DEBUG - Minimum GD value: 5
+2024-07-03 15:57:39,335 - DEBUG - Trees with minimum GD: ['N7', 'N5', 'N4', 'N2', 'N3', 'VIT_219s0090g01610.1', 'N6', 'VIT_212s0057g00470.1', 'Solyc07g048040.1.1', 'N8', 'AMTR_s00055p00140570', 'Os03t0194100-01']
+2024-07-03 15:57:39,335 - INFO - Finished filter_min_GD
+2024-07-03 15:57:39,335 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:39,335 - DEBUG - Overlap values: [0.0, 0.16666666666666666, 0.0, 0.0, 0.0, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.0, 0.0, 0.0, 0.0]
+2024-07-03 15:57:39,335 - DEBUG - Maximum overlap value: 0.16666666666666666
+2024-07-03 15:57:39,335 - DEBUG - Trees with maximum overlap: ['N5', 'VIT_219s0090g01610.1', 'N6', 'VIT_212s0057g00470.1']
+2024-07-03 15:57:39,335 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:39,335 - INFO - Starting filter_min_var
+2024-07-03 15:57:39,336 - DEBUG - Variance values: [0.0268798425049355, 0.06496767646585651, 0.04933388745570469, 0.04457136038237959]
+2024-07-03 15:57:39,336 - DEBUG - Minimum variance value: 0.0268798425049355
+2024-07-03 15:57:39,336 - DEBUG - Trees with minimum variance: ['N5']
+2024-07-03 15:57:39,336 - INFO - Finished filter_min_var
+2024-07-03 15:57:39,336 - INFO - Finished Processing Tree: OG_102327_10
+
+2024-07-03 15:57:39,336 - INFO - 
+==================== Start Processing Tree: OG_109614_4 ====================
+
+2024-07-03 15:57:39,337 - INFO - 
+==================== Start Processing Tree: OG_100156_39 ====================
+
+2024-07-03 15:57:39,368 - INFO - Starting filter_min_GD
+2024-07-03 15:57:39,407 - DEBUG - GD values: [27, 28, 28, 29, 29, 27, 27, 28, 28, 29, 30, 30, 29, 27, 28, 28, 28, 28, 28, 29, 29, 28, 29, 30, 30, 29, 28, 29, 29, 28, 28, 29, 29, 28, 28, 28]
+2024-07-03 15:57:39,407 - DEBUG - Minimum GD value: 27
+2024-07-03 15:57:39,407 - DEBUG - Trees with minimum GD: ['N1', 'N37', 'N17', 'N36']
+2024-07-03 15:57:39,407 - INFO - Finished filter_min_GD
+2024-07-03 15:57:39,407 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:39,407 - DEBUG - Overlap values: [0.5, 0.5, 0.6666666666666666, 0.8333333333333334]
+2024-07-03 15:57:39,407 - DEBUG - Maximum overlap value: 0.8333333333333334
+2024-07-03 15:57:39,407 - DEBUG - Trees with maximum overlap: ['N36']
+2024-07-03 15:57:39,407 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:39,408 - INFO - Finished Processing Tree: OG_100156_39
+
+2024-07-03 15:57:39,408 - INFO - 
+==================== Start Processing Tree: OG_100055_59 ====================
+
+2024-07-03 15:57:39,598 - INFO - Starting filter_min_GD
+2024-07-03 15:57:39,747 - DEBUG - GD values: [33, 33, 33, 34, 34, 34, 35, 36, 36, 35, 34, 35, 36, 36, 35, 34, 34, 35, 35, 36, 37, 38, 38, 37, 36, 34, 34, 33, 33, 33, 33, 34, 35, 36, 37, 37, 36, 35, 34, 33, 33, 33, 33, 33, 33, 34, 35, 36, 36, 37, 37, 35, 34, 33, 33, 34, 34, 35, 36, 37, 37, 36, 37, 37, 35, 33, 33, 33, 34, 34, 35, 36, 37, 37, 36, 35]
+2024-07-03 15:57:39,747 - DEBUG - Minimum GD value: 33
+2024-07-03 15:57:39,747 - DEBUG - Trees with minimum GD: ['N18', 'N17', 'N16', 'Os08t0224500-01', 'Os03t0397600-00', 'N57', 'N25', 'N56', 'N28', 'N55', 'Os06t0590600-01', 'N54', 'N35', 'N53', 'N41', 'N52', 'Solyc03g058450.4.1', 'N51']
+2024-07-03 15:57:39,747 - INFO - Finished filter_min_GD
+2024-07-03 15:57:39,747 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:39,748 - DEBUG - Overlap values: [1.0, 1.0, 1.0, 0.16666666666666666, 0.16666666666666666, 1.0, 0.8333333333333334, 1.0, 0.16666666666666666, 1.0, 0.16666666666666666, 1.0, 0.8333333333333334, 1.0, 1.0, 0.8333333333333334, 0.16666666666666666, 0.8333333333333334]
+2024-07-03 15:57:39,748 - DEBUG - Maximum overlap value: 1.0
+2024-07-03 15:57:39,748 - DEBUG - Trees with maximum overlap: ['N18', 'N17', 'N16', 'N57', 'N56', 'N55', 'N54', 'N53', 'N41']
+2024-07-03 15:57:39,748 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:39,748 - INFO - Starting filter_min_var
+2024-07-03 15:57:39,752 - DEBUG - Variance values: [0.054078798369228485, 0.05995463202799558, 0.07082319878730432, 0.054078798369228485, 0.06047489920943108, 0.09623785503581467, 0.10494253329723294, 0.10205473807286766, 0.11261398275202822]
+2024-07-03 15:57:39,752 - DEBUG - Minimum variance value: 0.054078798369228485
+2024-07-03 15:57:39,752 - DEBUG - Trees with minimum variance: ['N18', 'N57']
+2024-07-03 15:57:39,752 - INFO - Finished filter_min_var
+2024-07-03 15:57:39,770 - INFO - Starting filter_min_RF
+2024-07-03 15:57:39,770 - DEBUG - RF values: dict_values([8, 8])
+2024-07-03 15:57:39,770 - DEBUG - Minimum RF value: 8
+2024-07-03 15:57:39,770 - DEBUG - Trees with minimum RF: ['N18', 'N57']
+2024-07-03 15:57:39,770 - INFO - Finished filter_min_RF
+2024-07-03 15:57:39,771 - INFO - Finished Processing Tree: OG_100055_59
+
+2024-07-03 15:57:39,771 - INFO - 
+==================== Start Processing Tree: OG_100003_150 ====================
+
+2024-07-03 15:57:39,894 - INFO - Starting filter_min_GD
+2024-07-03 15:57:40,130 - DEBUG - GD values: [138, 138, 139, 139, 140, 140, 140, 140, 141, 141, 140, 140, 141, 141, 139, 140, 140, 141, 142, 142, 141, 139, 138, 138, 139, 139, 139, 140, 140, 141, 142, 142, 141, 140, 140, 139, 140, 140]
+2024-07-03 15:57:40,130 - DEBUG - Minimum GD value: 138
+2024-07-03 15:57:40,130 - DEBUG - Trees with minimum GD: ['N126', 'N123', 'N125', 'N148']
+2024-07-03 15:57:40,130 - INFO - Finished filter_min_GD
+2024-07-03 15:57:40,130 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:40,131 - DEBUG - Overlap values: [1.0, 1.0, 0.16666666666666666, 1.0]
+2024-07-03 15:57:40,131 - DEBUG - Maximum overlap value: 1.0
+2024-07-03 15:57:40,131 - DEBUG - Trees with maximum overlap: ['N126', 'N123', 'N148']
+2024-07-03 15:57:40,131 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:40,131 - INFO - Starting filter_min_var
+2024-07-03 15:57:40,135 - DEBUG - Variance values: [0.02646105611161534, 0.024231115295847542, 0.02646105611161534]
+2024-07-03 15:57:40,135 - DEBUG - Minimum variance value: 0.024231115295847542
+2024-07-03 15:57:40,135 - DEBUG - Trees with minimum variance: ['N123']
+2024-07-03 15:57:40,135 - INFO - Finished filter_min_var
+2024-07-03 15:57:40,136 - INFO - Finished Processing Tree: OG_100003_150
+
+2024-07-03 15:57:40,136 - INFO - 
+==================== Start Processing Tree: OG_106076_6 ====================
+
+2024-07-03 15:57:40,138 - INFO - Starting filter_min_GD
+2024-07-03 15:57:40,139 - DEBUG - GD values: [3, 3, 3, 3, 3, 3]
+2024-07-03 15:57:40,139 - DEBUG - Minimum GD value: 3
+2024-07-03 15:57:40,139 - DEBUG - Trees with minimum GD: ['AT4G00335.3', 'N4', 'N2', 'N3', 'VIT_215s0046g01820.2', 'Solyc01g094840.3.1']
+2024-07-03 15:57:40,139 - INFO - Finished filter_min_GD
+2024-07-03 15:57:40,139 - INFO - Starting filter_max_overlap
+2024-07-03 15:57:40,139 - DEBUG - Overlap values: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+2024-07-03 15:57:40,139 - DEBUG - Maximum overlap value: 0.0
+2024-07-03 15:57:40,139 - DEBUG - Trees with maximum overlap: ['AT4G00335.3', 'N4', 'N2', 'N3', 'VIT_215s0046g01820.2', 'Solyc01g094840.3.1']
+2024-07-03 15:57:40,139 - INFO - Finished filter_max_overlap
+2024-07-03 15:57:40,139 - INFO - Starting filter_min_var
+2024-07-03 15:57:40,139 - DEBUG - Variance values: [0.0023004536694222217, 0.0023004536694222217, 0.00025797096379249985, 0.003998470707834399, 0.0033655452277722205, 0.005822875692105554]
+2024-07-03 15:57:40,139 - DEBUG - Minimum variance value: 0.00025797096379249985
+2024-07-03 15:57:40,139 - DEBUG - Trees with minimum variance: ['N2']
+2024-07-03 15:57:40,139 - INFO - Finished filter_min_var
+2024-07-03 15:57:40,139 - INFO - Finished Processing Tree: OG_106076_6
+
+2024-07-03 15:57:40,139 - INFO - Finished main script
