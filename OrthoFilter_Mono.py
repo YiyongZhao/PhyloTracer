@@ -4,18 +4,19 @@ import matplotlib.colors as colors
 from PyPDF4 import PdfFileReader, PdfFileWriter
 from BranchLength_NumericConverter import trans_branch_length,write_tree_to_newick
 
-def rename_input_single_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
+
+def rename_input_single_tre(Phylo_t:object, taxa_dic:dict,new_named_gene2gene_dic:dict) -> object:
     for node in Phylo_t :
-        sps=node.name.split('_')[0]
-        if sps in gene2new_named_gene_dic:
-            node.name=gene2new_named_gene_dic[sps]+'_'+node.name
+        gene=new_named_gene2gene_dic[node.name]
+        if gene in taxa_dic:
+            node.name=taxa_dic[gene]+'_'+node.name
     return Phylo_t
 
-def rename_output_tre(Phylo_t:object) -> object:
+def rename_output_tre(Phylo_t:object,new_named_gene2gene_dic) -> object:
     for node in Phylo_t:
         parts = node.name.split("_")  
         new_str = "_".join(parts[1:]) 
-        node.name = new_str
+        node.name = new_named_gene2gene_dic[new_str]
     return Phylo_t
 
 def is_multi_copy_tree(Phylo_t:object)->bool:
@@ -24,7 +25,7 @@ def is_multi_copy_tree(Phylo_t:object)->bool:
     if len(leafs) !=len(uniq_species):
         return True
 
-def set_style(Phylo_t:object,color_dict:dict)->object:
+def set_style(Phylo_t:object,color_dict:dict,new_named_gene2gene_dic)->object:
     for node in Phylo_t.traverse():
         nstyle=NodeStyle()
         nstyle["size"] = 0
@@ -32,10 +33,13 @@ def set_style(Phylo_t:object,color_dict:dict)->object:
         nstyle["fgcolor"] = "black"
         node.set_style(nstyle)
         if  node.is_leaf():
-            species_name=node.name.split('_')[1]
-            if species_name in color_dict:
-                color = color_dict[species_name].split('*')[-1]
-                face = TextFace(''+node.name, fgcolor=color,fstyle='italic')
+            parts = node.name.split("_")
+            species_name=parts[0]
+            new_str = "_".join(parts[1:]) 
+            gene=new_named_gene2gene_dic[new_str]
+            if gene in color_dict:
+                color = color_dict[gene].split('*')[-1]
+                face = TextFace(''+species_name+'_'+gene, fgcolor=color,fstyle='italic')
                 node.add_face(face, column=0)
     return Phylo_t
 
@@ -69,10 +73,10 @@ def get_node_single_taxa_dict(Phylo_t:object)->dict:
 
 def is_single_tree(Phylo_t:object)->bool:
     single_taxa_dict = get_node_single_taxa_dict(Phylo_t)
-    if 'basal angiosperms'  in single_taxa_dict.keys():
-        single_taxa_dict.pop('basal angiosperms')
-    if 'Outgroup' in single_taxa_dict.keys():
-        single_taxa_dict.pop('Outgroup')
+    # if 'basal angiosperms'  in single_taxa_dict.keys():
+    #     single_taxa_dict.pop('basal angiosperms')
+    # if 'Outgroup' in single_taxa_dict.keys():
+    #     single_taxa_dict.pop('Outgroup')
     def check_single(dictionary):
         for value in dictionary.values():
             if len(value) != 1:
@@ -274,7 +278,7 @@ def get_node_avg_length(Phylo_t:object)->int:
     return sum(node_length)/node_num
 
 
-def remove_long_gene(Phylo_t:object, long_branch_index:int, outfile:str, tre_ID:str) -> object:
+def remove_long_gene(Phylo_t:object, long_branch_index:int, outfile:str, tre_ID:str,new_named_gene2gene_dic:dict) -> object:
     Phylo_t1 = Phylo_t.copy()
     remove_gene_set = set()
     tips_avg_length = get_tips_avg_length(Phylo_t1)
@@ -290,11 +294,11 @@ def remove_long_gene(Phylo_t:object, long_branch_index:int, outfile:str, tre_ID:
             leaf2sister_radio = abs(get_sister_relative_branch_ratio(leaf, sister))
             
             if distance2root_radio > long_branch_index or leaf2sister_radio > long_branch_index:
-                outfile.write(tre_ID + '\t' + '*' + '\t' + sps_gene + '\t' + str(distance2root_radio) + '\t' + str(leaf2sister_radio) + '\t' + '\n')
+                outfile.write(tre_ID + '\t' + '*' + '\t' + new_named_gene2gene_dic[sps_gene] + '\t' + str(distance2root_radio) + '\t' + str(leaf2sister_radio) + '\t' + '\n')
                 remove_gene_set.add(leaf.name)
                 is_modified = True  
             else:
-                outfile.write(tre_ID + '\t' + '\t' + '\t' + sps_gene + '\t' + str(distance2root_radio) + '\t' + str(leaf2sister_radio) + '\t' + '\n')
+                outfile.write(tre_ID + '\t' + '\t' + '\t' + new_named_gene2gene_dic[sps_gene] + '\t' + str(distance2root_radio) + '\t' + str(leaf2sister_radio) + '\t' + '\n')
 
 
         if not is_modified:
@@ -307,13 +311,14 @@ def remove_long_gene(Phylo_t:object, long_branch_index:int, outfile:str, tre_ID:
     return Phylo_t1
 
 
-def remove_insert_gene(Phylo_t:object,long_branch_index:int,outfile:str,tre_ID:str)->object:
+def remove_insert_gene(Phylo_t:object,long_branch_index:int,outfile:str,tre_ID:str,new_named_gene2gene_dic:dict)->object:
     Phylo_t1 = Phylo_t.copy()    
     taxa_clade = set()
     get_single_clades(Phylo_t1, taxa_clade)
     remove_gene_set = set()
 
     for clade in taxa_clade:
+        temp_name= '_'.join(clade.name.split('_')[1:])
         if is_ancestor_sister_same(clade):
             target_clade = get_target_clade(clade)
             if target_clade==None:
@@ -322,7 +327,10 @@ def remove_insert_gene(Phylo_t:object,long_branch_index:int,outfile:str,tre_ID:s
                 index_num = calculate_insertion_depth(target_clade, clade)
                 index_over = calculate_insertion_coverage(target_clade, clade)
                 insert=calculate_insertion(target_clade, clade)
-                outfile.write(tre_ID+'\t'+'@'+'\t'+clade.name+'\t'+str(index_num)+'\t'+str(index_over)+'\t'+str(insert)+'\n')     
+                if clade.is_leaf():
+                    outfile.write(tre_ID+'\t'+'@'+'\t'+new_named_gene2gene_dic.get(temp_name,temp_name)+'\t'+str(index_num)+'\t'+str(index_over)+'\t'+str(insert)+'\n')
+                else:
+                    outfile.write(tre_ID+'\t'+'@'+'\t'+clade.name+'\t'+str(index_num)+'\t'+str(index_over)+'\t'+str(insert)+'\n')
                 remove_gene_set.add(clade.name)              
     total_leafs_set=set(Phylo_t1.get_leaf_names())
     diff=total_leafs_set - remove_gene_set
@@ -341,7 +349,7 @@ def generate_pdf_after(tre_ID,Phylo_t)->None:
     ts.title.add_face(TextFace(tre_ID + '_after', fsize=10), column=0)
     Phylo_t.render(file_name=tre_ID + '_after.pdf', tree_style=ts)
 
-def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_branch_index:int,visual:bool=False)->None:
+def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_branch_index:int,new_named_gene2gene_dic:dict,gene2new_named_gene_dic:dict,visual:bool=False)->None:
     color_dic = get_color_dict(taxa_dic)
     dir_path1 = os.path.join(os.getcwd(), "orthofilter_mono/pruned_tree/")
     if os.path.exists(dir_path1):
@@ -360,30 +368,31 @@ def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_b
     pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
     for tre_ID, tre_path in tre_dic.items():
         pbar.set_description(f"Processing {tre_ID}")
-        t = Tree(tre_path)
-        t.ladderize()
-        t.resolve_polytomy(recursive=True)
-        t.sort_descendants("support")
+        t0 = Tree(tre_path)
+        t0.ladderize()
+        t0.resolve_polytomy(recursive=True)
+        t0.sort_descendants("support")
+        t=rename_input_tre(t0,gene2new_named_gene_dic)
         num_tre_node(t)
         if is_multi_copy_tree(t):
             o = open(os.path.join(dir_path3, tre_ID + '_delete_gene.txt'), 'w')
             o.write('tre_ID' + '\t' + 'long_branch_label' + '\t' + 'gene' + '\t' +'root_relative_branch_ratio' + '\t' + 'sister_relative_branch_ratio' + '\n')
-            rename_input_single_tre(t, taxa_dic)
+            rename_input_single_tre(t, taxa_dic,new_named_gene2gene_dic)
             if  visual:
-                set_style(t, color_dic)
+                set_style(t, color_dic,new_named_gene2gene_dic)
                 generate_pdf_before(tre_ID,t)
-            t1 = remove_long_gene(t, long_branch_index, o, tre_ID)
+            t1 = remove_long_gene(t, long_branch_index, o, tre_ID,new_named_gene2gene_dic)
             o.write('\n')
             if len(get_species_set(t1)) !=1:
                 o.write('tre_ID' + '\t' + 'insert_branch_label' + '\t' + 'gene' + '\t' + 'insertion_depth' + '\t' + 'insertion_coverage' + '\t' + 'calculate_insertion' + '\n')
-                t2 = remove_insert_gene(t1, insert_branch_index, o, tre_ID)
+                t2 = remove_insert_gene(t1, insert_branch_index, o, tre_ID,new_named_gene2gene_dic)
                 o.close()
                 if  visual:
                     generate_pdf_after(tre_ID,t2)
                     merge_pdfs_side_by_side(tre_ID + '_before.pdf', tre_ID + '_after.pdf', os.path.join(dir_path2, tre_ID + '.pdf'))
                     os.remove(tre_ID + '_before.pdf')
                     os.remove(tre_ID + '_after.pdf')
-                t3 = rename_output_tre(t2)
+                t3 = rename_output_tre(t2,new_named_gene2gene_dic)
                 tree_str = trans_branch_length(t3)
                 write_tree_to_newick(tree_str, tre_ID, dir_path1)
             else:
@@ -392,7 +401,7 @@ def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_b
                     merge_pdfs_side_by_side(tre_ID + '_before.pdf', tre_ID + '_after.pdf', os.path.join(dir_path2, tre_ID + '.pdf'))
                     os.remove(tre_ID + '_before.pdf')
                     os.remove(tre_ID + '_after.pdf')
-                t3 = rename_output_tre(t1)
+                t3 = rename_output_tre(t1,new_named_gene2gene_dic)
                 tree_str = trans_branch_length(t3)
                 write_tree_to_newick(tree_str, tre_ID, dir_path1)
 
@@ -400,15 +409,15 @@ def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_b
         else:
             o = open(os.path.join(dir_path3, tre_ID + '_delete_gene.txt'), 'w')
             o.write('tre_ID' + '\t' + 'long_branch_label' + '\t' + 'gene' + '\t' +'root_relative_branch_ratio' + '\t' + 'sister_relative_branch_ratio' + '\n')
-            rename_input_single_tre(t, taxa_dic)
+            rename_input_single_tre(t, taxa_dic,new_named_gene2gene_dic)
             if  visual:
-                set_style(t, color_dic)
+                set_style(t, color_dic,new_named_gene2gene_dic)
                 generate_pdf_before(tre_ID,t)
-            t1 = remove_long_gene(t, long_branch_index, o, tre_ID)
+            t1 = remove_long_gene(t, long_branch_index, o, tre_ID,new_named_gene2gene_dic)
             o.write('\n')
             if len(get_species_set(t1)) !=1:
                 o.write('tre_ID' + '\t' + 'insert_branch_label' + '\t' + 'gene' + '\t' + 'insertion_depth' + '\t' + 'insertion_coverage' + '\t' + 'calculate_insertion' + '\n')
-                t2=remove_insert_gene(t1,insert_branch_index,o,tre_ID)
+                t2=remove_insert_gene(t1,insert_branch_index,o,tre_ID,new_named_gene2gene_dic)
             
                 while not is_single_tree(t2):
                     prune_single(t2)
@@ -419,7 +428,7 @@ def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_b
                     os.remove(tre_ID+'_before.pdf')
                     os.remove(tre_ID+'_after.pdf')
 
-                t3=rename_output_tre(t2)
+                t3=rename_output_tre(t2,new_named_gene2gene_dic)
                 tree_str= trans_branch_length(t3)
                 write_tree_to_newick(tree_str,tre_ID,dir_path1)
             else:
@@ -428,7 +437,7 @@ def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_b
                     merge_pdfs_side_by_side(tre_ID + '_before.pdf', tre_ID + '_after.pdf', os.path.join(dir_path2, tre_ID + '.pdf'))
                     os.remove(tre_ID + '_before.pdf')
                     os.remove(tre_ID + '_after.pdf')
-                t3 = rename_output_tre(t1)
+                t3 = rename_output_tre(t1,new_named_gene2gene_dic)
                 tree_str =trans_branch_length(t3)
                 write_tree_to_newick(tree_str, tre_ID, dir_path1)
             
