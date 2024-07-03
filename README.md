@@ -204,7 +204,7 @@ Description:
 Required parameter:
     --input_GF_list       File containing paths to gene tree files, one per line
     --input_taxa          File with taxonomic information for species, one per line
-    --input_imap         File with classification information of species corresponding to genes
+    --input_imap          File with classification information of species corresponding to genes
     --long_branch_index   Tips whose branch length is greater than or equal to the long branch index will be removed
 Optional parameter:
     --visual              Visualize the results of gene family trees before and after removing long branches
@@ -218,7 +218,7 @@ Description:
 Required parameter:
     --input_GF_list        File containing paths to gene tree files, one per line
     --input_taxa           File with taxonomic information for species
-    --input_imap         File with classification information of species corresponding to genes
+    --input_imap           File with classification information of species corresponding to genes
     --long_branch_index    Tips whose branch length is greater than or equal to the long branch index will be removed
     --insert_branch_index  Nodes with insertion coverage ratio and insertion depth greater than or equal to the insert branch index will be removed
 Optional parameter:
