@@ -40,10 +40,10 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 
 ---
 ## Module features
-1. **PhyloTree_CollapseExpand:** To transform a phylogenetic tree with Newick format into a ‘comb’ structure based on a predefined support value threshold. It can also revert the 'comb' structure to the binary tree, allowing meet the standard software analysis requiredments.
-2. **PhyloSupport_Scaler:** To recalibrate support values (bootstrap/posterior probability) for a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational requiredments.
+1. **PhyloTree_CollapseExpand:** To transform a phylogenetic tree with Newick format into a ‘comb’ structure based on a predefined support value threshold. It can also revert the 'comb' structure to the binary tree, allowing meet the standard software analysis requirements.
+2. **PhyloSupport_Scaler:** To recalibrate support values (bootstrap/posterior probability) for a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational requirements.
 3. **BranchLength_NumericConverter:** To convert values of branch length with string format to numeric format for a phylogenetic tree, critical for quantitative analysis and computational operations.
-4. **Phylo_Rooter:** Enables an accuracy method for gene tree rooting and enhancing the downstream evolutionarly genomic analysis.
+4. **Phylo_Rooter:** Enables an accuracy method for gene tree rooting and enhancing the downstream evolutionary genomic analysis.
 5. **OrthoFilter_LB:** To prune phylogenomic noises from single-copy and multi-copy gene family trees by removing the tips with long branch lengths.
 6. **OrthoFilter_Mono:** To prune phylogenomic noise from single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives.
 7. **TreeTopology_Summarizer:** To enumerate the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
