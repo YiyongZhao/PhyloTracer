@@ -1,5 +1,18 @@
 from __init__ import *
 
+def fold_same_taxa(t):
+    t1=t.copy()
+    for node in t1.traverse():
+        if not node.is_leaf():
+            taxa=get_species_list(node)
+            if len(set(taxa))==1:
+                node.name=taxa[0]
+                for child in node.get_children():
+                    child.detach()  
+        else:
+            node.name=node.name.split('_')[0]
+    return t1
+
 def get_only_sps_tree(Phylo_t):
     Phylo_t_c=Phylo_t.copy()
     for node in Phylo_t_c:
@@ -20,7 +33,7 @@ def get_max_tree(trees):
 
 def process(trees, result_dict):
     if len(trees) == 1:
-        result_dict[trees[0].write(format=9)] = 1
+        result_dict[trees[0].write(format=9)] = [trees[0]]
         return []
     else:
         same_rf_trees = []
@@ -48,32 +61,35 @@ def process_tree(trees,result_dict):
         remaining_trees = process(remaining_trees, result_dict)
 
 def get_summary_result(outfile,dic,new_named_gene2gene_dic):
-    with open(outfile, 'w') as file:
+    with open(f'relative_{outfile}.txt', 'w') as file:
+        file.write(f'topology_id\ttopology_num\ttips_num\ttopology\n')
         for index,clade in enumerate(dic.keys()):
             tres=dic[clade]
             tres1=sorted(tres,key=lambda x: len(x), reverse=True)
             for tree in tres1:
                 tree1=rename_input_tre(tree,new_named_gene2gene_dic)
                 tree_str=tree1.write(format=9)
-                file.write(str(index)+'_'+str(len(dic[clade]))+'_'+str(len(tree))+'\t'+tree_str+'\n')
+                file.write(str(index)+'\t'+str(len(dic[clade]))+'\t'+str(len(tree))+'\t'+tree_str+'\n')
 
-def get_absolutely_result(outfile,trees,new_named_gene2gene_dic):
-    dic1={}
+def get_absolutely_result(outfile,trees,voucher2taxa_dic):
+    topolo_dic={}
     for i in trees:
-        k1=i.write(format=9)
-        if k1 in dic1:
-            dic1[k1]+=1
+        t=fold_same_taxa(i)
+        t_str=t.write(format=9)
+        if t_str in topolo_dic:
+            topolo_dic[t_str]+=1
         else:
-            dic1[k1]=1
-    dic2= dict(sorted(dic1.items(), key=lambda x: len(x[0]), reverse=True))
-    with open(outfile+'_absolutely', 'w') as file:
-        for k,v in dic2.items():
-            t=Tree(k)
-            t1=rename_input_tre(t,new_named_gene2gene_dic)
-            t1_str=t1.write(format=9)
-            file.write(t1_str+'\t'+str(v)+'\n')
+            topolo_dic[t_str]=1
+            
+    sorted_dict = dict(sorted(topolo_dic.items(), key=lambda x: len(x[0]), reverse=True))
+    with open(f'absolute_{outfile}.txt', 'w') as file:
+        for num,k in enumerate(sorted_dict):
+            t1=Tree(k)
+            t2=rename_input_tre(t1,voucher2taxa_dic)
+            t1_str=t2.write(format=9)
+            file.write(f'{num}\t{t1_str}\t{sorted_dict[k]}\n')
 
-def statistical_main(tre_dic,outfile,gene2new_named_gene_dic,new_named_gene2gene_dic):
+def statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic):
     only_sptrees=[]
     for k,v in tre_dic.items():
         t=read_tree(v)
@@ -82,11 +98,11 @@ def statistical_main(tre_dic,outfile,gene2new_named_gene_dic,new_named_gene2gene
         t2=get_only_sps_tree(t1)
         only_sptrees.append(t2)
         
-    get_absolutely_result(outfile,only_sptrees,new_named_gene2gene_dic)
+    get_absolutely_result(outfile,only_sptrees,voucher2taxa_dic)
     
     dic={}
     process_tree(only_sptrees,dic)
-    get_summary_result(outfile,dic,new_named_gene2gene_dic)
+    get_summary_result(outfile,dic,voucher2taxa_dic)
     
 
 if __name__ == "__main__":
