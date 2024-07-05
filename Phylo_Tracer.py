@@ -107,7 +107,6 @@ OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visu
 TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help')
 TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-TreeTopology_Summarizer_parser.add_argument('--outfile', metavar='file',  required=True, help='Out filename')
 
 # Tree_Visualizer command
 Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Tree_Visualizer help')
@@ -310,7 +309,7 @@ def main():
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
-            outfile=args.outfile
+            outfile='topology'
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic)
