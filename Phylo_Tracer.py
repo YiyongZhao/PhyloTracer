@@ -373,7 +373,7 @@ def main():
             sptree.write(outfile='numed_sptree.nwk',format=1)
             renamed_sptree=rename_input_tre(sptree, taxa2voucher_dic)
             tre_dic = read_and_return_dict(input_GF_list)
-            filename = 'gd_detector_result.txt'
+            filename = 'gd_result.txt'
             write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
             end_time = time.time()
             execution_time = end_time - start_time
