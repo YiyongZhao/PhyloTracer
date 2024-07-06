@@ -1,0 +1,2 @@
+S4(2)->Amborella_trichopoda(1)	36
+S4(2)->Amborella_trichopoda(2)	30
