@@ -286,9 +286,9 @@ Description:
 Required parameter:
     --input_GF_list      File containing paths to gene tree files, one per line
     --input_sps_tree     A species tree file with Newick
-    --output_folder      Output folder name
+    --input_imap         File with classification information of species corresponding to genes
 Usage:
-    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --output_folder filename
+    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
 ```
 ### GD_Loss_Visualizer
 ```
