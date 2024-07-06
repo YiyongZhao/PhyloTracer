@@ -1,0 +1,1 @@
+S1(2)->S0(1)->Arabidopsis_thaliana(0)	1

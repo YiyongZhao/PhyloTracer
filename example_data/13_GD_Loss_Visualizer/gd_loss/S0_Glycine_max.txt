@@ -1,0 +1,2 @@
+S0(2)->Glycine_max(1)	2
+S0(2)->Glycine_max(2)	1

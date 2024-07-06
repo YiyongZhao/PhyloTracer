@@ -1,0 +1,4 @@
+S4(2)->S3(2)->Oryza_sativa_L.Nipponbare(2)	37
+S4(2)->S3(2)->Oryza_sativa_L.Nipponbare(0)	12
+S4(2)->S3(2)->Oryza_sativa_L.Nipponbare(1)	15
+S4(2)->S3(1)->Oryza_sativa_L.Nipponbare(0)	2
