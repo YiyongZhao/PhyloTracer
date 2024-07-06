@@ -138,7 +138,7 @@ GD_Visualizer_parser.add_argument('--gd_result', metavar='file',  required=True,
 GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_Tracker help')
 GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gf list')
 GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree filet')
-GD_Loss_Tracker_parser.add_argument('--output_folder', type=str,  required=True, help='Output foldername')
+GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
@@ -400,19 +400,24 @@ def main():
 
     elif args.command == 'GD_Loss_Tracker':
         # Execute the GD_Loss_Tracker function
-        if args.input_GF_list and args.input_sps_tree and args.output_folder :
+        if args.input_GF_list and args.input_sps_tree and args.input_imap :
             start_time = time.time()
             input_GF_list = args.input_GF_list
+            input_imap = args.input_imap
             input_sps_tree = args.input_sps_tree
-            out_dir=args.output_folder
+            dir_path = os.path.join(os.getcwd(), "gd_loss/")
+            if os.path.exists(dir_path):
+                shutil.rmtree(dir_path)
+            os.makedirs(dir_path)
+
+            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             sptree=PhyloTree(input_sps_tree,format=1)
             num_sptree(sptree)
             tre_dic=read_and_return_dict(input_GF_list)
 
-            os.makedirs(out_dir, exist_ok=True)
-            sp_dic=get_path_str_num_dic(tre_dic,sptree)
+            sp_dic=get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
             split_dicts=split_dict_by_first_last_char(sp_dic)
-            divide_path_results_into_individual_files_by_species(split_dicts,out_dir)
+            divide_path_results_into_individual_files_by_species(split_dicts,dir_path)
             write_total_lost_path_counts_result(sp_dic)
             end_time = time.time()
             execution_time = end_time - start_time
