@@ -48,17 +48,18 @@ def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id, out_dir):
 
 def generate_plt(input_folder,out_dir):
 
-	input_dirs=os.listdir(input_folder)
-	pbar = tqdm(total=len(input_dirs), desc="Processing file", unit="file")
-	for file in input_dirs:
-		pbar.set_description(f"Processing {file}")
-		full_path = os.path.join(input_folder, file)
-		new_dic=read_and_return_dict(full_path)
-		sum_loss_dic=get_gd_node_to_species_loss_dic(new_dic)
-		gd_id,sps=file.split('.')[0].split('_')
-		visualizer_sum_loss_dic(sum_loss_dic,sps,gd_id,out_dir)
-		pbar.update(1)
-	pbar.close()
+    input_dirs=os.listdir(input_folder)
+    pbar = tqdm(total=len(input_dirs), desc="Processing file", unit="file")
+    for file in input_dirs:
+        pbar.set_description(f"Processing {file}")
+        full_path = os.path.join(input_folder, file)
+        new_dic=read_and_return_dict(full_path)
+        sum_loss_dic=get_gd_node_to_species_loss_dic(new_dic)
+        gd_id=file.split('.')[0].split('_')[0]
+        sps='_'.join(file.split('.')[0].split('_')[1:])
+        visualizer_sum_loss_dic(sum_loss_dic,sps,gd_id,out_dir)
+        pbar.update(1)
+    pbar.close()
 if __name__ == "__main__":
     out='outfile'
     input_folder='input'
