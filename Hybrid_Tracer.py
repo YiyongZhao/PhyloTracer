@@ -4,6 +4,14 @@ from Bio import SeqIO
 import phyde as hd
 import subprocess
 from collections import Counter
+import time
+
+def format_time(seconds):
+    days = seconds // (24 * 3600)
+    hours = (seconds % (24 * 3600)) // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    return f"{int(days)} d, {int(hours)} h, {int(minutes)} m, {seconds:.2f} s"
 
 def calculate_depth(node1, node2):
     if node1 in node2.iter_ancestors() or node2 in node1.iter_ancestors():
@@ -25,12 +33,11 @@ def find_dup_node(Phylo_t: object, sptree:object,min_support: int = 50) -> list:
             i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
             events_node_name_list = i.split(',')
             common_ancestor_node = Phylo_t.get_common_ancestor(events_node_name_list)
-            child1,child2=common_ancestor_node.get_children()
             sp_set=get_species_set(common_ancestor_node)
             mapp_sp_node=sptree.get_common_ancestor(sp_set)
             common_ancestor_node.add_feature('map',mapp_sp_node.name)
-            if common_ancestor_node.support >= min_support:
-                dup_node_name_list.append(common_ancestor_node)
+            #if common_ancestor_node.support >= min_support:
+            dup_node_name_list.append(common_ancestor_node)
     return dup_node_name_list
 
 def create_fasta_dict(fasta_file,gene2new_named_gene_dic):
@@ -257,6 +264,7 @@ def get_gd_count_dic_and_gd_type_dic(tre_dic,gene2new_named_gene_dic,rename_sptr
         t1 = rename_input_tre(t, gene2new_named_gene_dic)
         
         gds = find_dup_node(t1, rename_sptree, 50)
+
         for gd in gds:
             type_str=get_model(gd,rename_sptree)
             if gd.map in gd_count_dic:
@@ -273,7 +281,7 @@ def get_process_gd_clade(gd_type_dic,gd_count_dic):
     for k,v in gd_type_dic.items():
         type_ratio=(v['ABB']+v['AAB'])/len(gd_count_dic[k])
         if len(gd_count_dic[k])>=300 and type_ratio>=0.5 :
-            gd_clade += gd_count_dic[k]
+            gd_clade.append((k,gd_count_dic[k]))
     return gd_clade
 
 def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic):
@@ -288,39 +296,44 @@ def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, vou
     os.makedirs(dir_path1)
     
     gd_count_dic,gd_type_dic=get_gd_count_dic_and_gd_type_dic(tre_dic,gene2new_named_gene_dic,rename_sptree)
-    
-    data=count_elements_in_lists(gd_type_dic)
-    gd_clades=get_process_gd_clade(data,gd_count_dic)
-    pbar = tqdm(total=len(gd_clades), desc="Processing gds", unit="gds")
-    for gd_clade_set in gd_clades:
-        gdid=gd_clade_set[0]
-        gd_clade=gd_clade_set[1]
-        if len(get_species_set(gd_clade)) < 4:
-            continue
-            pbar.update(1)
-        else:
-            outfile =gdid
-            tre_id1=outfile.split('-')[0]
-            pbar.set_description(f"Processing {outfile}")
-            seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
-            outgroup_gene = get_outgroup_gene(gd_clade, rename_sptree)
-            if outgroup_gene!=None:
-                tup = concatenate_genes_and_create_hyde_input(outgroup_gene,gd_clade, seq_dic, rename_sptree, outfile, dir_path1, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic)
-                command = [
-                    'run_hyde.py',
-                    '-i', os.path.join(dir_path1, tup[0]),
-                    '-m', os.path.join(dir_path1, tup[1]),
-                    '-t', str(tup[3]),
-                    '-n', str(tup[3]),
-                    '-s', str(tup[4]),
-                    '-o', tup[5],
-                    '--prefix', os.path.join(dir_path, outfile)
-                ]
-                subprocess.run(command, check=True)
-                pbar.update(1)
-            else:
-                continue
-                pbar.update(1)
-    pbar.close()
 
+    data=count_elements_in_lists(gd_type_dic)
+
+
+    gd_clades=get_process_gd_clade(data,gd_count_dic)
+    for gd in gd_clades:
+
+        gd_name,gds=gd
+        print(f'{gd_name} is processing')
+        start_time = time.time()
+        for gd_clade_set in gds:
+            gdid=gd_clade_set[0]
+            gd_clade=gd_clade_set[1]
+            if len(get_species_set(gd_clade)) <3:
+                continue
+            else:
+                outfile =gdid
+                tre_id1=outfile.split('-')[0]
+                seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
+                outgroup_gene = get_outgroup_gene(gd_clade, rename_sptree)
+                if outgroup_gene!=None:
+                    tup = concatenate_genes_and_create_hyde_input(outgroup_gene,gd_clade, seq_dic, rename_sptree, outfile, dir_path1, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic)
+                    command = [
+                        'run_hyde.py',
+                        '-i', os.path.join(dir_path1, tup[0]),
+                        '-m', os.path.join(dir_path1, tup[1]),
+                        '-t', str(tup[3]),
+                        '-n', str(tup[3]),
+                        '-s', str(tup[4]),
+                        '-o', tup[5],
+                        '--prefix', os.path.join(dir_path, outfile)
+                    ]
+                    subprocess.run(command, check=True)
+                    
+                else:
+                    continue
+        end_time = time.time()
+        execution_time = end_time - start_time
+        formatted_time = format_time(execution_time)
+        print("Program execution time:", formatted_time)
 
