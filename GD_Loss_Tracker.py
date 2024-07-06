@@ -106,18 +106,19 @@ def add_extra_maptree_node_name(lst,sptree):
                     lst1.add(i.name)       
     return lst1
 
-def get_path_str_with_count_num_lst(tre_id,gd_id,genetree,sptree,out):#统计一颗树中所有gd下不同的丢失情况
+def get_path_str_with_count_num_lst(tre_id,gd_id,genetree,sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic):#统计一颗树中所有gd下不同的丢失情况
+    renamed_sptree=rename_input_tre(sptree,taxa2voucher_dic)
     path_str_with_count_num_lst = []
     dup_node_name_list = find_dup_node(genetree)
     for i in dup_node_name_list:
         sp = get_species_set(i)
         clade_up = i.get_children()[0]
         clade_down = i.get_children()[1]
-        up_tips='-'.join(clade_up.get_leaf_names())
-        down_tips='-'.join(clade_down.get_leaf_names())
+        up_tips='-'.join([new_named_gene2gene_dic[j] for j in clade_up.get_leaf_names()])
+        down_tips='-'.join([new_named_gene2gene_dic[j] for j in clade_down.get_leaf_names()])
 
         if len(sp) != 1:
-            max_clade2sp = sptree.get_common_ancestor(sp)
+            max_clade2sp = renamed_sptree.get_common_ancestor(sp)
             out.write(tre_id+'\t'+str(gd_id)+'\t'+max_clade2sp.name+'\t'+up_tips+'\t'+down_tips+'\n')
 
             clade_up_set = get_maptree_internal_node_name_set(clade_up, max_clade2sp)
@@ -130,10 +131,10 @@ def get_path_str_with_count_num_lst(tre_id,gd_id,genetree,sptree,out):#统计一
 
             path_str_lst = get_tips_to_clade_path_lst(max_clade2sp)
             for j in path_str_lst:
-                s = '->'.join([f'{key}({dic[key]})' for key in j.split('->')])
+                s = '->'.join([f'{voucher2taxa_dic.get(key,key)}({dic[key]})' for key in j.split('->')])
                 path_str_with_count_num_lst.append(s)
         else:
-            out.write(tre_id+'\t'+str(gd_id)+'\t'+get_maptree_name(sptree,sp)+'\t'+up_tips+'\t'+down_tips+'\n')
+            out.write(tre_id+'\t'+str(gd_id)+'\t'+voucher2taxa_dic.get(get_maptree_name(renamed_sptree,sp),get_maptree_name(renamed_sptree,sp))+'\t'+up_tips+'\t'+down_tips+'\n')
         gd_id+=1
     return path_str_with_count_num_lst
 
@@ -163,13 +164,14 @@ def split_dict_by_first_last_char(original_dict):
 
     return split_dicts
 
-def get_path_str_num_dic(tre_dic,sptree):
+def get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic):
     path_str_num_dic={}
     out=open('gd_summary.txt','w')
     gd_id=1
     for tre_id,tre_path in tre_dic.items():
         t=PhyloTree(tre_path)
-        path_str_num_lst=get_path_str_with_count_num_lst(tre_id,gd_id,t,sptree,out)
+        t1=rename_input_tre(t, gene2new_named_gene_dic)
+        path_str_num_lst=get_path_str_with_count_num_lst(tre_id,gd_id,t1,sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
         for i in path_str_num_lst :
             if i in path_str_num_dic:
                 path_str_num_dic[i]+=1
