@@ -1,2 +1,0 @@
-S2(2)->Solanum_lycopersicum(1)	57
-S2(2)->Solanum_lycopersicum(2)	22

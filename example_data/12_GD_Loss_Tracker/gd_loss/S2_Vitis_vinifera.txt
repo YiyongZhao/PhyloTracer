@@ -1,5 +1,0 @@
-S2(2)->S1(2)->Vitis_vinifera(1)	39
-S2(2)->S1(2)->Vitis_vinifera(2)	27
-S2(2)->S1(1)->Vitis_vinifera(1)	4
-S2(2)->S1(1)->Vitis_vinifera(0)	3
-S2(2)->S1(2)->Vitis_vinifera(0)	6

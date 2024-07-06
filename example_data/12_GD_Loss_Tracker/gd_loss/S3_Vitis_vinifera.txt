@@ -1,2 +1,0 @@
-S3(2)->S2(2)->S1(2)->Vitis_vinifera(2)	4
-S3(2)->S2(2)->S1(1)->Vitis_vinifera(1)	1
