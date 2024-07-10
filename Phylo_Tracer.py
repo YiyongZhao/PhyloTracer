@@ -124,10 +124,11 @@ GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help
 GD_Detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 GD_Detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
 GD_Detector_parser.add_argument('--gd_support', type=int,required=True, help='GD node support [50-100]')
-GD_Detector_parser.add_argument('--clade_support', type=int,required=True, help='The children support of GD node [0-100]')
-GD_Detector_parser.add_argument('--dup_species_radio', type=float ,required=True,help='The proportion of species with species duplications under the GD node [0-1]')
+GD_Detector_parser.add_argument('--subclade_support', type=int,required=True, help='The children support of GD node [0-100]')
+GD_Detector_parser.add_argument('--dup_species_proportion', type=float ,required=True,help='The proportion of species with species duplications under the GD node [0-1]')
 GD_Detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
 GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+GD_Detector_parser.add_argument('--deepvar',type=int,required=True, help='Maximum variance of deepth: 1')
 
 # GD_Visualizer command
 GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='GD_Visualizer help')
@@ -358,15 +359,16 @@ def main():
     
     elif args.command == 'GD_Detector':
         # Execute the GD_Detector function
-        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.gd_support and args.clade_support is not None and args.dup_species_radio is not None and args.dup_species_num :
+        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.gd_support is not None and args.subclade_support is not None and args.dup_species_proportion is not None and args.dup_species_num is not None and args.deepvar is not None:
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             input_sps_tree = args.input_sps_tree
             gd_support=args.gd_support
-            clade_support=args.clade_support
-            dup_species_percent = args.dup_species_radio
+            subclade_support=args.subclade_support
+            dup_species_percent = args.dup_species_proportion
             dup_species_num = args.dup_species_num
+            deep_var=args.deepvar
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             sptree=PhyloTree(args.input_sps_tree)
             num_tre_node(sptree)
@@ -374,7 +376,7 @@ def main():
             renamed_sptree=rename_input_tre(sptree, taxa2voucher_dic)
             tre_dic = read_and_return_dict(input_GF_list)
             filename = 'gd_result.txt'
-            write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
+            write_gd_result(filename, tre_dic, gd_support,subclade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,deep_var)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -473,8 +475,10 @@ def main():
             seq_path_dic = read_and_return_dict(input_Seq_GF_list)
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             sptree=read_phylo_tree(input_sps_tree)
+            num_tre_node(sptree)
             rename_sptree=rename_input_tre(sptree,taxa2voucher_dic)
-            num_tre_node(rename_sptree)
+            sptree.write(outfile='numed_sptree.nwk',format=1)
+
             hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic)
             end_time = time.time()
             execution_time = end_time - start_time
