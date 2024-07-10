@@ -21,7 +21,7 @@ def are_sister_supports_greater_than_num(sister1, sister2, clade_support):
     support2 = sister2.support if hasattr(sister2, 'support') else 0
     return support1 > clade_support and support2 > clade_support
 
-def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_support:int=0,dup_species_num:int=2,dup_species_percent:int=0) -> list:
+def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_support:int=0,dup_species_num:int=2,dup_species_percent:int=0,deepvar:int=1) -> list:
     dup_node_name_list = []
     events = Phylo_t.get_descendant_evol_events()
     for ev in events:
@@ -35,19 +35,20 @@ def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_supp
             common_ancestor_node.add_feature('map',mapp_sp_node.name)
 
             if judge_support(common_ancestor_node.support,gd_support):
+
                 child1, child2 = common_ancestor_node.get_children()
                 c1=mapp_gene_tree_to_species(get_species_set(child1),sptree)
                 c2=mapp_gene_tree_to_species(get_species_set(child2),sptree)
                 #dup_sps=sps_dup_num(get_species_list(common_ancestor_node),get_species_set(common_ancestor_node))
                 #dup_percent=dup_sps/len(get_species_set(common_ancestor_node))
-
-                if sptree.get_distance(c1,c2, topology_only=True) <=1:
+                print(sptree.get_distance(c1,c2, topology_only=True))
+                if sptree.get_distance(c1,c2, topology_only=True) <=deepvar:
                 #if dup_sps>=dup_species_num and dup_percent>=dup_species_percent:
                 #if are_sister_supports_greater_than_num(child1,child2,clade_support):
                     dup_node_name_list.append(common_ancestor_node)
     return dup_node_name_list
 
-def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic):
+def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_percent, dup_species_num,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,deepvar):
     with open(filename,'w') as file:
         file.write('#tree_ID'+'\t'+'gd_id'+'\t'+'gd_support'+'\t'+'gene1'+'\t'+'gene2'+'\t'+'level'+'\t'+'species'+'\t'+'GD_dup_sps'+'\t'+'dup_ratio'+'\t'+'gd_type'+'\t'+'comment'+'\n') 
         gd_num=1
@@ -57,7 +58,7 @@ def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_perc
             Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
             #Phylo_t1=root_tre_with_midpoint_outgroup(Phylo_t0)
             num_tre_node(Phylo_t0)
-            dup_node_name_list = find_dup_node(Phylo_t0,sptree,gd_support,clade_support,dup_species_num,dup_species_percent)
+            dup_node_name_list = find_dup_node(Phylo_t0,sptree,gd_support,clade_support,dup_species_num,dup_species_percent,deepvar)
             #Phylo_t0.write(outfile='num_tree/' + str(tre_ID) + '.nwk', format=1)
             # if tre_ID=='OG_104386_20':
             # for i in dup_node_name_list:
@@ -88,7 +89,7 @@ def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_perc
                 
                 
                 for j in gene_pair1:
-                    file.write(tre_ID+'\t'+str(gd_num)+'\t')
+                    file.write(str(tre_ID)+'\t'+str(gd_num)+'\t')
                     a,b=j.split('-')
                     if a.split('_')[0] ==b.split('_')[0]:
                         c=a.split('_')[0]
