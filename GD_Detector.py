@@ -41,7 +41,7 @@ def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_supp
                 c2=mapp_gene_tree_to_species(get_species_set(child2),sptree)
                 #dup_sps=sps_dup_num(get_species_list(common_ancestor_node),get_species_set(common_ancestor_node))
                 #dup_percent=dup_sps/len(get_species_set(common_ancestor_node))
-                print(sptree.get_distance(c1,c2, topology_only=True))
+                #print(sptree.get_distance(c1,c2, topology_only=True))
                 if sptree.get_distance(c1,c2, topology_only=True) <=deepvar:
                 #if dup_sps>=dup_species_num and dup_percent>=dup_species_percent:
                 #if are_sister_supports_greater_than_num(child1,child2,clade_support):
