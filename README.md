@@ -193,7 +193,7 @@ Required parameter:
     --input_GF_list      File containing paths to gene tree files, one per line
     --input_imap         File with classification information of species corresponding to genes
     --input_gene_length  File with information corresponding to gene lengths
-    --input_sps_tree     A species tree file with Newick
+    --input_sps_tree     A species tree file with Newick format
 Usage:
     Phylo_Tracer.py Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk 
 ```
@@ -265,7 +265,7 @@ Required parameter:
     --subclade_support         The subclade support of GD node [0-100]
     --dup_species_proportion   The proportion of species with species duplications under the GD node [0-1]
     --dup_species_num          The number of species with species duplications under the GD node
-    --input_sps_tree           A species tree file with Newick
+    --input_sps_tree           A species tree file with Newick format
     --deepvar                  Default=1, maximum variance of deepth
 Usage:
     Phylo_Tracer.py GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk --deepvar 1
@@ -275,7 +275,7 @@ Usage:
 Description:
     To visualize gene duplication detection results and integrate these findings onto the species tree
 Required parameter:
-    --input_sps_tree  A numbered species tree file with Newick
+    --input_sps_tree  A numbered species tree file with Newick format
     --gd_result       Result file of GD_Detector
 Usage:
     Phylo_Tracer.py GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt
@@ -286,7 +286,7 @@ Description:
     To analyze and summarize gene duplication loss events traverse each node from the species tree for each tips
 Required parameter:
     --input_GF_list      File containing paths to gene tree files, one per line
-    --input_sps_tree     A species tree file with Newick
+    --input_sps_tree     A species tree file with Newick format
     --input_imap         File with classification information of species corresponding to genes
 Usage:
     Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
@@ -320,7 +320,7 @@ Required parameter:
     --input_GF_list      File containing paths to gene tree files, one per line
     --input_Seq_GF_list  File containing paths to sequence alignment files corresponding to the gene trees
     --input_imap         File with classification information of species corresponding to genes
-    --input_sps_tree     A species tree file with Newick
+    --input_sps_tree     A species tree file with Newick format
 Usage:
     Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk input_imap gene2sps.imap
 ```
@@ -330,7 +330,7 @@ Description:
     To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals
 Required parameter:
     --input_hybrid_folder  The result folder name of Hybrid_Tracer
-    --input_sps_tree       A species tree file with Newick
+    --input_sps_tree       A species tree file with Newick format
 Usage:
     Phylo_Tracer.py Hybrid_Visualizer --input_hybrid_folder input_foldername --input_sps_tree sptree.nwk 
 ```
