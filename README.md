@@ -266,7 +266,7 @@ Required parameter:
     --dup_species_proportion   The proportion of species with species duplications under the GD node [0-1]
     --dup_species_num          The number of species with species duplications under the GD node
     --input_sps_tree           A species tree file with Newick
-    --deepvar                  Maximum variance of deepth: 1
+    --deepvar                  Default=1, maximum variance of deepth
 Usage:
     Phylo_Tracer.py GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk --deepvar 1
 ```
