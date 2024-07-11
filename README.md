@@ -249,7 +249,7 @@ Required parameter:
 Optional parameter:
     --species_categories  File with taxonomic information for species
     --gene_family         If you want to mark gene families you need to provide this file
-    --input_sps_tree      If you provide the --gene_family parameter, you should provide a species tree file with Newick
+    --input_sps_tree      If you provide the --gene_family parameter, you should provide a species tree file with Newick format
     --gene_expression     Gene expression level files
 Usage:
     Phylo_Tracer.py Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--species_categories [gene2sps.imap gene2order.imap  gene2taxa.imap gene2clade.imap] --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.imap --input_sps_tree sptree.nwk  --gene_expression gene2expression.imap]
