@@ -181,7 +181,7 @@ Description:
 Required parameter:
     --input_GF_list  File containing paths to gene tree files, one per line
 Optional parameter:
-    --decimal_place  Default=10, return the branch length values to 10 decimal places
+    --decimal_place  Default = 10, return the branch length values to 10 decimal places
 Usage:
     Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
 ```
@@ -263,10 +263,10 @@ Required parameter:
     --input_imap               File with classification information of species corresponding to genes
     --gd_support               GD node support [50-100]
     --subclade_support         The subclade support of GD node [0-100]
-    --dup_species_proportion   The proportion of overlappped species from two subclade for a GD event with range [0-1]
+    --dup_species_proportion   Default = 0.2, the proportion of overlappped species from two subclade for a GD event with range [0-1]
     --dup_species_num          The number of species with species duplications under the GD node
     --input_sps_tree           A species tree file with Newick format
-    --deepvar                  Default=1, maximum variance of deepth
+    --deepvar                  Default = 1, maximum variance of deepth
 Usage:
     Phylo_Tracer.py GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk --deepvar 1
 ```
