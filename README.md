@@ -263,7 +263,7 @@ Required parameter:
     --input_imap               File with classification information of species corresponding to genes
     --gd_support               GD node support [50-100]
     --subclade_support         The subclade support of GD node [0-100]
-    --dup_species_proportion   The proportion of species with species duplications under the GD node [0-1]
+    --dup_species_proportion   The proportion of overlappped species from two subclade for a GD event with range [0-1]
     --dup_species_num          The number of species with species duplications under the GD node
     --input_sps_tree           A species tree file with Newick format
     --deepvar                  Default=1, maximum variance of deepth
