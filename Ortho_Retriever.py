@@ -109,7 +109,6 @@ def get_single_copy_trees(Phylo_t1:object,renamed_len_dic:dict,gene2new_named_ge
     principal_gene_S,filtered_offcut_ev_seqs_L0=offcut_tre(Phylo_t1,renamed_len_dic)
     minor_othologs_L=[]
     minor_othologs_L=iterator(filtered_offcut_ev_seqs_L0,Phylo_t1,gene2new_named_gene_dic,minor_othologs_L,tre_path,renamed_len_dic)
-    print(minor_othologs_L)
     ordered_name_OG_L=rename_OGs_tre_name(principal_gene_S,minor_othologs_L,tre_ID)
     for tre_name,OG_S in ordered_name_OG_L:
 
