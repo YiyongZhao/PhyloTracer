@@ -125,8 +125,9 @@ def get_single_copy_trees(Phylo_t1:object,renamed_len_dic:dict,gene2new_named_ge
 #ordered_name_OG_L=rename_OGs_tre_name(principal_gene_S,minor_othologs_L,tre_ID)
 ##########################################################################
 def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic):
-    o=open('result.txt','w')
+    o=open('ortho_retriever_summary.txt','w')
     o.write('tre_name'+'\t'+'single_copy_tree'+'\n')
+    processed_lines=[]
     for tre_ID,tre_path in tre_dic.items():
         Phylo_t0=read_phylo_tree(tre_path)
         if is_rooted(Phylo_t0):
@@ -139,7 +140,10 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed
         for clade in trees:
             tre_name=clade[0]
             Phylo_t_OG_L=clade[1]
-            o.write(tre_name + "\t" + Phylo_t_OG_L.write()+ "\n")
+            processed_lines.append(tre_name + "\t" + Phylo_t_OG_L.write()+ "\n")
+    sorted_lines = sorted(processed_lines, key=lambda x: len(x.split('\t')[1]), reverse=True)
+    for line in sorted_lines:
+        o.write(line)
     o.close()
 
 if __name__ == "__main__":
