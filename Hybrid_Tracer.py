@@ -25,7 +25,7 @@ def calculate_distance(node1,node2):
     distance = node1.get_distance(node2)
     return distance
 
-def find_dup_node(Phylo_t: object, sptree:object,min_support: int = 50) -> list:
+def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_support:int=0,dup_species_num:int=2,dup_species_percent:int=0,deepvar:int=1) -> list:
     dup_node_name_list = []
     events = Phylo_t.get_descendant_evol_events()
     for ev in events:
@@ -33,11 +33,23 @@ def find_dup_node(Phylo_t: object, sptree:object,min_support: int = 50) -> list:
             i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
             events_node_name_list = i.split(',')
             common_ancestor_node = Phylo_t.get_common_ancestor(events_node_name_list)
+            child1,child2=common_ancestor_node.get_children()
             sp_set=get_species_set(common_ancestor_node)
-            mapp_sp_node=sptree.get_common_ancestor(sp_set)
+            mapp_sp_node=mapp_gene_tree_to_species(sp_set,sptree)
             common_ancestor_node.add_feature('map',mapp_sp_node.name)
-            #if common_ancestor_node.support >= min_support:
-            dup_node_name_list.append(common_ancestor_node)
+
+            if judge_support(common_ancestor_node.support,gd_support):
+
+                child1, child2 = common_ancestor_node.get_children()
+                c1=mapp_gene_tree_to_species(get_species_set(child1),sptree)
+                c2=mapp_gene_tree_to_species(get_species_set(child2),sptree)
+                #dup_sps=sps_dup_num(get_species_list(common_ancestor_node),get_species_set(common_ancestor_node))
+                #dup_percent=dup_sps/len(get_species_set(common_ancestor_node))
+                #print(sptree.get_distance(c1,c2, topology_only=True))
+                if sptree.get_distance(c1,c2, topology_only=True) <=deepvar:
+                #if dup_sps>=dup_species_num and dup_percent>=dup_species_percent:
+                #if are_sister_supports_greater_than_num(child1,child2,clade_support):
+                    dup_node_name_list.append(common_ancestor_node)
     return dup_node_name_list
 
 def create_fasta_dict(fasta_file,gene2new_named_gene_dic):
@@ -279,8 +291,8 @@ def get_gd_count_dic_and_gd_type_dic(tre_dic,gene2new_named_gene_dic,rename_sptr
 def get_process_gd_clade(gd_type_dic,gd_count_dic):
     gd_clade=[]
     for k,v in gd_type_dic.items():
-        type_ratio=(v['ABB']+v['AAB'])/len(gd_count_dic[k])
-        if len(gd_count_dic[k])>=300 and type_ratio>=0.5 :
+        type_ratio=(v['ABB']+v['AAB'])/(v['ABB']+v['AAB']+v['ABAB'])
+        if (v['ABB']+v['AAB']+v['ABAB'])>=300 and type_ratio>=0.5 :
             gd_clade.append((k,gd_count_dic[k]))
     return gd_clade
 
@@ -299,19 +311,24 @@ def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, vou
 
     data=count_elements_in_lists(gd_type_dic)
 
-
     gd_clades=get_process_gd_clade(data,gd_count_dic)
     for gd in gd_clades:
 
         gd_name,gds=gd
-        print(f'{gd_name} is processing')
-        start_time = time.time()
-        for gd_clade_set in gds:
-            gdid=gd_clade_set[0]
-            gd_clade=gd_clade_set[1]
-            if len(get_species_set(gd_clade)) <3:
-                continue
-            else:
+
+        if gd_name=='N1':
+            start_time = time.time()
+            print(f'{gd_name} is processing')
+            clade=rename_sptree&gd_name
+            # if len(get_species_set(clade)) <3:
+            #     print(f'{gd_name} species num is less than 3')
+            #     continue
+            # else:
+            for gd_clade_set in gds:
+                gdid=gd_clade_set[0]
+                gd_clade=gd_clade_set[1]
+                
+
                 outfile =gdid
                 tre_id1=outfile.split('-')[0]
                 seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
@@ -328,12 +345,24 @@ def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, vou
                         '-o', tup[5],
                         '--prefix', os.path.join(dir_path, outfile)
                     ]
-                    subprocess.run(command, check=True)
-                    
+                    subprocess.run(command, check=True)    
                 else:
-                    continue
-        end_time = time.time()
-        execution_time = end_time - start_time
-        formatted_time = format_time(execution_time)
-        print("Program execution time:", formatted_time)
+                    print('not finde outgroup_gene')
+            end_time = time.time()
+            execution_time = end_time - start_time
+            formatted_time = format_time(execution_time)
+            print("Program execution time:", formatted_time)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
