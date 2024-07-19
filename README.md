@@ -322,7 +322,7 @@ Required parameter:
     --input_imap         File with classification information of species corresponding to genes
     --input_sps_tree     A species tree file with Newick format
 Usage:
-    Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk input_imap gene2sps.imap
+    Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
 ```
 ### Hybrid_Visualizer
 ```
