@@ -91,7 +91,7 @@ OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='OrthoFilte
 OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 OrthoFilter_LB_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 OrthoFilter_LB_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-OrthoFilter_LB_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+OrthoFilter_LB_parser.add_argument('--branch_length_multiples', type=int, default=5, required=True, help='Branch_length_multiples')
 OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='Visualize the results if set')
 
 # OrthoFilter_Mono command
@@ -99,7 +99,7 @@ OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='OrthoF
 OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
 OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-OrthoFilter_Mono_parser.add_argument('--long_branch_index', type=int, default=5, required=True, help='Long branch index')
+OrthoFilter_Mono_parser.add_argument('--branch_length_multiples', type=int, default=5, required=True, help='Branch_length_multiples')
 OrthoFilter_Mono_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
 OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize the results if set')
 
@@ -264,17 +264,17 @@ def main():
         
     elif args.command == 'OrthoFilter_LB':
         # Execute the OrthoFilter_LB function
-        if args.input_GF_list and args.input_imap and args.input_taxa and args.long_branch_index :
+        if args.input_GF_list and args.input_imap and args.input_taxa and args.branch_length_multiples :
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             input_taxa=args.input_taxa
-            long_brancch_index=args.long_branch_index
+            long_branch_index=args.branch_length_multiples
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer(input_imap)
             
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
-            prune_main_LB(tre_dic,taxa_dic,long_brancch_index,gene2new_named_gene_dic, new_named_gene2gene_dic,visual=args.visual)
+            prune_main_LB(tre_dic,taxa_dic,long_branch_index,gene2new_named_gene_dic, new_named_gene2gene_dic,visual=args.visual)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -285,17 +285,17 @@ def main():
 
     elif args.command == 'OrthoFilter_Mono':
         # Execute the OrthoFilter_Mono function
-        if args.input_GF_list and args.input_taxa and args.long_branch_index and args.insert_branch_index:
+        if args.input_GF_list and args.input_taxa and args.branch_length_multiples and args.insert_branch_index:
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_taxa=args.input_taxa
             input_imap = args.input_imap
-            long_brancch_index=args.long_branch_index
+            long_branch_index=args.branch_length_multiples
             insert_branch_index=args.insert_branch_index
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic=read_and_return_dict(input_taxa)
-            prune_main_Mono(tre_dic,taxa_dic,long_brancch_index,insert_branch_index,new_named_gene2gene_dic,gene2new_named_gene_dic,visual=args.visual)
+            prune_main_Mono(tre_dic,taxa_dic,long_branch_index,insert_branch_index,new_named_gene2gene_dic,gene2new_named_gene_dic,visual=args.visual)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
