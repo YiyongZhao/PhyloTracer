@@ -202,29 +202,29 @@ Usage:
 Description:
     To prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length
 Required parameter:
-    --input_GF_list       File containing paths to gene tree files, one per line
-    --input_taxa          File with taxonomic information for species, one per line
-    --input_imap          File with classification information of species corresponding to genes
-    --long_branch_index   Tips whose branch length is greater than or equal to the long branch index will be removed
+    --input_GF_list             File containing paths to gene tree files, one per line
+    --input_taxa                File with taxonomic information for species, one per line
+    --input_imap                File with classification information of species corresponding to genes
+    --branch_length_multiples   Tips whose branch length is greater than or equal to the branch length multiples will be removed
 Optional parameter:
     --visual              Visualize the results of gene family trees before and after removing long branches
 Usage:
-    Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --long_branch_index 10 [--visual]
+    Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --branch_length_multiples 10 [--visual]
 ```
 ### OrthoFilter_Mono
 ```
 Description:
     To prune phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives
 Required parameter:
-    --input_GF_list        File containing paths to gene tree files, one per line
-    --input_taxa           File with taxonomic information for species
-    --input_imap           File with classification information of species corresponding to genes
-    --long_branch_index    Tips whose branch length is greater than or equal to the long branch index will be removed
-    --insert_branch_index  Nodes with insertion coverage ratio and insertion depth greater than or equal to the insert branch index will be removed
+    --input_GF_list            File containing paths to gene tree files, one per line
+    --input_taxa               File with taxonomic information for species
+    --input_imap               File with classification information of species corresponding to genes
+    --branch_length_multiples  Tips whose branch length is greater than or equal to the branch length multiples will be removed
+    --insert_branch_index      Nodes with insertion coverage ratio and insertion depth greater than or equal to the insert branch index will be removed
 Optional parameter:
-    --visual               Visualize the results of gene family trees before and after removing outliers and paralogs
+    --visual                   Visualize the results of gene family trees before and after removing outliers and paralogs
 Usage:
-    Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --long_branch_index 10 --insert_branch_index 10 [--visual]
+    Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --branch_length_multiples 10 --insert_branch_index 10 [--visual]
 ```
 ### TreeTopology_Summarizer
 ```
