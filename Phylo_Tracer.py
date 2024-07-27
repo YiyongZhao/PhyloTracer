@@ -163,6 +163,7 @@ Hybrid_Tracer_parser.add_argument('--input_imap', metavar='file',  required=True
 Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybrid_Visualizer help')
 Hybrid_Visualizer_parser.add_argument('--input_hybrid_folder', type=str,  required=True, help='The results of Hybrid_Tracer')
 Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light")
 
 #HaploFinder
 HaploFinder = subparsers.add_parser('HaploFinder', help='HaploFinder help')
@@ -494,7 +495,11 @@ def main():
             input_hybrid_folder=args.input_hybrid_folder
             input_sps_tree = args.input_sps_tree
             sptree=read_tree(input_sps_tree)
-            hyde_visual_main(input_hybrid_folder,sptree)
+            if args.node:
+                hyde_visual_node_main(input_hybrid_folder,sptree) 
+            else:
+                hyde_visual_main(input_hybrid_folder,sptree)
+            
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
