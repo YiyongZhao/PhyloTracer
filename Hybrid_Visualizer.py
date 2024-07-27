@@ -72,14 +72,13 @@ def generate_tree_leaf(t, hybrid_sps,filename):
     
     leaf_names = t.get_leaf_names()
     max_l = max(len(name) for name in leaf_names)
-    fill_char = '·'
     
     for i in t.traverse():
         i.set_style(nstyle)
         if i.is_leaf():
-            leaf_name = i.name.ljust(max_l, fill_char)  # 使用填充确保字符长度相同
+            leaf_name = i.name.ljust(max_l, '·')  # 使用填充确保字符长度相同
             fgcolor = 'red' if i.name == hybrid_sps else 'black'
-            i.add_face(TextFace(i.name, fgcolor=fgcolor), column=1, position='aligned')
+            i.add_face(TextFace(leaf_name, fgcolor=fgcolor), column=1, position='aligned')
             
     ts = TreeStyle()
     ts.scale = 10
@@ -151,6 +150,22 @@ def from_summary_get_hyb_to_date(summary_dic, filter_dic,a_hyb_to_three_tup_list
     return tup_df,gamma_df,filtered_gamma_df
         
 
+def hyde_visual_cmap():
+    cmap = []
+    color = 1
+    lucency = 0
+    for each in range(5000):
+        cmap.insert(each, np.array([0,0,color,lucency]))
+        color = color - (1/5000)
+        lucency = lucency + (1/5000)
+    color = 0
+    lucency = 1
+    for each in range(5001, 9999):
+        cmap.insert(each, np.array([color,0,0,lucency]))
+        color = color + (1/5000)
+        lucency = lucency - (1/5000)
+    newcmp = ListedColormap(cmap)
+    return newcmp
 
 def get_necmap():
     def create_lightened_cmap(rgb_color, reverse=False):
@@ -195,16 +210,23 @@ def create_hot_map_node(summary_dic,filter_dic,hyb_dic,node, t,filename):
     summary_gamma_df=[d[1] for d in df_lst] 
     summary_filter_df=[d[2] for d in df_lst] 
     
-    tup_result_df=average_dataframes(summary_tup_df)
+    tup_result_df = average_dataframes(summary_tup_df).astype(int)
     gamma_result_df=average_dataframes(summary_gamma_df)
     filter_result_df=average_dataframes(summary_filter_df)
     
-#     for leaf in node_s:
-#         tup_result_df.loc[:, leaf] = 0  
-#         tup_result_df.loc[leaf] = 0 
-#         gamma_result_df.loc[:, leaf] = 0  
-#         gamma_result_df.loc[leaf] = 0 
-        
+    for leaf in node_s:
+        tup_result_df.loc[:, leaf] = 0  
+        tup_result_df.loc[leaf] = 0 
+        gamma_result_df.loc[:, leaf] = 0  
+        gamma_result_df.loc[leaf] = 0 
+    
+    mask_upper = np.triu(np.ones_like(gamma_result_df, dtype=bool), k=1)
+    tup_result_df[mask_upper] = 0
+    gamma_result_df[mask_upper] = 0
+
+    tup_annot = tup_result_df.astype(str).where(tup_result_df != 0, other='')
+    gamma_annot = gamma_result_df.applymap(lambda x: f"{x:.3f}" if x != 0 else '')
+
     fig = plt.figure(figsize=(30, 30))
 
     border_width = 0.001
@@ -212,22 +234,29 @@ def create_hot_map_node(summary_dic,filter_dic,hyb_dic,node, t,filename):
     ax = fig.add_axes(ax_size)
     
     
-    newcmp = get_necmap()
+    newcmp = hyde_visual_cmap()
     
-    sns.heatmap(tup_result_df, annot=True, fmt=".0f", cmap='Greys', annot_kws={'color':'#cd4321','size': 60,'va':'bottom'},
-                xticklabels=False, yticklabels=False, cbar=False,linewidths=.5,square=True)
-                              
-    sns.heatmap(gamma_result_df, annot=True, fmt=".3f",cmap='Greys',annot_kws={'color':'#cd21ab','size': 60,'va':'top'},
-                xticklabels=False, yticklabels=False, cbar=False,linewidths=.5,square=True)   
-                              
-    sns.heatmap(gamma_result_df,annot=False, cmap=newcmp,fmt=".3f", xticklabels=False, yticklabels=False,
-                annot_kws={'color':'red','size': 50,'va':'top'},cbar=False,cbar_kws={"shrink": 0.6,'anchor':(-1.4,0.5)}, vmin=0, vmax=1,linewidths=.5,square=True)  
+    sns.heatmap(tup_result_df, annot=tup_annot, fmt="", cmap='Greys', ax=ax,
+                annot_kws={'color':'#cd4321','size': 60,'va':'bottom'},
+                xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
+
+    # 第二个 heatmap，显示非零数值
+    sns.heatmap(gamma_result_df, annot=gamma_annot, fmt="", cmap='Greys', ax=ax,
+                annot_kws={'color':'#cd21ab','size': 60,'va':'top'},
+                xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
+
+    # 第三个 heatmap，不显示标记
+    newcmp = hyde_visual_cmap()
+    
+    sns.heatmap(gamma_result_df, annot=False, cmap=newcmp, ax=ax,  
+                xticklabels=False, yticklabels=False, cbar=False, cbar_kws={'shrink':0.6},
+                vmin=0, vmax=1, linewidths=1.5, linecolor='black',square=True)
     
     m = ax.imshow(gamma_df, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)  
-    position = fig.add_axes([0.83, 0.2, 0.02, 0.7]) 
+    position=fig.add_axes([0.9, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
-    cbar.ax.tick_params(labelsize=40)
- 
+    cbar.ax.tick_params(labelsize=40)  
+    cbar.set_label('Heatmap of Y Values', fontsize=40)
     plt.savefig(filename+"_hotmap.png", dpi=200)
     plt.cla()
     plt.close("all")
@@ -241,6 +270,9 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename,b1):
     for i in a_hyb_to_three_tup_list:
         tup = i.split('-')
         p1,hyb,p2=tup
+        if p1 not in sp or p2 not in sp:
+            print(f"Warning: {p1} or {p2} is not in sp.")
+            continue  # 跳过不在 sp 中的组合
         same_tups = summary_dic[i]
         num = len(same_tups)
         gamma = calculate_gamma(same_tups)
@@ -255,22 +287,36 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename,b1):
     ax_size = [0 + border_width, 0 + border_width, 1 - 2 * border_width, 1 - 2 * border_width]
     ax = fig.add_axes(ax_size)
     
-    sns.heatmap(tup_df, annot=True, fmt=".0f", cmap='Greys', ax=ax,annot_kws={'color':'#cd4321','size': 20,'va':'bottom'},
-                xticklabels=False, yticklabels=False, cbar=False,linewidths=.5,square=True)
-                              
-    sns.heatmap(gamma_df, annot=True, fmt=".3f",cmap='Greys',ax=ax,annot_kws={'color':'#cd21ab','size': 20,'va':'top'},
-                xticklabels=False, yticklabels=False, cbar=False,linewidths=.5,square=True)   
+    mask_upper = np.triu(np.ones_like(gamma_df, dtype=bool), k=1)
+    gamma_df[mask_upper] = 0
+    tup_df[mask_upper] = 0
+
+    tup_annot = tup_df.astype(str).where(tup_df != 0, other='')
+    gamma_annot = gamma_df.applymap(lambda x: f"{x:.3f}" if x != 0 else '')
+    # 第一个 heatmap，显示非零数值
+    sns.heatmap(tup_df, annot=tup_annot, fmt="", cmap='Greys', ax=ax,
+                annot_kws={'color':'#cd4321','size': 60,'va':'bottom'},
+                xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
+
+    # 第二个 heatmap，显示非零数值
+    sns.heatmap(gamma_df, annot=gamma_annot, fmt="", cmap='Greys', ax=ax,
+                annot_kws={'color':'#cd21ab','size': 60,'va':'top'},
+                xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
+
+    # 第三个 heatmap，不显示标记
+    newcmp = hyde_visual_cmap()
     
-    newcmp=get_necmap()
-    sns.heatmap(gamma_df, annot=False, cmap=newcmp, ax=ax,fmt=".3f",  
-                xticklabels=False, yticklabels=False,  
-                cbar=False, cbar_kws={'shrink':0.6},vmin=0, vmax=1, linewidths=.5, square=True)
+    sns.heatmap(gamma_df, annot=False, cmap=newcmp, ax=ax,  
+                xticklabels=False, yticklabels=False, cbar=False, cbar_kws={'shrink':0.6},
+                vmin=0, vmax=1, linewidths=1.5, linecolor='black',square=True)
     
     m = ax.imshow(gamma_df, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)  
-    position = fig.add_axes([0.83, 0.2, 0.02, 0.7]) 
+    position=fig.add_axes([0.88, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
     cbar.ax.tick_params(labelsize=40)  
+    cbar.set_label('Heatmap of y Values', fontsize=50,labelpad=10)
     
+
     plt.savefig(filename+"_hotmap.png", dpi=300)
     plt.cla()
     plt.close("all")
@@ -333,29 +379,55 @@ def rejust_root_dist(sptree):
 
     return sptree
 
-def hyde_visual_main(hybrid_tracer,sptree):
+def hyde_visual_leaf_main(hybrid_tracer,sptree):
     temp_directory = hybrid_tracer
     merge_files(temp_directory, '-out.txt', 'merged_out.txt')
     merge_files(temp_directory, '-filtered.txt', 'merged_filtered.txt')
 
-    a=parse_hyde_out('merged_out.txt')
-    a1=parse_hyde_out('merged_filtered.txt')
-    b=calculate_three_tup(a)
-    b1=calculate_three_tup(a1)
-    c=get_hybrid_dic(b)
-    c1=get_hybrid_dic(b1)
-    for k,v in c.items():
+    out1=parse_hyde_out('merged_out.txt')
+    out2=parse_hyde_out('merged_filtered.txt')
+    result1=calculate_three_tup(out1)
+    result2=calculate_three_tup(out2)
+    hybrid_dic1=get_hybrid_dic(result1)
+    hybrid_dic2=get_hybrid_dic(result2)
+    for k,v in hybrid_dic1.items():
+        print(f'{k} is processing')
         t1=sptree.copy()
         #t2=rename_input_tre(t1,taxa_dic)
         generate_tree_leaf(t1,k,k)
-        create_hot_map_leaf(b,v,t1,k,b1)
+        create_hot_map_leaf(result1,v,t1,k,result2)
         combine_fig(k)
         os.remove(f"{k}_hotmap.png")
         os.remove(f'{k}_img_faces.png')
 
+def hyde_visual_node_main(hybrid_tracer,sptree):
+    temp_directory = hybrid_tracer
+    merge_files(temp_directory, '-out.txt', 'merged_out.txt')
+    merge_files(temp_directory, '-filtered.txt', 'merged_filtered.txt')
 
+    out1=parse_hyde_out('merged_out.txt')
+    out2=parse_hyde_out('merged_filtered.txt')
+    result1=calculate_three_tup(out1)
+    result2=calculate_three_tup(out2)
+    hybrid_dic1=get_hybrid_dic(result1)
+    hybrid_dic2=get_hybrid_dic(result2)
+
+    num_tre_node(sptree)
+    nodes=[i for i in sptree.traverse() if not i.is_leaf()]
+
+    for node in nodes:
+        if node.is_root():
+            continue
+        else:
+            print(f'{node.name} is processing')
+            t1=sptree.copy()
+            generate_tree_node(t1,node,node.name)
+            create_hot_map_node(result1,result2,hybrid_dic1,node,t1,node.name)
+            combine_fig(node.name)
+            os.remove(f"{node.name}_hotmap.png")
+            os.remove(f'{node.name}_img_faces.png')
 if __name__ == "__main__":
-    hyde_visual_main()
-        
-
+    sptree=Tree('sptree.nwk')
+    hyde_visual_leaf_main(sptree)
+    hyde_visual_node_main(sptree) 
 
