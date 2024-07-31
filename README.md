@@ -233,7 +233,6 @@ Description:
 Required parameter:
     --input_GF_list    File containing paths to gene tree files, one per line
     --input_imap       File with classification information of species corresponding to genes
-    --outfile          Output filename
 Usage:
     Phylo_Tracer.py TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap 
 ```
