@@ -203,13 +203,13 @@ Description:
     To prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length
 Required parameter:
     --input_GF_list             File containing paths to gene tree files, one per line
-    --input_taxa                File with taxonomic information for species, one per line
     --input_imap                File with classification information of species corresponding to genes
-    --branch_length_multiples   Tips whose branch length is greater than or equal to the branch length multiples will be removed
+    --absolute_branch_length    Absolute branch length multiplier and default = 5
+    --relative_branch_length   Relative branch length multiplier and default = 2.5
 Optional parameter:
     --visual              Visualize the results of gene family trees before and after removing long branches
 Usage:
-    Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --branch_length_multiples 10 [--visual]
+    Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
 ```
 ### OrthoFilter_Mono
 ```
