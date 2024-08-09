@@ -27,7 +27,7 @@ def parse_hyde_out(filename):
             elif i1[5]=='nan':
                 continue
             elif 0<float(i1[5])<1: 
-                tup=[i1[0],i1[1],i1[2],i1[5]]
+                tup=[i1[0],i1[1],i1[2],i1[5],i1[3]]
                 lst.append(tup)
     return lst
 
@@ -59,7 +59,19 @@ def calculate_gamma(lst):#一个三元组统计的list
             num=float(i[3])
             gamma+=num 
     return gamma/len(lst)
-    
+
+def calculate_pvalue(lst):#一个三元组统计的list
+    pvalue=0
+    for i in lst:
+        if i[4]=='nan':
+            continue
+        elif i[4] =='-inf':
+            continue
+        else:
+            num=float(i[4])
+            pvalue+=num 
+    return pvalue/len(lst)
+
 def generate_tree_leaf(t, hybrid_sps,filename):
     nstyle = NodeStyle()
     nstyle["vt_line_width"] = 1
@@ -141,11 +153,12 @@ def from_summary_get_hyb_to_date(summary_dic, filter_dic,a_hyb_to_three_tup_list
         same_tups = summary_dic[i]
         num = len(same_tups)
         gamma = calculate_gamma(same_tups)
-        
+        pvalue=calculate_pvalue(same_tups)
+
         gamma_3=round(gamma, 3)
         tup_df.loc[p1, p2] = num
         gamma_df.loc[p1, p2] = gamma_3
-        filtered_gamma_df[p1][p2]=len(filter_dic[i])
+        filtered_gamma_df[p1][p2]=pvalue
         
     return tup_df,gamma_df,filtered_gamma_df
         
@@ -237,12 +250,12 @@ def create_hot_map_node(summary_dic,filter_dic,hyb_dic,node, t,filename):
     newcmp = hyde_visual_cmap()
     
     sns.heatmap(tup_result_df, annot=tup_annot, fmt="", cmap='Greys', ax=ax,
-                annot_kws={'color':'#cd4321','size': 60,'va':'bottom'},
+                annot_kws={'color':'#FFFFFF','size': 60,'va':'top'},
                 xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
 
     # 第二个 heatmap，显示非零数值
     sns.heatmap(gamma_result_df, annot=gamma_annot, fmt="", cmap='Greys', ax=ax,
-                annot_kws={'color':'#cd21ab','size': 60,'va':'top'},
+                annot_kws={'color':'#F5EF70','size': 60,'va':'bottom'},
                 xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
 
     # 第三个 heatmap，不显示标记
@@ -256,7 +269,7 @@ def create_hot_map_node(summary_dic,filter_dic,hyb_dic,node, t,filename):
     position=fig.add_axes([0.9, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
     cbar.ax.tick_params(labelsize=40)  
-    cbar.set_label('Heatmap of Y Values', fontsize=40)
+    #cbar.set_label('Heatmap of Y Values', fontsize=50,labelpad=10)
     plt.savefig(filename+"_hotmap.png", dpi=200)
     plt.cla()
     plt.close("all")
@@ -276,33 +289,43 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename,b1):
         same_tups = summary_dic[i]
         num = len(same_tups)
         gamma = calculate_gamma(same_tups)
-        
+        pvalue=calculate_pvalue(same_tups)
+
         tup_df.loc[p1, p2] = num
         gamma_df.loc[p1, p2] = round(gamma, 3)
-        filtered_gamma_df.loc[p1, p2]=len(b1[i])
-        
+        filtered_gamma_df.loc[p1, p2]=pvalue
+    
+    for p1 in sp:
+        for p2 in sp:
+            if p1 != p2:
+                if filtered_gamma_df.loc[p1, p2] < filtered_gamma_df.loc[p2, p1]:
+                    gamma_df.loc[p2, p1] = 0
+                else:
+                    gamma_df.loc[p1, p2] = 0
+
     fig = plt.figure(figsize=(30, 30))
     
     border_width = 0.001
     ax_size = [0 + border_width, 0 + border_width, 1 - 2 * border_width, 1 - 2 * border_width]
     ax = fig.add_axes(ax_size)
     
-    mask_upper = np.triu(np.ones_like(gamma_df, dtype=bool), k=1)
-    gamma_df[mask_upper] = 0
-    tup_df[mask_upper] = 0
+    # mask_upper = np.triu(np.ones_like(gamma_df, dtype=bool), k=1)
+    # gamma_df[mask_upper] = 0
+    # tup_df[mask_upper] = 0
 
     tup_annot = tup_df.astype(str).where(tup_df != 0, other='')
     gamma_annot = gamma_df.applymap(lambda x: f"{x:.3f}" if x != 0 else '')
     # 第一个 heatmap，显示非零数值
     sns.heatmap(tup_df, annot=tup_annot, fmt="", cmap='Greys', ax=ax,
-                annot_kws={'color':'#cd4321','size': 60,'va':'bottom'},
+                annot_kws={'color':'#FFFFFF','size': 60,'va':'top'},
                 xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
-
+    
     # 第二个 heatmap，显示非零数值
     sns.heatmap(gamma_df, annot=gamma_annot, fmt="", cmap='Greys', ax=ax,
-                annot_kws={'color':'#cd21ab','size': 60,'va':'top'},
+                annot_kws={'color':'#F5EF70','size': 60,'va':'bottom'},
                 xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
 
+   
     # 第三个 heatmap，不显示标记
     newcmp = hyde_visual_cmap()
     
@@ -311,12 +334,11 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename,b1):
                 vmin=0, vmax=1, linewidths=1.5, linecolor='black',square=True)
     
     m = ax.imshow(gamma_df, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)  
-    position=fig.add_axes([0.88, 0.2, 0.05, 0.7])
+    position=fig.add_axes([0.9, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
     cbar.ax.tick_params(labelsize=40)  
-    cbar.set_label('Heatmap of y Values', fontsize=50,labelpad=10)
+    #cbar.set_label('Heatmap of y Values', fontsize=50,labelpad=10)
     
-
     plt.savefig(filename+"_hotmap.png", dpi=300)
     plt.cla()
     plt.close("all")
@@ -379,10 +401,10 @@ def rejust_root_dist(sptree):
 
     return sptree
 
-def hyde_visual_leaf_main(hybrid_tracer,sptree):
-    temp_directory = hybrid_tracer
-    merge_files(temp_directory, '-out.txt', 'merged_out.txt')
-    merge_files(temp_directory, '-filtered.txt', 'merged_filtered.txt')
+def hyde_visual_leaf_main(sptree):
+    # temp_directory = hybrid_tracer
+    # merge_files(temp_directory, '-out.txt', 'merged_out.txt')
+    # merge_files(temp_directory, '-filtered.txt', 'merged_filtered.txt')
 
     out1=parse_hyde_out('merged_out.txt')
     out2=parse_hyde_out('merged_filtered.txt')
@@ -400,10 +422,10 @@ def hyde_visual_leaf_main(hybrid_tracer,sptree):
         os.remove(f"{k}_hotmap.png")
         os.remove(f'{k}_img_faces.png')
 
-def hyde_visual_node_main(hybrid_tracer,sptree):
-    temp_directory = hybrid_tracer
-    merge_files(temp_directory, '-out.txt', 'merged_out.txt')
-    merge_files(temp_directory, '-filtered.txt', 'merged_filtered.txt')
+def hyde_visual_node_main(sptree):
+    # temp_directory = hybrid_tracer
+    # merge_files(temp_directory, '-out.txt', 'merged_out.txt')
+    # merge_files(temp_directory, '-filtered.txt', 'merged_filtered.txt')
 
     out1=parse_hyde_out('merged_out.txt')
     out2=parse_hyde_out('merged_filtered.txt')
@@ -429,5 +451,5 @@ def hyde_visual_node_main(hybrid_tracer,sptree):
 if __name__ == "__main__":
     sptree=Tree('sptree.nwk')
     hyde_visual_leaf_main(sptree)
-    hyde_visual_node_main(sptree) 
+    #hyde_visual_node_main(sptree) 
 
