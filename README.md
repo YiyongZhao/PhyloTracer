@@ -86,6 +86,12 @@ pip install PhyloTracer
 * Introducing the concept of long-branch genes for noise filtration in gene trees.   
 * Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.
 * Use GD clade to verify hybridization signals between species.
+1.Root Relative Branch Ratio (RRBR): The relative branch length ratio based on the root. It represents the ratio between the branch length of a gene and the average branch length of all genes in the gene family tree.
+
+$$
+\text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
+$$
+
 ---
 ## Installation
 
