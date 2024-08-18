@@ -100,9 +100,9 @@ $$
 $$
 
 Where:
-- **Branch Length** is the branch length of the specified gene.
-- **Average Branch Length** is the average branch length of all genes in the gene family tree.
-- **Sister Branch Length** is the branch length of the nearest "neighbor" or "sister" gene of the specified gene.
+- **Branch Length** : is the branch length of the specified gene.
+- **Average Branch Length** : is the average branch length of all genes in the gene family tree.
+- **Sister Branch Length** : is the branch length of the nearest "neighbor" or "sister" gene of the specified gene.
 
 ---
 ## Installation
