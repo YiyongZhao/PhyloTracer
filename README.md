@@ -86,7 +86,6 @@ pip install PhyloTracer
 * Introducing the concept of long-branch genes for noise filtration in gene trees.   
 * Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.
 * Use GD clade to verify hybridization signals between species.
-# <img src="logo/24b4fdb314cc4d34caf572440dc29406.png" width="80" height="80" align="center"> PhyloTracer </div> 
 ---
 ## Installation
 
