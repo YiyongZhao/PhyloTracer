@@ -85,7 +85,7 @@ pip install PhyloTracer
 * Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroup branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
 * Introducing the concept of long-branch genes for noise filtration in gene trees.   
 * Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.
-* Use GD to verify hybridization signals between species.   
+* Use GD clade to verify hybridization signals between species.   
 ---
 ## Installation
 
