@@ -82,13 +82,16 @@ pip install PhyloTracer
 ```
 ---
 ## Features
-* Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroup branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.   
-* Introducing the concept of long-branch genes for noise filtration in gene trees.   
-* Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.Root Relative Branch Ratio (RRBR): The relative branch length ratio based on the root. It represents the ratio between the branch length of a gene and the average branch length of all genes in the gene family tree.
+* Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroup branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.
+* Introducing the concept of long-branch genes for noise filtration in gene trees.
+* Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.
+
+Root Relative Branch Ratio (RRBR): The relative branch length ratio based on the root. It represents the ratio between the branch length of a gene and the average branch length of all genes in the gene family tree.
 
 $$
 \text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
 $$
+
 Sister Relative Branch Ratio (SRBR): The relative branch length ratio based on the nearest neighbor or "sister" gene. It represents the ratio between the branch length of a gene and the branch length of its nearest neighbor gene.
 
 $$
@@ -96,8 +99,6 @@ $$
 $$
 
 * Use GD clade to verify hybridization signals between species.
-
-
 ---
 ## Installation
 
