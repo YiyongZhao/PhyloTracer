@@ -83,6 +83,7 @@ pip install PhyloTracer
 ---
 ## Features
 * Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroup branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.
+* Use GD clade to verify hybridization signals between species.
 * Introducing the concept of long-branch genes for noise filtration in gene trees.
 * Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.
 
@@ -98,7 +99,11 @@ $$
 \text{SRBR} = \frac{\text{Branch Length} - \text{Sister Branch Length}}{\text{Sister Branch Length}}
 $$
 
-* Use GD clade to verify hybridization signals between species.
+Where:
+- **Branch Length** is the branch length of the specified gene.
+- **Average Branch Length** is the average branch length of all genes in the gene family tree.
+- **Sister Branch Length** is the branch length of the nearest "neighbor" or "sister" gene of the specified gene.
+
 ---
 ## Installation
 
