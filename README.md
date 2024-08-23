@@ -200,11 +200,6 @@ Usage:
     Phylo_Tracer.py Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk 
 ```
 ### OrthoFilter_LB
-```
-Description:
-    To prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length
-Root Relative Branch Ratio (RRBR): The relative branch length ratio based on the root. It represents the ratio between the branch length of a gene and the average branch length of all genes in the gene family tree.
-
 $$
 \text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
 $$
@@ -220,6 +215,10 @@ Where:
 - **Average Branch Length** : is the average branch length of all genes in the gene family tree.
 - **Sister Branch Length** : is the branch length of the nearest "neighbor" or "sister" gene of the specified gene.
 
+```
+Description:
+    To prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length
+Root Relative Branch Ratio (RRBR): The relative branch length ratio based on the root. It represents the ratio between the branch length of a gene and the average branch length of all genes in the gene family tree.
 Required parameter:
     --input_GF_list             File containing paths to gene tree files, one per line
     --input_imap                File with classification information of species corresponding to genes
