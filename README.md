@@ -86,24 +86,7 @@ pip install PhyloTracer
 * Use GD clade to verify hybridization signals between species.
 * Introducing the concept of long-branch genes for noise filtration in gene trees.
 * Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.
-
-Root Relative Branch Ratio (RRBR): The relative branch length ratio based on the root. It represents the ratio between the branch length of a gene and the average branch length of all genes in the gene family tree.
-
-$$
-\text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
-$$
-
-Sister Relative Branch Ratio (SRBR): The relative branch length ratio based on the nearest neighbor or "sister" gene. It represents the ratio between the branch length of a gene and the branch length of its nearest neighbor gene.
-
-$$
-\text{SRBR} = \frac{\text{Branch Length} - \text{Sister Branch Length}}{\text{Sister Branch Length}}
-$$
-
-Where:
-- **Branch Length** : is the branch length of the specified gene.
-- **Average Branch Length** : is the average branch length of all genes in the gene family tree.
-- **Sister Branch Length** : is the branch length of the nearest "neighbor" or "sister" gene of the specified gene.
-
+  
 ---
 ## Installation
 
@@ -220,6 +203,23 @@ Usage:
 ```
 Description:
     To prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length
+Root Relative Branch Ratio (RRBR): The relative branch length ratio based on the root. It represents the ratio between the branch length of a gene and the average branch length of all genes in the gene family tree.
+
+$$
+\text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
+$$
+
+Sister Relative Branch Ratio (SRBR): The relative branch length ratio based on the nearest neighbor or "sister" gene. It represents the ratio between the branch length of a gene and the branch length of its nearest neighbor gene.
+
+$$
+\text{SRBR} = \frac{\text{Branch Length} - \text{Sister Branch Length}}{\text{Sister Branch Length}}
+$$
+
+Where:
+- **Branch Length** : is the branch length of the specified gene.
+- **Average Branch Length** : is the average branch length of all genes in the gene family tree.
+- **Sister Branch Length** : is the branch length of the nearest "neighbor" or "sister" gene of the specified gene.
+
 Required parameter:
     --input_GF_list             File containing paths to gene tree files, one per line
     --input_imap                File with classification information of species corresponding to genes
