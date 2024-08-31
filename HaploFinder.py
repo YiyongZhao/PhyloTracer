@@ -119,27 +119,36 @@ def read_gd_pairs(gd_lst):
             dict_gd[reverse_index]=dict_gd1[index]
     return dict_gd
     
-def plot_dot(root,data,loc1,loc2,gl,dict_gd):
-    gl_start1,gl_start2=0.95,0.05
+def plot_dot(root, data, loc1, loc2, gl,dict_gd):
+    gl_start1, gl_start2 = 0.95, 0.05
+    
     for pair, wgd_notch in dict_gd.items():
-        fd=pair.strip().split(":")
-        gene1=fd[0]
-        gene2=fd[1]
-        index= gene1+":"+gene2
+        fd = pair.strip().split(":")
+        gene1 = fd[0]
+        gene2 = fd[1]
+        index = gene1 + ":" + gene2
         if gene1 in loc1.keys() and gene2 in loc2.keys():
-            x,y=loc1[gene1],loc2[gene2]
-            x,y=gl_start1-x,gl_start2+y
-            if index in dict_gd.keys():
-                if dict_gd[index] == "red":
-                    DrawCircle(root,[y,x],0.001,'red',0.6)
-                if dict_gd[index] == "green":
-                    DrawCircle(root,[y,x],0.001,'green',0.6)
-                if dict_gd[index] == "orange":
-                    DrawCircle(root,[y,x],0.001,'orange',0.6)
-                if dict_gd[index] == "blue":
-                    DrawCircle(root,[y,x],0.001,'blue',0.6)
-                if dict_gd[index] == "NONE":
-                    DrawCircle(root,[y,x],0.001,'gray',0.6)   
+            x, y = loc1[gene1], loc2[gene2]
+            x, y = gl_start1 - x, gl_start2 + y
+            if dict_gd[index] == "NONE":
+                DrawCircle(root, [y, x], 0.001, 'gray', 0.6)
+
+    for pair, wgd_notch in dict_gd.items():
+        fd = pair.strip().split(":")
+        gene1 = fd[0]
+        gene2 = fd[1]
+        index = gene1 + ":" + gene2
+        if gene1 in loc1.keys() and gene2 in loc2.keys():
+            x, y = loc1[gene1], loc2[gene2]
+            x, y = gl_start1 - x, gl_start2 + y
+            if dict_gd[index] == "red":
+                DrawCircle(root, [y, x], 0.001, 'red', 0.6)
+            elif dict_gd[index] == "green":
+                DrawCircle(root, [y, x], 0.001, 'green', 0.6)
+            elif dict_gd[index] == "purple":
+                DrawCircle(root, [y, x], 0.001, 'purple', 0.6)
+            elif dict_gd[index] == "blue":
+                DrawCircle(root, [y, x], 0.001, 'blue', 0.6)   
 
 def DrawCircle(ax, loc, radius,color, alpha):
     circle = mpatches.Circle(loc, radius, edgecolor="none", facecolor=color, alpha=alpha)
@@ -220,6 +229,7 @@ def find_dup_node(Phylo_t:object)->list:#After searching for duplication events,
             events_node_name_list = i.split(',')
             common_ancestor_node_name = Phylo_t.get_common_ancestor(events_node_name_list)
             dup_node_name_list.append(common_ancestor_node_name)
+            
     return dup_node_name_list
 
 
@@ -260,17 +270,49 @@ def get_gene_pairs(t,sp1,sp2):
     gene_pairs = generate_combinations(sp1_gene_list, sp2_gene_list)
     return gene_pairs
 
+def find_independent_dup_nodes(dup_node_list, Phylo_t: object) -> list:
+    """
+    Find independent duplication nodes (gd) that are not on the same path in the phylogenetic tree.
+
+    Args:
+        dup_node_list (list): A list of duplication node objects.
+        Phylo_t (object): The phylogenetic tree object.
+
+    Returns:
+        list: A list of independent duplication node names (gd).
+    """
+    dup_node_list.sort(key=lambda x: len(x.get_leaf_names()))
+    node_dic={}
+
+    for node in dup_node_list:
+        if len(get_species_set(node))==1:
+            continue
+        else:
+            tips=len(node)
+            if tips in node_dic:
+                node_dic[tips].append(node)
+            else:
+                node_dic[tips]=[node]
+    if node_dic:
+        min_key_value = min(node_dic.items(), key=lambda x: x[0])
+
+        return min_key_value[1]       
+    else:
+        return []
+
 def process_gd_result(gf,imap,sp1,sp2):
     tre_dic=read_and_return_dict(gf)
     gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(imap)
     rename_sp1=taxa2voucher_dic[sp1]
     rename_sp2=taxa2voucher_dic[sp2]
     processed_lines=[]
+    written_results = set()
     for tre_ID, tre_path in tre_dic.items():
         Phylo_t0 = read_phylo_tree(tre_path)
         Phylo_t0.resolve_polytomy(recursive=True)
         Phylo_t0.sort_descendants()
         Phylo_t1 = rename_input_tre(Phylo_t0, gene2new_named_gene_dic)
+
         if len(get_species_set(Phylo_t1)) == 1:
             continue
         sps_tol=get_species_set(Phylo_t1)
@@ -278,14 +320,38 @@ def process_gd_result(gf,imap,sp1,sp2):
         if len(sps_tol)==2 and {sp1,sp2} not in sps_tol:
             continue
 
-        paral_clade_list = find_dup_node(Phylo_t1)
-        gene_pairs = get_gene_pairs(Phylo_t1,rename_sp1,rename_sp2)
+        dup_node_list = find_dup_node(Phylo_t1)
+        paral_clade_list = find_independent_dup_nodes(dup_node_list,Phylo_t1)
 
         
-        for item in gene_pairs:
-            result = filter_gd(item, paral_clade_list, new_named_gene2gene_dic)
-            if result:
-                processed_lines.append(result)
+        for i in paral_clade_list:
+            if len(i)==3:
+                gene_pairs = get_gene_pairs(i, rename_sp1, rename_sp2)
+                for item in gene_pairs:
+                    item1_set=set(item)
+                    gd_clade1, gd_clade2 = i.get_children()
+                    gd_tips1 = [leaf for leaf in gd_clade1.get_leaf_names()]
+                    gd_tips2 = [leaf for leaf in gd_clade2.get_leaf_names()]
+                    set1 = set(gd_tips1)
+                    set2 = set(gd_tips2)
+                    if item1_set <= set1:
+                        # if gd_clade1.support >=100:
+                            result= new_named_gene2gene_dic[item[0]] + '\t' + new_named_gene2gene_dic[item[1]] + '\t' + 'green'+'\n'
+                            s=item[1]+'-g'# + '\t' + new_named_gene2gene_dic[item[1]]
+                    elif item1_set <= set2:
+                        # if gd_clade2.support >=100:
+                            result= new_named_gene2gene_dic[item[0]] + '\t' + new_named_gene2gene_dic[item[1]] + '\t' + 'green'+'\n'
+                            s=item[1]+'-g'# + '\t' + new_named_gene2gene_dic[item[1]]
+                    else:
+
+                        result= new_named_gene2gene_dic[item[0]] + '\t' + new_named_gene2gene_dic[item[1]] + '\t' + 'red'+'\n'
+                        s=item[1]+'-r'# + '\t' + new_named_gene2gene_dic[item[1]]
+
+                    if result and s not in written_results:
+
+                        processed_lines.append(result)  
+                        written_results.add(s)
+
     sorted_lines = sorted(processed_lines, key=lambda x: x.split('\t')[2])
     return sorted_lines
 
