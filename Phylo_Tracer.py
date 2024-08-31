@@ -65,110 +65,110 @@ subparsers = parser.add_subparsers(dest='command', help='available programs:')
 
 # PhyloTree_CollapseExpand command
 PhyloTree_CollapseExpand_parser = subparsers.add_parser('PhyloTree_CollapseExpand', help='PhyloTree_CollapseExpand help')
-PhyloTree_CollapseExpand_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-PhyloTree_CollapseExpand_parser.add_argument('--support_value', type=int,required=True, help='If the support of the node is less than this value, it will be folded')
-PhyloTree_CollapseExpand_parser.add_argument('--revert', action='store_true', help='Revert this comb structure back to a fully resolved binary tree')
+PhyloTree_CollapseExpand_parser.add_argument('--input_GF_list', metavar='file', required=True, help='File containing paths to gene tree files, one per line')
+PhyloTree_CollapseExpand_parser.add_argument('--support_value', type=int,required=True, help='Nodes whose support is less than or equal to support_value will be converted')
+PhyloTree_CollapseExpand_parser.add_argument('--revert', action='store_true', help='Revert this comb structure to a fully resolved binary tree')
 
 # PhyloSupport_Scaler command
 PhyloSupport_Scaler_parser = subparsers.add_parser('PhyloSupport_Scaler', help='PhyloSupport_Scaler help')
-PhyloSupport_Scaler_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-PhyloSupport_Scaler_parser.add_argument('--scale_to', type=str,  choices=['1', '100'],help='[1/100] you can only input 1 or 100 Whether to scale branch support information')
+PhyloSupport_Scaler_parser.add_argument('--input_GF_list', metavar='file', required=True, help='File containing paths to gene tree files, one per line')
+PhyloSupport_Scaler_parser.add_argument('--scale_to', type=str,  choices=['1', '100'],help='Input 1 to scale support values from 1-100 to 0-1, or 100 to scale from 0-1 to 1-100')
 
 # BranchLength_NumericConverter command
 BranchLength_NumericConverter_parser = subparsers.add_parser('BranchLength_NumericConverter', help='BranchLength_NumericConverter help')
-BranchLength_NumericConverter_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-BranchLength_NumericConverter_parser.add_argument('--decimal_place', type=int, help='Set how many decimal places to keep')
+BranchLength_NumericConverter_parser.add_argument('--input_GF_list', metavar='file', required=True, help='File containing paths to gene tree files, one per line')
+BranchLength_NumericConverter_parser.add_argument('--decimal_place', type=int, help='Return the branch length values to 10 decimal places and default = 10')
 
 # Phylo_Rooter command
 Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Phylo_Rooter help')
-Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-Phylo_Rooter_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='file',  help='Input gene length list')
-Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
+Phylo_Rooter_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
+Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='file',  help='File with information corresponding to gene length')
+Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
 
 # OrthoFilter_LB command
-OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='OrthoFilter_LBr help')
-OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-OrthoFilter_LB_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-OrthoFilter_LB_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-OrthoFilter_LB_parser.add_argument('--branch_length_multiples', type=int, default=5, required=True, help='Branch_length_multiples')
-OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='Visualize the results if set')
+OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='OrthoFilter_LB help')
+OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
+OrthoFilter_LB_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
+OrthoFilter_LB_parser.add_argument('--absolute_branch_length', type=int, default=5, required=True, help='Absolute branch length multiplier and default = 5')
+OrthoFilter_LB_parser.add_argument('--relative_branch_length', type=float, default=2.5, required=True, help='Relative branch length multiplier and default = 5')
+OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
 
 # OrthoFilter_Mono command
 OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='OrthoFilter_Mono help')
-OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
+OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
 OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
-OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 OrthoFilter_Mono_parser.add_argument('--branch_length_multiples', type=int, default=5, required=True, help='Branch_length_multiples')
 OrthoFilter_Mono_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
-OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize the results if set')
+OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
 
 # TreeTopology_Summarizer command
 TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help')
-TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
+TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 
 # Tree_Visualizer command
 Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Tree_Visualizer help')
-Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='file', required=True, help='Input gene tree list')
-Tree_Visualizer_parser.add_argument('--input_imap', metavar='file', required=True, help='Input imap file')
-Tree_Visualizer_parser.add_argument('--species_categories', metavar='file', nargs='+',  help='Species category information')
-Tree_Visualizer_parser.add_argument('--keep_branch', type=str,  choices=['1', '0'],help='[1/0] you can only input 1 or 0 Whether to preserve branch length information')
-Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='Tree style: [r/c] (rectangular) or (circular) (default: rectangular)')
-Tree_Visualizer_parser.add_argument('--gene_family', metavar='file',  required=False, help='Input species tree file')
-Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='Input species tree file')
-Tree_Visualizer_parser.add_argument('--gene_expression', metavar='file',  required=False, help='gene_expression')
+Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='file', required=True, help='File containing paths to gene tree files, one per line')
+Tree_Visualizer_parser.add_argument('--input_imap', metavar='file', required=True, help='File with classification information of species corresponding to genes')
+Tree_Visualizer_parser.add_argument('--species_categories', metavar='file', nargs='+',  help='File with taxonomic information for species')
+Tree_Visualizer_parser.add_argument('--keep_branch', type=str,  choices=['1', '0'],help='1 or 0 indicates whether or not to preserve branch length information')
+Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='The tree style, r is meaning rectangular, c is meaning circular')
+Tree_Visualizer_parser.add_argument('--gene_family', metavar='file',  required=False, help='If you want to mark gene families you need to provide this file')
+Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A species tree file with Newick format')
+Tree_Visualizer_parser.add_argument('--gene_expression', metavar='file',  required=False, help='Gene expression level files')
 
 # GD_Detector command
 GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
-GD_Detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-GD_Detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+GD_Detector_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
+GD_Detector_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 GD_Detector_parser.add_argument('--gd_support', type=int,required=True, help='GD node support [50-100]')
-GD_Detector_parser.add_argument('--subclade_support', type=int,required=True, help='The children support of GD node [0-100]')
-GD_Detector_parser.add_argument('--dup_species_proportion', type=float ,required=True,help='The proportion of species with species duplications under the GD node [0-1]')
+GD_Detector_parser.add_argument('--subclade_support', type=int,required=True, help='The subclade support of GD node [0-100]')
+GD_Detector_parser.add_argument('--dup_species_proportion', type=float ,required=True,help='The proportion of overlappped species from two subclade for a GD event with range [0-1] and default = 0.2')
 GD_Detector_parser.add_argument('--dup_species_num', type=int ,required=True,help='The number of species with species duplications under the GD node')
-GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
-GD_Detector_parser.add_argument('--deepvar',type=int,required=True, help='Maximum variance of deepth: 1')
+GD_Detector_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
+GD_Detector_parser.add_argument('--deepvar',type=int,required=True, help='Maximum variance of deepth and default = 1')
 
 # GD_Visualizer command
 GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='GD_Visualizer help')
-GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree filet')
-GD_Visualizer_parser.add_argument('--gd_result', metavar='file',  required=True, help='The output of GD_Detector')
+GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A numbered species tree file with Newick format')
+GD_Visualizer_parser.add_argument('--gd_result', metavar='file',  required=True, help='Result file of GD_Detecto')
 
 # GD_Loss_Tracker command
 GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_Tracker help')
-GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gf list')
-GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree filet')
-GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
+GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
+GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
-GD_Loss_Visualizer_parser.add_argument('--input_folder', type=str,  required=True, help='Input foldername')
-GD_Loss_Visualizer_parser.add_argument('--output_folder', type=str,  required=True, help='Output foldername')
+GD_Loss_Visualizer_parser.add_argument('--input_folder', type=str,  required=True, help='The result folder name of GD_Loss_Tracker')
+GD_Loss_Visualizer_parser.add_argument('--output_folder', type=str,  required=True, help='Output folder name')
 
 # Ortho_Retriever command
 Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help')
-Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-Ortho_Retriever_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
-Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='file',  required=True, help='Input gene length list')
+Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
+Ortho_Retriever_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
+Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='file',  required=True, help='File with information corresponding to gene length')
 
 # Hybrid_Tracer
 Hybrid_Tracer_parser = subparsers.add_parser('Hybrid_Tracer', help='Hybrid_Tracer help')
-Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='Input gene tree list')
-Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='file',  required=True, help='Seq file list')
-Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
-Hybrid_Tracer_parser.add_argument('--input_imap', metavar='file',  required=True, help='Input imap file')
+Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
+Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='file',  required=True, help='File containing paths to sequence alignment files corresponding to the gene trees')
+Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
+Hybrid_Tracer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 
 # Hybrid_Visualizer
 Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybrid_Visualizer help')
-Hybrid_Visualizer_parser.add_argument('--input_hybrid_folder', type=str,  required=True, help='The results of Hybrid_Tracer')
-Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='Input species tree file')
+Hybrid_Visualizer_parser.add_argument('--input_hybrid_folder', type=str,  required=True, help='The result folder name of Hybrid_Tracer')
+Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
 Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light")
 
 #HaploFinder
 HaploFinder = subparsers.add_parser('HaploFinder', help='HaploFinder help')
-HaploFinder.add_argument('--input_GF_list', metavar='FILE', required=True, help='Input gene tree list file')
-HaploFinder.add_argument('--input_imap', metavar='FILE', required=True, help='Input imap file')
+HaploFinder.add_argument('--input_GF_list', metavar='FILE', required=True, help='File containing paths to gene tree files, one per line file')
+HaploFinder.add_argument('--input_imap', metavar='FILE', required=True, help='File with classification information of species corresponding to genes')
 HaploFinder.add_argument('--species_a', type=str, required=True, help='Name of species A')
 HaploFinder.add_argument('--species_b', type=str, required=True, help='Name of species B')
 HaploFinder.add_argument('--species_a_gff', metavar='FILE', required=True, help='GFF file of species A')
@@ -265,17 +265,16 @@ def main():
         
     elif args.command == 'OrthoFilter_LB':
         # Execute the OrthoFilter_LB function
-        if args.input_GF_list and args.input_imap and args.input_taxa and args.branch_length_multiples :
+        if args.input_GF_list and args.input_imap and args.absolute_branch_length and args.relative_branch_length :
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
-            input_taxa=args.input_taxa
-            long_branch_index=args.branch_length_multiples
+            absolute_branch_length=args.absolute_branch_length-1
+            relative_branch_length=args.relative_branch_length-1
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer(input_imap)
             
             tre_dic = read_and_return_dict(input_GF_list)
-            taxa_dic=read_and_return_dict(input_taxa)
-            prune_main_LB(tre_dic,taxa_dic,long_branch_index,gene2new_named_gene_dic, new_named_gene2gene_dic,visual=args.visual)
+            prune_main_LB(tre_dic,voucher2taxa_dic,gene2new_named_gene_dic, new_named_gene2gene_dic,absolute_branch_length,relative_branch_length,visual=args.visual)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -536,7 +535,8 @@ def main():
             generate_and_print_dotplot(process_gd_pairs, 'gd_pairs')
             
             total_pairs = process_blastp_pairs + process_synteny_pairs + process_gd_pairs
-            generate_and_print_dotplot(total_pairs, 'total_pairs')
+            process_total_pairs=sorted(total_pairs, key=lambda x: x.split('\t')[2])
+            generate_and_print_dotplot(process_total_pairs, 'total_pairs')
             
             # Calculate and print execution time
             end_time = time.time()
