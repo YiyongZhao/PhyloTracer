@@ -1,5 +1,4 @@
 from __init__ import *
-
 def fold_same_taxa(t):
     t1=t.copy()
     for node in t1.traverse():
@@ -83,25 +82,29 @@ def get_absolutely_result(outfile,trees,voucher2taxa_dic):
             
     sorted_dict = dict(sorted(topolo_dic.items(), key=lambda x: len(x[0]), reverse=True))
     with open(f'absolute_{outfile}.txt', 'w') as file:
+        file.write(f'topology_id\ttopology_num\ttopology\n')
         for num,k in enumerate(sorted_dict):
             t1=Tree(k)
             t2=rename_input_tre(t1,voucher2taxa_dic)
             t1_str=t2.write(format=9)
-            file.write(f'{num}\t{t1_str}\t{sorted_dict[k]}\n')
+            file.write(f'{num}\t{sorted_dict[k]}\t{t1_str}\n')
 
 def statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic):
     only_sptrees=[]
+    sctrees=[]
     for k,v in tre_dic.items():
         t=read_tree(v)
         t1=rename_input_tre(t,gene2new_named_gene_dic)
         t1.sort_descendants()
         t2=get_only_sps_tree(t1)
+        if len(get_species_set(t2))==len(t2):
+            sctrees.append(t2)
         only_sptrees.append(t2)
         
     get_absolutely_result(outfile,only_sptrees,voucher2taxa_dic)
     
     dic={}
-    process_tree(only_sptrees,dic)
+    process_tree(sctrees,dic)
     get_summary_result(outfile,dic,voucher2taxa_dic)
     
 
