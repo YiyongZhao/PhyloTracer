@@ -70,24 +70,23 @@ def remove_long_branches(phylo_t: object, absolute_branch_length: int, relative_
     tips_avg_length = get_average_tip_length(phylo_t1)
   
     for leaf in phylo_t1:
-        if leaf.dist!=0:
-            sps_gene = leaf.name
-            distance = leaf.dist
-            distance_to_root_ratio = (distance-tips_avg_length) / tips_avg_length
-            sister = leaf.get_sisters()[0]
-            if sister.is_leaf():
-                sister_avg_length=sister.dist
-                if sister_avg_length==0:
-                    leaf_to_sister_ratio=4
-                else:
-                    leaf_to_sister_ratio = (distance - sister_avg_length) / sister_avg_length
+        sps_gene = leaf.name
+        distance = leaf.dist
+        distance_to_root_ratio = (distance-tips_avg_length) / tips_avg_length
+        sister = leaf.get_sisters()[0]
+        if sister.is_leaf():
+            sister_avg_length=sister.dist
+            if sister_avg_length==0:
+                leaf_to_sister_ratio=4
             else:
-                sister_avg_length=get_average_node_length(sister)
-                if sister_avg_length==0:
-                    leaf_to_sister_ratio=4
-                else:
-                    leaf_to_sister_ratio = (distance - sister_avg_length) / sister_avg_length
-            
+                leaf_to_sister_ratio = (distance - sister_avg_length) / sister_avg_length
+        else:
+            sister_avg_length=get_average_node_length(sister)
+            if sister_avg_length==0:
+                leaf_to_sister_ratio=4
+            else:
+                leaf_to_sister_ratio = (distance - sister_avg_length) / sister_avg_length
+        if leaf.dist!=0:
             if distance_to_root_ratio >= absolute_branch_length:
                 if leaf_to_sister_ratio >= relative_branch_length:
                     outfile.write(f"{tre_ID}\t*\t{new_named_gene2gene_dic[sps_gene]}\t{distance_to_root_ratio}\t{leaf_to_sister_ratio}\n")
@@ -154,40 +153,24 @@ def prune_main_LB(tre_dic: dict, voucher2taxa_dic: dict, gene2new_named_gene_dic
 
         output_file = open(os.path.join(dir_path_long_branch, f'{tre_ID}_delete_gene.txt'), 'w')
         output_file.write('tre_ID\tlong_branch_label\tgene\troot_relative_branch_ratio\tsister_relative_branch_ratio\n')        
-        if has_multiple_copies(t):
-            if visual:
-                style_tree(t, color_dic, new_named_gene2gene_dic)
-                generate_pdf_before(tre_ID, t)
+        
+        if visual:
+            style_tree(t, color_dic, new_named_gene2gene_dic)
+            generate_pdf_before(tre_ID, t)
 
-            t1 = remove_long_branches(t, absolute_branch_length, relative_branch_length,output_file, tre_ID, new_named_gene2gene_dic)
-            output_file.close()
+        t1 = remove_long_branches(t, absolute_branch_length, relative_branch_length,output_file, tre_ID, new_named_gene2gene_dic)
+        output_file.close()
 
-            if visual:
-                generate_pdf_after(tre_ID, t1)
-                merge_pdfs(f"{tre_ID}_before.pdf", f"{tre_ID}_after.pdf", os.path.join(dir_path_pdf, f"{tre_ID}.pdf"))
-                os.remove(f"{tre_ID}_before.pdf")
-                os.remove(f"{tre_ID}_after.pdf")
+        if visual:
+            generate_pdf_after(tre_ID, t1)
+            merge_pdfs(f"{tre_ID}_before.pdf", f"{tre_ID}_after.pdf", os.path.join(dir_path_pdf, f"{tre_ID}.pdf"))
+            os.remove(f"{tre_ID}_before.pdf")
+            os.remove(f"{tre_ID}_after.pdf")
 
-            t2 = rename_input_tre(t1, new_named_gene2gene_dic)
-            tree_str = trans_branch_length(t2)
-            write_tree_to_newick(tree_str, tre_ID, dir_path_pruned)
-        else:
-            if visual:
-                style_tree(t, color_dic, new_named_gene2gene_dic)
-                generate_pdf_before(tre_ID, t)
-
-            t1 = remove_long_branches(t, absolute_branch_length, relative_branch_length,output_file, tre_ID, new_named_gene2gene_dic)
-            output_file.close()
-
-            if visual:
-                generate_pdf_after(tre_ID, t1)
-                merge_pdfs(f"{tre_ID}_before.pdf", f"{tre_ID}_after.pdf", os.path.join(dir_path_pdf, f"{tre_ID}.pdf"))
-                os.remove(f"{tre_ID}_before.pdf")
-                os.remove(f"{tre_ID}_after.pdf")
-
-            t2 = rename_input_tre(t1, new_named_gene2gene_dic)
-            tree_str = trans_branch_length(t2)
-            write_tree_to_newick(tree_str, tre_ID, dir_path_pruned)
+        t2 = rename_input_tre(t1, new_named_gene2gene_dic)
+        tree_str = trans_branch_length(t2)
+        write_tree_to_newick(tree_str, tre_ID, dir_path_pruned)
+        
 
         pbar.update(1)
     pbar.close()
