@@ -158,7 +158,6 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
         gene_color_dict=get_color_dict(gene2fam)
     color_dicts = generate_color_dict(gene_categories)
     faces_added = set()  # used to track the added faces
-
     def add_face_to_node(node, face, column, position="aligned"):
         if (node, column, position) not in faces_added:
             node.add_face(face, column=column, position=position)
@@ -168,19 +167,19 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
         if (node, column, "aligned") not in faces_added:
             if species in color_dict:
                 color = color_dict[species].split('@')[-1]
-                face = TextFace("   ▐" + '  ' + color_dict[species].split('@')[0], fgcolor=color,ftype='Arial')
+                face = TextFace("  ▐" + '  ' + color_dict[species].split('@')[0], fgcolor=color,ftype='Arial')
                 add_face_to_node(node, face, column, position="aligned")
 
     def add_species_face(node, species):
         if species in sps_color_dict:
             color = sps_color_dict[species].split('@')[-1]
-            face = TextFace(' ' + gene, fgcolor=color,ftype='Arial', fstyle='italic')
-            node.add_face(face, column=-1)
+            gene_face = TextFace(' ' + gene, fgcolor=color,ftype='Arial', fstyle='italic')
+            node.add_face(gene_face, column=-1)
 
         if species in sps_color_dict:
             color = sps_color_dict[species].split('@')[-1]
-            face4 = TextFace("   ▐" + '  ' + sps_color_dict[species].split('@')[0], fgcolor=color,ftype='Arial', fstyle='italic')
-            add_face_to_node(node, face4, 0, position="aligned")
+            species_face = TextFace("  ▐" + '  ' + sps_color_dict[species].split('@')[0], fgcolor=color,ftype='Arial', fstyle='italic')
+            add_face_to_node(node, species_face, 0, position="aligned")
 
     def add_gene_face(node, gene):
         matched_key = None
@@ -192,7 +191,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                 break
         if matched_value:
             color = matched_value.split('@')[-1]
-            face5 = TextFace("   ▐" + '  ' +  matched_value.split('@')[0], fgcolor=color,ftype='Arial', fstyle='italic')
+            face5 = TextFace("  ▐" + '  ' +  matched_value.split('@')[0], fgcolor=color,ftype='Arial')
             add_face_to_node(node, face5, column, position="aligned")
 
     
@@ -206,8 +205,8 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
             for color_dict in color_dicts:
                 generate_face_mark(node, gene, column, color_dict)
                 column += 1
-            if gene2fam is not None and  gene[4:] in gene_color_dict:
-                add_gene_face(node, gene[4:])
+            if gene2fam is not None and  gene in gene_color_dict:
+                add_gene_face(node, gene)
             else:
                 pass
 
@@ -241,18 +240,22 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
     def add_heat_map_to_node(tree,df,new_named_gene2gene_dic,gene_categories):
         for node in tree:
             gene = new_named_gene2gene_dic[node.name]
-            only_gene='_'.join(gene.split('_')[1:])
-            if node.is_leaf() and only_gene in df.index:
-                n=len(gene_categories)+1
+            matched_key = None
+            matched_value = None
+            for key in df.index:
+                if fuzzy_match(key, gene):
+                    matched_key = key
+            if node.is_leaf() and matched_key in df.index:
+                n=len(gene_categories)+2
                 for i in df.columns.tolist():
-                    color = get_color(df[i][only_gene])
+                    color = get_color(df[i][matched_key])
                     face=RectFace(width=10, height=10, fgcolor=color,bgcolor=color)
                     node.add_face(face, column=n, position='aligned')
                     n+=1
                     
     def add_header_to_tree(ts,df,gene_categories):
         labels = df.columns.to_list()
-        n=len(gene_categories)+1
+        n=len(gene_categories)+2
         for i in labels:
             face=TextFace(' '+i,fgcolor='black',fsize=9)
             face.rotation=-90
@@ -285,16 +288,17 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
 
 def get_matched_value(gene, gene2fam):
     for key, value in gene2fam.items():
-        if fuzzy_match(key, gene):
+        if fuzzy_match(gene, key):
             return key, value
     return None, None
 
     
-def get_fam_dic(t, gene2fam):
+def get_fam_dic(t, gene2fam,new_named_gene2gene_dic):
     fam_dic = {}
     for i in t:
-        gene = i.name[4:]
+        gene = new_named_gene2gene_dic[i.name]
         match_gene, match_family = get_matched_value(gene, gene2fam)
+        #print(f'{match_gene}\t{match_family}')
         if match_family and match_family in gene2fam.values():
             fam_dic.setdefault(match_family, []).append(i.name)
     return fam_dic
@@ -306,9 +310,9 @@ def find_combinations(my_list):
             combinations.append((my_list[i], my_list[j]))
     return combinations
 
-def get_dup_family_dic(t,gene2fam):
+def get_dup_family_dic(t,gene2fam,new_named_gene2gene_dic):
     fam_node_dic={}
-    fam_dic=get_fam_dic(t,gene2fam)
+    fam_dic=get_fam_dic(t,gene2fam,new_named_gene2gene_dic)
     for k,v in fam_dic.items():
         nodes=set()
         com=find_combinations(v)
@@ -318,9 +322,9 @@ def get_dup_family_dic(t,gene2fam):
         fam_node_dic[k]=nodes
     return fam_node_dic
 
-def mapping_sptree(t,sptree,sp_node_dic,gene2fam):
+def mapping_sptree(t,sptree,sp_node_dic,gene2fam,new_named_gene2gene_dic):
     
-    fam_node_dic=get_dup_family_dic(t,gene2fam)
+    fam_node_dic=get_dup_family_dic(t,gene2fam,new_named_gene2gene_dic)
     for k,v in fam_node_dic.items():
         for i in v :
             clade=t&i
@@ -348,8 +352,31 @@ def get_sptree_style(sorted_dict):
         ts.legend.add_face(TextFace(v.split('@')[1]+' '+k,fsize=20,fgcolor=v.split('@')[0]), column=0)
     return ts
 
-def mark_gene_to_sptree(sptree, sp_node_dic,gene_categories,sorted_dict):
-    color_dicts = generate_color_dict(gene_categories)
+def create_species_mappings(dict_list):
+    gene2sps, gene2family, gene2order, gene2clade = dict_list
+
+    sps2family = {}
+    sps2order = {}
+    sps2clade = {}
+
+    for gene, sps in gene2sps.items():
+        # 将 gene2family 中对应的值存入 sps2family
+        if gene in gene2family:
+            sps2family[sps] = gene2family[gene]
+        # 将 gene2order 中对应的值存入 sps2order
+        if gene in gene2order:
+            sps2order[sps] = gene2order[gene]
+        # 将 gene2clade 中对应的值存入 sps2clade
+        if gene in gene2clade:
+            sps2clade[sps] = gene2clade[gene]
+
+    return [sps2family, sps2order, sps2clade]
+
+def mark_gene_to_sptree(sptree, sp_node_dic,gene_categories,sorted_dict,gene2sps,voucher2taxa_dic):
+    gene_categories_1=gene_categories.copy()
+    gene_categories_1.insert(0, gene2sps)
+    gene_categories_2=create_species_mappings(gene_categories_1)
+    color_dicts = generate_color_dict(gene_categories_2)
     faces_added = set()  # used to track the added faces
     
     def add_face_to_node(node, face, column, position="aligned"):
@@ -420,23 +447,28 @@ def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,t
         pbar.update(1)
     pbar.close()
 
-def mark_gene_to_sptree_main(tre_dic,gene_categories,sptree,gene2fam):
+def mark_gene_to_sptree_main(tre_dic,gene_categories,sptree,gene2fam,gene2sps,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic):
     sorted_dict=get_new_sorted_dict(gene2fam)
     num_tre_node(sptree)
     sp_node_dic={}
     for k,v in tre_dic.items():
         t=read_phylo_tree(v)
         num_tre_node(t)
-        mapping_sptree(t,sptree,sp_node_dic,gene2fam)
-    mark_gene_to_sptree(sptree,sp_node_dic,gene_categories,sorted_dict)
-    rename_sptree(sptree)
+        t1=rename_input_tre(t,gene2new_named_gene_dic)
+        mapping_sptree(t1,sptree,sp_node_dic,gene2fam,new_named_gene2gene_dic)
+
+    sp2=rename_input_tre(sptree,voucher2taxa_dic)
+
+    mark_gene_to_sptree(sp2,sp_node_dic,gene_categories,sorted_dict,gene2sps,voucher2taxa_dic)
+
+    rename_sptree(sp2)
     ts=get_sptree_style(sorted_dict)
-    realign_branch_length(sptree)
-    clade_up=sptree.get_children()[0]
-    clade_down=sptree.get_children()[1]
-    clade_up.dist=1 
-    clade_down.dist=get_max_deepth(clade_up)-1
-    sptree.render(file_name='424species_branch7.pdf',tree_style=ts)
+    realign_branch_length(sp2)
+    clade_up=sp2.get_children()[0]
+    clade_down=sp2.get_children()[1]
+    clade_up.dist=1
+    clade_down.dist=get_max_deepth(clade_up)
+    sp2.render(file_name='genefamily_map2_sptree.pdf',tree_style=ts)
 
 ####################################################################################
 if __name__ == "__main__":
