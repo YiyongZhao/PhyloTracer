@@ -1,6 +1,8 @@
 from __init__ import *
 import matplotlib.pyplot as plt
 import re 
+from PIL import Image
+import math
 
 def extract_numbers_in_parentheses(string):
     pattern = r"\((\d+)\)"
@@ -23,6 +25,39 @@ def get_gd_node_to_species_loss_dic(sp_dic):
 
     return sum_loss_dic
 
+def merge_pngs_matrix(folder_name, output_file='gd_loss_summary_visualizer.png'):
+    images = []
+    for file_name in os.listdir(folder_name):
+        if file_name.endswith('.png'):
+            with Image.open(os.path.join(folder_name, file_name)) as img:
+                images.append(img.copy())
+
+    if not images:
+        print("没有找到 PNG 文件。")
+        return
+
+    total_images = len(images)
+
+    cols = math.ceil(math.sqrt(total_images)) 
+    rows = math.ceil(total_images / cols)      
+
+    widths, heights = zip(*(img.size for img in images))
+    
+    max_width = max(widths)
+    max_height = max(heights)
+    total_width = max_width * cols
+    total_height = max_height * rows
+
+
+    new_image = Image.new('RGB', (total_width, total_height), (255, 255, 255))
+
+
+    for index, img in enumerate(images):
+        x_offset = (index % cols) * max_width
+        y_offset = (index // cols) * max_height
+        new_image.paste(img, (x_offset, y_offset))
+
+    new_image.save(output_file)
 
 def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id, out_dir):
     keys = list(sum_loss_dic.keys())
@@ -37,7 +72,6 @@ def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id, out_dir):
     plt.title('Count of ' + sps + ' Species under Node ' + gd_id, fontsize=16)  
     plt.yticks(fontsize=12)  
 
-    # 添加数据标签
     for key, value in zip(keys, values):
         plt.text(key, value, str(value), ha='center', va='bottom', fontsize=12)
 
@@ -60,9 +94,128 @@ def generate_plt(input_folder,out_dir):
         visualizer_sum_loss_dic(sum_loss_dic,sps,gd_id,out_dir)
         pbar.update(1)
     pbar.close()
+    merge_pngs_matrix(out_dir)
+
+def process_gd_loss_summary():
+    element_counts = {}
+    
+    with open('gd_loss_gf_count_summary.txt', 'r') as f:
+        lines = f.readlines()
+
+        for line in lines[2:]:  
+            line = line.strip()
+            if not line:  
+                continue
+            path = line.split('\t')[0]
+            treeid = line.split('\t')[1:]
+            
+            elements = path.split('->')
+            for i in elements:
+                if i in element_counts:
+                    element_counts[i].update(treeid)  
+                else:
+                    element_counts[i] = set(treeid)  
+    new_dic={}
+    for key in element_counts:
+        new_dic[key] = len(element_counts[key])
+
+    return new_dic
+
+def transform_dict(original_dict):
+    new_dict = {}
+
+    for key, value in original_dict.items():
+        gene_name, number = key.split('(') 
+        number = number.strip(')') 
+
+        if gene_name not in new_dict:
+            new_dict[gene_name] = {}
+        
+        if number not in new_dict[gene_name]:
+            new_dict[gene_name][number] = 0
+        
+        new_dict[gene_name][number] += value  
+
+    return new_dict
+
+def realign_branch_length(Phylo_t1:object)->object:
+    Phylo_t1.ladderize()
+    Phylo_t1.resolve_polytomy(recursive=True)
+    Phylo_t1.sort_descendants("support")
+    max_deep=get_max_deepth(Phylo_t1)
+    for node in Phylo_t1.traverse():
+        if not node.is_root():
+            node.dist=1
+            degree=node.get_distance(node.get_tree_root()) + 1
+            deep=get_max_deepth(node)
+            node.dist=max_deep-deep-degree
+    clade_up=Phylo_t1.get_children()[0]
+    clade_down=Phylo_t1.get_children()[1]
+    difference=abs(get_max_deepth(clade_up)-get_max_deepth(clade_down))+1
+    clade_up.dist=clade_up.dist+difference  
+    clade_down.dist=clade_down.dist+difference   
+    
+    return Phylo_t1
+
+def rejust_root_dist(sptree):
+    clade_up=sptree.get_children()[0]
+    clade_down=sptree.get_children()[1]
+    if len(clade_up)>len(clade_down):
+        clade_up.dist=1 
+        if clade_down.is_leaf():
+            clade_down.dist=get_max_deepth(sptree)-1
+        else:
+            clade_down.dist=get_max_deepth(sptree)-get_max_deepth(clade_down)
+    else:
+        clade_down.dist=1 
+        if clade_up.is_leaf():
+            clade_up.dist=get_max_deepth(sptree)-1
+        else:
+            clade_up.dist=get_max_deepth(sptree)-get_max_deepth(clade_up)
+
+    return sptree
+
+def visualizer_sptree(result,sptree):
+    new_dict=transform_dict(result)
+
+    sptree.ladderize()
+    sptree.sort_descendants("support")
+
+    ts = TreeStyle()
+    ts.title.add_face(TextFace("Green color : No-duplicate loss",fsize=5), column=1)
+    ts.title.add_face(TextFace("Blue color : One-duplicate loss", fsize=5),column=1)
+    ts.title.add_face(TextFace("Red color : Two-duplicate loss", fsize=5),column=1)
+    ts.title.add_face(TextFace("The number represents the number of statistical GFs", fsize=5),column=1)
+    ts.extra_branch_line_type =0
+    ts.extra_branch_line_color='black'
+    ts.branch_vertical_margin = -1
+    for node in sptree.traverse():
+
+        nstyle = NodeStyle()
+        nstyle["fgcolor"] = "black"
+        nstyle["size"] = 0
+        nstyle["shape"] = "circle"
+        nstyle["vt_line_width"] = 1
+        nstyle["hz_line_width"] = 1
+        node.set_style(nstyle)
+        if node.name in new_dict:
+            loss_dic=new_dict[node.name]
+            for k,v in loss_dic.items():
+                if k=='2':
+                    color='green'
+                    node.add_face(TextFace(v, fsize=5, fgcolor=color), column=0, position="branch-top")
+                elif k=='1':
+                    color='blue'
+                    node.add_face(TextFace(v, fsize=5, fgcolor=color), column=1, position="branch-top")
+                else:
+                    color='red'
+                    node.add_face(TextFace(v, fsize=5, fgcolor=color), column=2, position="branch-top")
+    realign_branch_length(sptree)
+    rejust_root_dist(sptree)
+    sptree.render('gd_loss_visualizer.PDF',w=210, units="mm",tree_style=ts)
 if __name__ == "__main__":
     out='outfile'
     input_folder='input'
     os.makedirs(out, exist_ok=True)
-    enerate_plt(input_folder,out)
+    generate_plt(input_folder,out)
 
