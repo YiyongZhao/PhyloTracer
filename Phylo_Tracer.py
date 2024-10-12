@@ -420,10 +420,10 @@ def main():
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             input_sps_tree = args.input_sps_tree
-            dir_path = os.path.join(os.getcwd(), "gd_loss/")
-            if os.path.exists(dir_path):
-                shutil.rmtree(dir_path)
-            os.makedirs(dir_path)
+            # dir_path = os.path.join(os.getcwd(), "gd_loss/")
+            # if os.path.exists(dir_path):
+            #     shutil.rmtree(dir_path)
+            # os.makedirs(dir_path)
 
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             sptree=PhyloTree(input_sps_tree)
@@ -431,21 +431,18 @@ def main():
             tre_dic=read_and_return_dict(input_GF_list)
 
             sp_dic,path2_treeid_dic=get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
-            split_dicts=split_dict_by_first_last_char(sp_dic)
+            #split_dicts=split_dict_by_first_last_char(sp_dic)
 
-            if args.all:
+            if args.all:   
+               write_total_lost_path_counts_result(sp_dic, path2_treeid_dic)
 
-                divide_path_results_into_individual_files_by_species(split_dicts, dir_path)
-                write_total_lost_path_counts_result(sp_dic)
-                write_total_lost_path_treeid_result(path2_treeid_dic)
-        
             elif args.start_node:
                 start_node=proecee_start_node(args.start_node,sptree)
-                write_gd_loss_info_of_strart_node(sp_dic,start_node)
+                write_gd_loss_info_of_strart_node(sp_dic,start_node,path2_treeid_dic)
             
             elif args.end_species:
                 species=args.end_species
-                write_gd_loss_info_of_species(sp_dic,species)
+                write_gd_loss_info_of_species(sp_dic,species,path2_treeid_dic)
 
             end_time = time.time()
             execution_time = end_time - start_time
