@@ -140,12 +140,16 @@ GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_
 GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
 GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
 GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
+GD_Loss_Tracker_parser.add_argument('--all', action='store_true', help='If specified, detects gene duplications (GD) and loss events across all nodes.')
+GD_Loss_Tracker_parser.add_argument('--start_node',  metavar='file',  required=False, help='The starting node for detecting gene duplications (GD) and losses. This limits the detection to the subtree rooted at the specified node.')
+GD_Loss_Tracker_parser.add_argument('--end_species', type=str,  required=False, help='The species where detection ends. Only events affecting species up to and including the specified species will be detected.')
+
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
 GD_Loss_Visualizer_parser.add_argument('--input_folder', type=str,  required=True, help='The result folder name of GD_Loss_Tracker')
 GD_Loss_Visualizer_parser.add_argument('--output_folder', type=str,  required=True, help='Output folder name')
-
+GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A species tree file with Newick format')
 # Ortho_Retriever command
 Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help')
 Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
@@ -335,20 +339,29 @@ def main():
             species_category_list = [read_and_return_dict(i) for i in species_categories]
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
+            gene2fam = None
+            df = None
+            
             if args.gene_family and args.input_sps_tree:
-                input_gene2fam = args.gene_family
-                gene2fam = read_and_return_dict(input_gene2fam)
-                input_sps_tree = args.input_sps_tree
-                sptree = Tree(input_sps_tree)
-                mark_gene_to_sptree_main(tre_dic,species_category_list,sptree,gene2fam)
-                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
+                gene2fam = read_and_return_dict(args.gene_family)
+                gene2sps = read_and_return_dict(input_imap)
+                sptree = Tree(args.input_sps_tree)
+                sptree1=rename_input_tre(sptree,taxa2voucher_dic)
+                mark_gene_to_sptree_main(tre_dic, species_category_list, sptree1, gene2fam, gene2sps,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
+            
             if args.gene_expression:
-                gene2fam=None
-                df=pd.read_excel(args.gene_expression, index_col=0) 
-                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam,df)
-            else:
-                gene2fam=None
-                view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch,new_named_gene2gene_dic,gene2fam)
+                file_extension = os.path.splitext(args.gene_expression)[1]  # 获取文件扩展名
+                
+                if file_extension == '.xlsx' or file_extension == '.xls':
+                    df = pd.read_excel(args.gene_expression, index_col=0)
+                elif file_extension == '.csv':
+                    df = pd.read_csv(args.gene_expression, index_col=0)
+                else:
+                    raise ValueError("Unsupported file format. Please provide an Excel or CSV file.")
+
+            view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch, new_named_gene2gene_dic, gene2fam, df)
+
+            # 计算并格式化程序执行时间
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -413,14 +426,27 @@ def main():
             os.makedirs(dir_path)
 
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
-            sptree=PhyloTree(input_sps_tree,format=1)
+            sptree=PhyloTree(input_sps_tree)
             num_sptree(sptree)
             tre_dic=read_and_return_dict(input_GF_list)
 
-            sp_dic=get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
+            sp_dic,path2_treeid_dic=get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
             split_dicts=split_dict_by_first_last_char(sp_dic)
-            divide_path_results_into_individual_files_by_species(split_dicts,dir_path)
-            write_total_lost_path_counts_result(sp_dic)
+
+            if args.all:
+
+                divide_path_results_into_individual_files_by_species(split_dicts, dir_path)
+                write_total_lost_path_counts_result(sp_dic)
+                write_total_lost_path_treeid_result(path2_treeid_dic)
+        
+            elif args.start_node:
+                start_node=proecee_start_node(args.start_node,sptree)
+                write_gd_loss_info_of_strart_node(sp_dic,start_node)
+            
+            elif args.end_species:
+                species=args.end_species
+                write_gd_loss_info_of_species(sp_dic,species)
+
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -435,6 +461,11 @@ def main():
             input_dir=args.input_folder
             out_dir=args.output_folder
             os.makedirs(out_dir, exist_ok=True)
+            if args.input_sps_tree:
+                input_sps_tree=args.input_sps_tree
+                sptree=Tree(input_sps_tree,format=1)
+                result=process_gd_loss_summary()
+                visualizer_sptree(result,sptree)
             generate_plt(input_dir,out_dir)
             end_time = time.time()
             execution_time = end_time - start_time
