@@ -1,5 +1,5 @@
 from __init__ import *
-
+from collections import Counter
 def calculate_depth(node1, node2):
     if node1 in node2.iter_ancestors() or node2 in node1.iter_ancestors():
         distance = node1.get_distance(node2, topology_only=True)+2
@@ -52,7 +52,7 @@ def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_perc
     with open(filename,'w') as file:
         file.write('#tree_ID'+'\t'+'gd_id'+'\t'+'gd_support'+'\t'+'gene1'+'\t'+'gene2'+'\t'+'level'+'\t'+'species'+'\t'+'GD_dup_sps'+'\t'+'dup_ratio'+'\t'+'gd_type'+'\t'+'comment'+'\n') 
         gd_num=1
-
+        gd_type_dic={}
         for tre_ID, tre_path in tre_dic.items():
             Phylo_t0 = read_phylo_tree(tre_path)
             Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
@@ -77,7 +77,8 @@ def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_perc
             #         print(s)
 
             for i in dup_node_name_list:
-
+                sp_set=get_species_set(i)
+                mapp_sp_node=mapp_gene_tree_to_species(sp_set,sptree)
                 clade=i
                 parent=clade.map
                 child1,child2=clade.get_children()
@@ -86,7 +87,12 @@ def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_perc
                 model=get_model(clade,sptree)
                 gene_pair1=gene_pair(clade)
                 null='null'
-                
+                if not mapp_sp_node.is_leaf():
+                    if mapp_sp_node.name in gd_type_dic:
+                        gd_type_dic[mapp_sp_node.name].append(model)
+                    else:
+                        gd_type_dic[mapp_sp_node.name]=[model]
+
                 
                 for j in gene_pair1:
                     file.write(str(tre_ID)+'\t'+str(gd_num)+'\t')
@@ -102,7 +108,37 @@ def write_gd_result(filename, tre_dic, gd_support,clade_support,dup_species_perc
                     file.write(str(clade.support)+'\t'+new_named_gene2gene_dic.get(a, null)+'\t'+new_named_gene2gene_dic.get(b, null)+'\t'+voucher2taxa_dic.get(parent,parent)+'\t'+voucher2taxa_dic[c]+'\t'+str(dup_sps)+'\t'+str(round(dup_percent,2))+'\t'+model+'\t'+'-'+'\t''\n')
                 gd_num+=1
             
-        
+        merged_data=count_elements_in_lists(gd_type_dic)
+        df = pd.DataFrame.from_dict(merged_data, orient='index').fillna(0)
+
+        df.to_csv('gd_type.csv')
+
+def count_elements_in_lists(data):
+    def merge_and_filter_types(data, merge_map):
+        merged_data = {}
+        for key, counter in data.items():
+            new_counter = Counter()
+            for t, count in counter.items():
+                merged = False
+                for new_type, types_to_merge in merge_map.items():
+                    if t in types_to_merge:
+                        new_counter[new_type] += count
+                        merged = True
+                        break
+                if not merged and t == 'AB<=>AB':
+                    new_counter['ABAB'] += count
+            merged_data[key] = new_counter
+        return merged_data
+
+    counted_data = {key: Counter(value) for key, value in data.items()}
+    merge_map = {
+    'ABB': ['AB<=>B', 'B<=>AB', 'XB<=>AB', 'AB<=>XB'],
+    'AAB': ['AB<=>A', 'A<=>AB', 'AX<=>AB', 'AB<=>AX']
+    }
+
+    result = merge_and_filter_types(counted_data, merge_map)
+    return result
+
 def get_model(clade, sptree):
     sps = get_species_list(clade)
     sps_clade = sptree.get_common_ancestor(set(sps))
