@@ -305,8 +305,11 @@ Required parameter:
     --input_GF_list      File containing paths to gene tree files, one per line
     --input_sps_tree     A species tree file with Newick format
     --input_imap         File with classification information of species corresponding to genes
+    --all                If specified, detects gene duplications (GD) and loss events across all nodes
+    --start_node         File containing species of node for detecting gene duplications (GD) and losses. This limits the detection to the subtree rooted at the specified node
+    --end_species        The species where detection ends. Only events affecting species up to and including the specified species will be detected
 Usage:
-    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
+    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--all --start_node ]
 ```
 ### GD_Loss_Visualizer
 ```
@@ -315,8 +318,9 @@ Description:
 Required parameter:
     --input_folder     The result folder name of GD_Loss_Tracker
     --output_folder    Output folder name
+    --input_sps_tree   A numbered species tree file with Newick format
 Usage:
-    Phylo_Tracer.py GD_Loss_Visualizer --input_folder input_foldername --output_folder output_foldername
+    Phylo_Tracer.py GD_Loss_Visualizer --input_folder input_foldername --output_folder output_foldername [--input_sps_tree numbered_species_tree.nwk]
 ```
 ### Ortho_Retriever
 ```
