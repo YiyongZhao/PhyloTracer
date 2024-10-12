@@ -243,35 +243,34 @@ def divide_path_results_into_individual_files_by_species(split_dicts, out_dir):
             for path, num in dic.items():
                 output_file.write(f"{path}\t{num}\n")
 
-def write_total_lost_path_counts_result(sp_dic):
-    sorted_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_dict = {k: sp_dic[k] for k in sorted_keys}
-    with open('gd_loss_count_summary.txt','w') as f :
-        f.write(f'GD Loss path\tGF count')
-        precess=set()
-        for k,v in sorted_dict.items():
-            last_char = k.split('->')[-1].split('(')[0]
-            if last_char not in precess:
-                f.write('\n')
-                f.write(k+'\t'+str(v)+'\n')
-                precess.add(last_char)
-            else:
-                f.write(k+'\t'+str(v)+'\n')
+def write_total_lost_path_counts_result(sp_dic, path_dic):
+    sorted_sp_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
+    sorted_sp_dict = {k: sp_dic[k] for k in sorted_sp_keys}
 
-def write_total_lost_path_treeid_result(sp_dic):
-    sorted_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_dict = {k: sp_dic[k] for k in sorted_keys}
-    with open('gd_loss_gf_count_summary.txt','w') as f :
-        f.write(f'GD Loss path\tGF count')
-        precess=set()
-        for k,v in sorted_dict.items():
+    sorted_path_keys = sorted(path_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
+    sorted_path_dict = {k: path_dic[k] for k in sorted_path_keys}
+
+    with open('gd_loss_count_summary.txt', 'w') as f:
+        f.write('GD Loss path\tGF count\n')
+        processed_sp = set()
+        for k, v in sorted_sp_dict.items():
             last_char = k.split('->')[-1].split('(')[0]
-            if last_char not in precess:
-                f.write('\n')
-                f.write(k+'\t'+'\t'.join(v)+'\n')
-                precess.add(last_char)
+            if last_char not in processed_sp:
+                f.write(f'\n{k}\t{v}\n')
+                processed_sp.add(last_char)
             else:
-                f.write(k+'\t'+'\t'.join(v)+'\n')
+                f.write(f'{k}\t{v}\n')
+
+    with open('gd_loss_gf_count_summary.txt', 'w') as f1:
+        f1.write('GD Loss path\tGF count\n')
+        processed_path = set()
+        for k1, v1 in sorted_path_dict.items():
+            last_char1 = k1.split('->')[-1].split('(')[0]
+            if last_char1 not in processed_path:
+                f1.write(f'\n{k1}\t' + '\t'.join(map(str, v1)) + '\n')
+                processed_path.add(last_char1)
+            else:
+                f1.write(f'{k1}\t' + '\t'.join(map(str, v1)) + '\n')
 
 def proecee_start_node(file, sptree):
     with open(file, 'r') as f:
@@ -283,33 +282,47 @@ def proecee_start_node(file, sptree):
         print(f"Error: Unable to find a common ancestor for species: {species_list}")
         return None
 
-def write_gd_loss_info_of_strart_node(sp_dic,start_node):
-    sorted_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_dict = {k: sp_dic[k] for k in sorted_keys}
-    with open('gd_loss_count_summary.txt','w') as f :
-        f.write(f'GD Loss path\tGF count')
-        for k,v in sorted_dict.items():
+def write_gd_loss_info_of_strart_node(sp_dic,start_node,path_dic):
+    sorted_sp_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
+    sorted_sp_dict = {k: sp_dic[k] for k in sorted_sp_keys}
+
+    sorted_path_keys = sorted(path_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
+    sorted_path_dict = {k: path_dic[k] for k in sorted_path_keys}
+    with open('gd_loss_count_summary.txt', 'w') as f:
+        f.write('GD Loss path\tGF count\n')
+        for k, v in sorted_sp_dict.items():
             first_char = k.split('->')[0].split('(')[0]
             if first_char==start_node:
-                f.write('\n')
-                if isinstance(v, (list, tuple)):
-                    f.write(k + '\t' + '\t'.join(v) + '\n')
-                else:
-                    f.write(k + '\t' + str(v) + '\n')  
-                    
-def write_gd_loss_info_of_species(sp_dic,species):
-    sorted_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_dict = {k: sp_dic[k] for k in sorted_keys}
-    with open('gd_loss_count_summary.txt','w') as f :
-        f.write(f'GD Loss path\tGF count')
-        for k,v in sorted_dict.items():
-            first_char = k.split('->')[-1].split('(')[0]
-            if first_char==species:
-                f.write('\n')
-                if isinstance(v, (list, tuple)):
-                    f.write(k + '\t' + '\t'.join(v) + '\n')
-                else:
-                    f.write(k + '\t' + str(v) + '\n')  
+                f.write(f'\n{k}\t{v}\n')
+
+    with open('gd_loss_gf_count_summary.txt', 'w') as f1:
+        f1.write('GD Loss path\tGF count\n')
+        for k1, v1 in sorted_path_dict.items():
+            first_char = k1.split('->')[0].split('(')[0]
+            if first_char==start_node:
+                f1.write(f'\n{k1}\t' + '\t'.join(v1) + '\n')
+
+def write_gd_loss_info_of_species(sp_dic,species,path_dic):
+    sorted_sp_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
+    sorted_sp_dict = {k: sp_dic[k] for k in sorted_sp_keys}
+
+    sorted_path_keys = sorted(path_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
+    sorted_path_dict = {k: path_dic[k] for k in sorted_path_keys}
+
+    with open('gd_loss_count_summary.txt', 'w') as f:
+        f.write('GD Loss path\tGF count\n')
+        for k, v in sorted_sp_dict.items():
+            last_char = k.split('->')[-1].split('(')[0]
+            if last_char==species:
+                f.write(f'\n{k}\t{v}\n')
+
+
+    with open('gd_loss_gf_count_summary.txt', 'w') as f1:
+        f1.write('GD Loss path\tGF count\n')
+        for k1, v1 in sorted_path_dict.items():
+            last_char = k1.split('->')[-1].split('(')[0]
+            if last_char==species:
+                f1.write(f'\n{k1}\t' + '\t'.join(map(str, v1)) + '\n')  
 
 
 
