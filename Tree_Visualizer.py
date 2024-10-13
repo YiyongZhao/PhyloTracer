@@ -173,12 +173,12 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
     def add_species_face(node, species):
         if species in sps_color_dict:
             color = sps_color_dict[species].split('@')[-1]
-            gene_face = TextFace(' ' + gene, fgcolor=color,ftype='Arial', fstyle='italic')
+            gene_face = TextFace(' ' + gene, fgcolor=color,ftype='Arial')
             node.add_face(gene_face, column=-1)
 
         if species in sps_color_dict:
             color = sps_color_dict[species].split('@')[-1]
-            species_face = TextFace("  ▐" + '  ' + sps_color_dict[species].split('@')[0], fgcolor=color,ftype='Arial', fstyle='italic')
+            species_face = TextFace("  ▐" + '  ' + sps_color_dict[species].split('@')[0], fgcolor=color,ftype='Arial')
             add_face_to_node(node, species_face, 0, position="aligned")
 
     def add_gene_face(node, gene):
@@ -252,6 +252,14 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                     face=RectFace(width=10, height=10, fgcolor=color,bgcolor=color)
                     node.add_face(face, column=n, position='aligned')
                     n+=1
+            else:
+                n=len(gene_categories)+2
+                for i in df.columns.tolist():
+                    color = '#F5F5F5'
+                    face=RectFace(width=10, height=10, fgcolor=color,bgcolor=color)
+                    node.add_face(face, column=n, position='aligned')
+                    n+=1
+
                     
     def add_header_to_tree(ts,df,gene_categories):
         labels = df.columns.to_list()
