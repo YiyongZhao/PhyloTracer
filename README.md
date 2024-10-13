@@ -309,7 +309,7 @@ Required parameter:
     --start_node         File containing species of node for detecting gene duplications (GD) and losses. This limits the detection to the subtree rooted at the specified node
     --end_species        The species where detection ends. Only events affecting species up to and including the specified species will be detected
 Usage:
-    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--all --start_node ]
+    Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--all --start_node --end_species ]
 ```
 ### GD_Loss_Visualizer
 ```
