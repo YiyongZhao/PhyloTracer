@@ -1,5 +1,5 @@
 from __init__ import *
-
+import re
 def find_dup_node(Phylo_t:object)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
     events = Phylo_t.get_descendant_evol_events()
     dup_node = []
@@ -11,23 +11,21 @@ def find_dup_node(Phylo_t:object)->list:#After searching for duplication events,
             dup_node.append(common_ancestor_node)
     return dup_node
     
-def get_maptree_internal_node_name_set(clade,sptree):
-    names=set()
-    for i in clade.traverse():
-        if not i.is_leaf():
-            sp_set=get_species_set(i)
-            if len(sp_set) !=1 :
-                sp=sptree.get_common_ancestor(sp_set)
-                names.add(sp.name)
-            else:
-                sp_set=list(sp_set)[0]
-                sp=sptree&sp_set
-                names.add(sp.name)
-        else:
-            sp_set=i.name.split('_')[0]
-            sp=sptree&sp_set
-            names.add(sp.name)
-    return names
+def get_maptree_internal_node_name_set(node,sptree):
+    sps=get_species_set(node)
+
+    node1=node.up
+    map_nodename1=get_maptree_name(sptree,get_species_set(node1))
+    map_node1=sptree&map_nodename1
+
+    names=[]
+    for i in sps:
+        clade=sptree&i
+        path=get_two_nodes_path_str(clade,map_node1)
+        names+=path
+
+    return set(names)
+
 
 def get_two_subclade_maptree_node_name_lst(max_clade,sptree):
     clade_up=max_clade.get_children()[0]
@@ -43,7 +41,8 @@ def get_maptree_internal_node_name_count_dic(max_clade,max_clade2sp,sptree):
     for i in up_down_lst :
         if i in dic :
             dic[i]+=1
-    return dic 
+    keys_with_zero_value = [key for key, value in dic.items() if value == 0 and key not in sptree.get_leaf_names()]
+    return dic,keys_with_zero_value
 
 def get_maptree_name(sptree, sps_set):
     if len(sps_set)!=1:
@@ -63,14 +62,17 @@ def get_two_nodes_path_str(start_node, end_node):
             break
     nodes.append(end_node.name)
     re_nodes=list(reversed(nodes))
-    path_str='->'.join(re_nodes)
-    return path_str
+   
+    return re_nodes
 
-def get_tips_to_clade_path_lst(taget_node:object)->list:#taget_node也就是gd node
+def get_tips_to_clade_path_lst(taget_node:object,dic)->list:#taget_node也就是gd node
     path_str_lst=[]
     for i in taget_node:
         path_str=get_two_nodes_path_str(i,taget_node)
-        path_str_lst.append(path_str)
+        numlist=[dic[k] for k in path_str]
+        result = '->'.join([f"{name}({count})" for name, count in zip(path_str, numlist)])
+
+        path_str_lst.append(result)
     return path_str_lst
         
 def get_maptree_node_count_dic(sp_list,map_clade):#{'S1':2,'A':2}
@@ -106,7 +108,24 @@ def add_extra_maptree_node_name(lst,sptree):
                     lst1.add(i.name)       
     return lst1
 
-def get_path_str_with_count_num_lst(tre_id,gd_id,genetree,sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic):#统计一颗树中所有gd下不同的丢失情况
+def get_gene_loss_list(clade_up,clade_down,dup_sps):
+    gene_loss=[]
+    for leaf in clade_up.get_leaf_names():
+        if leaf.split('_')[0]  in dup_sps:
+            continue
+        else: 
+            gene_loss.append(leaf)
+
+    for leaf2 in clade_down.get_leaf_names():
+        if leaf2.split('_')[0] in dup_sps:
+            continue
+        else: 
+            gene_loss.append(leaf2)
+
+    return gene_loss
+
+
+def get_path_str_with_count_num_lst(tre_id,gd_id,genetree,sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic,path2_treeid_dic):#统计一颗树中所有gd下不同的丢失情况
     renamed_sptree=rename_input_tre(sptree,taxa2voucher_dic)
     path_str_with_count_num_lst = []
     dup_node_name_list = find_dup_node(genetree)
@@ -121,72 +140,30 @@ def get_path_str_with_count_num_lst(tre_id,gd_id,genetree,sptree,out,gene2new_na
             max_clade2sp = renamed_sptree.get_common_ancestor(sp)
             sps_loss=set(max_clade2sp.get_leaf_names())-sp
             dup_sps=get_species_set(clade_up)&get_species_set(clade_down)
-            gene_loss=[]
-            for leaf in clade_up.get_leaf_names():
-                if leaf.split('_')[0]  in dup_sps:
-                    continue
-                else: 
-                    gene_loss.append(leaf)
+            gene_loss=get_gene_loss_list(clade_up,clade_down,dup_sps)
 
-            for leaf2 in clade_down.get_leaf_names():
-                if leaf2.split('_')[0] in dup_sps:
-                    continue
-                else: 
-                    gene_loss.append(leaf2)
+            dic,keys_with_zero_value=get_maptree_internal_node_name_count_dic(i,max_clade2sp,sptree)
 
-            out.write(tre_id+'\t'+str(gd_id)+'\t'+max_clade2sp.name+'\t'+up_tips+'\t'+down_tips+'\t'+'-'.join(sorted(sps_loss))+'\t'+'-'.join(sorted(gene_loss))+'\n')
 
-            clade_up_set = get_maptree_internal_node_name_set(clade_up, max_clade2sp)
-            clade_down_set = get_maptree_internal_node_name_set(clade_down, max_clade2sp)
-            clade_up_lst = add_extra_maptree_node_name(clade_up_set, max_clade2sp)
-            clade_down_lst = add_extra_maptree_node_name(clade_down_set, max_clade2sp)
-            sp_list = list(clade_up_lst) + list(clade_down_lst)
-            
-            dic = get_maptree_node_count_dic(sp_list, max_clade2sp)
+            path_str_lst = get_tips_to_clade_path_lst(max_clade2sp,dic)
+            for i in path_str_lst:
+                if i in path2_treeid_dic:
+                    path2_treeid_dic[i].append(f'{tre_id}-{gd_id}')
+                else:
+                    path2_treeid_dic[i]=[f'{tre_id}-{gd_id}']
 
-            path_str_lst = get_tips_to_clade_path_lst(max_clade2sp)
-            for j in path_str_lst:
-                s = '->'.join([f'{voucher2taxa_dic.get(key,key)}({dic[key]})' for key in j.split('->')])
-                path_str_with_count_num_lst.append(s)
+            path_str_with_count_num_lst+=path_str_lst
+            out.write(tre_id+'\t'+str(gd_id)+'\t'+max_clade2sp.name+'\t'+up_tips+'\t'+down_tips+'\t'+'-'.join(keys_with_zero_value)+'\t'+'-'.join(sorted(sps_loss))+'\t'+'-'.join(sorted(gene_loss))+'\n')
         else:
             out.write(tre_id+'\t'+str(gd_id)+'\t'+voucher2taxa_dic.get(get_maptree_name(renamed_sptree,sp),get_maptree_name(renamed_sptree,sp))+'\t'+up_tips+'\t'+down_tips+'\n')
         gd_id+=1
 
     set_path_str_with_count_num_lst = path_str_with_count_num_lst.copy()
 
-    # temp_dic={}
-    # for path in set_path_str_with_count_num_lst:
-    #     if path.split('->')[-1].split('(')[0] in temp_dic:
-    #         temp_dic[path.split('->')[-1].split('(')[0]].append(path)
-    #     else:
-    #         temp_dic[path.split('->')[-1].split('(')[0]]=[path]
-
-    # newlist=[]
-    # for k,v in temp_dic.items():
-    #     templist=[]
-    #     longest_element = max(v, key=len)
-    #     if len(v)>1:
-    #         for i in v:
-    #             if i==longest_element:
-    #                 templist.append(i)
-    #                 continue
-    #             copystr=longest_element[:len(longest_element)-len(i)]
-    #             firstnum=int(i.split("->")[0].split("(")[-1].strip(")"))
-    #             parts = copystr.split("->")
-    #             lastnum = int(copystr.split("->")[-2].split("(")[-1].strip(")") if len(copystr.split("->")) > 1 else '0')
-    #             if  firstnum>lastnum:
-    #                 proecessstr=copystr[:-4]+str(firstnum)+')->'
-    #                 newstr=proecessstr+i
-    #             else:
-    #                 newstr=copystr+i
-    #             templist.append(newstr)
-    #     else:
-    #         templist.append(v[0])
-
-        #newlist+=result
+    
     result = sorted(set_path_str_with_count_num_lst, reverse=True)
         
-    return result
+    return result,gd_id
 
 def num_sptree(sptree):
     n=0
@@ -219,29 +196,20 @@ def get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2g
     path2_treeid_dic={}
     path_str_num_dic={}
     out=open('gd_summary.txt','w')
-    out.write(f'Tree_id\tGD_id\tSpecies_level\tGD_subclade1\tGD_subclade2\tspecies_Loss\tGene_Loss\n')
+    out.write(f'Tree_id\tGD_id\tSpecies_level\tGD_subclade1\tGD_subclade2\tNode_loss(twice)\tSpecies_Loss\tGene_Loss\n')
     gd_id=1
     for tre_id,tre_path in tre_dic.items():
         t=PhyloTree(tre_path)
         t1=rename_input_tre(t, gene2new_named_gene_dic)
-        path_str_num_lst=get_path_str_with_count_num_lst(tre_id,gd_id,t1,sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
+        path_str_num_lst,gd_id=get_path_str_with_count_num_lst(tre_id,gd_id,t1,sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic,path2_treeid_dic)
         for i in path_str_num_lst :
             if i in path_str_num_dic:
                 path_str_num_dic[i]+=1
             else:
                 path_str_num_dic[i]=1
-            if i in path2_treeid_dic:
-                path2_treeid_dic[i].append(tre_id)
-            else:
-                path2_treeid_dic[i]=[tre_id]
+            
     out.close()
     return path_str_num_dic,path2_treeid_dic
-
-def divide_path_results_into_individual_files_by_species(split_dicts, out_dir):
-    for file_name,dic in split_dicts.items():  
-        with open(f"{out_dir}/{file_name}.txt", 'w') as output_file:
-            for path, num in dic.items():
-                output_file.write(f"{path}\t{num}\n")
 
 def write_total_lost_path_counts_result(sp_dic, path_dic):
     sorted_sp_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
@@ -282,48 +250,51 @@ def proecee_start_node(file, sptree):
         print(f"Error: Unable to find a common ancestor for species: {species_list}")
         return None
 
-def write_gd_loss_info_of_strart_node(sp_dic,start_node,path_dic):
-    sorted_sp_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_sp_dict = {k: sp_dic[k] for k in sorted_sp_keys}
+def sort_dict_by_keys(input_dict):
+    sorted_keys = sorted(input_dict.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
+    sorted_dict = {k: input_dict[k] for k in sorted_keys}
+    return dict(sorted(sorted_dict.items(), key=lambda x: [int(n) for n in re.findall(r'\((\d+)\)', x[0])], reverse=True))
 
-    sorted_path_keys = sorted(path_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_path_dict = {k: path_dic[k] for k in sorted_path_keys}
-    with open('gd_loss_count_summary.txt', 'w') as f:
+def write_gd_loss_to_file(filename, data_dict, key_filter, filter_value):
+    with open(filename, 'w') as f:
         f.write('GD Loss path\tGF count\n')
-        for k, v in sorted_sp_dict.items():
-            first_char = k.split('->')[0].split('(')[0]
-            if first_char==start_node:
+        for k, v in data_dict.items():
+            if key_filter(k) == filter_value:
                 f.write(f'\n{k}\t{v}\n')
 
-    with open('gd_loss_gf_count_summary.txt', 'w') as f1:
-        f1.write('GD Loss path\tGF count\n')
-        for k1, v1 in sorted_path_dict.items():
-            first_char = k1.split('->')[0].split('(')[0]
-            if first_char==start_node:
-                f1.write(f'\n{k1}\t' + '\t'.join(v1) + '\n')
+def write_gd_loss_info_of_strart_node(sp_dic, start_node, path_dic):
+    sorted_dict1 = sort_dict_by_keys(sp_dic)
+    sorted_dict2 = sort_dict_by_keys(path_dic)
 
-def write_gd_loss_info_of_species(sp_dic,species,path_dic):
-    sorted_sp_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_sp_dict = {k: sp_dic[k] for k in sorted_sp_keys}
+    write_gd_loss_to_file('gd_loss_count_summary.txt', sorted_dict1, 
+                           lambda k: k.split('->')[0].split('(')[0], start_node)
+    
+    write_gd_loss_to_file('gd_loss_gf_count_summary.txt', sorted_dict2, 
+                           lambda k: k.split('->')[0].split('(')[0], start_node)
 
-    sorted_path_keys = sorted(path_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_path_dict = {k: path_dic[k] for k in sorted_path_keys}
+def write_gd_loss_info_of_species(sp_dic, species, path_dic):
+    sorted_sp_dict = sort_dict_by_keys(sp_dic)
+    sorted_path_dict = sort_dict_by_keys(path_dic)
 
-    with open('gd_loss_count_summary.txt', 'w') as f:
-        f.write('GD Loss path\tGF count\n')
-        for k, v in sorted_sp_dict.items():
-            last_char = k.split('->')[-1].split('(')[0]
-            if last_char==species:
-                f.write(f'\n{k}\t{v}\n')
+    write_gd_loss_to_file('gd_loss_count_summary.txt', sorted_sp_dict, 
+                           lambda k: k.split('->')[-1].split('(')[0], species)
 
+    write_gd_loss_to_file('gd_loss_gf_count_summary.txt', sorted_path_dict, 
+                           lambda k: k.split('->')[-1].split('(')[0], species)
 
-    with open('gd_loss_gf_count_summary.txt', 'w') as f1:
-        f1.write('GD Loss path\tGF count\n')
-        for k1, v1 in sorted_path_dict.items():
-            last_char = k1.split('->')[-1].split('(')[0]
-            if last_char==species:
-                f1.write(f'\n{k1}\t' + '\t'.join(map(str, v1)) + '\n')  
+def write_gd_loss_info_of_node_to_species(sp_dic, start_node, species, path_dic):
+    sorted_dict1 = sort_dict_by_keys(sp_dic)
+    sorted_dict2 = sort_dict_by_keys(path_dic)
 
+    write_gd_loss_to_file('gd_loss_count_summary.txt', sorted_dict1, 
+                           lambda k: (k.split('->')[0].split('(')[0], 
+                                       k.split('->')[-1].split('(')[0]), 
+                           (start_node, species))
+    
+    write_gd_loss_to_file('gd_loss_gf_count_summary.txt', sorted_dict2, 
+                           lambda k: (k.split('->')[0].split('(')[0], 
+                                       k.split('->')[-1].split('(')[0]), 
+                           (start_node, species))
 
 
 if __name__ == "__main__":
