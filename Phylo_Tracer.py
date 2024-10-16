@@ -147,8 +147,8 @@ GD_Loss_Tracker_parser.add_argument('--end_species', type=str,  required=False, 
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
-GD_Loss_Visualizer_parser.add_argument('--input_folder', type=str,  required=True, help='The result folder name of GD_Loss_Tracker')
-GD_Loss_Visualizer_parser.add_argument('--output_folder', type=str,  required=True, help='Output folder name')
+# GD_Loss_Visualizer_parser.add_argument('--input_folder', type=str,  required=True, help='The result folder name of GD_Loss_Tracker')
+# GD_Loss_Visualizer_parser.add_argument('--output_folder', type=str,  required=True, help='Output folder name')
 GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A species tree file with Newick format')
 # Ortho_Retriever command
 Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help')
@@ -431,10 +431,14 @@ def main():
             tre_dic=read_and_return_dict(input_GF_list)
 
             sp_dic,path2_treeid_dic=get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
-            #split_dicts=split_dict_by_first_last_char(sp_dic)
 
-            if args.all:   
-               write_total_lost_path_counts_result(sp_dic, path2_treeid_dic)
+            if args.start_node and args.end_species:
+                start_node=proecee_start_node(args.start_node,sptree)
+                species=args.end_species
+                write_gd_loss_info_of_node_to_species(sp_dic,start_node,species,path2_treeid_dic)
+
+            elif args.all:   
+                write_total_lost_path_counts_result(sp_dic, path2_treeid_dic)
 
             elif args.start_node:
                 start_node=proecee_start_node(args.start_node,sptree)
@@ -443,6 +447,8 @@ def main():
             elif args.end_species:
                 species=args.end_species
                 write_gd_loss_info_of_species(sp_dic,species,path2_treeid_dic)
+
+            
 
             end_time = time.time()
             execution_time = end_time - start_time
@@ -453,17 +459,23 @@ def main():
 
     elif args.command == 'GD_Loss_Visualizer':
         # Execute the GD_Loss_Visualizer function
-        if args.input_folder and  args.output_folder :
+        if args.input_sps_tree:
+        # if args.input_folder and  args.output_folder :
             start_time = time.time()
-            input_dir=args.input_folder
-            out_dir=args.output_folder
-            os.makedirs(out_dir, exist_ok=True)
-            if args.input_sps_tree:
-                input_sps_tree=args.input_sps_tree
-                sptree=Tree(input_sps_tree,format=1)
-                result=process_gd_loss_summary()
-                visualizer_sptree(result,sptree)
-            generate_plt(input_dir,out_dir)
+            # input_dir=args.input_folder
+            # out_dir=args.output_folder
+            # os.makedirs(out_dir, exist_ok=True)
+            # if args.input_sps_tree:
+
+            input_sps_tree=args.input_sps_tree
+            sptree=Tree(input_sps_tree,format=1)
+            result=process_gd_loss_summary()
+            generate_plt()
+            visualizer_sptree(result,sptree)
+            
+            
+
+            #generate_plt(input_dir,out_dir)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -525,7 +537,7 @@ def main():
             if args.node:
                 hyde_visual_node_main(input_hybrid_folder,sptree) 
             else:
-                hyde_visual_main(input_hybrid_folder,sptree)
+                hyde_visual_leaf_main(input_hybrid_folder,sptree)
             
             end_time = time.time()
             execution_time = end_time - start_time
