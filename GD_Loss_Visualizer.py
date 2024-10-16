@@ -11,19 +11,31 @@ def extract_numbers_in_parentheses(string):
 
 def get_gd_node_to_species_loss_dic(sp_dic):
     loss_dic = {'No-duplicate loss': [], 'One-duplicate loss': [], 'Two-duplicate loss': []}
-    for k,v in sp_dic.items() :
-        s=extract_numbers_in_parentheses(k)
-        s_set=set(s)
-        if s_set=={'2'}:
+
+    for k, v in sp_dic.items():
+        s = extract_numbers_in_parentheses(k)
+        s_set = set(s)
+        
+        if s_set == {'2'}:
             loss_dic['No-duplicate loss'].append(v)
-        elif s_set=={'2','1'} or s_set=={'2','1','0'} or s_set=={'1','0'}:
+        elif s_set == {'2', '1'} or s_set == {'2', '1', '0'} or s_set == {'1', '0'}:
             loss_dic['One-duplicate loss'].append(v)
         else:
             loss_dic['Two-duplicate loss'].append(v)
+    
+    for key in loss_dic:
+        filtered_values = []
+        for val in loss_dic[key]:
+            if isinstance(val, str) and not val.isdigit():
+                continue
+            filtered_values.append(int(val) if isinstance(val, str) and val.isdigit() else float(val))
+        loss_dic[key] = filtered_values
 
     sum_loss_dic = {key: sum(value) for key, value in loss_dic.items()}
-
+    
     return sum_loss_dic
+
+
 
 def merge_pngs_matrix(folder_name, output_file='gd_loss_summary_visualizer.png'):
     images = []
@@ -59,7 +71,7 @@ def merge_pngs_matrix(folder_name, output_file='gd_loss_summary_visualizer.png')
 
     new_image.save(output_file)
 
-def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id, out_dir):
+def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id):
     keys = list(sum_loss_dic.keys())
     values = list(sum_loss_dic.values())
     color = 'lightblue'
@@ -76,25 +88,23 @@ def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id, out_dir):
         plt.text(key, value, str(value), ha='center', va='bottom', fontsize=12)
 
     plt.tight_layout()  
-    plt.savefig(f'{out_dir}/{gd_id}_{sps}.png')
+    plt.savefig(f'{gd_id}_{sps}.png')
     plt.cla()
     plt.close("all")  
 
-def generate_plt(input_folder,out_dir):
+def generate_plt(full_path: str = 'gd_loss_count_summary.txt'):
+    new_dic = read_and_return_dict(full_path)
+ 
+    sum_loss_dic = get_gd_node_to_species_loss_dic(new_dic)
 
-    input_dirs=os.listdir(input_folder)
-    pbar = tqdm(total=len(input_dirs), desc="Processing file", unit="file")
-    for file in input_dirs:
-        pbar.set_description(f"Processing {file}")
-        full_path = os.path.join(input_folder, file)
-        new_dic=read_and_return_dict(full_path)
-        sum_loss_dic=get_gd_node_to_species_loss_dic(new_dic)
-        gd_id=file.split('.')[0].split('_')[0]
-        sps='_'.join(file.split('.')[0].split('_')[1:])
-        visualizer_sum_loss_dic(sum_loss_dic,sps,gd_id,out_dir)
-        pbar.update(1)
-    pbar.close()
-    merge_pngs_matrix(out_dir)
+    first_key = list(new_dic.keys())[1]
+    
+    gd_id = first_key.split('->')[0].split('(')[0]
+    sps = first_key.split('->')[-1].split('(')[0]
+    
+    visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id)
+
+        
 
 def process_gd_loss_summary():
     element_counts = {}
@@ -107,8 +117,8 @@ def process_gd_loss_summary():
             if not line:  
                 continue
             path = line.split('\t')[0]
-            treeid = line.split('\t')[1:]
-            
+            input_string = line.split('\t')[1]
+            treeid= [og.strip().strip("'") for og in input_string.split(',')]
             elements = path.split('->')
             for i in elements:
                 if i in element_counts:
@@ -185,10 +195,12 @@ def visualizer_sptree(result,sptree):
     ts.title.add_face(TextFace("Green color : No-duplicate loss",fsize=5), column=1)
     ts.title.add_face(TextFace("Blue color : One-duplicate loss", fsize=5),column=1)
     ts.title.add_face(TextFace("Red color : Two-duplicate loss", fsize=5),column=1)
-    ts.title.add_face(TextFace("The number represents the number of statistical GFs", fsize=5),column=1)
+    ts.title.add_face(TextFace("The number represents the number of statistical GDs", fsize=5),column=1)
     ts.extra_branch_line_type =0
     ts.extra_branch_line_color='black'
     ts.branch_vertical_margin = -1
+
+
     for node in sptree.traverse():
 
         nstyle = NodeStyle()
@@ -210,6 +222,7 @@ def visualizer_sptree(result,sptree):
                 else:
                     color='red'
                     node.add_face(TextFace(v, fsize=5, fgcolor=color), column=2, position="branch-top")
+
     realign_branch_length(sptree)
     rejust_root_dist(sptree)
     sptree.render('gd_loss_visualizer.PDF',w=210, units="mm",tree_style=ts)
