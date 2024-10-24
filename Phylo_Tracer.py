@@ -118,6 +118,7 @@ Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default=
 Tree_Visualizer_parser.add_argument('--gene_family', metavar='file',  required=False, help='If you want to mark gene families you need to provide this file')
 Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A species tree file with Newick format')
 Tree_Visualizer_parser.add_argument('--gene_expression', metavar='file',  required=False, help='Gene expression level files')
+Tree_Visualizer_parser.add_argument('--visual_gd', action='store_true', help='Visualize the gd node of gene family trees')
 
 # GD_Detector command
 GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help')
@@ -359,7 +360,7 @@ def main():
                 else:
                     raise ValueError("Unsupported file format. Please provide an Excel or CSV file.")
 
-            view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch, new_named_gene2gene_dic, gene2fam, df)
+            view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch, new_named_gene2gene_dic, gene2fam, df,visual=args.visual_gd)
 
             # 计算并格式化程序执行时间
             end_time = time.time()
