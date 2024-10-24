@@ -51,14 +51,15 @@ def Dup_NodeIDs_from_Numbered_GFs(Phylo_t:object)->object:
     
     return Phylo_t1, dup_node_name_list
 
-def create_tree_style(tree_style,tre_ID):
+def create_tree_style(tree_style,tre_ID,visual:bool=False):
     ts = TreeStyle()
     ts.title.add_face(TextFace("★",fgcolor="white"), column=0)
     ts.title.add_face(TextFace(tre_ID), column=1)
-    ts.title.add_face(TextFace("★", fgcolor="red"), column=0)
-    ts.title.add_face(TextFace("Interspecific gene duplication event"), column=1)
-    ts.title.add_face(TextFace("★", fgcolor="blue"), column=0)
-    ts.title.add_face(TextFace("Intraspecific gene duplication event"), column=1)
+    if visual:
+        ts.title.add_face(TextFace("★", fgcolor="red"), column=0)
+        ts.title.add_face(TextFace("Interspecific gene duplication event"), column=1)
+        ts.title.add_face(TextFace("★", fgcolor="blue"), column=0)
+        ts.title.add_face(TextFace("Intraspecific gene duplication event"), column=1)
     
     ts.mode = tree_style
     ts.scale = 20
@@ -76,43 +77,34 @@ def create_tree_style(tree_style,tre_ID):
     
     return ts
 
-def set_node_style(node:object, dup_node_name_list:list):
+def set_node_style(node: object, dup_node_name_list: list, visual: bool = False):
     nstyle = NodeStyle()
     splist = set(get_species_list(node))
-    if node.name in dup_node_name_list and len(splist) == 1:
-        nstyle["vt_line_width"] = 1
-        nstyle["hz_line_width"] = 1
-        nstyle["vt_line_type"] = 0 
-        nstyle["hz_line_type"] = 0 
-        nstyle["size"] = 0
-        nstyle["shape"] = "circle"
-        nstyle["fgcolor"] = "black"
-        node.add_face(TextFace("★", fsize=7, fgcolor="blue"), column=1, position="branch-top")
-    elif node.name in dup_node_name_list and len(splist) != 1:
-        nstyle["vt_line_width"] = 1
-        nstyle["hz_line_width"] = 1
-        nstyle["vt_line_type"] = 0 
-        nstyle["hz_line_type"] = 0 
-        nstyle["size"] = 0
-        nstyle["shape"] = "circle"
-        nstyle["fgcolor"] = "black"
-        node.add_face(TextFace("★", fsize=7, fgcolor="red"), column=1, position="branch-top")
-    else:
-        nstyle["vt_line_width"] = 1
-        nstyle["hz_line_width"] = 1
-        nstyle["vt_line_type"] = 0 
-        nstyle["hz_line_type"] = 0 
-        nstyle["size"] = 0
-        nstyle["shape"] = "circle"
-        nstyle["fgcolor"] = "black"
-    node.set_style(nstyle)
+
+    nstyle["vt_line_width"] = 1
+    nstyle["hz_line_width"] = 1
+    nstyle["vt_line_type"] = 0
+    nstyle["hz_line_type"] = 0
+    nstyle["size"] = 0
+    nstyle["shape"] = "circle"
+    nstyle["fgcolor"] = "black"
     
-def get_treestyle(Phylo_t:object,tree_style:str,tre_ID:str)->object:
+
+    if visual:
+        if node.name in dup_node_name_list and len(splist) == 1:
+            node.add_face(TextFace("★", fsize=7, fgcolor="blue"), column=1, position="branch-top")
+        elif node.name in dup_node_name_list and len(splist) != 1:
+            node.add_face(TextFace("★", fsize=7, fgcolor="red"), column=1, position="branch-top")
+    
+    node.set_style(nstyle)
+
+    
+def get_treestyle(Phylo_t:object,tree_style:str,tre_ID:str,visual:bool=False)->object:
     Phylo_t1, dup_node_name_list = Dup_NodeIDs_from_Numbered_GFs(Phylo_t)
-    ts = create_tree_style(tree_style,tre_ID)
+    ts = create_tree_style(tree_style,tre_ID,visual)
 
     for node in Phylo_t1.traverse():
-        set_node_style(node, dup_node_name_list)
+        set_node_style(node, dup_node_name_list,visual)
     
     return Phylo_t1, ts
 
@@ -153,11 +145,6 @@ def fuzzy_match(search_string, key):
     return re.search(search_string, key)
 
 def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,ts,new_named_gene2gene_dic:dict,dir_path,gene2fam=None,df=None)->object:
-    sps_color_dict=get_color_dict(voucher2taxa_dic)
-    if gene2fam is not None:
-        gene_color_dict=get_color_dict(gene2fam)
-    color_dicts = generate_color_dict(gene_categories)
-    faces_added = set()  # used to track the added faces
     def add_face_to_node(node, face, column, position="aligned"):
         if (node, column, position) not in faces_added:
             node.add_face(face, column=column, position=position)
@@ -193,22 +180,6 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
             color = matched_value.split('@')[-1]
             face5 = TextFace("  ▐" + '  ' +  matched_value.split('@')[0], fgcolor=color,ftype='Arial')
             add_face_to_node(node, face5, column, position="aligned")
-
-    
-    for node in Phylo_t1.traverse():
-        if node.is_leaf():
-            gene = new_named_gene2gene_dic[node.name]
-            species = voucher2taxa_dic[node.name.split("_")[0]]
-            rename_species=node.name.split("_")[0]
-            add_species_face(node, rename_species)
-            column = 1
-            for color_dict in color_dicts:
-                generate_face_mark(node, gene, column, color_dict)
-                column += 1
-            if gene2fam is not None and  gene in gene_color_dict:
-                add_gene_face(node, gene)
-            else:
-                pass
 
     def get_color(value):
         if np.isnan(value): 
@@ -259,8 +230,7 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
                     face=RectFace(width=10, height=10, fgcolor=color,bgcolor=color)
                     node.add_face(face, column=n, position='aligned')
                     n+=1
-
-                    
+         
     def add_header_to_tree(ts,df,gene_categories):
         labels = df.columns.to_list()
         n=len(gene_categories)+2
@@ -286,6 +256,27 @@ def tips_mark(Phylo_t1:object,voucher2taxa_dic:dict,gene_categories:list,tre_ID,
             n+=1
             
         ts.legend_position=2
+
+    sps_color_dict=get_color_dict(voucher2taxa_dic)
+    if gene2fam is not None:
+        gene_color_dict=get_color_dict(gene2fam)
+    color_dicts = generate_color_dict(gene_categories)
+    faces_added = set()  # used to track the added faces
+
+    for node in Phylo_t1.traverse():
+        if node.is_leaf():
+            gene = new_named_gene2gene_dic[node.name]
+            species = voucher2taxa_dic[node.name.split("_")[0]]
+            rename_species=node.name.split("_")[0]
+            add_species_face(node, rename_species)
+            column = 1
+            for color_dict in color_dicts:
+                generate_face_mark(node, gene, column, color_dict)
+                column += 1
+            if gene2fam is not None and  gene in gene_color_dict:
+                add_gene_face(node, gene)
+            else:
+                pass
 
     if df is not None:
         add_heat_map_to_node(Phylo_t1,df,new_named_gene2gene_dic,gene_categories)
@@ -434,7 +425,7 @@ def rename_sptree(sptree):
         #if i.name in sp:
         #    i.name=sp[i.name]
 
-def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic,gene2fam=None,df=None):
+def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic,gene2fam=None,df=None,visual:bool=False):
     dir_path = os.path.join(os.getcwd(), "tree_visualizer/")
     if os.path.exists(dir_path):
         shutil.rmtree(dir_path)
@@ -444,13 +435,14 @@ def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,t
         pbar.set_description(f"Processing {tre_ID}")
         Phylo_t0=read_phylo_tree(tre_path)
         Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
-        Phylo_t1,ts=get_treestyle(Phylo_t0,tree_style,tre_ID)
+        Phylo_t1,ts=get_treestyle(Phylo_t0,tree_style,tre_ID,visual)
         Phylo_t1.ladderize()
         Phylo_t1.resolve_polytomy(recursive=True)
         Phylo_t1.sort_descendants("support")
         if keep_branch !='1' :
             realign_branch_length(Phylo_t1)
             rejust_root_dist(Phylo_t1)
+
         tips_mark(Phylo_t1,voucher2taxa_dic,gene_categories,tre_ID,ts,new_named_gene2gene_dic,dir_path,gene2fam,df)
         pbar.update(1)
     pbar.close()
