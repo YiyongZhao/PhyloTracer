@@ -317,11 +317,9 @@ Usage:
 Description:
     To visualize the summary of gene duplication loss events on the context of species tree
 Required parameter:
-    --input_folder     The result folder name of GD_Loss_Tracker
-    --output_folder    Output folder name
     --input_sps_tree   A numbered species tree file with Newick format
 Usage:
-    Phylo_Tracer.py GD_Loss_Visualizer --input_folder input_foldername --output_folder output_foldername [--input_sps_tree numbered_species_tree.nwk]
+    Phylo_Tracer.py GD_Loss_Visualizer --input_sps_tree numbered_species_tree.nwk
 ```
 ### Ortho_Retriever
 ```
