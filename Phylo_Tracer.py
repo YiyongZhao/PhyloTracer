@@ -1,6 +1,7 @@
 import sys, textwrap
 import argparse
 import time
+import logging
 from PhyloTree_CollapseExpand import *
 from PhyloSupport_Scaler import *
 from BranchLength_NumericConverter import *
@@ -249,6 +250,12 @@ def main():
     elif args.command == 'Phylo_Rooter':
         # Execute the Phylo_Rooter function
         if args.input_GF_list and args.input_imap and args.input_sps_tree and args.input_gene_length:
+            logging.basicConfig(
+            filename='phylo_rooter.log',
+            level=logging.DEBUG,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            filemode='w'  # 'w' to overwrite the log file each time; use 'a' to append to the log file
+            )
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
@@ -437,7 +444,7 @@ def main():
                 start_node=proecee_start_node(args.start_node,sptree)
                 species=args.end_species
                 write_gd_loss_info_of_node_to_species(sp_dic,start_node,species,path2_treeid_dic)
-
+                parse_text_to_excel('gd_loss_count_summary.txt')
             elif args.all:   
                 write_total_lost_path_counts_result(sp_dic, path2_treeid_dic)
 
