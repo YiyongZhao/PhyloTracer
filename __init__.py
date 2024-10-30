@@ -1,3 +1,4 @@
+import logging
 import pandas as pd
 from ete3 import PhyloTree,Tree,NodeStyle,TreeStyle,TextFace,RectFace
 import random
@@ -18,16 +19,18 @@ def generate_sps_voucher(sps_num:int) -> list:
 
 def gene_id_transfer(gene2taxa_list:str) -> dict:
     gene2taxa_dic = read_and_return_dict(gene2taxa_list)
-    taxa_list = list(set(gene2taxa_dic.values()))
+    sorted_gene2taxa_dic = dict(sorted(gene2taxa_dic.items(), key=lambda item: item[0]))
+    
+    taxa_list = list(set(sorted_gene2taxa_dic.values()))
     taxa2voucher_dic = dict(zip(taxa_list, generate_sps_voucher(len(taxa_list))))
     voucher2taxa_dic = {value: key for key, value in taxa2voucher_dic.items()}
     gene_count = {}
 
-    for species in gene2taxa_dic.values():
+    for species in sorted_gene2taxa_dic.values():
         gene_count[species] = gene_count.get(species, 0) + 1
 
     new_gene_names = [f"{taxa2voucher_dic[species]}_{i}" for species, count in gene_count.items() for i in range(1, count + 1)]
-    gene2new_named_gene_dic = dict(zip(gene2taxa_dic.keys(), new_gene_names))
+    gene2new_named_gene_dic = dict(zip(sorted_gene2taxa_dic.keys(), new_gene_names))
     new_named_gene2gene_dic = {value: key for key, value in gene2new_named_gene_dic.items()}
     return gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic
 #gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("gene2taxa.list")
@@ -37,7 +40,7 @@ def read_and_return_dict(filename, separator="\t") -> dict:
     return df.set_index([0])[1].to_dict()
 
 def rename_input_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
-    Phylo_t1=Phylo_t.copy()
+    Phylo_t1=Phylo_t.copy('newick')
     for node in Phylo_t1.traverse():
         if node.name in gene2new_named_gene_dic.keys():
             node.name = gene2new_named_gene_dic[node.name]
@@ -54,7 +57,7 @@ def is_rooted(Phylo_t:object)->bool:#Translate the function that determines whet
         return True
 
 def root_tre_with_midpoint_outgroup(Phylo_t:object)->object:#Rooting the phylogenetic tree using the midpoint outgroup method.
-    Phylo_t1=Phylo_t.copy()
+    Phylo_t1=Phylo_t.copy('newick')
     mid_node=Phylo_t1.get_midpoint_outgroup()
     Phylo_t1.set_outgroup(mid_node)
     return Phylo_t1
@@ -139,25 +142,18 @@ def calculate_gd_num(Phylo_t:object)->int:
     
     return gd_num
 
-def sps_dup_num(sps_list:list, unique_sps:list)->int:
+def sps_dup_num(sps_list: list, unique_sps: list) -> int:
     sps_num_dic = {i: 0 for i in unique_sps}
-    sps_dups = set()
+    sps_dups = 0
 
     for sps in sps_list:
         if sps in sps_num_dic:
             sps_num_dic[sps] += 1
-            if sps_num_dic[sps] > 1:
-                sps_dups.add(sps)
+            if sps_num_dic[sps] == 2:
+                sps_dups += 1
 
-    return len(sps_dups)
+    return sps_dups
 
-def rename_species_tree(sptree:object, voucher2taxa_dic:dict)->object:
-    for node in sptree:
-        key_to_find = node.name
-        if key_to_find in voucher2taxa_dic.values():
-            new_name = next(key for key, value in voucher2taxa_dic.items() if value == key_to_find)
-            node.name = new_name           
-    return sptree
 
 def find_tre_dup(Phylo_t:object) -> list:   #seperator either "@" or "_"
     tre_ParaL=[]
