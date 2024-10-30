@@ -1,14 +1,6 @@
-import logging
 from Ortho_Retriever import *
 from __init__ import *
 from BranchLength_NumericConverter import write_tree_to_newick
-
-logging.basicConfig(
-    filename='phylo_rooter.log',
-    level=logging.DEBUG,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    filemode='w'  # 'w' to overwrite the log file each time; use 'a' to append to the log file
-)
 
 def log_tree_processing_start(tre_id: str):
     logging.info(f"\n{'='*20} Start Processing Tree: {tre_id} {'='*20}\n")
@@ -149,6 +141,7 @@ def get_RF_dic(voucher2taxa_dic,trees:list,gene2new_named_gene_dic:dict,tre_ID:s
         for tre_name,OG_S in ordered_name_OG_L: 
             OG_L = [new_named_gene2gene_dic[OG] for OG in OG_S]
             Phylo_t0=read_phylo_tree(tre_path)
+
             Phylo_t=root_tre_with_midpoint_outgroup(Phylo_t0)
             Phylo_t_OG_L=extract_tree(OG_L,Phylo_t)
             Phylo_t_OG_L=rename_input_tre(Phylo_t_OG_L,gene2new_named_gene_dic)
@@ -192,7 +185,7 @@ def rename_output_tre(Phylo_t:object, new_named_gene2gene_dic:dict,tre_ID:str,di
         if node.name in new_named_gene2gene_dic.keys():
             node.name = new_named_gene2gene_dic[node.name]
 
-    tree_str=Phylo_t.write(format=1)
+    tree_str=Phylo_t.write(format=0)
     write_tree_to_newick(tree_str,tre_ID,dir_path)
     
 
