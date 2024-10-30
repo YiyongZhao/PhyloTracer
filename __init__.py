@@ -19,7 +19,7 @@ def generate_sps_voucher(sps_num:int) -> list:
 
 def gene_id_transfer(gene2taxa_list:str) -> dict:
     gene2taxa_dic = read_and_return_dict(gene2taxa_list)
-    sorted_gene2taxa_dic = dict(sorted(gene2taxa_dic.items(), key=lambda item: item[0]))
+    sorted_gene2taxa_dic = dict(sorted(gene2taxa_dic.items())) 
     
     taxa_list = list(set(sorted_gene2taxa_dic.values()))
     taxa2voucher_dic = dict(zip(taxa_list, generate_sps_voucher(len(taxa_list))))
