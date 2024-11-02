@@ -295,7 +295,64 @@ def write_gd_loss_info_of_node_to_species(sp_dic, start_node, species, path_dic)
                            lambda k: (k.split('->')[0].split('(')[0], 
                                        k.split('->')[-1].split('(')[0]), 
                            (start_node, species))
+def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
+    lines = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            line = line.strip() 
+            if line: 
+                lines.append(line)  
 
+    header_line = lines[1].strip()
+    columns = [col.split('(')[0] for col in header_line.split('->')]
+    columns.append("count") 
+    
+    rows = []
+
+    for line in lines[1:]:
+        line = line.strip() 
+        if not line:  
+            continue
+
+        match = re.findall(r'\((\d+)\)', line) 
+        count_match = re.search(r'\s+(\d+)$', line) 
+        
+
+        if count_match:
+            count = count_match.group(1)
+
+            if len(match) + 1 == len(columns): 
+                rows.append([*match, count])
+            else:
+                print(f"行解析不匹配的行: {line} (解析后元素数: {len(match) + 1}, 期望数: {len(columns)})")
+        else:
+            print(f"未找到计数值的行: {line}")
+
+    if rows:
+        df = pd.DataFrame(rows, columns=columns)
+    else:
+        print("没有有效的数据行。")
+        return
+
+
+    descriptions = []
+    for _, row in df.iterrows():
+        loss_desc = []
+        for i, col in enumerate(columns[:-1]):  
+            if int(row[col]) < 2: 
+                if i > 0:  
+                    prev_col = columns[i - 1]  
+                    loss_desc.append(f"Lost after {prev_col}")
+                else:
+                    loss_desc.append(f"Lost after {col}")
+
+        descriptions.append("No duplicate lost" if not loss_desc else loss_desc[0])  # 添加描述
+
+    df["Rest # of duplicates"] = descriptions
+
+    df = df[["Rest # of duplicates"] + columns]
+
+    df.to_excel(output_file, index=False)
 
 if __name__ == "__main__":
     out='outfile'
