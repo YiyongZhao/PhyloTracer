@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt; plt.rcdefaults()
 import matplotlib.patches as mpatches 
 import time 
 import gc
-from collections import defaultdict
+from collections import defaultdict,Counter
 
 
 def read_gff(fn):
@@ -51,13 +51,23 @@ def read_gff(fn):
         dict[a[1]]=[a[0],a[2],a[3],a[4],a[5]]
         data.append(a) 
     return data,dict
-def read_lens(fn): 
-    fp=open(fn) 
-    data=[] 
-    for row in fp.readlines(): 
-        r1,r2=row.split() 
-        data.append([r1,r2]) 
+
+def read_lens(fn, chrs=None): 
+    data = []
+    
+    chrs_lst = None
+    if chrs:
+        with open(chrs, 'r') as f:
+            chrs_lst = {i.strip() for i in f.readlines()} 
+    
+    with open(fn, 'r') as fp:
+        for row in fp.readlines():
+            r1, r2 = row.strip().split('\t')           
+            if chrs_lst is None or r1 in chrs_lst:
+                data.append([r1, r2])
+    
     return data
+
 def plot_chr1(lens,gl,gl2,mark,name): 
     total_lens=sum([float(k[1]) for k in lens]) 
     step=gl/float(total_lens) 
@@ -91,6 +101,7 @@ def plot_chr2(lens,gl,gl2,mark,name):
     plt.plot([gl_start,gl_start],[start_x,start_x-gl2],linestyle='-', color='black',linewidth=1) 
     plt.text(0.5*(2*gl_start+gl),mark_y+0.02,name,color='black',fontsize = 18,rotation = 0,weight='semibold',**align) 
     return step
+
 def gene_location(gff, lens, step): 
     loc_gene,dict_chr,n={},{},0 
     for i in lens: 
@@ -99,7 +110,7 @@ def gene_location(gff, lens, step):
     for k in gff: 
         if k[0] not in dict_chr.keys(): 
             continue 
-        loc=(float(dict_chr[k[0]])+float(k[3]))*step 
+        loc=(float(dict_chr[k[0]])+float(k[5]))*step 
         loc_gene[k[1]]=loc 
     return loc_gene
 
@@ -119,7 +130,7 @@ def read_gd_pairs(gd_lst):
             dict_gd[reverse_index]=dict_gd1[index]
     return dict_gd
     
-def plot_dot(root, data, loc1, loc2, gl,dict_gd):
+def plot_dot(root, data, loc1, loc2, gl,dict_gd,size=0.001):
     gl_start1, gl_start2 = 0.95, 0.05
     
     for pair, wgd_notch in dict_gd.items():
@@ -131,7 +142,7 @@ def plot_dot(root, data, loc1, loc2, gl,dict_gd):
             x, y = loc1[gene1], loc2[gene2]
             x, y = gl_start1 - x, gl_start2 + y
             if dict_gd[index] == "NONE":
-                DrawCircle(root, [y, x], 0.001, 'gray', 0.6)
+                DrawCircle(root, [y, x], size, 'gray', 0.6)
 
     for pair, wgd_notch in dict_gd.items():
         fd = pair.strip().split(":")
@@ -142,20 +153,20 @@ def plot_dot(root, data, loc1, loc2, gl,dict_gd):
             x, y = loc1[gene1], loc2[gene2]
             x, y = gl_start1 - x, gl_start2 + y
             if dict_gd[index] == "red":
-                DrawCircle(root, [y, x], 0.001, 'red', 0.6)
+                DrawCircle(root, [y, x], size, 'red', 0.6)
             elif dict_gd[index] == "green":
-                DrawCircle(root, [y, x], 0.001, 'green', 0.6)
+                DrawCircle(root, [y, x], size, 'green', 0.6)
             elif dict_gd[index] == "purple":
-                DrawCircle(root, [y, x], 0.001, 'purple', 0.6)
+                DrawCircle(root, [y, x], size, 'purple', 0.6)
             elif dict_gd[index] == "blue":
-                DrawCircle(root, [y, x], 0.001, 'blue', 0.6)   
+                DrawCircle(root, [y, x], size, 'blue', 0.6)   
 
 def DrawCircle(ax, loc, radius,color, alpha):
     circle = mpatches.Circle(loc, radius, edgecolor="none", facecolor=color, alpha=alpha)
     ax.add_patch(circle)
 
 
-def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name):
+def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name,target_chr1=None, target_chr2=None, size=None):
     plt.figure(figsize=(10, 10)) 
     root = plt.axes([0, 0, 1, 1]) 
     align = dict(family='Arial',style='normal',horizontalalignment="center", verticalalignment="center") 
@@ -165,8 +176,12 @@ def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name):
     gff_2,dict_gff2=read_gff(gff2) 
     t2=time.time() 
     print("Reading gff took "+str(t2-t1)+" second") 
-    lens_1=read_lens(lens1)
-    lens_2=read_lens(lens2)
+    if target_chr1 and target_chr2:
+        lens_1=read_lens(lens1,chrs1)
+        lens_2=read_lens(lens2,chrs2)
+    else:
+        lens_1=read_lens(lens1)
+        lens_2=read_lens(lens2)
     t3=time.time() 
     print("Reading lens took "+str(t3-t2)+" second") 
     gl1,gl2=0.92,0.92 
@@ -177,10 +192,18 @@ def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name):
     print("Reading lebel_pairs took "+str(t4-t3)+" second")  
     gene_loc_1=gene_location(gff_1,lens_1,step_1)
     gene_loc_2=gene_location(gff_2,lens_2,step_2) 
+
+
+    gene_conversion_list=find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,file_name)
+    find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,file_name)
     t5=time.time() 
     print("Dealing lebel_pairs took "+str(t5-t4)+" second") 
     gc.collect() 
-    plot_dot(root,dict_gd,gene_loc_1,gene_loc_2,gl1,dict_gd) 
+
+    if size:
+        plot_dot(root,dict_gd,gene_loc_1,gene_loc_2,gl1,dict_gd,size) 
+    else:
+        plot_dot(root,dict_gd,gene_loc_1,gene_loc_2,gl1,dict_gd) 
     t6=time.time() 
     print("Ploting dot took "+str(t6-t5)+" second") 
     root.set_xlim(0, 1) 
@@ -191,66 +214,140 @@ def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name):
     t7=time.time() 
     print(f"{file_name} Dotplot totaly took "+str(t7-t1)+" second")
 #####################################
-def process_blastp_result(input_file, num: int = 5):
-    col_count = {}
+def process_blastp_result(input_file, num=5, evalue_threshold=1e-5, min_score=100):
+    gene_data = {}
     processed_lines = []
-    
+    used_targets = set()
+
     with open(input_file, 'r') as file:
         for line in file:
             cols = line.strip().split('\t')
-            col1 = cols[0]
-            
-            if col1 in col_count:
-                if col_count[col1] < num:
-                    processed_lines.append(f"{cols[0]}\t{cols[1]}\tNONE")
-                    col_count[col1] += 1
-            else:
-                processed_lines.append(f"{cols[0]}\t{cols[1]}\torange")
-                col_count[col1] = 1
+            if len(cols) < 12:  
+                continue
 
-    sorted_lines = sorted(processed_lines, key=lambda x: x.split('\t')[2])
-    return sorted_lines
+            query_gene = cols[0]
+            target_gene = cols[1]
+            evalue = float(cols[10])
+            score = float(cols[11])
+
+            if evalue < evalue_threshold and score >= min_score:
+                gene_data.setdefault(query_gene, []).append((target_gene, score))
+
+    for query_gene, hits in gene_data.items():
+        sorted_hits = sorted(hits, key=lambda x: x[1], reverse=True)
+
+        for i, (target_gene, score) in enumerate(sorted_hits):
+            if target_gene in used_targets:
+                continue  
+
+            if i == 0:
+                color = "red"
+            elif i < num:
+                color = "blue"
+            else:
+                break  
+
+            processed_lines.append(f"{query_gene}\t{target_gene}\t{color}\n")
+            used_targets.add(target_gene)
+
+
+    sorted_list = sorted(processed_lines)
+    return sorted_list
 
 #####################################
-def process_synteny_result(input_file):
+def parse_synteny_file(input_file):
+    alignments = defaultdict(list) 
+    alignment_scores = {} 
+
     with open(input_file, 'r') as file:
-        processed_lines = [f"{cols[0]}\t{cols[2]}\tblue\n" for line in file if not line.startswith('#') for cols in [line.strip().split('\t')]]
-    sorted_lines = sorted(processed_lines, key=lambda x: x.split('\t')[2])
+        current_alignment = None
+        for line in file:
+            line = line.strip()
+            if line.startswith("#"):
+                match = re.search(r'Alignment\s+(\d+):.*?score=(\d+)', line)
+                if match:
+                    current_alignment = int(match.group(1))
+                    score = int(match.group(2))
+                    alignment_scores[current_alignment] = score
+            elif current_alignment is not None and line:
+                cols = line.split("\t")
+                if len(cols) >= 3:
+                    gene_a = cols[0] 
+                    gene_b = cols[2] 
+                    alignments[current_alignment].append((gene_a, gene_b))
+    return alignments, alignment_scores
+
+def assign_colors_by_alignment(alignments, alignment_scores):
+    gene_to_alignments = defaultdict(list)  
+
+   
+    for alignment, gene_pairs in alignments.items():
+        for gene_a, gene_b in gene_pairs:
+            gene_to_alignments[gene_a].append((alignment, gene_b))
+
+    result = set()
+    gene_pair_set=set()
     
-    return sorted_lines
+    for gene_a, alignments_list in gene_to_alignments.items():
+        
+        alignments_list.sort(key=lambda x: alignment_scores[x[0]], reverse=True)
+
+       
+        for i, (alignment, gene_b) in enumerate(alignments_list):
+            if i == 0:
+                color = "red"
+            else:
+                color = "blue"
+            gene_pair=f"{gene_a}\t{gene_b}"
+            if gene_pair not in gene_pair_set:
+                result.add(f"{gene_pair}\t{color}")
+                gene_pair_set.add(gene_pair)
+            else:
+                continue
+
+    sorted_list = sorted(result)
+    return sorted_list
+
+def judge_support(support,support_value):
+    if  support <=1 and 0.5 <=support_value <=1:
+        if support>=support_value:
+            return True
+        else:
+            return False
+        
+    elif support <=1 and 50 <= support_value <=100:
+        support_value=support_value/100
+        if support>=support_value:
+            return True
+        else:
+            return False
+    elif support > 1 and 0.5 <=support_value <=1:
+        support_value=support_value*100
+        if support>=support_value:
+            return True
+        else:
+            return False
+    elif support > 1 and 50 <=support_value <=100:
+        if support>=support_value:
+            return True
+        else:
+            return False
 
 #####################################
-def find_dup_node(Phylo_t:object)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
+def find_dup_node(Phylo_t:object,support_value=50)->list:
     events = Phylo_t.get_descendant_evol_events()
-    dup_node_name_list = []
-    for ev in events:
-        if ev.etype == "D":
-            i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
-            events_node_name_list = i.split(',')
-            common_ancestor_node_name = Phylo_t.get_common_ancestor(events_node_name_list)
-            dup_node_name_list.append(common_ancestor_node_name)
-            
-    return dup_node_name_list
+    dup_node_list = []
+    for event in events:
+        if event.etype == "D":
+            event_nodes = set(event.in_seqs) | set(event.out_seqs)
+            dup_node = Phylo_t.get_common_ancestor(list(event_nodes))
+            if judge_support(dup_node.support,support_value):
+                child1,child2=dup_node.get_children()
 
+                if judge_support(child1.support,support_value) and judge_support(child2.support,support_value):
+                    dup_node_list.append(dup_node)
+    return dup_node_list
 
-def filter_gd(gene_pair, paral_clade_list, new_named_gene2gene_dic):
-    item1_set = set(gene_pair)
-
-    for gd in paral_clade_list:
-        gd_clade1, gd_clade2 = gd.get_children()
-        gd_tips1 = [leaf for leaf in gd_clade1.get_leaf_names()]
-        gd_tips2 = [leaf for leaf in gd_clade2.get_leaf_names()]
-        set1 = set(gd_tips1)
-        set2 = set(gd_tips2)
-        total = set(gd_tips1 + gd_tips2)
-
-        if item1_set <= total:
-            if item1_set <= set1 or item1_set <= set2:
-                return new_named_gene2gene_dic[gene_pair[0]] + '\t' + new_named_gene2gene_dic[gene_pair[1]] + '\t' + 'green'+'\n'
-            else:
-                return new_named_gene2gene_dic[gene_pair[0]] + '\t' + new_named_gene2gene_dic[gene_pair[1]] + '\t' + 'red'+'\n'
-        else:
-            return new_named_gene2gene_dic[gene_pair[0]] + '\t' + new_named_gene2gene_dic[gene_pair[1]] + '\t' + 'NONE'+'\n'  # Return empty string if no match found
 
 def generate_combinations(list1, list2):
     gene_pairs=[]
@@ -271,16 +368,6 @@ def get_gene_pairs(t,sp1,sp2):
     return gene_pairs
 
 def find_independent_dup_nodes(dup_node_list, Phylo_t: object) -> list:
-    """
-    Find independent duplication nodes (gd) that are not on the same path in the phylogenetic tree.
-
-    Args:
-        dup_node_list (list): A list of duplication node objects.
-        Phylo_t (object): The phylogenetic tree object.
-
-    Returns:
-        list: A list of independent duplication node names (gd).
-    """
     dup_node_list.sort(key=lambda x: len(x.get_leaf_names()))
     node_dic={}
 
@@ -299,6 +386,97 @@ def find_independent_dup_nodes(dup_node_list, Phylo_t: object) -> list:
         return min_key_value[1]       
     else:
         return []
+
+
+def process_total_color_list(file_list):
+    gene_pair_marks = defaultdict(list)
+    file_occurrences = defaultdict(int)  
+
+    for file in file_list:
+        seen_pairs = set() 
+        for line in file:
+            gene_pair, color = '\t'.join(line.split()[:2]), line.split()[-1]
+            gene_pair_marks[gene_pair].append(color)
+
+            if gene_pair not in seen_pairs:
+                file_occurrences[gene_pair] += 1
+                seen_pairs.add(gene_pair)
+
+    final_result = []
+    for gene_pair, colors in gene_pair_marks.items():
+        if file_occurrences[gene_pair] == len(file_list):  
+            count = Counter(colors) 
+            red_count = count.get("red", 0)
+            blue_count = count.get("blue", 0)
+            
+            if red_count > blue_count:
+                final_result.append(f"{gene_pair}\tred")
+            elif blue_count > red_count:
+                final_result.append(f"{gene_pair}\tblue")
+            else:
+                print(f"Equal counts for {gene_pair}: red={red_count}, blue={blue_count}")
+
+    return final_result
+
+def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,gd_pairs):
+    chrs_combinations = [(chr_a, chr_b) for chr_a in [i[0] for i in lens_1] 
+                         for chr_b in [i[0] for i in lens_2]]
+
+    block_list = []
+
+    for chr_a, chr_b in chrs_combinations:
+        
+        if chr_a==chr_b: 
+            red_count = 0
+            blue_count = 0
+
+            for pair, color in dict_gd.items():
+                gene_a, gene_b = pair.split(":")
+                chr_gene_a = dict_gff1.get(gene_a, [None])[0]
+                chr_gene_b = dict_gff2.get(gene_b, [None])[0]
+
+                if chr_gene_a == chr_a and chr_gene_b == chr_b:
+                    if color == "red":
+                        red_count += 1
+                    elif color == "blue":
+                        blue_count += 1
+
+            total = red_count + blue_count
+            red_ratio = red_count / total if total > 0 else 0
+            blue_ratio = blue_count / total if total > 0 else 0
+
+            block_list.append({
+                "chr_a": chr_a,
+                "chr_b": chr_b,
+                "red_count": red_count,
+                "blue_count": blue_count,
+                "red_ratio": red_ratio,
+                "blue_ratio": blue_ratio
+            })
+
+    filter_block_list = [
+        block for block in block_list
+        if block["blue_ratio"] > 0 and block["red_ratio"] / block["blue_ratio"] < 10
+    ]
+    with open(f'chr_conversion_list_{gd_pairs}.txt', 'w') as f:
+        for i in filter_block_list:
+            f.write(f'{i}\n')
+    return filter_block_list
+
+
+def find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,gd_pairs):
+    with open(f'gene_conversion_{gd_pairs}.txt', 'w') as f:
+        for block in gene_conversion_list:
+            chr_a = block["chr_a"]
+            chr_b = block["chr_b"]
+
+            for pair, color in dict_gd.items():
+                gene_a, gene_b = pair.split(":")
+                chr_gene_a = dict_gff1.get(gene_a, [None])[0]
+                chr_gene_b = dict_gff2.get(gene_b, [None])[0]
+
+                if chr_gene_a == chr_a and chr_gene_b == chr_b:
+                    f.write(f'{gene_a}\t{gene_b}\t{color}\n')
 
 def process_gd_result(gf,imap,sp1,sp2):
     tre_dic=read_and_return_dict(gf)
@@ -320,36 +498,35 @@ def process_gd_result(gf,imap,sp1,sp2):
         if len(sps_tol)==2 and {sp1,sp2} not in sps_tol:
             continue
 
-        dup_node_list = find_dup_node(Phylo_t1)
+        dup_node_list = find_dup_node(Phylo_t1,50)
         paral_clade_list = find_independent_dup_nodes(dup_node_list,Phylo_t1)
 
         
         for i in paral_clade_list:
-            if len(i)==3:
+            if len(i) ==3:
                 gene_pairs = get_gene_pairs(i, rename_sp1, rename_sp2)
+                
+                gd_clade1, gd_clade2 = i.get_children()
+                gd_tips1 = set(gd_clade1.get_leaf_names())
+                gd_tips2 = set(gd_clade2.get_leaf_names())
+
                 for item in gene_pairs:
-                    item1_set=set(item)
-                    gd_clade1, gd_clade2 = i.get_children()
-                    gd_tips1 = [leaf for leaf in gd_clade1.get_leaf_names()]
-                    gd_tips2 = [leaf for leaf in gd_clade2.get_leaf_names()]
-                    set1 = set(gd_tips1)
-                    set2 = set(gd_tips2)
-                    if item1_set <= set1:
-                        # if gd_clade1.support >=100:
-                            result= new_named_gene2gene_dic[item[0]] + '\t' + new_named_gene2gene_dic[item[1]] + '\t' + 'green'+'\n'
-                            s=item[1]+'-g'# + '\t' + new_named_gene2gene_dic[item[1]]
-                    elif item1_set <= set2:
-                        # if gd_clade2.support >=100:
-                            result= new_named_gene2gene_dic[item[0]] + '\t' + new_named_gene2gene_dic[item[1]] + '\t' + 'green'+'\n'
-                            s=item[1]+'-g'# + '\t' + new_named_gene2gene_dic[item[1]]
+                    gene1, gene2 = item
+                    item_set = set(item)
+                    gene_a=new_named_gene2gene_dic[gene1]
+                    gene_b=new_named_gene2gene_dic[gene2]
+                    
+                    if item_set <= gd_tips1 or item_set <= gd_tips2:
+                        result = f"{gene_a}\t{gene_b}\tred\n"
+                        s = f"{gene2}-g"
+
                     else:
+                        result = f"{gene_a}\t{gene_b}\tblue\n"
+                        s = f"{gene2}-r"
 
-                        result= new_named_gene2gene_dic[item[0]] + '\t' + new_named_gene2gene_dic[item[1]] + '\t' + 'red'+'\n'
-                        s=item[1]+'-r'# + '\t' + new_named_gene2gene_dic[item[1]]
 
-                    if result and s not in written_results:
-
-                        processed_lines.append(result)  
+                    if s not in written_results:
+                        processed_lines.append(result)
                         written_results.add(s)
 
     sorted_lines = sorted(processed_lines, key=lambda x: x.split('\t')[2])
@@ -367,15 +544,20 @@ if __name__=="__main__":
     num=int(sys.argv[9])
     gf=sys.argv[10]
     imap=sys.argv[11]
- 
+    target_chr1=sys.argv[12]
+    target_chr2=sys.argv[13]
+    size=sys.argv[14]
+    
 
-    process_blastp_pairs=process_blastp_result(blastp_pairs,num)
-    process_synteny_pairs=process_synteny_result(synteny_pairs)
+    process_blastp_pairs=process_blastp_result(blastp_pairs, num)
+    alignments, alignment_scores = parse_synteny_file(synteny_pairs)
+    process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
     process_gd_pairs=process_gd_result(gf,imap,spe1,spe2)
-    generate_dotplot(gff1,gff2,lens1,lens2,process_blastp_pairs,spe1,spe2,'blastp_pairs')
+    generate_dotplot(gff1,gff2,lens1,lens2,process_blastp_pairs,spe1,spe2,'blastp_pairs',target_chr1,target_chr2,size)
     print('-'*30)
-    generate_dotplot(gff1,gff2,lens1,lens2,process_synteny_pairs,spe1,spe2,'synteny_pairs')
+    generate_dotplot(gff1,gff2,lens1,lens2,process_synteny_pairs,spe1,spe2,'synteny_pairs',target_chr1,target_chr2,size)
     print('-'*30)
-    generate_dotplot(gff1,gff2,lens1,lens2,process_gd_pairs,spe1,spe2,'gd_pairs')
-    total_pairs=process_blastp_pairs+process_synteny_pairs+process_gd_pairs
-    generate_dotplot(gff1,gff2,lens1,lens2,total_pairs,spe1,spe2,'total_pairs')
+    generate_dotplot(gff1,gff2,lens1,lens2,process_gd_pairs,spe1,spe2,'gd_pairs',target_chr1,target_chr2,size)
+    total_pairs=[process_blastp_pairs,process_synteny_pairs,process_gd_pairs]
+    total_lst=process_total_color_list(total_pairs)
+    generate_dotplot(gff1,gff2,lens1,lens2,total_lst,spe1,spe2,'total_pairs',target_chr1,target_chr2,size)
