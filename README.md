@@ -370,8 +370,11 @@ Required parameter:
     --blastp_result      Blastp result between species A and species B
     --synteny_result     Synteny result between species A and species B
     --blastp_limit       Limit number of targets per gene pair in the BLASTp result
+    --visual_chr_a       A file containing the chromosome numbers of species A is required to visualize specific chromosome regions
+    --visual_chr_b       A file containing the chromosome numbers of species B is required to visualize specific chromosome regions
+    --size               The size of each point in the dopolot graph and default = 0.0005
 Usage:
-    Phylo_Tracer.py HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --blastp_result blastp.txt --synteny_result synteny.txt --blastp_limit 5
+    Phylo_Tracer.py HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --blastp_result blastp.txt --synteny_result synteny.txt --blastp_limit 5 [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size]
 ```
 
 ## Bug Reports
