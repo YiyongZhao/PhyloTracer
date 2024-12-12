@@ -136,7 +136,7 @@ GD_Detector_parser.add_argument('--deepvar',type=int,required=True, help='Maximu
 GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='GD_Visualizer help')
 GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A numbered species tree file with Newick format')
 GD_Visualizer_parser.add_argument('--gd_result', metavar='file',  required=True, help='Result file of GD_Detecto')
-
+GD_Visualizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 # GD_Loss_Tracker command
 GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_Tracker help')
 GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
@@ -149,9 +149,9 @@ GD_Loss_Tracker_parser.add_argument('--end_species', type=str,  required=False, 
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
-# GD_Loss_Visualizer_parser.add_argument('--input_folder', type=str,  required=True, help='The result folder name of GD_Loss_Tracker')
-# GD_Loss_Visualizer_parser.add_argument('--output_folder', type=str,  required=True, help='Output folder name')
+GD_Loss_Visualizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A species tree file with Newick format')
+
 # Ortho_Retriever command
 Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help')
 Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
@@ -184,7 +184,9 @@ HaploFinder.add_argument('--species_b_lens', metavar='FILE', required=True, help
 HaploFinder.add_argument('--blastp_result', metavar='FILE', required=True, help='Blastp result between species A and species B')
 HaploFinder.add_argument('--synteny_result', metavar='FILE', required=True, help='Synteny result between species A and species B')
 HaploFinder.add_argument('--blastp_limit', type=int, required=True, help='Limit number of targets per gene pair in the BLASTp result')
-
+HaploFinder.add_argument('--visual_chr_a', metavar='FILE', required=False, help='A file containing the chromosome numbers of species a')
+HaploFinder.add_argument('--visual_chr_b', metavar='FILE', required=False, help='A file containing the chromosome numbers of species b')
+HaploFinder.add_argument('--size', type=float, required=False, help='The size of each point in the dopolot graph and default = 0.0005')
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
 
@@ -346,6 +348,7 @@ def main():
             keep_branch = args.keep_branch
             species_category_list = [read_and_return_dict(i) for i in species_categories]
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
+            
             tre_dic = read_and_return_dict(input_GF_list)
             gene2fam = None
             df = None
@@ -408,11 +411,12 @@ def main():
 
     elif args.command == 'GD_Visualizer':
         # Execute the GD_Visualizer function
-        if args.input_sps_tree and args.gd_result :
+        if args.input_sps_tree and args.gd_result and args.input_imap :
             start_time = time.time()
             sptree=Tree(args.input_sps_tree,format=1)
             gd_result = args.gd_result
-            gd_visualizer_main(sptree,gd_result)
+            taxa=read_and_return_dict(args.input_imap)
+            gd_visualizer_main(sptree,gd_result,taxa)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -436,10 +440,13 @@ def main():
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             sptree=PhyloTree(input_sps_tree)
             num_sptree(sptree)
+
             tre_dic=read_and_return_dict(input_GF_list)
 
-            sp_dic,path2_treeid_dic=get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
-
+            sp_dic1,path2_treeid_dic1=get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
+            sp_dic = {'->'.join(parts[:-1] + [parts[-1].replace(parts[-1].split('(')[0], voucher2taxa_dic.get(parts[-1].split('(')[0], parts[-1].split('(')[0]))]): v for k, v in sp_dic1.items() for parts in [k.split('->')]}
+            path2_treeid_dic= {'->'.join(parts[:-1] + [parts[-1].replace(parts[-1].split('(')[0], voucher2taxa_dic.get(parts[-1].split('(')[0], parts[-1].split('(')[0]))]): v for k, v in path2_treeid_dic1.items() for parts in [k.split('->')]}
+            
             if args.start_node and args.end_species:
                 start_node=proecee_start_node(args.start_node,sptree)
                 species=args.end_species
@@ -467,19 +474,16 @@ def main():
 
     elif args.command == 'GD_Loss_Visualizer':
         # Execute the GD_Loss_Visualizer function
-        if args.input_sps_tree:
+        if args.input_sps_tree and args.input_imap:
         # if args.input_folder and  args.output_folder :
             start_time = time.time()
-            # input_dir=args.input_folder
-            # out_dir=args.output_folder
-            # os.makedirs(out_dir, exist_ok=True)
-            # if args.input_sps_tree:
+            taxa=read_and_return_dict(args.input_imap)
 
             input_sps_tree=args.input_sps_tree
             sptree=Tree(input_sps_tree,format=1)
             result=process_gd_loss_summary()
             generate_plt()
-            visualizer_sptree(result,sptree)
+            visualizer_sptree(result,sptree,taxa)
             
             
 
@@ -563,8 +567,9 @@ def main():
             start_time = time.time()
             
             # Process results
-            process_blastp_pairs = process_blastp_result(args.blastp_result, args.blastp_limit)
-            process_synteny_pairs = process_synteny_result(args.synteny_result)
+            process_blastp_pairs=process_blastp_result(args.blastp_result, args.blastp_limit)
+            alignments, alignment_scores = parse_synteny_file(args.synteny_result)
+            process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
             process_gd_pairs = process_gd_result(args.input_GF_list, args.input_imap, args.species_a, args.species_b)
             
             # GFF and lens variables
@@ -572,19 +577,26 @@ def main():
             lens1, lens2 = args.species_a_lens, args.species_b_lens
             spe1, spe2 = args.species_a, args.species_b
             
+            target_chr1 = args.visual_chr_a
+            target_chr2 = args.visual_chr_b
+            size = args.size if args.size else 0.001
+
             # Helper function to generate dotplots
-            def generate_and_print_dotplot(pairs, label):
-                generate_dotplot(gff1, gff2, lens1, lens2, pairs, spe1, spe2, label)
+            def generate_and_print_dotplot(pairs, label,size):
+                generate_dotplot(gff1, gff2, lens1, lens2, pairs, spe1, spe2, label, target_chr1, target_chr2, size)
+                print(size)
                 print('-' * 30)
             
             # Generate dotplots
-            generate_and_print_dotplot(process_blastp_pairs, 'blastp_pairs')
-            generate_and_print_dotplot(process_synteny_pairs, 'synteny_pairs')
-            generate_and_print_dotplot(process_gd_pairs, 'gd_pairs')
+            generate_and_print_dotplot(process_blastp_pairs, 'blastp_pairs',size)
+            generate_and_print_dotplot(process_synteny_pairs, 'synteny_pairs',size)
+            generate_and_print_dotplot(process_gd_pairs, 'gd_pairs',size)
             
-            total_pairs = process_blastp_pairs + process_synteny_pairs + process_gd_pairs
-            process_total_pairs=sorted(total_pairs, key=lambda x: x.split('\t')[2])
-            generate_and_print_dotplot(process_total_pairs, 'total_pairs')
+            total_pairs=[process_blastp_pairs,process_synteny_pairs,process_gd_pairs]
+            total_lst=process_total_color_list(total_pairs)
+
+
+            generate_and_print_dotplot(total_lst, 'total_pairs',size)
             
             # Calculate and print execution time
             end_time = time.time()
