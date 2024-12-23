@@ -47,7 +47,7 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 5. **OrthoFilter_LB:** To prune phylogenomic noises from single-copy and multi-copy gene family trees by removing the tips with long branch lengths.
 6. **OrthoFilter_Mono:** To prune phylogenomic noise from single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives.
 7. **TreeTopology_Summarizer:** To enumerate the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
-8. **Tree_Visualizer:** To visualize and integrate gene duplication detection results into the species tree.
+8. **Tree_Visualizer:** To visualize  visualize gene duplication events on phylogenetic trees by marking duplication nodes, adding color-coded labels, integrating gene expression data, and summarizing duplications on the species tree for intuitive evolutionary analysis.
 9. **GD_Detector:** To identify gene duplication events by reconciliation of gene family trees to a species tree.
 10. **GD_Visualizer:** To visualize gene duplication detection on the context of a species tree.
 11. **GD_Loss_Tracker:** To track the gene duplication loss event starting across each nodes/tips from a specific GD burst event in the species tree.
