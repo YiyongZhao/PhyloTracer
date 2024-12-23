@@ -40,19 +40,19 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 
 ---
 ## Module features
-1. **PhyloTree_CollapseExpand:** To transform a phylogenetic tree with Newick format into a ‘comb’ structure based on a predefined support value threshold. It can also revert the 'comb' structure to the binary tree, allowing meet the standard software analysis requirements.
+1. **PhyloTree_CollapseExpand:** To transform a phylogenetic tree with Newick format into a ‘comb’ structure based on a predefined support value threshold. It can also revert the 'comb' structure to the binary tree, allowing it to meet the standard software analysis requirements.
 2. **PhyloSupport_Scaler:** To recalibrate support values (bootstrap/posterior probability) for a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational requirements.
-3. **BranchLength_NumericConverter:** To convert values of branch length with string format to numeric format for a phylogenetic tree, critical for quantitative analysis and computational operations.
+3. **BranchLength_NumericConverter:** To convert branch length values from string format to numeric format for a phylogenetic tree, which is critical for quantitative analysis and computational operations.
 4. **Phylo_Rooter:** Enables an accuracy method for gene tree rooting and enhancing the downstream evolutionary genomic analysis.
 5. **OrthoFilter_LB:** To prune phylogenomic noises from single-copy and multi-copy gene family trees by removing the tips with long branch lengths.
 6. **OrthoFilter_Mono:** To prune phylogenomic noise from single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives.
 7. **TreeTopology_Summarizer:** To enumerate the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
-8. **Tree_Visualizer:** To visualize  visualize gene duplication events on phylogenetic trees by marking duplication nodes, adding color-coded labels, integrating gene expression data, and summarizing duplications on the species tree for intuitive evolutionary analysis.
+8. **Tree_Visualizer:** To visualize gene duplication events on phylogenetic trees by marking duplication nodes, adding color-coded labels, integrating gene expression data, and summarizing duplications on the species tree for intuitive evolutionary analysis.
 9. **GD_Detector:** To identify gene duplication events by reconciliation of gene family trees to a species tree.
-10. **GD_Visualizer:** To visualize gene duplication detection on the context of a species tree.
-11. **GD_Loss_Tracker:** To track the gene duplication loss event starting across each nodes/tips from a specific GD burst event in the species tree.
-12. **GD_Loss_Visualizer:** To visualize the summary of gene duplication loss event counts for each nodes/tips on the context of the species tree.
-13. **Ortho_Retriever:** To rapid infer putative single-copy orthologs by splitting paralogs from large-scale gene family trees across multiple species.
+10. **GD_Visualizer:** To visualize gene duplication detection in the context of a species tree.
+11. **GD_Loss_Tracker:** To track the gene duplication loss event starting across each node/tip from a specific GD burst event in the species tree.
+12. **GD_Loss_Visualizer:** To visualize the summary of gene duplication loss event counts for each node/tip in the context of the species tree.
+13. **Ortho_Retriever:** To rapidly infer putative single-copy orthologs by splitting paralogs from large-scale gene family trees across multiple species.
 14. **Hybrid_Tracer:** To detect hybridization signals for each potential GD burst event across species tree by using the D-statistic (ABAB-BABA) test.
 15. **Hybrid_Visualizer:** To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
 16. **HaploFinder:** Distinguishing ancient genome recombination events including gene conversions and crossovers by tracing subgenome haplotypes through phylogenomic profiling.
