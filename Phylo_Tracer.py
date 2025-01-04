@@ -150,7 +150,7 @@ GD_Loss_Tracker_parser.add_argument('--end_species', type=str,  required=False, 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
 GD_Loss_Visualizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
-GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A species tree file with Newick format')
+GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A numbered species tree file with Newick format')
 
 # Ortho_Retriever command
 Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help')
