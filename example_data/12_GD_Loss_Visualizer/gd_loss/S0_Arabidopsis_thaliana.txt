@@ -1,2 +1,0 @@
-S0(2)->Arabidopsis_thaliana(2)	2
-S0(2)->Arabidopsis_thaliana(1)	1

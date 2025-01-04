@@ -1,7 +1,0 @@
-S2(2)->S1(2)->S0(2)->Glycine_max(2)	39
-S2(2)->S1(2)->S0(2)->Glycine_max(1)	14
-S2(2)->S1(2)->S0(1)->Glycine_max(1)	15
-S2(2)->S1(1)->S0(1)->Glycine_max(1)	6
-S2(2)->S1(1)->S0(1)->Glycine_max(0)	1
-S2(2)->S1(2)->S0(2)->Glycine_max(0)	2
-S2(2)->S1(2)->S0(1)->Glycine_max(0)	2
