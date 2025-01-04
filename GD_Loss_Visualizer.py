@@ -185,7 +185,7 @@ def rejust_root_dist(sptree):
 
     return sptree
 
-def visualizer_sptree(result,sptree):
+def visualizer_sptree(result,sptree,taxa):
     new_dict=transform_dict(result)
 
     sptree.ladderize()
@@ -196,10 +196,17 @@ def visualizer_sptree(result,sptree):
     ts.title.add_face(TextFace("Blue color : One-duplicate loss", fsize=5),column=1)
     ts.title.add_face(TextFace("Red color : Two-duplicate loss", fsize=5),column=1)
     ts.title.add_face(TextFace("The number represents the number of statistical GDs", fsize=5),column=1)
+
+    ts.show_border = True
+    ts.margin_bottom = 20
+    ts.margin_left = 20
+    ts.margin_right = 50
+    ts.margin_top = 20
+    ts.show_leaf_name = True
+    ts.show_branch_support = False
     ts.extra_branch_line_type =0
     ts.extra_branch_line_color='black'
     ts.branch_vertical_margin = -1
-
 
     for node in sptree.traverse():
 
@@ -222,9 +229,12 @@ def visualizer_sptree(result,sptree):
                 else:
                     color='red'
                     node.add_face(TextFace(v, fsize=5, fgcolor=color), column=2, position="branch-top")
-
-    realign_branch_length(sptree)
-    rejust_root_dist(sptree)
+    for leaf in sptree:
+        if leaf.name in taxa:
+            leaf.name=taxa[leaf.name]
+            # node.add_face(TextFace(taxa[leaf.name], fsize=5, fgcolor='black',ftype='Arial'), column=0, position="aligned")
+    # realign_branch_length(sptree)
+    # rejust_root_dist(sptree)
     sptree.render('gd_loss_visualizer.PDF',w=210, units="mm",tree_style=ts)
 if __name__ == "__main__":
     out='outfile'
