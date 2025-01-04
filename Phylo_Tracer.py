@@ -149,7 +149,6 @@ GD_Loss_Tracker_parser.add_argument('--end_species', type=str,  required=False, 
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
-GD_Loss_Visualizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A numbered species tree file with Newick format')
 
 # Ortho_Retriever command
@@ -474,16 +473,16 @@ def main():
 
     elif args.command == 'GD_Loss_Visualizer':
         # Execute the GD_Loss_Visualizer function
-        if args.input_sps_tree and args.input_imap:
+        if args.input_sps_tree:
         # if args.input_folder and  args.output_folder :
             start_time = time.time()
-            taxa=read_and_return_dict(args.input_imap)
+            
 
             input_sps_tree=args.input_sps_tree
             sptree=Tree(input_sps_tree,format=1)
             result=process_gd_loss_summary()
             generate_plt()
-            visualizer_sptree(result,sptree,taxa)
+            visualizer_sptree(result,sptree)
             
             
 
