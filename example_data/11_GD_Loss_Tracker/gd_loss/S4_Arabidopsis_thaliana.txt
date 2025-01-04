@@ -1,8 +1,0 @@
-S4(2)->S3(2)->S2(1)->S1(1)->S0(1)->Arabidopsis_thaliana(1)	15
-S4(2)->S3(2)->S2(2)->S1(2)->S0(2)->Arabidopsis_thaliana(2)	39
-S4(2)->S3(2)->S2(2)->S1(2)->S0(2)->Arabidopsis_thaliana(1)	6
-S4(2)->S3(2)->S2(2)->S1(2)->S0(1)->Arabidopsis_thaliana(0)	1
-S4(2)->S3(2)->S2(2)->S1(2)->S0(1)->Arabidopsis_thaliana(1)	2
-S4(2)->S3(1)->S2(1)->S1(1)->S0(1)->Arabidopsis_thaliana(0)	1
-S4(2)->S3(1)->S2(1)->S1(1)->S0(1)->Arabidopsis_thaliana(1)	1
-S4(2)->S3(2)->S2(2)->S1(1)->S0(1)->Arabidopsis_thaliana(1)	1
