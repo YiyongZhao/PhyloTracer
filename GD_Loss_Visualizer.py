@@ -185,7 +185,7 @@ def rejust_root_dist(sptree):
 
     return sptree
 
-def visualizer_sptree(result,sptree,taxa):
+def visualizer_sptree(result,sptree):
     new_dict=transform_dict(result)
 
     sptree.ladderize()
@@ -229,9 +229,9 @@ def visualizer_sptree(result,sptree,taxa):
                 else:
                     color='red'
                     node.add_face(TextFace(v, fsize=5, fgcolor=color), column=2, position="branch-top")
-    for leaf in sptree:
-        if leaf.name in taxa:
-            leaf.name=taxa[leaf.name]
+    # for leaf in sptree:
+    #     if leaf.name in taxa:
+    #         leaf.name=taxa[leaf.name]
             # node.add_face(TextFace(taxa[leaf.name], fsize=5, fgcolor='black',ftype='Arial'), column=0, position="aligned")
     # realign_branch_length(sptree)
     # rejust_root_dist(sptree)
