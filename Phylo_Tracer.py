@@ -113,7 +113,7 @@ TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='file',  req
 Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Tree_Visualizer help')
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='file', required=True, help='File containing paths to gene tree files, one per line')
 Tree_Visualizer_parser.add_argument('--input_imap', metavar='file', required=True, help='File with classification information of species corresponding to genes')
-Tree_Visualizer_parser.add_argument('--species_categories', metavar='file', nargs='+',  help='File with taxonomic information for species')
+Tree_Visualizer_parser.add_argument('--gene_categories', metavar='file', nargs='+',  help='File with taxonomic information for species')
 Tree_Visualizer_parser.add_argument('--keep_branch', type=str,  choices=['1', '0'],help='1 or 0 indicates whether or not to preserve branch length information')
 Tree_Visualizer_parser.add_argument('--tree_style',  choices=['r', 'c'],default='r', help='The tree style, r is meaning rectangular, c is meaning circular')
 Tree_Visualizer_parser.add_argument('--gene_family', metavar='file',  required=False, help='If you want to mark gene families you need to provide this file')
@@ -343,9 +343,9 @@ def main():
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
             tree_style = args.tree_style
-            species_categories = args.species_categories
+            gene_categories = args.gene_categories
             keep_branch = args.keep_branch
-            species_category_list = [read_and_return_dict(i) for i in species_categories]
+            species_category_list = [read_and_return_dict(i) for i in gene_categories]
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             
             tre_dic = read_and_return_dict(input_GF_list)
