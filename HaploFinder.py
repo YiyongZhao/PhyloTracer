@@ -214,69 +214,6 @@ def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name,target_c
     t7=time.time() 
     print(f"{file_name} Dotplot totaly took "+str(t7-t1)+" second")
 #####################################
-def process_blastp_result(input_file, num=5, evalue_threshold=1e-5, min_score=100):
-    gene_data = {}
-    processed_lines = []
-    used_targets = set()
-
-    with open(input_file, 'r') as file:
-        for line in file:
-            cols = line.strip().split('\t')
-            if len(cols) < 12:  
-                continue
-
-            query_gene = cols[0]
-            target_gene = cols[1]
-            evalue = float(cols[10])
-            score = float(cols[11])
-
-            if evalue < evalue_threshold and score >= min_score:
-                gene_data.setdefault(query_gene, []).append((target_gene, score))
-
-    for query_gene, hits in gene_data.items():
-        sorted_hits = sorted(hits, key=lambda x: x[1], reverse=True)
-
-        for i, (target_gene, score) in enumerate(sorted_hits):
-            if target_gene in used_targets:
-                continue  
-
-            if i == 0:
-                color = "red"
-            elif i < num:
-                color = "blue"
-            else:
-                break  
-
-            processed_lines.append(f"{query_gene}\t{target_gene}\t{color}\n")
-            used_targets.add(target_gene)
-
-
-    sorted_list = sorted(processed_lines)
-    return sorted_list
-
-#####################################
-def parse_synteny_file(input_file):
-    alignments = defaultdict(list) 
-    alignment_scores = {} 
-
-    with open(input_file, 'r') as file:
-        current_alignment = None
-        for line in file:
-            line = line.strip()
-            if line.startswith("#"):
-                match = re.search(r'Alignment\s+(\d+):.*?score=(\d+)', line)
-                if match:
-                    current_alignment = int(match.group(1))
-                    score = int(match.group(2))
-                    alignment_scores[current_alignment] = score
-            elif current_alignment is not None and line:
-                cols = line.split("\t")
-                if len(cols) >= 3:
-                    gene_a = cols[0] 
-                    gene_b = cols[2] 
-                    alignments[current_alignment].append((gene_a, gene_b))
-    return alignments, alignment_scores
-
 def assign_colors_by_alignment(alignments, alignment_scores):
     gene_to_alignments = defaultdict(list)  
 
@@ -334,7 +271,16 @@ def judge_support(support,support_value):
             return False
 
 #####################################
-def find_dup_node(Phylo_t:object,support_value=50)->list:
+def find_dup_node(Phylo_t:object,sp1,sp2,new_named_gene2gene_dic,processed_lines,written_results,support_value=50)->list:
+    """
+    Find all duplication nodes in the phylogenetic tree.
+    
+    Args:
+        Phylo_t (object): The phylogenetic tree object.
+    
+    Returns:
+        list: A list of duplication node names.
+    """
     events = Phylo_t.get_descendant_evol_events()
     dup_node_list = []
     for event in events:
@@ -346,6 +292,19 @@ def find_dup_node(Phylo_t:object,support_value=50)->list:
 
                 if judge_support(child1.support,support_value) and judge_support(child2.support,support_value):
                     dup_node_list.append(dup_node)
+        else:
+            event_nodes = set(event.in_seqs) | set(event.out_seqs)
+            dup_node = Phylo_t.get_common_ancestor(list(event_nodes))
+            orthology=get_gene_pairs(dup_node,sp1,sp2)
+            for i in orthology:
+                gene1, gene2 = i
+                gene_a=new_named_gene2gene_dic[gene1]
+                gene_b=new_named_gene2gene_dic[gene2]
+                result = f"{gene_a}\t{gene_b}\tred\n"
+                s = f"{gene2}-r"
+                if s not in written_results:
+                    processed_lines.append(result)
+                    written_results.add(s)
     return dup_node_list
 
 
@@ -386,37 +345,6 @@ def find_independent_dup_nodes(dup_node_list, Phylo_t: object) -> list:
         return min_key_value[1]       
     else:
         return []
-
-
-def process_total_color_list(file_list):
-    gene_pair_marks = defaultdict(list)
-    file_occurrences = defaultdict(int)  
-
-    for file in file_list:
-        seen_pairs = set() 
-        for line in file:
-            gene_pair, color = '\t'.join(line.split()[:2]), line.split()[-1]
-            gene_pair_marks[gene_pair].append(color)
-
-            if gene_pair not in seen_pairs:
-                file_occurrences[gene_pair] += 1
-                seen_pairs.add(gene_pair)
-
-    final_result = []
-    for gene_pair, colors in gene_pair_marks.items():
-        if file_occurrences[gene_pair] == len(file_list):  
-            count = Counter(colors) 
-            red_count = count.get("red", 0)
-            blue_count = count.get("blue", 0)
-            
-            if red_count > blue_count:
-                final_result.append(f"{gene_pair}\tred")
-            elif blue_count > red_count:
-                final_result.append(f"{gene_pair}\tblue")
-            else:
-                print(f"Equal counts for {gene_pair}: red={red_count}, blue={blue_count}")
-
-    return final_result
 
 def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,gd_pairs):
     chrs_combinations = [(chr_a, chr_b) for chr_a in [i[0] for i in lens_1] 
@@ -478,7 +406,7 @@ def find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,gd_p
                 if chr_gene_a == chr_a and chr_gene_b == chr_b:
                     f.write(f'{gene_a}\t{gene_b}\t{color}\n')
 
-def process_gd_result(gf,imap,sp1,sp2):
+def process_gd_result(gf,imap,sp1,sp2,support):
     tre_dic=read_and_return_dict(gf)
     gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(imap)
     rename_sp1=taxa2voucher_dic[sp1]
@@ -498,11 +426,11 @@ def process_gd_result(gf,imap,sp1,sp2):
         if len(sps_tol)==2 and {sp1,sp2} not in sps_tol:
             continue
 
-        dup_node_list = find_dup_node(Phylo_t1,50)
-        paral_clade_list = find_independent_dup_nodes(dup_node_list,Phylo_t1)
+        dup_node_list = find_dup_node(Phylo_t1,rename_sp1, rename_sp2,new_named_gene2gene_dic,processed_lines,written_results,support)
+        
 
         
-        for i in paral_clade_list:
+        for i in dup_node_list:
             if len(i) ==3:
                 gene_pairs = get_gene_pairs(i, rename_sp1, rename_sp2)
                 
@@ -518,18 +446,45 @@ def process_gd_result(gf,imap,sp1,sp2):
                     
                     if item_set <= gd_tips1 or item_set <= gd_tips2:
                         result = f"{gene_a}\t{gene_b}\tred\n"
-                        s = f"{gene2}-g"
+                        s = f"{gene2}-r"
 
                     else:
                         result = f"{gene_a}\t{gene_b}\tblue\n"
-                        s = f"{gene2}-r"
+                        s = f"{gene2}-b"
 
 
                     if s not in written_results:
                         processed_lines.append(result)
                         written_results.add(s)
 
-    sorted_lines = sorted(processed_lines, key=lambda x: x.split('\t')[2])
+            elif len(i) ==4:
+                gd_clade1, gd_clade2 = i.get_children()
+                tips1 = set(get_species_set(gd_clade1))
+                tips2 = set(get_species_set(gd_clade2))
+                if len(tips1)==len(tips2)==2:
+                    gene_pairs = get_gene_pairs(i, rename_sp1, rename_sp2)
+                    gd_tips1 = set(gd_clade1.get_leaf_names())
+                    gd_tips2 = set(gd_clade2.get_leaf_names())
+                    for item in gene_pairs:
+                        gene1, gene2 = item
+                        item_set = set(item)
+                        gene_a=new_named_gene2gene_dic[gene1]
+                        gene_b=new_named_gene2gene_dic[gene2]
+                        
+                        if item_set <= gd_tips1 or item_set <= gd_tips2:
+                            result = f"{gene_a}\t{gene_b}\tred\n"
+                            s = f"{gene2}-r"
+
+                        else:
+                            result = f"{gene_a}\t{gene_b}\tblue\n"
+                            s = f"{gene2}-b"
+
+
+                        if s not in written_results:
+                            processed_lines.append(result)
+                            written_results.add(s)
+
+    sorted_lines = sorted(processed_lines, key=lambda x: x.split('\t')[0])
     return sorted_lines
 
 if __name__=="__main__":
