@@ -184,7 +184,7 @@ HaploFinder.add_argument('--species_a_lens', metavar='FILE', required=True, help
 HaploFinder.add_argument('--species_b_lens', metavar='FILE', required=True, help='Lens file of species B')
 HaploFinder.add_argument('--visual_chr_a', metavar='FILE', required=False, help='A file containing the chromosome numbers of species a')
 HaploFinder.add_argument('--visual_chr_b', metavar='FILE', required=False, help='A file containing the chromosome numbers of species b')
-HaploFinder.add_argument('--gd_support', type=int,required=True, help='GD node support [50-100]')
+HaploFinder.add_argument('--gd_support', type=int,required=True,default=50, help='GD node support [50-100]')
 HaploFinder.add_argument('--size', type=float, required=False, help='The size of each point in the dopolot graph and default = 0.0005')
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
