@@ -1,0 +1,3 @@
+{'chr_a': 'chr04', 'chr_b': 'chr04', 'red_count': 424, 'blue_count': 56, 'red_ratio': 0.8833333333333333, 'blue_ratio': 0.11666666666666667}
+{'chr_a': 'chr09', 'chr_b': 'chr09', 'red_count': 311, 'blue_count': 33, 'red_ratio': 0.9040697674418605, 'blue_ratio': 0.09593023255813954}
+{'chr_a': 'chr10', 'chr_b': 'chr10', 'red_count': 262, 'blue_count': 45, 'red_ratio': 0.8534201954397395, 'blue_ratio': 0.1465798045602606}
