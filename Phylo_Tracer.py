@@ -163,10 +163,12 @@ Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='file',  required=T
 Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='file',  required=True, help='File containing paths to sequence alignment files corresponding to the gene trees')
 Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
 Hybrid_Tracer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
+Hybrid_Tracer_parser.add_argument('--target_node',  metavar='file', required=False, help='Specific node to process. Use "all" to process all gd_names.')
+Hybrid_Tracer_parser.add_argument('--split_gd', action='store_true', help='Split the gd to run hyde')
 
 # Hybrid_Visualizer
 Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybrid_Visualizer help')
-Hybrid_Visualizer_parser.add_argument('--input_hybrid_folder', type=str,  required=True, help='The result folder name of Hybrid_Tracer')
+Hybrid_Visualizer_parser.add_argument('--hyde_out', metavar='file',  required=True, help='File containing result of hyde')
 Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
 Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light")
 
@@ -180,11 +182,9 @@ HaploFinder.add_argument('--species_a_gff', metavar='FILE', required=True, help=
 HaploFinder.add_argument('--species_b_gff', metavar='FILE', required=True, help='GFF file of species B')
 HaploFinder.add_argument('--species_a_lens', metavar='FILE', required=True, help='Lens file of species A')
 HaploFinder.add_argument('--species_b_lens', metavar='FILE', required=True, help='Lens file of species B')
-HaploFinder.add_argument('--blastp_result', metavar='FILE', required=True, help='Blastp result between species A and species B')
-HaploFinder.add_argument('--synteny_result', metavar='FILE', required=True, help='Synteny result between species A and species B')
-HaploFinder.add_argument('--blastp_limit', type=int, required=True, help='Limit number of targets per gene pair in the BLASTp result')
 HaploFinder.add_argument('--visual_chr_a', metavar='FILE', required=False, help='A file containing the chromosome numbers of species a')
 HaploFinder.add_argument('--visual_chr_b', metavar='FILE', required=False, help='A file containing the chromosome numbers of species b')
+HaploFinder.add_argument('--gd_support', type=int,required=True, help='GD node support [50-100]')
 HaploFinder.add_argument('--size', type=float, required=False, help='The size of each point in the dopolot graph and default = 0.0005')
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
@@ -447,7 +447,7 @@ def main():
             path2_treeid_dic= {'->'.join(parts[:-1] + [parts[-1].replace(parts[-1].split('(')[0], voucher2taxa_dic.get(parts[-1].split('(')[0], parts[-1].split('(')[0]))]): v for k, v in path2_treeid_dic1.items() for parts in [k.split('->')]}
             
             if args.start_node and args.end_species:
-                start_node=proecee_start_node(args.start_node,sptree)
+                start_node=process_start_node(args.start_node,sptree)
                 species=args.end_species
                 write_gd_loss_info_of_node_to_species(sp_dic,start_node,species,path2_treeid_dic)
                 parse_text_to_excel('gd_loss_count_summary.txt')
@@ -455,7 +455,7 @@ def main():
                 write_total_lost_path_counts_result(sp_dic, path2_treeid_dic)
 
             elif args.start_node:
-                start_node=proecee_start_node(args.start_node,sptree)
+                start_node=process_start_node(args.start_node,sptree)
                 write_gd_loss_info_of_strart_node(sp_dic,start_node,path2_treeid_dic)
             
             elif args.end_species:
@@ -522,6 +522,8 @@ def main():
             input_Seq_GF_list = args.input_Seq_GF_list
             input_sps_tree = args.input_sps_tree
             input_imap= args.input_imap
+            target_node_name = process_start_node(args.target_node, sptree) if args.target_node else None
+
             tre_dic = read_and_return_dict(input_GF_list)
             seq_path_dic = read_and_return_dict(input_Seq_GF_list)
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
@@ -530,7 +532,12 @@ def main():
             rename_sptree=rename_input_tre(sptree,taxa2voucher_dic)
             sptree.write(outfile='numed_sptree.nwk',format=1)
 
-            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic)
+            
+            if target_node_name:
+                print(f"Target node determined: {target_node_name}")
+            else:
+                print("No target_species_file provided, processing all gd.")
+            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic,target_node=target_node_name,split_gd=args.split_gd)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
@@ -540,15 +547,15 @@ def main():
 
     elif args.command == 'Hybrid_Visualizer':
         # Execute the Hybrid_Visualizer function
-        if args.input_hybrid_folder  and args.input_sps_tree :
+        if args.hyde_out  and args.input_sps_tree :
             start_time = time.time()
-            input_hybrid_folder=args.input_hybrid_folder
+            hyde_out=args.hyde_out
             input_sps_tree = args.input_sps_tree
             sptree=read_tree(input_sps_tree)
             if args.node:
-                hyde_visual_node_main(input_hybrid_folder,sptree) 
+                hyde_visual_node_main(hyde_out,sptree) 
             else:
-                hyde_visual_leaf_main(input_hybrid_folder,sptree)
+                hyde_visual_leaf_main(hyde_out,sptree)
             
             end_time = time.time()
             execution_time = end_time - start_time
@@ -559,45 +566,24 @@ def main():
 
     elif args.command == 'HaploFinder':
         required_args = [args.input_GF_list, args.input_imap, args.species_a, args.species_b,
-                     args.species_a_gff, args.species_b_gff, args.species_a_lens, args.species_b_lens,
-                     args.blastp_result, args.synteny_result, args.blastp_limit]
+                     args.species_a_gff, args.species_b_gff, args.species_a_lens, args.species_b_lens,args.gd_support]
     
         if all(required_args):
             start_time = time.time()
             
-            # Process results
-            process_blastp_pairs=process_blastp_result(args.blastp_result, args.blastp_limit)
-            alignments, alignment_scores = parse_synteny_file(args.synteny_result)
-            process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
-            process_gd_pairs = process_gd_result(args.input_GF_list, args.input_imap, args.species_a, args.species_b)
+            process_gd_pairs = process_gd_result(args.input_GF_list, args.input_imap, args.species_a, args.species_b,args.gd_support)
             
             # GFF and lens variables
             gff1, gff2 = args.species_a_gff, args.species_b_gff
             lens1, lens2 = args.species_a_lens, args.species_b_lens
             spe1, spe2 = args.species_a, args.species_b
-            
+
             target_chr1 = args.visual_chr_a
             target_chr2 = args.visual_chr_b
             size = args.size if args.size else 0.001
 
-            # Helper function to generate dotplots
-            def generate_and_print_dotplot(pairs, label,size):
-                generate_dotplot(gff1, gff2, lens1, lens2, pairs, spe1, spe2, label, target_chr1, target_chr2, size)
-                print(size)
-                print('-' * 30)
-            
-            # Generate dotplots
-            generate_and_print_dotplot(process_blastp_pairs, 'blastp_pairs',size)
-            generate_and_print_dotplot(process_synteny_pairs, 'synteny_pairs',size)
-            generate_and_print_dotplot(process_gd_pairs, 'gd_pairs',size)
-            
-            total_pairs=[process_blastp_pairs,process_synteny_pairs,process_gd_pairs]
-            total_lst=process_total_color_list(total_pairs)
+            generate_dotplot(gff1, gff2, lens1, lens2, process_gd_pairs, spe1, spe2, 'gd_pairs', target_chr1, target_chr2, size)
 
-
-            generate_and_print_dotplot(total_lst, 'total_pairs',size)
-            
-            # Calculate and print execution time
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
