@@ -162,47 +162,95 @@ def get_max_deepth(root:object)->int:
     
     return max_child_depth + 1
 
-
-            
-def concatenate_genes_and_create_hyde_input(outgroup_gene,node, seq_dic, sptree, trename, temp_dir,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic):
-    temp_dir = os.path.join(temp_dir, "")
-    
-    with open(os.path.join(temp_dir, trename + '.imap'), 'w') as o:
-        leafs = node.get_leaf_names()
-        leafs.append(outgroup_gene)
-        leafs.append(outgroup_gene)
+def run_hyde_for_subclades(outgroup_gene,node, seq_dic,voucher2taxa_dic):
+    def run_hyde_for_clade(leafs, seq_dic, voucher2taxa_dic, outgroup_gene):
+        leafs.append(outgroup_gene)  # 仅加一次 outgroup gene
         sps_seq = {}
-        for i in leafs:
-            sps = i.split('_')[0]
-            sps_0=voucher2taxa_dic[sps]
-            if sps not in sps_seq:
-                o.write(f'{sps_0}\t{sps_0}\n')
-                sps_seq[sps] = seq_dic[i]
-            else:
-                sps_seq[sps] += seq_dic[i]
-        
+
+        with open("temp.imap", 'w') as imap_file:
+            for leaf in leafs:
+                sps = leaf.split('_')[0]
+                sps_0 = voucher2taxa_dic[sps]
+                if sps not in sps_seq:
+                    imap_file.write(f'{sps_0}\t{sps_0}\n')
+                    sps_seq[sps] = seq_dic[leaf]
+                else:
+                    sps_seq[sps] += seq_dic[leaf]
+
         max_length = max(len(seq) for seq in sps_seq.values())
-        new_dic = {}
-        
-        for k, v in sps_seq.items():
-            new_seq = v + '-' * (max_length - len(v))
-            new_dic[k] = new_seq
-        
-        out = voucher2taxa_dic[outgroup_gene.split('_')[0]]
-        phy_file = f'{trename}_{len(sps_seq)}species_{max_length}sites_{out}.phy'
-        
-        with open(os.path.join(temp_dir, phy_file), 'w') as f:
-            for k, v in new_dic.items():
-                f.write(f'{voucher2taxa_dic[k]}\t{v}\n')
+        padded_sps_seq = {k: v + '-' * (max_length - len(v)) for k, v in sps_seq.items()}
 
-        sptree1=rename_input_tre(sptree,voucher2taxa_dic)
-        t1 = sptree1.copy()
-        t1.prune(list(voucher2taxa_dic[i] for i in new_dic.keys()))
+        with open('temp.phy', 'w') as phy_file:
+            for species, sequence in padded_sps_seq.items():
+                phy_file.write(f'{voucher2taxa_dic[species]}\t{sequence}\n')
 
-        t1.write(outfile=os.path.join(temp_dir, trename + '.nwk'))
+        outgroup_taxa = voucher2taxa_dic[outgroup_gene.split('_')[0]]
+        hyde_result_lst = []
+        sps_num = len(sps_seq)
+
+        dat = hd.HydeData("temp.phy", "temp.imap", outgroup_taxa, sps_num, sps_num, max_length)
+        res = dat.list_triples()
+        for t in res:
+            p1, hyb, p2 = t
+            result = dat.test_triple(p1, hyb, p2)
+            combined_element = (t, result, len(res))
+            hyde_result_lst.append(combined_element)
+
+        os.remove('temp.phy')
+        os.remove('temp.imap')
+
+        return hyde_result_lst
+
+    children = node.children
+    if len(children) != 2:
+        raise ValueError("The input node must have exactly two children.")
+
+    subclade_results = []
+    for child in children:
+        leafs = child.get_leaf_names()
+        result = run_hyde_for_clade(leafs, seq_dic, voucher2taxa_dic, outgroup_gene)
+        subclade_results.extend(result)
+
+    return subclade_results
+
+def run_hyde_for_gdclade(outgroup_gene,node, seq_dic,voucher2taxa_dic):
+    leafs = node.get_leaf_names()
+    leafs.extend([outgroup_gene, outgroup_gene])
+    sps_seq = {}
+
+    with open("temp.imap", 'w') as imap_file:
+        for leaf in leafs:
+            sps = leaf.split('_')[0]
+            sps_0 = voucher2taxa_dic[sps]
+            if sps not in sps_seq:
+                imap_file.write(f'{sps_0}\t{sps_0}\n')
+                sps_seq[sps] = seq_dic[leaf]
+            else:
+                sps_seq[sps] += seq_dic[leaf]
+
+    max_length = max(len(seq) for seq in sps_seq.values())
+    padded_sps_seq = {k: v + '-' * (max_length - len(v)) for k, v in sps_seq.items()}
+
+
+    with open('temp.phy', 'w') as phy_file:
+        for species, sequence in padded_sps_seq.items():
+            phy_file.write(f'{voucher2taxa_dic[species]}\t{sequence}\n')
     
-    tup = (phy_file, trename + '.imap', trename + '.nwk', len(sps_seq), max_length, out)
-    return tup
+    outgroup_taxa = voucher2taxa_dic[outgroup_gene.split('_')[0]]
+    
+
+    hyde_result_lst=[]
+    sps_num=len(sps_seq)
+    dat = hd.HydeData("temp.phy", "temp.imap", outgroup_taxa, sps_num, sps_num, max_length)
+    res = dat.list_triples()
+    for t in res:
+        p1,hyb,p2=t
+        result=dat.test_triple(p1,hyb,p2)
+        combined_element = (t, result,len(res))
+        hyde_result_lst.append(combined_element)
+    os.remove('temp.phy')
+    os.remove('temp.imap')
+    return hyde_result_lst
 
 def get_model(clade, sptree):
     sps = get_species_list(clade)
@@ -326,61 +374,103 @@ def get_process_gd_clade(gd_type_dic,gd_count_dic):
     for k,v in gd_type_dic.items():
         if (v['ABB']+v['AAB']+v['ABAB'])!=0:
             type_ratio=(v['ABB']+v['AAB'])/(v['ABB']+v['AAB']+v['ABAB'])
-            if (v['ABB']+v['AAB']+v['ABAB'])>=200 and type_ratio>=0.1 :
+            if (v['ABB']+v['AAB']+v['ABAB'])>=10 and type_ratio>=0.1 :
                 gd_clade.append((k,gd_count_dic[k]))
     return gd_clade
 
-def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic):
-    dir_path = os.path.join(os.getcwd(), "hybrid_tracer/")
-    if os.path.exists(dir_path):
-        shutil.rmtree(dir_path)
-    os.makedirs(dir_path)
+def write_out(out, triple, outfile):
+    """
+    Take the output from test_triple() and write it to file.
+    """
+    print(triple[0],"\t",triple[1],"\t",triple[2],"\t",sep="",end="",file=outfile,)
+    print(out["Zscore"], "\t", sep="", end="", file=outfile)
+    print(out["Pvalue"], "\t", sep="", end="", file=outfile)
+    print(out["Gamma"], "\t", sep="", end="", file=outfile)
+    print(out["AAAA"], "\t", sep="", end="", file=outfile)
+    print(out["AAAB"], "\t", sep="", end="", file=outfile)
+    print(out["AABA"], "\t", sep="", end="", file=outfile)
+    print(out["AABB"], "\t", sep="", end="", file=outfile)
+    print(out["AABC"], "\t", sep="", end="", file=outfile)
+    print(out["ABAA"], "\t", sep="", end="", file=outfile)
+    print(out["ABAB"], "\t", sep="", end="", file=outfile)
+    print(out["ABAC"], "\t", sep="", end="", file=outfile)
+    print(out["ABBA"], "\t", sep="", end="", file=outfile)
+    print(out["BAAA"], "\t", sep="", end="", file=outfile)
+    print(out["ABBC"], "\t", sep="", end="", file=outfile)
+    print(out["CABC"], "\t", sep="", end="", file=outfile)
+    print(out["BACA"], "\t", sep="", end="", file=outfile)
+    print(out["BCAA"], "\t", sep="", end="", file=outfile)
+    print(out["ABCD"], "\n", sep="", end="", file=outfile)
 
-    dir_path1 = os.path.join(os.getcwd(), "hybrid_tracer_temp/")
-    if os.path.exists(dir_path1):
-        shutil.rmtree(dir_path1)
-    os.makedirs(dir_path1)
-    
+def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic,target_node=None,split_gd:bool=False):
+    hyde_tuple_lst=[]
     gd_count_dic,gd_type_dic=get_gd_count_dic_and_gd_type_dic(tre_dic,gene2new_named_gene_dic,rename_sptree)
-
     data=count_elements_in_lists(gd_type_dic)
-
     gd_clades=get_process_gd_clade(data,gd_count_dic)
-    for gd in gd_clades:
 
+    for gd in gd_clades:
         gd_name,gds=gd
 
-        if gd_name=='N1':
-            start_time = time.time()
-            print(f'{gd_name} is processing')
-            clade=rename_sptree&gd_name
-            # if len(get_species_set(clade)) <3:
-            #     print(f'{gd_name} species num is less than 3')
-            #     continue
-            # else:
-            for gd_clade_set in gds:
-                gdid=gd_clade_set[0]
-                gd_clade=gd_clade_set[1]
-                outfile =gdid
-                tre_id1=outfile.split('-')[0]
-                seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
-                outgroup_gene = get_outgroup_gene(gd_clade, rename_sptree)
-                if outgroup_gene!=None:
-                    tup = concatenate_genes_and_create_hyde_input(outgroup_gene,gd_clade, seq_dic, rename_sptree, outfile, dir_path1, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic)
-                    command = [
-                        'run_hyde.py',
-                        '-i', os.path.join(dir_path1, tup[0]),
-                        '-m', os.path.join(dir_path1, tup[1]),
-                        '-t', str(tup[3]),
-                        '-n', str(tup[3]),
-                        '-s', str(tup[4]),
-                        '-o', tup[5],
-                        '--prefix', os.path.join(dir_path, outfile)
-                    ]
-                    subprocess.run(command, check=True)    
+
+        if target_node and gd_name != target_node:
+            continue
+
+        start_time = time.time()
+        print(f'{gd_name} is processing')
+
+        clade=rename_sptree&gd_name
+
+        for gd_clade_set in gds:
+            gdid=gd_clade_set[0]
+            gd_clade=gd_clade_set[1]
+            outfile =gdid
+            tre_id1=outfile.split('-')[0]
+            seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
+            outgroup_gene = get_outgroup_gene(gd_clade, rename_sptree)
+            if outgroup_gene!=None:
+                if split_gd:
+                    tup = run_hyde_for_subclades(outgroup_gene,gd_clade, seq_dic,voucher2taxa_dic)
                 else:
-                    print(f'{gdid} not finde outgroup_gene')
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
+                    tup = run_hyde_for_gdclade(outgroup_gene,gd_clade, seq_dic,voucher2taxa_dic)
+                hyde_tuple_lst.extend(tup)
+            else:
+                print(f'{gdid} not finde outgroup_gene')
+
+        output_files = {"normal": ("hyde_out.txt", "hyde_filtered_out.txt"),"split": ("split_hyde_out.txt", "split_hyde_filtered_out.txt")}
+        file_key = "split" if split_gd else "normal"
+        out_file_name, filtered_out_file_name = output_files[file_key]
+        header = ("P1\tHybrid\tP2\tZscore\tPvalue\tGamma\tAAAA\tAAAB\tAABA\tAABB\tAABC\tABAA\t""ABAB\tABAC\tABBA\tBAAA\tABBC\tCABC\tBACA\tBCAA\tABCD\n")
+        with open(out_file_name, 'w') as out_file, open(filtered_out_file_name, 'w') as filtered_out_file:
+            print(header, end="", file=out_file)
+            print(header, end="", file=filtered_out_file)
+
+            for t, res, t_num in hyde_tuple_lst:
+                write_out(res, t, out_file)
+                if is_filtered(res, t_num):
+                    write_out(res, t, filtered_out_file)
+
+def is_filtered(res, t_num):
+    """Check if the result passes filtering criteria."""
+    return (
+        res["Pvalue"] < (0.05 / t_num)
+        and abs(res["Zscore"]) != 99999.9
+        and 0.0 < res["Gamma"] < 1.0
+    )        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
