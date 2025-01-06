@@ -3,19 +3,9 @@ import matplotlib
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont
 from collections import defaultdict
 import seaborn as sns
-
-
-def merge_files(directory, suffix, output_file):
-    with open(output_file, 'w', encoding='utf-8') as outfile:
-        for filename in os.listdir(directory):
-            if filename.endswith(suffix):
-                file_path = os.path.join(directory, filename)
-                with open(file_path, 'r', encoding='utf-8') as infile:
-                    for line in infile:
-                        outfile.write(line)
 
 def parse_hyde_out(filename):
     lst=[]
@@ -27,7 +17,7 @@ def parse_hyde_out(filename):
             elif i1[5]=='nan':
                 continue
             elif 0<float(i1[5])<1: 
-                tup=[i1[0],i1[1],i1[2],i1[5],i1[3]]
+                tup=[i1[0],i1[1],i1[2],i1[4],i1[5]]
                 lst.append(tup)
     return lst
 
@@ -51,24 +41,24 @@ def get_hybrid_dic(summary_dic):
 def calculate_gamma(lst):#一个三元组统计的list
     gamma=0
     for i in lst:
-        if i[3]=='nan':
-            continue
-        elif i[3] =='-inf':
-            continue
-        else:
-            num=float(i[3])
-            gamma+=num 
-    return gamma/len(lst)
-
-def calculate_pvalue(lst):#一个三元组统计的list
-    pvalue=0
-    for i in lst:
         if i[4]=='nan':
             continue
         elif i[4] =='-inf':
             continue
         else:
             num=float(i[4])
+            gamma+=num 
+    return gamma/len(lst)
+
+def calculate_pvalue(lst):#一个三元组统计的list
+    pvalue=0
+    for i in lst:
+        if i[3]=='nan':
+            continue
+        elif i[3] =='-inf':
+            continue
+        else:
+            num=float(i[3])
             pvalue+=num 
     return pvalue/len(lst)
 
@@ -90,7 +80,7 @@ def generate_tree_leaf(t, hybrid_sps,filename):
         if i.is_leaf():
             leaf_name = i.name.ljust(max_l, '·')  # 使用填充确保字符长度相同
             fgcolor = 'red' if i.name == hybrid_sps else 'black'
-            i.add_face(TextFace(leaf_name, fgcolor=fgcolor), column=1, position='aligned')
+            i.add_face(TextFace(leaf_name+' ', fgcolor=fgcolor), column=1, position='aligned')
             
     ts = TreeStyle()
     ts.scale = 10
@@ -143,10 +133,10 @@ def generate_tree_node(t,node,filename):
     
     t.render(file_name=filename+"_img_faces.png",h=3200,tree_style=ts)
 
-def from_summary_get_hyb_to_date(summary_dic, filter_dic,a_hyb_to_three_tup_list, leafs):
+def from_summary_get_hyb_to_date(summary_dic,a_hyb_to_three_tup_list, leafs):
     tup_df = pd.DataFrame(index=leafs, columns=leafs, data=0)
     gamma_df = pd.DataFrame(index=leafs, columns=leafs, data=0)
-    filtered_gamma_df=pd.DataFrame(index=leafs, columns=leafs, data=0)
+    pvalue_df=pd.DataFrame(index=leafs, columns=leafs, data=0)
     for i in a_hyb_to_three_tup_list:
         tup = i.split('-')
         p1,hyb,p2=tup
@@ -158,9 +148,9 @@ def from_summary_get_hyb_to_date(summary_dic, filter_dic,a_hyb_to_three_tup_list
         gamma_3=round(gamma, 3)
         tup_df.loc[p1, p2] = num
         gamma_df.loc[p1, p2] = gamma_3
-        filtered_gamma_df[p1][p2]=pvalue
+        pvalue_df.loc[p1, p2] = pvalue
         
-    return tup_df,gamma_df,filtered_gamma_df
+    return tup_df,gamma_df,pvalue_df
         
 
 def hyde_visual_cmap():
@@ -203,7 +193,7 @@ def get_necmap():
 
     return combined_cmap
 
-def create_hot_map_node(summary_dic,filter_dic,hyb_dic,node, t,filename):
+def create_hot_map_node(summary_dic,hyb_dic,node, t,filename):
     def average_dataframes(summary_tup_df): 
         tup_result_df = pd.DataFrame(0, index=summary_tup_df[0].index, columns=summary_tup_df[0].columns)  
         for df in summary_tup_df:  
@@ -216,7 +206,7 @@ def create_hot_map_node(summary_dic,filter_dic,hyb_dic,node, t,filename):
     df_lst=[]
     for i in node_s:
         a_hyb_to_three_tup_list=hyb_dic[i]
-        tup_df,gamma_df,filtered_gamma_df=from_summary_get_hyb_to_date(summary_dic,filter_dic,a_hyb_to_three_tup_list,leafs)
+        tup_df,gamma_df,filtered_gamma_df=from_summary_get_hyb_to_date(summary_dic,a_hyb_to_three_tup_list,leafs)
         df_lst.append((tup_df,gamma_df,filtered_gamma_df))
 
     summary_tup_df=[d[0] for d in df_lst] 
@@ -275,11 +265,11 @@ def create_hot_map_node(summary_dic,filter_dic,hyb_dic,node, t,filename):
     plt.close("all")
         
     
-def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename,b1):
+def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename):
     sp = t.get_leaf_names()
     tup_df = pd.DataFrame(index=sp, columns=sp, data=0)
     gamma_df = pd.DataFrame(index=sp, columns=sp, data=0)
-    filtered_gamma_df=pd.DataFrame(index=sp, columns=sp, data=0)
+    pvalue_df=pd.DataFrame(index=sp, columns=sp, data=0)
     for i in a_hyb_to_three_tup_list:
         tup = i.split('-')
         p1,hyb,p2=tup
@@ -293,12 +283,12 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename,b1):
 
         tup_df.loc[p1, p2] = num
         gamma_df.loc[p1, p2] = round(gamma, 3)
-        filtered_gamma_df.loc[p1, p2]=pvalue
+        pvalue_df.loc[p1, p2]=pvalue
     
     for p1 in sp:
         for p2 in sp:
             if p1 != p2:
-                if filtered_gamma_df.loc[p1, p2] < filtered_gamma_df.loc[p2, p1]:
+                if pvalue_df.loc[p1, p2] < pvalue_df.loc[p2, p1]:
                     gamma_df.loc[p2, p1] = 0
                 else:
                     gamma_df.loc[p1, p2] = 0
@@ -401,38 +391,24 @@ def rejust_root_dist(sptree):
 
     return sptree
 
-def hyde_visual_leaf_main(sptree):
-    # temp_directory = hybrid_tracer
-    # merge_files(temp_directory, '-out.txt', 'merged_out.txt')
-    # merge_files(temp_directory, '-filtered.txt', 'merged_filtered.txt')
-
-    out1=parse_hyde_out('merged_out.txt')
-    out2=parse_hyde_out('merged_filtered.txt')
+def hyde_visual_leaf_main(out_file_name,sptree):
+    out1=parse_hyde_out(out_file_name)
     result1=calculate_three_tup(out1)
-    result2=calculate_three_tup(out2)
     hybrid_dic1=get_hybrid_dic(result1)
-    hybrid_dic2=get_hybrid_dic(result2)
     for k,v in hybrid_dic1.items():
         print(f'{k} is processing')
         t1=sptree.copy()
         #t2=rename_input_tre(t1,taxa_dic)
         generate_tree_leaf(t1,k,k)
-        create_hot_map_leaf(result1,v,t1,k,result2)
+        create_hot_map_leaf(result1,v,t1,k)
         combine_fig(k)
         os.remove(f"{k}_hotmap.png")
         os.remove(f'{k}_img_faces.png')
 
-def hyde_visual_node_main(sptree):
-    # temp_directory = hybrid_tracer
-    # merge_files(temp_directory, '-out.txt', 'merged_out.txt')
-    # merge_files(temp_directory, '-filtered.txt', 'merged_filtered.txt')
-
-    out1=parse_hyde_out('merged_out.txt')
-    out2=parse_hyde_out('merged_filtered.txt')
+def hyde_visual_node_main(out_file_name,sptree):
+    out1=parse_hyde_out(out_file_name)
     result1=calculate_three_tup(out1)
-    result2=calculate_three_tup(out2)
     hybrid_dic1=get_hybrid_dic(result1)
-    hybrid_dic2=get_hybrid_dic(result2)
 
     num_tre_node(sptree)
     nodes=[i for i in sptree.traverse() if not i.is_leaf()]
@@ -444,7 +420,7 @@ def hyde_visual_node_main(sptree):
             print(f'{node.name} is processing')
             t1=sptree.copy()
             generate_tree_node(t1,node,node.name)
-            create_hot_map_node(result1,result2,hybrid_dic1,node,t1,node.name)
+            create_hot_map_node(result1,hybrid_dic1,node,t1,node.name)
             combine_fig(node.name)
             os.remove(f"{node.name}_hotmap.png")
             os.remove(f'{node.name}_img_faces.png')
