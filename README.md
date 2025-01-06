@@ -341,18 +341,20 @@ Required parameter:
     --input_Seq_GF_list  File containing paths to sequence alignment files corresponding to the gene trees
     --input_imap         File with classification information of species corresponding to genes
     --input_sps_tree     A species tree file with Newick format
+    --target_node        File with the species name that maps specific gd node
 Usage:
-    Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
+    Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_node N1.txt]
 ```
 ### Hybrid_Visualizer
 ```
 Description:
     To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals
 Required parameter:
-    --input_hybrid_folder  The result folder name of Hybrid_Tracer
-    --input_sps_tree       A species tree file with Newick format
+    --hyde_out        File containing the result of hyde of Hybrid_Tracer
+    --input_sps_tree  A species tree file with Newick format
+    --node            Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light
 Usage:
-    Phylo_Tracer.py Hybrid_Visualizer --input_hybrid_folder input_foldername --input_sps_tree sptree.nwk 
+    Phylo_Tracer.py Hybrid_Visualizer --hyde_out hyde.out  --input_sps_tree sptree.nwk [--node]
 ```
 ### HaploFinder
 ```
@@ -367,14 +369,12 @@ Required parameter:
     --species_b_gff      GFF file of species B
     --species_a_lens     Lens file of species A
     --species_b_lens     Lens file of species B
-    --blastp_result      Blastp result between species A and species B
-    --synteny_result     Synteny result between species A and species B
-    --blastp_limit       Limit number of targets per gene pair in the BLASTp result
+    --gd_support         GD node support [50-100],and default = 0.0005
     --visual_chr_a       A file containing the chromosome numbers of species A is required to visualize specific chromosome regions
     --visual_chr_b       A file containing the chromosome numbers of species B is required to visualize specific chromosome regions
     --size               The size of each point in the dotplot graph and default = 0.0005
 Usage:
-    Phylo_Tracer.py HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --blastp_result blastp.txt --synteny_result synteny.txt --blastp_limit 5 [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size]
+    Phylo_Tracer.py HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens  --gd_support 50 [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001]
 ```
 
 ## Bug Reports
