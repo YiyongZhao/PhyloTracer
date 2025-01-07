@@ -108,7 +108,7 @@ OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visu
 TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help')
 TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
 TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
-
+TreeTopology_Summarizer_parser.add_argument('--visual_top', type=int,  required=False, default=10,help='Visualize the result of provide number,default=10')
 # Tree_Visualizer command
 Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Tree_Visualizer help')
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='file', required=True, help='File containing paths to gene tree files, one per line')
@@ -184,7 +184,7 @@ HaploFinder.add_argument('--species_a_lens', metavar='FILE', required=True, help
 HaploFinder.add_argument('--species_b_lens', metavar='FILE', required=True, help='Lens file of species B')
 HaploFinder.add_argument('--visual_chr_a', metavar='FILE', required=False, help='A file containing the chromosome numbers of species a')
 HaploFinder.add_argument('--visual_chr_b', metavar='FILE', required=False, help='A file containing the chromosome numbers of species b')
-HaploFinder.add_argument('--gd_support', type=int,required=True,default=50, help='GD node support [50-100]')
+HaploFinder.add_argument('--gd_support', type=int,required=True, default=50,help='GD node support [50-100]')
 HaploFinder.add_argument('--size', type=float, required=False, help='The size of each point in the dopolot graph and default = 0.0005')
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
@@ -323,10 +323,11 @@ def main():
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_imap = args.input_imap
+            top_n=args.visual_top if args.visual_top else None
             outfile='topology'
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
-            statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic)
+            statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic,top_n)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
