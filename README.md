@@ -237,8 +237,8 @@ Required parameter:
     --input_GF_list            File containing paths to gene tree files, one per line
     --input_taxa               File with taxonomic information for species
     --input_imap               File with classification information of species corresponding to genes
-    --branch_length_multiples  Tips whose branch length is greater than or equal to the branch length multiples will be removed
-    --insert_branch_index      Nodes with insertion coverage ratio and insertion depth greater than or equal to the insert branch index will be removed
+    --branch_length_multiples  Tips whose branch length is greater than or equal to the branch length multiples will be removed and default = 10
+    --insert_branch_index      Nodes with insertion coverage ratio and insertion depth greater than or equal to the insert branch index will be removed and default = 10
 Optional parameter:
     --visual                   Visualize the results of gene family trees before and after removing outliers and paralogs
 Usage:
