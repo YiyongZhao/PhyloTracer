@@ -266,7 +266,7 @@ Required parameter:
 Optional parameter:
     --gene_categories     File with taxonomic information for species
     --gene_family         File with family classification information corresponding to genes
-    --input_sps_tree      If you provide the --gene_family parameter, you should provide a species tree file with Newick format
+    --input_sps_tree      Species tree file in Newick format (required with --gene_family)
     --gene_expression     Gene expression level files
     --visual_gd           Visualize the gd node of gene family trees
 Usage:
@@ -275,7 +275,7 @@ Usage:
 ### GD_Detector
 ```
 Description:
-    To identify gene duplication events by reconciling gene trees and species tree
+    To identify gene duplication events by reconciling gene trees with a species tree
 Required parameter:
     --input_GF_list            File containing paths to gene tree files, one per line
     --input_imap               File with classification information of species corresponding to genes
@@ -291,7 +291,7 @@ Usage:
 ### GD_Visualizer
 ```
 Description:
-    To visualize gene duplication detection results and integrate these findings onto the species tree
+    To visualize gene duplication detection results and integrate findings onto the species tree
 Required parameter:
     --input_sps_tree  A numbered species tree file with Newick format
     --gd_result       Result file of GD_Detector
@@ -301,7 +301,7 @@ Usage:
 ### GD_Loss_Tracker
 ```
 Description:
-    To analyze and summarize gene duplication loss events traverse each node from the species tree for each tips
+    To analyze and summarize gene duplication loss events across nodes and tips in the species tree
 Required parameter:
     --input_GF_list      File containing paths to gene tree files, one per line
     --input_sps_tree     A species tree file with Newick format
@@ -341,7 +341,8 @@ Required parameter:
     --input_Seq_GF_list  File containing paths to sequence alignment files corresponding to the gene trees
     --input_imap         File with classification information of species corresponding to genes
     --input_sps_tree     A species tree file with Newick format
-    --target_node        File with the species name that maps specific gd node
+Optional parameter:
+    --target_node        File with species names mapped to specific GD nodes, one per line
 Usage:
     Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_node N1.txt]
 ```
@@ -352,6 +353,7 @@ Description:
 Required parameter:
     --hyde_out        File containing the result of hyde of Hybrid_Tracer
     --input_sps_tree  A species tree file with Newick format
+Optional parameter:
     --node            Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light
 Usage:
     Phylo_Tracer.py Hybrid_Visualizer --hyde_out hyde.out  --input_sps_tree sptree.nwk [--node]
