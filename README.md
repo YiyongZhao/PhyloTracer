@@ -160,7 +160,7 @@ Description:
     To transform a phylogenetic tree in Newick format into a 'comb' structure based on a predefined support value threshold. It can also revert this `comb` structure to a fully resolved binary tree, allowing dynamic topology adjustments
 Required parameter:
     --input_GF_list  File containing paths to gene tree files, one per line
-    --support_value  Nodes whose support is less than or equal to 'support_value' will be converted
+    --support_value  Nodes whose support is less than or equal to 'support_value' will be converted and default=50
 Optional parameter:
     --revert         Revert this 'comb' structure to a fully resolved binary tree
 Usage:
@@ -223,9 +223,9 @@ Required parameter:
     --input_GF_list             File containing paths to gene tree files, one per line
     --input_imap                File with classification information of species corresponding to genes
     --absolute_branch_length    Absolute branch length multiplier and default = 5
-    --relative_branch_length   Relative branch length multiplier and default = 2.5
+    --relative_branch_length    Relative branch length multiplier and default = 2.5
 Optional parameter:
-    --visual              Visualize the results of gene family trees before and after removing long branches
+    --visual                    Visualize the results of gene family trees before and after removing long branches
 Usage:
     Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
 ```
@@ -247,7 +247,7 @@ Usage:
 ### TreeTopology_Summarizer
 ```
 Description:
-    To enumerate the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades
+    To enumerate and visualize the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades
 Required parameter:
     --input_GF_list    File containing paths to gene tree files, one per line
     --input_imap       File with classification information of species corresponding to genes
@@ -264,8 +264,8 @@ Required parameter:
     --keep_branch         1 or 0 indicates whether or not to preserve branch length information
     --tree_style          The tree style, 'r' is meaning rectangular, 'c' is meaning circular
 Optional parameter:
-    --gene_categories  File with taxonomic information for species
-    --gene_family         If you want to mark gene families you need to provide this file
+    --gene_categories     File with taxonomic information for species
+    --gene_family         File with family classification information corresponding to genes
     --input_sps_tree      If you provide the --gene_family parameter, you should provide a species tree file with Newick format
     --gene_expression     Gene expression level files
     --visual_gd           Visualize the gd node of gene family trees
@@ -279,9 +279,9 @@ Description:
 Required parameter:
     --input_GF_list            File containing paths to gene tree files, one per line
     --input_imap               File with classification information of species corresponding to genes
-    --gd_support               GD node support [50-100]
-    --subclade_support         The subclade support of GD node [0-100]
-    --dup_species_proportion   The proportion of overlappped species from two subclade for a GD event with range [0-1] and default = 0.2
+    --gd_support               GD node support and default = 50
+    --subclade_support         The subclade support of GD node and default = 50
+    --dup_species_proportion   The proportion of overlapped species from two subclades for a GD event with range [0-1] and default = 0.2
     --dup_species_num          The number of species with species duplications under the GD node
     --input_sps_tree           A species tree file with Newick format
     --deepvar                  Maximum variance of deepth and default = 1
