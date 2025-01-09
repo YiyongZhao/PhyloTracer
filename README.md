@@ -295,8 +295,9 @@ Description:
 Required parameter:
     --input_sps_tree  A numbered species tree file with Newick format
     --gd_result       Result file of GD_Detector
+    --input_imap         File with classification information of species corresponding to genes
 Usage:
-    Phylo_Tracer.py GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt
+    Phylo_Tracer.py GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap 
 ```
 ### GD_Loss_Tracker
 ```
