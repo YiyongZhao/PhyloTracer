@@ -35,42 +35,6 @@ def get_gd_node_to_species_loss_dic(sp_dic):
     
     return sum_loss_dic
 
-
-
-def merge_pngs_matrix(folder_name, output_file='gd_loss_summary_visualizer.png'):
-    images = []
-    for file_name in os.listdir(folder_name):
-        if file_name.endswith('.png'):
-            with Image.open(os.path.join(folder_name, file_name)) as img:
-                images.append(img.copy())
-
-    if not images:
-        print("没有找到 PNG 文件。")
-        return
-
-    total_images = len(images)
-
-    cols = math.ceil(math.sqrt(total_images)) 
-    rows = math.ceil(total_images / cols)      
-
-    widths, heights = zip(*(img.size for img in images))
-    
-    max_width = max(widths)
-    max_height = max(heights)
-    total_width = max_width * cols
-    total_height = max_height * rows
-
-
-    new_image = Image.new('RGB', (total_width, total_height), (255, 255, 255))
-
-
-    for index, img in enumerate(images):
-        x_offset = (index % cols) * max_width
-        y_offset = (index // cols) * max_height
-        new_image.paste(img, (x_offset, y_offset))
-
-    new_image.save(output_file)
-
 def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id):
     keys = list(sum_loss_dic.keys())
     values = list(sum_loss_dic.values())
@@ -91,8 +55,8 @@ def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id):
     plt.savefig(f'{gd_id}_{sps}.png')
     plt.cla()
     plt.close("all")  
-
-def generate_plt(full_path: str = 'gd_loss_count_summary.txt'):
+    
+def generate_plt(full_path):
     new_dic = read_and_return_dict(full_path)
  
     sum_loss_dic = get_gd_node_to_species_loss_dic(new_dic)
@@ -104,12 +68,10 @@ def generate_plt(full_path: str = 'gd_loss_count_summary.txt'):
     
     visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id)
 
-        
-
-def process_gd_loss_summary():
+def process_gd_loss_summary(file):
     element_counts = {}
     
-    with open('gd_loss_gf_count_summary.txt', 'r') as f:
+    with open(file, 'r') as f:
         lines = f.readlines()
 
         for line in lines[2:]:  
@@ -187,7 +149,6 @@ def rejust_root_dist(sptree):
 
 def visualizer_sptree(result,sptree):
     new_dict=transform_dict(result)
-
     sptree.ladderize()
     sptree.sort_descendants("support")
 
