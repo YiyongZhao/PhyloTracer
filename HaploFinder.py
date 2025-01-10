@@ -177,8 +177,8 @@ def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name,target_c
     t2=time.time() 
     print("Reading gff took "+str(t2-t1)+" second") 
     if target_chr1 and target_chr2:
-        lens_1=read_lens(lens1,chrs1)
-        lens_2=read_lens(lens2,chrs2)
+        lens_1=read_lens(lens1,target_chr1)
+        lens_2=read_lens(lens2,target_chr2)
     else:
         lens_1=read_lens(lens1)
         lens_2=read_lens(lens2)
@@ -187,15 +187,25 @@ def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name,target_c
     gl1,gl2=0.92,0.92 
     step_1=plot_chr1(lens_1,gl1,gl2,'',spe1) 
     step_2=plot_chr2(lens_2,gl2,gl1,'',spe2)
+
     dict_gd=read_gd_pairs(gd_pairs)
     t4=time.time() 
     print("Reading lebel_pairs took "+str(t4-t3)+" second")  
     gene_loc_1=gene_location(gff_1,lens_1,step_1)
     gene_loc_2=gene_location(gff_2,lens_2,step_2) 
 
+    # sorted_data = dict(sorted(dict_gd.items()))
+    # sorted_data1 = dict(sorted(sorted_data.items(), key=lambda x: (x[0].split(':')[0], x[0].split(':')[1])))
+    # with open('color_label.txt','w') as file :
+    #     for pair, color in sorted_data1.items():
+    #         gene_a, gene_b = pair.split(":")
+    #         file.write(f'{gene_a}\t{gene_b}\t{color}\n')
+
 
     gene_conversion_list=find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,file_name)
-    find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,file_name)
+
+    result_conversion=find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,file_name)
+    find_conversion_zones_with_ids_to_file(result_conversion)
     t5=time.time() 
     print("Dealing lebel_pairs took "+str(t5-t4)+" second") 
     gc.collect() 
@@ -350,6 +360,7 @@ def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,gd_pairs)
     chrs_combinations = [(chr_a, chr_b) for chr_a in [i[0] for i in lens_1] 
                          for chr_b in [i[0] for i in lens_2]]
 
+
     block_list = []
 
     for chr_a, chr_b in chrs_combinations:
@@ -381,18 +392,18 @@ def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,gd_pairs)
                 "red_ratio": red_ratio,
                 "blue_ratio": blue_ratio
             })
-
     filter_block_list = [
         block for block in block_list
-        if block["blue_ratio"] > 0 and block["red_ratio"] / block["blue_ratio"] < 10
+        if block["blue_ratio"] > 0 #and block["red_ratio"] / block["blue_ratio"] < 10
     ]
-    with open(f'chr_conversion_list_{gd_pairs}.txt', 'w') as f:
-        for i in filter_block_list:
-            f.write(f'{i}\n')
+    # with open(f'chr_conversion_list_{gd_pairs}.txt', 'w') as f:
+    #     for i in filter_block_list:
+    #         f.write(f'{i}\n')
     return filter_block_list
 
 
 def find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,gd_pairs):
+    sort_lst=[]
     with open(f'gene_conversion_{gd_pairs}.txt', 'w') as f:
         for block in gene_conversion_list:
             chr_a = block["chr_a"]
@@ -405,6 +416,36 @@ def find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,gd_p
 
                 if chr_gene_a == chr_a and chr_gene_b == chr_b:
                     f.write(f'{gene_a}\t{gene_b}\t{color}\n')
+                    sort_lst.append((gene_a,gene_b,color))
+    return sort_lst
+
+def find_conversion_zones_with_ids_to_file(data, output_file='gene_conversion.txt'):
+    conversion_zones = []  
+    n = len(data)          
+    zone_id = 1          
+    start = None         
+
+    for i in range(1, n):
+        if data[i][2] == 'blue' and data[i - 1][2] == 'red':
+            if start is None:
+                start = i - 1  
+            end = i+1 
+
+            while end + 1 < n and data[end + 1][2] == 'red':
+                end += 1
+
+            conversion_zones.append((zone_id, start, end))
+            zone_id += 1
+
+            start = end
+
+    with open(output_file, 'w') as f:
+        for zone in conversion_zones:
+            zone_id, start, end = zone
+            f.write(f"Conversion Zone {zone_id}:\n")
+            for j in range(start, end + 1):
+                f.write(f"{data[j]}\n")
+            f.write('*' * 20 + '\n')
 
 def process_gd_result(gf,imap,sp1,sp2,support):
     tre_dic=read_and_return_dict(gf)
