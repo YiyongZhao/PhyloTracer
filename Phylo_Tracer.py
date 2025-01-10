@@ -92,7 +92,7 @@ OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='OrthoFilte
 OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
 OrthoFilter_LB_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 OrthoFilter_LB_parser.add_argument('--absolute_branch_length', type=int, default=5, required=True, help='Absolute branch length multiplier and default = 5')
-OrthoFilter_LB_parser.add_argument('--relative_branch_length', type=float, default=2.5, required=True, help='Relative branch length multiplier and default = 5')
+OrthoFilter_LB_parser.add_argument('--relative_branch_length', type=float, default=2.5, required=True, help='Relative branch length multiplier and default = 2.5')
 OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
 
 # OrthoFilter_Mono command
@@ -100,8 +100,8 @@ OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='OrthoF
 OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
 OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='file',  required=True, help='Input taxa file')
 OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
-OrthoFilter_Mono_parser.add_argument('--branch_length_multiples', type=int, default=5, required=True, help='Branch_length_multiples')
-OrthoFilter_Mono_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index')
+OrthoFilter_Mono_parser.add_argument('--branch_length_multiples', type=int, default=5, required=True, help='Branch_length_multiples and default = 10')
+OrthoFilter_Mono_parser.add_argument('--insert_branch_index', type=int, default=5, required=True, help='Insert_branch_index and default = 10')
 OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
 
 # TreeTopology_Summarizer command
@@ -149,6 +149,8 @@ GD_Loss_Tracker_parser.add_argument('--end_species', type=str,  required=False, 
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help')
+GD_Loss_Visualizer_parser.add_argument('--gd_loss_result', metavar='file',  required=True, help='Result file of gd loss count summary of GD_Loss_Tracker')
+GD_Loss_Visualizer_parser.add_argument('--gd_loss_gf_result', metavar='file',  required=True, help='Result file of gd loss gf count summary of GD_Loss_Tracker')
 GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  required=False, help='A numbered species tree file with Newick format')
 
 # Ortho_Retriever command
@@ -474,15 +476,15 @@ def main():
 
     elif args.command == 'GD_Loss_Visualizer':
         # Execute the GD_Loss_Visualizer function
-        if args.input_sps_tree:
+        if args.input_sps_tree and args.gd_loss_result and args.gd_loss_gf_result:
         # if args.input_folder and  args.output_folder :
             start_time = time.time()
             
 
             input_sps_tree=args.input_sps_tree
             sptree=Tree(input_sps_tree,format=1)
-            result=process_gd_loss_summary()
-            generate_plt()
+            result=process_gd_loss_summary(args.gd_loss_gf_result)
+            generate_plt(args.gd_loss_result)
             visualizer_sptree(result,sptree)
             
             
