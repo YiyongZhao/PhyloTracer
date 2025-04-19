@@ -1,9 +1,0 @@
-ete3
-HyDe
-pandas
-numpy
-tqdm
-time
-pypdf4
-matplotlib
-pyqt5
