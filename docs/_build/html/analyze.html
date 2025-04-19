@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage &mdash; PhyloTracer 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="PhyloTracer Data Files" href="input_files.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PhyloTracer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="input_files.html">PhyloTracer Data Files</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#phylotree-collapseexpand">1. PhyloTree_CollapseExpand</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phylosupport-scaler">2. PhyloSupport_Scaler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#branchlength-numericconverter">3. BranchLength_NumericConverter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#phylo-rooter">4. Phylo_Rooter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#orthofilter-lb">5. OrthoFilter_LB</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#orthofilter-mono">6. OrthoFilter_Mono</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#treetopology-summarizer">7. TreeTopology_Summarizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tree-visualizer">8. Tree_Visualizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gd-detector">9. GD_Detector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gd-visualizer">10. GD_Visualizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gd-loss-tracker">11. GD_Loss_Tracker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gd-loss-visualizer">12. GD_Loss_Visualizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ortho-retriever">13. Ortho_Retriever</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hybrid-tracer">14. Hybrid_Tracer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hybrid-visualizer">15. Hybrid_Visualizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#haplofinder">16. HaploFinder</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PhyloTracer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/analyze.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="usage">
+<span id="id1"></span><h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
+<p>This section provides detailed usage instructions for the various modules and features of <strong>PhyloTracer</strong>. Each command includes a description, required parameters, optional parameters (if any), and an example of how to use it.</p>
+<section id="phylotree-collapseexpand">
+<h2>1. PhyloTree_CollapseExpand<a class="headerlink" href="#phylotree-collapseexpand" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To transform a phylogenetic tree in Newick format into a ‘comb’ structure based on a predefined support value threshold. It can also revert this <cite>comb</cite> structure to a fully resolved binary tree, allowing dynamic topology adjustments.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>   File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--support_value</span></code>   Nodes whose support is less than or equal to this value will be collapsed (default is 50).</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--revert</span></code>          Revert the ‘comb’ structure to a fully resolved binary tree.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>PhyloTree_CollapseExpand<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--support_value<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="o">[</span>--revert<span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="phylosupport-scaler">
+<h2>2. PhyloSupport_Scaler<a class="headerlink" href="#phylosupport-scaler" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To recalibrate support value from bootstrap or posterior probability in a phylogenetic tree, scaling them between [0,1] and [1,100] ranges for computational compatibility, and vice versa to meet various analytical needs.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>   File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--scale_to</span></code>        Specify ‘1’ to scale support values from 1-100 to 0-1, or ‘100’ to scale from 0-1 to 1-100.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>PhyloSupport_Scaler<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--scale_to<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="branchlength-numericconverter">
+<h2>3. BranchLength_NumericConverter<a class="headerlink" href="#branchlength-numericconverter" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To convert branch length values of a phylogenetic tree from string to numerical format.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>   File containing paths to gene tree files, one per line.</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--decimal_place</span></code>   Specify the number of decimal places for branch lengths (default is 10).</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>BranchLength_NumericConverter<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span><span class="o">[</span>--decimal_place<span class="w"> </span><span class="m">10</span><span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="phylo-rooter">
+<h2>4. Phylo_Rooter<a class="headerlink" href="#phylo-rooter" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>Enables an accurate method for gene tree rooting and enhancing the downstream evolutionary genomic analysis.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>       File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>          File with species classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_gene_length</span></code>   File with gene length information.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_sps_tree</span></code>      A species tree file in Newick format.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>Phylo_Rooter<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span>--input_gene_length<span class="w"> </span>gene2length.imap<span class="w"> </span>--input_sps_tree<span class="w"> </span>sptree.nwk
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="orthofilter-lb">
+<h2>5. OrthoFilter_LB<a class="headerlink" href="#orthofilter-lb" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>           File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>              File with species classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--absolute_branch_length</span></code>  Absolute branch length multiplier (default is 5).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--relative_branch_length</span></code>  Relative branch length multiplier (default is 2.5).</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--visual</span></code>                  Visualize the results of gene family trees before and after removing long branches.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>OrthoFilter_LB<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span>--absolute_branch_length<span class="w"> </span><span class="m">5</span><span class="w"> </span>--relative_branch_length<span class="w"> </span><span class="m">2</span>.5<span class="w"> </span><span class="o">[</span>--visual<span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="orthofilter-mono">
+<h2>6. OrthoFilter_Mono<a class="headerlink" href="#orthofilter-mono" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To prune phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>           File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_taxa</span></code>              File with taxonomic information for species.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>              File with species classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--branch_length_multiples</span></code> Tips whose branch length is greater than or equal to this multiple will be removed (default is 10).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--insert_branch_index</span></code>     Nodes with insertion coverage ratio and depth exceeding this index will be removed (default is 10).</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--visual</span></code>                  Visualize results before and after filtering.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>OrthoFilter_Mono<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span>--input_taxa<span class="w"> </span>gene2clade.imap<span class="w"> </span>--branch_length_multiples<span class="w"> </span><span class="m">10</span><span class="w"> </span>--insert_branch_index<span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="o">[</span>--visual<span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="treetopology-summarizer">
+<h2>7. TreeTopology_Summarizer<a class="headerlink" href="#treetopology-summarizer" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To enumerate and visualiz the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>   File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>      File with species classification information corresponding to genes.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>TreeTopology_Summarizer<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="tree-visualizer">
+<h2>8. Tree_Visualizer<a class="headerlink" href="#tree-visualizer" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To mark tips of gene trees with provided tags, identify GD nodes, and integrate gene duplication results onto the species tree.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>   File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>      File with species classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--keep_branch</span></code>     Whether to preserve branch length information (1 or 0).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--tree_style</span></code>      Tree style (‘r’ for rectangular, ‘c’ for circular).</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--gene_categories</span></code> Taxonomic information for species.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--gene_family</span></code>     File with family classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_sps_tree</span></code>  Species tree file in Newick format (required with –gene_family).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--gene_expression</span></code> Gene expression level files.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--visual_gd</span></code>       Visualize GD nodes of gene family trees.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>Tree_Visualizer<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span><span class="o">[</span>--gene_categories<span class="w"> </span>gene2order.imap<span class="w"> </span>--keep_branch<span class="w"> </span><span class="m">1</span><span class="w"> </span>--tree_style<span class="w"> </span>r<span class="w"> </span>--gene_family<span class="w"> </span>gene2family.imap<span class="w"> </span>--input_sps_tree<span class="w"> </span>sptree.nwk<span class="w"> </span>--gene_expression<span class="w"> </span>gene2expression.imap<span class="w"> </span>--visual_gd<span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="gd-detector">
+<h2>9. GD_Detector<a class="headerlink" href="#gd-detector" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To identify gene duplication events by reconciling gene trees with a species tree.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>           File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>              File with species classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--gd_support</span></code>              GD node support (default is 50).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--subclade_support</span></code>        Subclade support of GD node (default is 50).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--dup_species_proportion</span></code>  Proportion of overlapping species for a GD event (default is 0.2).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--dup_species_num</span></code>         Number of species duplications under the GD node.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_sps_tree</span></code>          Species tree file in Newick format.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--deepvar</span></code>                 Maximum variance of depth (default is 1).</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>GD_Detector<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span>--gd_support<span class="w"> </span><span class="m">50</span><span class="w"> </span>--subclade_support<span class="w"> </span><span class="m">50</span><span class="w"> </span>--dup_species_proportion<span class="w"> </span><span class="m">0</span>.5<span class="w"> </span>--dup_species_num<span class="w"> </span><span class="m">1</span><span class="w"> </span>--input_sps_tree<span class="w"> </span>sptree.nwk<span class="w"> </span>--deepvar<span class="w"> </span><span class="m">1</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="gd-visualizer">
+<h2>10. GD_Visualizer<a class="headerlink" href="#gd-visualizer" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To visualize gene duplication detection results and integrate findings onto the species tree.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_sps_tree</span></code>  A numbered species tree file in Newick format.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--gd_result</span></code>       Result file from GD_Detector.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>GD_Visualizer<span class="w"> </span>--input_sps_tree<span class="w"> </span>sptree.nwk<span class="w"> </span>--gd_result<span class="w"> </span>gd_result.txt
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="gd-loss-tracker">
+<h2>11. GD_Loss_Tracker<a class="headerlink" href="#gd-loss-tracker" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>Analyze and summarize gene duplication loss events across nodes and tips in the species tree.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>   File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_sps_tree</span></code>  Species tree file in Newick format.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>      File with species classification information corresponding to genes.</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--all</span></code>             If specified, detects gene duplications (GD) and loss events across all nodes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--start_node</span></code>      File containing species of node for detecting gene duplications (GD) and losses. This limits the detection to the subtree rooted at the specified node.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--end_species</span></code>     The species where detection ends. Only events affecting species up to and including the specified species will be detected.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>GD_Loss_Tracker<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_sps_tree<span class="w"> </span>sptree.nwk<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span><span class="o">[</span>--all<span class="w"> </span>--start_node<span class="w"> </span>--end_species<span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="gd-loss-visualizer">
+<h2>12. GD_Loss_Visualizer<a class="headerlink" href="#gd-loss-visualizer" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To visualize the summary of gene duplication loss events on the context of species tree.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_sps_tree</span></code>  A numbered species tree file in Newick format.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>GD_Loss_Visualizer<span class="w"> </span>--input_sps_tree<span class="w"> </span>numbered_species_tree.nwk
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="ortho-retriever">
+<h2>13. Ortho_Retriever<a class="headerlink" href="#ortho-retriever" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To infer single-copy putative orthologs by splitting paralogs from large-scale gene family trees for multiple species.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>       File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>          File with species classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_gene_length</span></code>   File with gene length information.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>Ortho_Retriever<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span>--input_gene_length<span class="w"> </span>gene2length.imap
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="hybrid-tracer">
+<h2>14. Hybrid_Tracer<a class="headerlink" href="#hybrid-tracer" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To use the ABAB-BABA test to detect hybridization signals for each potential GD burst event across species tree detect species hybridization events for.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>       File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_Seq_GF_list</span></code>   File containing paths to sequence alignment files corresponding to the gene trees.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>          File with species classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_sps_tree</span></code>      A species tree file in Newick format.</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--target_node</span></code>         File with species names mapped to specific GD nodes, one per line.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>Hybrid_Tracer<span class="w"> </span>--input_GF_list<span class="w"> </span>GF_ID2path.imap<span class="w"> </span>--input_Seq_GF_list<span class="w"> </span>Seq_GF_ID2path.imap<span class="w"> </span>--input_sps_tree<span class="w"> </span>sptree.nwk<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span><span class="o">[</span>--target_node<span class="w"> </span>N1.txt<span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="hybrid-visualizer">
+<h2>15. Hybrid_Visualizer<a class="headerlink" href="#hybrid-visualizer" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--hyde_out</span></code>        File containing the result of HyDe from Hybrid_Tracer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_sps_tree</span></code>  A species tree file in Newick format.</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--node</span></code>            Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light.</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>Hybrid_Visualizer<span class="w"> </span>--hyde_out<span class="w"> </span>hyde.out<span class="w"> </span>--input_sps_tree<span class="w"> </span>sptree.nwk<span class="w"> </span><span class="o">[</span>--node<span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</section>
+<section id="haplofinder">
+<h2>16. HaploFinder<a class="headerlink" href="#haplofinder" title="Link to this heading"></a></h2>
+<dl>
+<dt>Description:</dt><dd><p>To distinguish gene conversion by tracing subgenome haplotypes through phylogenomic profiling.</p>
+</dd>
+<dt>Required Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_GF_list</span></code>   File containing paths to gene tree files, one per line.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--input_imap</span></code>      File with species classification information corresponding to genes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--species_a</span></code>       Name of species A.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--species_b</span></code>       Name of species B.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--species_a_gff</span></code>   GFF file of species A.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--species_b_gff</span></code>   GFF file of species B.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--species_a_lens</span></code>  Lens file of species A.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--species_b_lens</span></code>  Lens file of species B.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--gd_support</span></code>      GD node support (default is 50).</p></li>
+</ul>
+</dd>
+<dt>Optional Parameters:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">--visual_chr_a</span></code>    File containing chromosome numbers of species A for visualization.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--visual_chr_b</span></code>    File containing chromosome numbers of species B for visualization.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--size</span></code>            Size of points in the dotplot graph (default is 0.0005).</p></li>
+</ul>
+</dd>
+<dt>Example:</dt><dd><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Phylo_Tracer.py<span class="w"> </span>HaploFinder<span class="w"> </span>--input_GF_list<span class="w"> </span>GF.list<span class="w"> </span>--input_imap<span class="w"> </span>gene2sps.imap<span class="w"> </span>--species_a<span class="w"> </span>A<span class="w"> </span>--species_b<span class="w"> </span>B<span class="w"> </span>--species_a_gff<span class="w"> </span>A.gff<span class="w"> </span>--species_b_gff<span class="w"> </span>B.gff<span class="w"> </span>--species_a_lens<span class="w"> </span>A.lens<span class="w"> </span>--species_b_lens<span class="w"> </span>B.lens<span class="w"> </span>--gd_support<span class="w"> </span><span class="m">50</span><span class="w"> </span><span class="o">[</span>--visual_chr_a<span class="w"> </span>chr_a.txt<span class="w"> </span>--visual_chr_b<span class="w"> </span>chr_b.txt<span class="w"> </span>--size<span class="w"> </span><span class="m">0</span>.0001<span class="o">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>For additional modules and detailed usage examples, refer to the relevant sections in this documentation.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="input_files.html" class="btn btn-neutral float-left" title="PhyloTracer Data Files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Tao Li.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

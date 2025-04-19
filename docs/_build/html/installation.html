@@ -1,0 +1,164 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installation &mdash; PhyloTracer 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=8d563738"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="PhyloTracer Data Files" href="input_files.html" />
+    <link rel="prev" title="PhyloTracer: A Versatile Toolkit for Comparative Genomics and Phylogenomics Analysis" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            PhyloTracer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">Miniconda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#required-python-packages">Required Python Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installing-phylotracer">Installing PhyloTracer</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="input_files.html">PhyloTracer Data Files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="analyze.html">Usage</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PhyloTracer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Installation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installation">
+<span id="id1"></span><h1>Installation<a class="headerlink" href="#installation" title="Link to this heading"></a></h1>
+<p>PhyloTracer requires Python v3.0+, ete3, HyDe, pandas, numpy, tqdm, time, pypdf4, matplotlib, pyqt5 Python modules (listed below).</p>
+<section id="id2">
+<h2>Miniconda<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
+<p>We recommend using a Python distribution such as Miniconda to make it easier
+to manage modules and environments.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get Miniconda for your operating system (Mac or Linux)</span>
+<span class="c1"># Answer yes to the questions the Installer asks</span>
+<span class="c1"># These commands will download Python 3.6 for Mac OSX</span>
+curl<span class="w"> </span>-O<span class="w"> </span>https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+bash<span class="w"> </span>Miniconda3-latest-MacOSX-x86_64.sh
+</pre></div>
+</div>
+</section>
+<section id="required-python-packages">
+<h2>Required Python Packages<a class="headerlink" href="#required-python-packages" title="Link to this heading"></a></h2>
+<p>With Miniconda installed, we can use <code class="docutils literal notranslate"><span class="pre">pip</span></code> (or <code class="docutils literal notranslate"><span class="pre">conda</span></code>) to install all of the Python
+modules that PhyloTracer requires (ete3, HyDe, pandas, numpy, tqdm, time, pypdf4, matplotlib, pyqt5).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Install packages with pip</span>
+conda<span class="w"> </span>install<span class="w"> </span>ete3,<span class="w"> </span>HyDe,<span class="w"> </span>pandas,<span class="w"> </span>numpy,<span class="w"> </span>tqdm,<span class="w"> </span>time,<span class="w"> </span>pypdf4,<span class="w"> </span>matplotlib,<span class="w"> </span>pyqt5
+</pre></div>
+</div>
+</section>
+<section id="installing-phylotracer">
+<h2>Installing PhyloTracer<a class="headerlink" href="#installing-phylotracer" title="Link to this heading"></a></h2>
+<p>There are two ways that PhyloTracer can be installed once you have all of the required Python modules:
+(1) install from PyPI using pip or (2) clone from GitHub and install manually.</p>
+<p>To install from PyPI, all we need to do is type the following command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">#installing from PyPI</span>
+pip<span class="w"> </span>install<span class="w"> </span>pPhyloTracer
+</pre></div>
+</div>
+<p>Next, we’ll take a look at how to install PhyloTracer by cloning it from GitHub.
+The commands below take you through every step to accomplish this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">#A convenient one-click installation by using conda (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) with the following commands:</span>
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/YiyongZhao/PhyloTracer.git
+<span class="nb">cd</span><span class="w"> </span>PhyloTracer
+conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>environment.yml
+conda<span class="w"> </span>activate<span class="w"> </span>phylotracer
+
+<span class="c1">#Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:</span>
+chmod<span class="w"> </span>+x<span class="w"> </span>install_packages.sh
+bash<span class="w"> </span>install_package.sh
+
+<span class="c1">#Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin &quot;xcb&quot; in &quot;&quot; even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.</span>
+<span class="c1">#Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:</span>
+<span class="nb">export</span><span class="w"> </span><span class="nv">QT_QPA_PLATFORM</span><span class="o">=</span>linuxfb
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="PhyloTracer: A Versatile Toolkit for Comparative Genomics and Phylogenomics Analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="input_files.html" class="btn btn-neutral float-right" title="PhyloTracer Data Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Tao Li.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
