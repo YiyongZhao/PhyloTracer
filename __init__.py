@@ -7,54 +7,116 @@ import os
 import shutil
 from tqdm import tqdm
 
-def generate_sps_voucher(sps_num:int) -> list:
+def generate_sps_voucher(sps_num: int) -> list:
+    """
+    Generate a list of unique 3-character vouchers for species labeling.
+
+    Args:
+        sps_num (int): Number of unique vouchers to generate.
+
+    Returns:
+        list: Sorted list of unique voucher strings.
+    """
     characters = [chr(i) for i in range(65, 91)] + [chr(i) for i in range(97, 123)] + [str(i) for i in range(10)]
     unique_strings = set()
-
     while len(unique_strings) < sps_num:
         unique_strings.add(''.join(random.sample(characters, 3)))
-
     return sorted(list(unique_strings))
 
+def gene_id_transfer(gene2taxa_list: str) -> dict:
+    """
+    Transfer gene IDs to new voucher-based IDs and build mapping dictionaries.
 
-def gene_id_transfer(gene2taxa_list:str) -> dict:
+    Args:
+        gene2taxa_list (str): Path to the gene-to-taxa mapping file.
+
+    Returns:
+        tuple: Dictionaries for gene-to-new-name, new-name-to-gene, voucher-to-taxa, and taxa-to-voucher.
+    """
     gene2taxa_dic = read_and_return_dict(gene2taxa_list)
-    sorted_gene2taxa_dic = dict(sorted(gene2taxa_dic.items())) 
-    
+    sorted_gene2taxa_dic = dict(sorted(gene2taxa_dic.items(), key=lambda x: x[1]))
     taxa_list = list(set(sorted_gene2taxa_dic.values()))
     taxa2voucher_dic = dict(zip(taxa_list, generate_sps_voucher(len(taxa_list))))
     voucher2taxa_dic = {value: key for key, value in taxa2voucher_dic.items()}
     gene_count = {}
-
     for species in sorted_gene2taxa_dic.values():
         gene_count[species] = gene_count.get(species, 0) + 1
-
     new_gene_names = [f"{taxa2voucher_dic[species]}_{i}" for species, count in gene_count.items() for i in range(1, count + 1)]
     gene2new_named_gene_dic = dict(zip(sorted_gene2taxa_dic.keys(), new_gene_names))
     new_named_gene2gene_dic = {value: key for key, value in gene2new_named_gene_dic.items()}
     return gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic
 #gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("gene2taxa.list")
 
-def read_and_return_dict(filename, separator="\t") -> dict:
-    df=pd.read_csv(filename,sep=separator,header=None)
-    return df.set_index([0])[1].to_dict()
+def read_and_return_dict(filename: str, separator: str = "\t") -> dict:
+    """
+    Read a two-column mapping file and return it as a dictionary.
 
-def rename_input_tre(Phylo_t:object, gene2new_named_gene_dic:dict) -> object:
+    Args:
+        filename (str): Path to the mapping file.
+        separator (str): Column separator.
+
+    Returns:
+        dict: Mapping from first column to second column.
+    """
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"File not found: {filename}")
+    try:
+        df = pd.read_csv(filename, sep=separator, header=None)
+        if df.empty:
+            raise ValueError("Mapping file is empty")
+        return df.set_index([0])[1].to_dict()
+    except Exception as e:
+        logging.error(f"Failed to parse mapping file {filename}: {e}")
+        raise
+
+def rename_input_tre(Phylo_t: object, gene2new_named_gene_dic: dict) -> object:
+    """
+    Rename the leaf nodes of a phylogenetic tree according to a mapping dictionary.
+
+    Args:
+        Phylo_t (object): The input phylogenetic tree.
+        gene2new_named_gene_dic (dict): Mapping from old gene names to new names.
+
+    Returns:
+        object: A copy of the tree with renamed nodes.
+    """
     Phylo_t1=Phylo_t.copy('newick')
     for node in Phylo_t1.traverse():
-        if node.name in gene2new_named_gene_dic.keys():
+        if node.name in gene2new_named_gene_dic:
             node.name = gene2new_named_gene_dic[node.name]
     return Phylo_t1
 
-def read_tree(tre_path:str) -> object:
-    return Tree(tre_path)
+def read_tree(tree_path: str) -> object:
+    """
+    Read a tree from a file and return a Tree object.
 
-def read_phylo_tree(tre_path:str) -> object:
-    return PhyloTree(tre_path)
-######################################################################################################################
-def is_rooted(Phylo_t:object)->bool:#Translate the function that determines whether the input phylogenetic tree has a negated root.
-    if len(Phylo_t.get_children()) ==2:
-        return True
+    Args:
+        tree_path (str): Path to the tree file.
+
+    Returns:
+        object: Tree object.
+    """
+    try:
+        return Tree(tree_path)
+    except Exception as e:
+        logging.error(f"Failed to read tree from {tree_path}: {e}")
+        raise
+
+def read_phylo_tree(tree_path: str) -> object:
+    """
+    Read a phylogenetic tree from a file and return a PhyloTree object.
+
+    Args:
+        tree_path (str): Path to the phylogenetic tree file.
+
+    Returns:
+        object: PhyloTree object.
+    """
+    try:
+        return PhyloTree(tree_path)
+    except Exception as e:
+        logging.error(f"Failed to read phylo tree from {tree_path}: {e}")
+        raise
 
 def root_tre_with_midpoint_outgroup(Phylo_t:object)->object:#Rooting the phylogenetic tree using the midpoint outgroup method.
     Phylo_t1=Phylo_t.copy('newick')
@@ -62,18 +124,29 @@ def root_tre_with_midpoint_outgroup(Phylo_t:object)->object:#Rooting the phyloge
     Phylo_t1.set_outgroup(mid_node)
     return Phylo_t1
 
-def find_dup_node(Phylo_t:object)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
-    events = Phylo_t.get_descendant_evol_events()
-    dup_node_name_list = []
-    for ev in events:
-        if ev.etype == "D":
-            i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
-            events_node_name_list = i.split(',')
-            common_ancestor_node_name = Phylo_t.get_common_ancestor(events_node_name_list)
-            dup_node_name_list.append(common_ancestor_node_name.name)
-    return dup_node_name_list
+def is_rooted(Phylo_t: object) -> bool:
+    """
+    Determine whether the input phylogenetic tree is rooted.
 
-def num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree.
+    Args:
+        Phylo_t (object): The phylogenetic tree object.
+
+    Returns:
+        bool: True if the tree is rooted (i.e., has exactly two children at the root), otherwise False.
+    """
+    return len(Phylo_t.get_children()) == 2
+
+
+def num_tre_node(Phylo_t: object) -> object:
+    """
+    Number the internal nodes of a phylogenetic tree in postorder traversal.
+
+    Args:
+        Phylo_t (object): The phylogenetic tree object.
+
+    Returns:
+        object: The tree with internal nodes numbered as "N0", "N1", etc.
+    """
     i = 0
     for node in Phylo_t.traverse('postorder'):
         if not node.is_leaf():
@@ -81,56 +154,168 @@ def num_tre_node(Phylo_t:object)->object:#Numbering the nodes in the tree.
             i += 1
     return Phylo_t
 
-def get_species_list(node):
+def get_species_list(node: object) -> list:
+    """
+    Get the list of species names under a given tree node.
+
+    Args:
+        node (object): Tree node.
+
+    Returns:
+        list: List of species names.
+    """
     if node is None:
-        return []  # or any other appropriate default value
+        return []
     return [leaf.name.split('_')[0] for leaf in node.iter_leaves()]
 
-def get_species_set(Phylo_t:object)->set:
+def calculate_species_overlap(gene_tree: object) -> float:
+    """
+    Calculate the species overlap ratio between two clades of the largest duplication node.
+
+    Args:
+        gene_tree (object): Gene tree object.
+
+    Returns:
+        float: Overlap ratio (0.0-1.0).
+    """
+    dup_nodes = find_dup_node(gene_tree)
+    if not dup_nodes:
+        return 0.0
+    largest_tree = max(dup_nodes, key=lambda node: len(node.get_leaves()))
+    up_clade = largest_tree.children[1]
+    down_clade = largest_tree.children[0]
+    species_list_a = get_species_list(up_clade)
+    species_list_b = get_species_list(down_clade)
+    overlap_ratio = len(set(species_list_a) & set(species_list_b)) / len(set(species_list_a) | set(species_list_b))
+    return overlap_ratio
+
+def find_dup_node(Phylo_t: Tree) -> list:
+    """
+    Find all duplication nodes in a phylogenetic tree.
+
+    Args:
+        Phylo_t (Tree): Phylogenetic tree object.
+
+    Returns:
+        list: List of duplication nodes.
+    """
+    events = Phylo_t.get_descendant_evol_events()
+    dup_node_list = []
+    for ev in events:
+        if ev.etype == "D":
+            try:
+                in_nodes = [Phylo_t & seq for seq in ev.in_seqs]
+                out_nodes = [Phylo_t & seq for seq in ev.out_seqs]
+                lca = Phylo_t.get_common_ancestor(in_nodes + out_nodes)
+                dup_node_list.append(lca)
+            except Exception as e:
+                logging.warning(f"Skipping event due to error: {e}")
+                continue
+    return dup_node_list
+
+def get_species_set(Phylo_t: object) -> set:
+    """
+    Get the set of unique species names in a phylogenetic tree.
+
+    Args:
+        Phylo_t (object): Phylogenetic tree object.
+
+    Returns:
+        set: Set of unique species names.
+    """
     return set(get_species_list(Phylo_t))
 
-def get_max_deepth(root:object)->int:
-    if not root:
-        return 0
-    
-    max_child_depth = 0
-    for child in root.children:
-        child_depth = get_max_deepth(child)
-        max_child_depth = max(max_child_depth, child_depth)
-    
-    return max_child_depth + 1
+def get_max_deepth(root: object, species_tree: object = None) -> int:
+    """
+    Calculate the maximum depth of a node in the species tree.
+    Maps the node to species tree and counts the number of nodes from mapped node to root plus one.
 
-def compute_tip_to_root_branch_length_variance(tree:object)->int:
+    Args:
+        root (object): Root node of the tree.
+        species_tree (object, optional): Species tree for mapping.
+
+    Returns:
+        int: Number of nodes from mapped node to root plus one in species tree.
+    """
+    if not root or not species_tree:
+        return 0
+        
+    # 获取当前节点的物种集合
+    species_set = get_species_set(root)
+    if not species_set:
+        return 0
+
+    try:
+        # 将物种集合映射到物种树上对应的节点
+        if len(species_set) == 1:
+            species_name = list(species_set)[0]
+            mapped_node = species_tree & species_name
+        else:
+            mapped_node = species_tree.get_common_ancestor(species_set)
+
+        # 计算从映射节点到根节点的路径长度
+        depth = 0  # 初始值为0
+        current = mapped_node
+        while not current.is_root():
+            depth += 1
+            current = current.up
+        return depth
+
+    except Exception as e:
+        print(f"Error in get_max_deepth: {str(e)}")
+        print(f"Root node: {root}")
+        print(f"Species tree: {species_tree}")
+        print(f"Species set: {species_set}")
+        return 0
+
+
+def compute_tip_to_root_branch_length_variance(tree: object) -> int:
+    """
+    Compute the variance of branch lengths from tips to root.
+
+    Args:
+        tree (object): Tree object.
+
+    Returns:
+        int: Variance of branch lengths.
+    """
     tip_to_root_branch_lengths = []
     for leaf in tree.iter_leaves():
         branch_length = tree.get_distance(leaf)
         tip_to_root_branch_lengths.append(branch_length)
-
     branch_length_variance = 0
     if len(tip_to_root_branch_lengths) > 1:
         variance=float(np.var(tip_to_root_branch_lengths))
         branch_length_variance = variance
-
     return branch_length_variance
 
-def calculate_species_overlap(gene_tree:object)->int:
-    up_clade=gene_tree.children[1]
-    down_clade=gene_tree.children[0]
-    species_list_a = get_species_list(up_clade)
-    species_list_b = get_species_list(down_clade)
-    overlap_ratio = len(set(species_list_a) & set(species_list_b)) / len(set(species_list_a) | set(species_list_b))
+def calculate_species_num(node: object) -> int:
+    """
+    Calculate the number of unique species under a node.
 
-    return overlap_ratio
+    Args:
+        node (object): Tree node.
 
-def calculate_species_num(node:object)->int:# Obtain the number of species under a node
+    Returns:
+        int: Number of unique species.
+    """
     species_num=len(get_species_set(node))
     return species_num
 
-def calculate_gd_num(Phylo_t:object)->int:
+def calculate_gd_num(Phylo_t: object) -> int:
+    """
+    Calculate the number of gene duplication events in a phylogenetic tree.
+
+    Args:
+        Phylo_t (object): Phylogenetic tree object.
+
+    Returns:
+        int: Number of gene duplication events.
+    """
     gd_num=0
     gd_node_names=find_dup_node(Phylo_t)
     for node in gd_node_names:
-        clade=Phylo_t&node
+        clade=node
         sps=[leaf.split('_')[0] for leaf in clade.get_leaf_names()]
         unique_sps=set(sps)
         if len(unique_sps) >5:
@@ -143,6 +328,16 @@ def calculate_gd_num(Phylo_t:object)->int:
     return gd_num
 
 def sps_dup_num(sps_list: list, unique_sps: list) -> int:
+    """
+    Count the number of species that appear more than once in the list.
+
+    Args:
+        sps_list (list): List of species names.
+        unique_sps (list): List of unique species names.
+
+    Returns:
+        int: Number of duplicated species.
+    """
     sps_num_dic = {i: 0 for i in unique_sps}
     sps_dups = 0
 
@@ -155,11 +350,22 @@ def sps_dup_num(sps_list: list, unique_sps: list) -> int:
     return sps_dups
 
 
-def find_tre_dup(Phylo_t:object) -> list:   #seperator either "@" or "_"
-    tre_ParaL=[]
+def find_tre_dup(Phylo_t: object) -> list:
+    """
+    Find all duplication events in a phylogenetic tree and return their sequence relationships.
+
+    Args:
+        Phylo_t (object): Phylogenetic tree object.
+
+    Returns:
+        tuple: A list of duplication event relationships (as strings) and a set of gene family leaf names.
+    """
+    tre_ParaL = []
+    if not hasattr(Phylo_t, "get_leaf_names") or not hasattr(Phylo_t, "get_descendant_evol_events"):
+        raise ValueError("Input object does not have required tree methods.")
     GF_leaves_S = set(Phylo_t.get_leaf_names())
     events = Phylo_t.get_descendant_evol_events()
     for ev in events:
         if ev.etype == "D":
-            tre_ParaL.append(",".join(ev.in_seqs)+"<=>"+",".join(ev.out_seqs))
-    return tre_ParaL,GF_leaves_S
+            tre_ParaL.append(",".join(ev.in_seqs) + "<=>" + ",".join(ev.out_seqs))
+    return tre_ParaL, GF_leaves_S
