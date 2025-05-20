@@ -8,13 +8,27 @@ import shutil
 from tqdm import tqdm
 
 def has_multiple_copies(phylo_t: object) -> bool:
-    """Check if the tree has multiple copies based on unique species."""
+    """
+    Check if the tree has multiple copies based on unique species.
+    Args:
+        phylo_t (object): The phylogenetic tree object.
+    Returns:
+        bool: True if the tree contains multiple copies, False otherwise.
+    """
     leaf_names = phylo_t.get_leaf_names()
     unique_species = get_species_set(phylo_t)
     return len(leaf_names) != len(unique_species)
 
 def style_tree(phylo_t: object, color_dict: dict, new_named_gene2gene_dic: dict) -> object:
-    """Set styles for tree nodes based on gene colors."""
+    """
+    Set styles for tree nodes based on gene colors.
+    Args:
+        phylo_t (object): The phylogenetic tree object.
+        color_dict (dict): Mapping from species to color.
+        new_named_gene2gene_dic (dict): Mapping from renamed gene to original gene name.
+    Returns:
+        object: The styled phylogenetic tree object.
+    """
     for node in phylo_t.traverse():
         nstyle = NodeStyle()
         nstyle["size"] = 0
@@ -32,7 +46,13 @@ def style_tree(phylo_t: object, color_dict: dict, new_named_gene2gene_dic: dict)
     return phylo_t
 
 def create_color_mapping(dictionary: dict) -> dict:
-    """Create a color mapping for unique values in the dictionary."""
+    """
+    Create a color mapping for unique values in the dictionary.
+    Args:
+        dictionary (dict): Input dictionary with values to be mapped to colors.
+    Returns:
+        dict: Mapping from original keys to color strings.
+    """
     colormap = plt.get_cmap("gist_rainbow")
     unique_values = set(dictionary.values())
     colors_list = [colors.rgb2hex(colormap(i)) for i in np.linspace(0, 1, len(unique_values))]
@@ -40,7 +60,15 @@ def create_color_mapping(dictionary: dict) -> dict:
     return {k: v + '*' + color_dict.get(v) for k, v in dictionary.items() if v in color_dict}
 
 def merge_pdfs(file1: str, file2: str, output_file: str) -> None:
-    """Merge two PDF files side by side."""
+    """
+    Merge two PDF files side by side.
+    Args:
+        file1 (str): Path to the first PDF file.
+        file2 (str): Path to the second PDF file.
+        output_file (str): Path to the output merged PDF file.
+    Returns:
+        None
+    """
     pdf_writer = PdfFileWriter()
     with open(file1, 'rb') as f1, open(file2, 'rb') as f2:
         pdf1 = PdfFileReader(f1)
@@ -56,15 +84,38 @@ def merge_pdfs(file1: str, file2: str, output_file: str) -> None:
             pdf_writer.write(output)
 
 def get_average_tip_length(phylo_t: object) -> float:
-    """Calculate the average length of tips in the phylogenetic tree."""
+    """
+    Calculate the average length of tips in the phylogenetic tree.
+    Args:
+        phylo_t (object): The phylogenetic tree object.
+    Returns:
+        float: The average tip length.
+    """
     return sum(leaf.dist for leaf in phylo_t)/len(phylo_t)
 
 def get_average_node_length(phylo_t: object) -> float:
-    """Calculate the average length of nodes in the phylogenetic tree."""
+    """
+    Calculate the average length of nodes in the phylogenetic tree.
+    Args:
+        phylo_t (object): The phylogenetic tree object.
+    Returns:
+        float: The average node length.
+    """
     return sum(phylo_t.get_distance(i)+phylo_t.dist for i in phylo_t)/ len(phylo_t)
 
 def remove_long_branches(phylo_t: object, absolute_branch_length: int, relative_branch_length: int,outfile: str, tre_ID: str, new_named_gene2gene_dic: dict) -> object:
-    """Remove branches longer than the specified index from the phylogenetic tree."""
+    """
+    Remove branches longer than the specified index from the phylogenetic tree.
+    Args:
+        phylo_t (object): The phylogenetic tree object.
+        absolute_branch_length (int): Threshold for absolute branch length ratio.
+        relative_branch_length (int): Threshold for relative branch length ratio.
+        outfile (str): Output file handle for logging removed genes.
+        tre_ID (str): Tree identifier.
+        new_named_gene2gene_dic (dict): Mapping from renamed gene to original gene name.
+    Returns:
+        object: The pruned phylogenetic tree object.
+    """
     phylo_t1 = phylo_t.copy()
     remove_gene_set = set()
     tips_avg_length = get_average_tip_length(phylo_t1)
@@ -111,21 +162,47 @@ def remove_long_branches(phylo_t: object, absolute_branch_length: int, relative_
     return phylo_t1
 
 def generate_pdf_before(tre_ID: str, phylo_t: object) -> None:
-    """Generate a PDF from the phylogenetic tree before pruning."""
+    """
+    Generate a PDF from the phylogenetic tree before pruning.
+    Args:
+        tre_ID (str): Tree identifier.
+        phylo_t (object): The phylogenetic tree object.
+    Returns:
+        None
+    """
     ts = TreeStyle()
     ts.show_leaf_name = False
     ts.title.add_face(TextFace(f'{tre_ID}_before', fsize=10), column=0)
     phylo_t.render(file_name=f'{tre_ID}_before.pdf', tree_style=ts)
 
 def generate_pdf_after(tre_ID: str, phylo_t: object) -> None:
-    """Generate a PDF from the phylogenetic tree after pruning."""
+    """
+    Generate a PDF from the phylogenetic tree after pruning.
+    Args:
+        tre_ID (str): Tree identifier.
+        phylo_t (object): The phylogenetic tree object.
+    Returns:
+        None
+    """
     ts = TreeStyle()
     ts.show_leaf_name = False
     ts.title.add_face(TextFace(f'{tre_ID}_after', fsize=10), column=0)
     phylo_t.render(file_name=f'{tre_ID}_after.pdf', tree_style=ts)
 
 def prune_main_LB(tre_dic: dict, voucher2taxa_dic: dict, gene2new_named_gene_dic: dict, new_named_gene2gene_dic: dict, absolute_branch_length:int=5, relative_branch_length: int=5, visual: bool = False) -> None:
-    """Main function to prune long branches from phylogenetic trees and visualize the results."""
+    """
+    Main function to prune long branches from phylogenetic trees and visualize the results.
+    Args:
+        tre_dic (dict): Dictionary mapping tree IDs to tree file paths.
+        voucher2taxa_dic (dict): Mapping from voucher to taxa.
+        gene2new_named_gene_dic (dict): Mapping from gene to renamed gene.
+        new_named_gene2gene_dic (dict): Mapping from renamed gene to original gene name.
+        absolute_branch_length (int, optional): Threshold for absolute branch length ratio. Default is 5.
+        relative_branch_length (int, optional): Threshold for relative branch length ratio. Default is 5.
+        visual (bool, optional): Whether to generate PDF visualizations. Default is False.
+    Returns:
+        None
+    """
     color_dic = create_color_mapping(voucher2taxa_dic)
 
     dir_path_pruned = os.path.join(os.getcwd(), "orthofilter_lb/pruned_tree/")
