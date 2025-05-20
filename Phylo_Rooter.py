@@ -5,6 +5,39 @@ from BranchLength_NumericConverter import write_tree_to_newick
 import numpy as np
 from scipy.stats import norm
 
+def get_mapped_node_depth(root: object, species_tree: object = None) -> int:
+    """
+    Calculate the depth of the node in the species tree that corresponds to the given gene tree node.
+    The function maps the gene tree node to the species tree (using the set of species under the node),
+    then counts the number of nodes from the mapped node up to the root (depth).
+
+    Args:
+        root (object): The gene tree node to be mapped.
+        species_tree (object, optional): The species tree for mapping.
+
+    Returns:
+        int: The depth of the mapped node in the species tree (number of nodes from mapped node to root).
+    """
+    if not root or not species_tree:
+        return 0
+    species_set = get_species_set(root)
+    if not species_set:
+        return 0
+    try:
+        if len(species_set) == 1:
+            species_name = list(species_set)[0]
+            mapped_node = species_tree & species_name
+        else:
+            mapped_node = species_tree.get_common_ancestor(species_set)
+        depth = 0
+        current = mapped_node
+        while not current.is_root():
+            depth += 1
+            current = current.up
+        return depth 
+    except Exception:
+        return 0
+        
 def calculate_RF_distance(Phylo_t_OG_L: object, sptree: object) -> int:
     """
     Calculate the Robinson-Foulds (RF) distance between a gene tree and a species tree.
@@ -134,10 +167,10 @@ def calculate_tree_statistics(
     down_clade = tree.children[0]
     if len(up_clade.get_leaf_names()) > len(down_clade.get_leaf_names()):
         var = abs(compute_tip_to_root_branch_length_variance(up_clade) - compute_tip_to_root_branch_length_variance(down_clade))
-        deep = get_max_deepth(down_clade,renamed_species_tree)
+        deep = get_mapped_node_depth(down_clade,renamed_species_tree)
     else:
         var = abs(compute_tip_to_root_branch_length_variance(down_clade) - compute_tip_to_root_branch_length_variance(up_clade))
-        deep = get_max_deepth(up_clade,renamed_species_tree)
+        deep = get_mapped_node_depth(up_clade,renamed_species_tree)
     if len(get_species_list(tree)) == len(get_species_set(tree)):
         RF = calculate_RF_distance(tree, renamed_species_tree)
     else:
