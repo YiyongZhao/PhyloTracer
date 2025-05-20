@@ -225,48 +225,23 @@ def get_species_set(Phylo_t: object) -> set:
     """
     return set(get_species_list(Phylo_t))
 
-def get_max_deepth(root: object, species_tree: object = None) -> int:
+ef get_max_deepth(root:object)->int:
     """
-    Calculate the maximum depth of a node in the species tree.
-    Maps the node to species tree and counts the number of nodes from mapped node to root plus one.
-
+    Calculate the maximum depth of a tree.
     Args:
-        root (object): Root node of the tree.
-        species_tree (object, optional): Species tree for mapping.
-
+        root (object): The root node of the tree, which should have a 'children' attribute.
     Returns:
-        int: Number of nodes from mapped node to root plus one in species tree.
+        int: The maximum depth of the tree (root counts as level 1).
     """
-    if not root or not species_tree:
+    if not root:
         return 0
-        
-    # 获取当前节点的物种集合
-    species_set = get_species_set(root)
-    if not species_set:
-        return 0
-
-    try:
-        # 将物种集合映射到物种树上对应的节点
-        if len(species_set) == 1:
-            species_name = list(species_set)[0]
-            mapped_node = species_tree & species_name
-        else:
-            mapped_node = species_tree.get_common_ancestor(species_set)
-
-        # 计算从映射节点到根节点的路径长度
-        depth = 0  # 初始值为0
-        current = mapped_node
-        while not current.is_root():
-            depth += 1
-            current = current.up
-        return depth
-
-    except Exception as e:
-        print(f"Error in get_max_deepth: {str(e)}")
-        print(f"Root node: {root}")
-        print(f"Species tree: {species_tree}")
-        print(f"Species set: {species_set}")
-        return 0
+    
+    max_child_depth = 0
+    for child in root.children:
+        child_depth = get_max_deepth(child)
+        max_child_depth = max(max_child_depth, child_depth)
+    
+    return max_child_depth + 1
 
 
 def compute_tip_to_root_branch_length_variance(tree: object) -> int:
