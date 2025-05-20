@@ -5,27 +5,65 @@ from PyPDF4 import PdfFileReader, PdfFileWriter
 from BranchLength_NumericConverter import trans_branch_length,write_tree_to_newick
 
 
-def rename_input_single_tre(Phylo_t:object, taxa_dic:dict,new_named_gene2gene_dic:dict) -> object:
-    for node in Phylo_t :
-        gene=new_named_gene2gene_dic[node.name]
+def rename_input_single_tre(Phylo_t: object, taxa_dic: dict, new_named_gene2gene_dic: dict) -> object:
+    """
+    Rename the leaf nodes of a phylogenetic tree by mapping gene names to species names and appending the original node name.
+    Args:
+        Phylo_t (object): The phylogenetic tree object to be renamed.
+        taxa_dic (dict): A dictionary mapping gene names to species names.
+        new_named_gene2gene_dic (dict): A dictionary mapping node names to gene names.
+    Returns:
+        object: The phylogenetic tree object with renamed leaf nodes.
+    """
+    for node in Phylo_t:
+        gene = new_named_gene2gene_dic[node.name]
         if gene in taxa_dic:
-            node.name=taxa_dic[gene]+'_'+node.name
+            node.name = taxa_dic[gene] + '_' + node.name
     return Phylo_t
 
-def rename_output_tre(Phylo_t:object,new_named_gene2gene_dic) -> object:
+def rename_output_tre(Phylo_t: object, new_named_gene2gene_dic: dict) -> object:
+    """
+    Restore the original gene names for the leaf nodes of a phylogenetic tree after processing.
+    Args:
+        Phylo_t (object): The phylogenetic tree object whose leaf nodes will be renamed.
+        new_named_gene2gene_dic (dict): A dictionary mapping processed node names back to original gene names.
+    Returns:
+        object: The phylogenetic tree object with restored leaf node names.
+    """
     for node in Phylo_t:
-        parts = node.name.split("_")  
-        new_str = "_".join(parts[1:]) 
+        parts = node.name.split("_")
+        new_str = "_".join(parts[1:])
         node.name = new_named_gene2gene_dic[new_str]
     return Phylo_t
 
-def is_multi_copy_tree(Phylo_t:object)->bool:
-    leafs=Phylo_t.get_leaf_names()
-    uniq_species=get_species_set(Phylo_t)
-    if len(leafs) !=len(uniq_species):
+def is_multi_copy_tree(Phylo_t: object) -> bool:
+    """
+    Determine whether the phylogenetic tree is a multi-copy gene tree.
+    Returns True if the number of leaf nodes does not equal the number of unique species.
+    Args:
+        Phylo_t (object): The phylogenetic tree object to check.
+    Returns:
+        bool: True if the tree is a multi-copy gene tree, False otherwise.
+    """
+    leafs = Phylo_t.get_leaf_names()
+    uniq_species = get_species_set(Phylo_t)
+    if len(leafs) != len(uniq_species):
         return True
+    return False
 
-def set_style(Phylo_t:object,color_dict:dict,new_named_gene2gene_dic)->object:
+def set_style(Phylo_t:object, color_dict:dict, new_named_gene2gene_dic:dict) -> object:
+    """
+    Set the visual style for each node in the phylogenetic tree for visualization purposes.
+    For each node, applies a default style (black circle, size 0). For leaf nodes, adds a colored and italicized label based on species and gene name.
+    
+    Args:
+        Phylo_t (object): The phylogenetic tree object to be styled.
+        color_dict (dict): A dictionary mapping gene names to color strings (e.g., 'geneA': '#FF0000').
+        new_named_gene2gene_dic (dict): A dictionary mapping processed node names to original gene names.
+    
+    Returns:
+        object: The styled phylogenetic tree object, ready for visualization.
+    """
     for node in Phylo_t.traverse():
         nstyle=NodeStyle()
         nstyle["size"] = 0
@@ -43,7 +81,16 @@ def set_style(Phylo_t:object,color_dict:dict,new_named_gene2gene_dic)->object:
                 node.add_face(face, column=0)
     return Phylo_t
 
-def get_color_dict(dictory:dict)->dict:
+def get_color_dict(dictory:dict) -> dict:
+    """
+    Generate a color dictionary for unique values in the input dictionary, mapping each value to a unique color string.
+    
+    Args:
+        dictory (dict): Input dictionary whose values will be assigned colors.
+    
+    Returns:
+        dict: A dictionary mapping each key to a color string (e.g., 'geneA': '#FF0000').
+    """
     colormap = plt.get_cmap("gist_rainbow")
     unique_values=set(dictory.values())
     colors_lst = [colors.rgb2hex(colormap(i)) for i in np.linspace(0, 1, len(unique_values))]
@@ -51,14 +98,33 @@ def get_color_dict(dictory:dict)->dict:
     sps_color_dict = {k: v + '*' + color_dict.get(v) for k, v in dictory.items() if v in color_dict}
     return sps_color_dict
 
-def get_single_clades(Phylo_t:object,empty_set:set)->None:
+def get_single_clades(Phylo_t:object, empty_set:set) -> None:
+    """
+    Recursively find and collect all clades (subtrees) in the phylogenetic tree that contain only a single species.
+    
+    Args:
+        Phylo_t (object): The phylogenetic tree object to search.
+        empty_set (set): A set to store clades containing only one species.
+    
+    Returns:
+        None
+    """
     if calculate_species_num(Phylo_t)==1:
         empty_set.add(Phylo_t)
         return
     for child in Phylo_t.get_children():
         get_single_clades(child,empty_set)                        
 
-def get_node_single_taxa_dict(Phylo_t:object)->dict:
+def get_node_single_taxa_dict(Phylo_t:object) -> dict:
+    """
+    Generate a dictionary mapping each single-taxa (species) to the list of clades (subtrees) containing only that species.
+    
+    Args:
+        Phylo_t (object): The phylogenetic tree object to search.
+    
+    Returns:
+        dict: A dictionary mapping species name to a list of clades containing only that species.
+    """
     def get_single_taxa_caldes(empty_set):
         single_taxa_dict = {}
         for clade in empty_set:
@@ -71,13 +137,31 @@ def get_node_single_taxa_dict(Phylo_t:object)->dict:
     sorted_dict = dict(sorted(single_taxa_dict.items(), key=lambda item: len(item[1]), reverse=True))
     return sorted_dict                         
 
-def is_single_tree(Phylo_t:object)->bool:
+def is_single_tree(Phylo_t:object) -> bool:
+    """
+    Determine whether the given phylogenetic tree contains only a single species.
+    
+    Args:
+        Phylo_t (object): The phylogenetic tree object to check.
+    
+    Returns:
+        bool: True if the tree contains only one species, False otherwise.
+    """
     single_taxa_dict = get_node_single_taxa_dict(Phylo_t)
     # if 'basal angiosperms'  in single_taxa_dict.keys():
     #     single_taxa_dict.pop('basal angiosperms')
     # if 'Outgroup' in single_taxa_dict.keys():
     #     single_taxa_dict.pop('Outgroup')
     def check_single(dictionary):
+        """
+        Check if all values in the dictionary are the same, indicating a single unique value.
+        
+        Args:
+            dictionary (dict): The dictionary to check.
+        
+        Returns:
+            bool: True if all values are the same, False otherwise.
+        """
         for value in dictionary.values():
             if len(value) != 1:
                 return False
@@ -85,7 +169,18 @@ def is_single_tree(Phylo_t:object)->bool:
 
     return check_single(single_taxa_dict)  
 
-def merge_pdfs_side_by_side(file1:str, file2:str, output_file:str)->None:
+def merge_pdfs_side_by_side(file1: str, file2: str, output_file: str) -> None:
+    """
+    Merge two PDF files side by side into a single output PDF file.
+    
+    Args:
+        file1 (str): Path to the first PDF file.
+        file2 (str): Path to the second PDF file.
+        output_file (str): Path to the output merged PDF file.
+    
+    Returns:
+        None
+    """
     pdf_writer = PdfFileWriter()
     with open(file1, 'rb') as f1, open(file2, 'rb') as f2:
         pdf1 = PdfFileReader(f1)
@@ -102,7 +197,16 @@ def merge_pdfs_side_by_side(file1:str, file2:str, output_file:str)->None:
     f1.close()
     f2.close()
 
-def calculate_avg_length(node:object)->int:
+def calculate_avg_length(node: object) -> int:
+    """
+    Calculate the average branch length for all descendant branches of the given node.
+    
+    Args:
+        node (object): The node whose descendant branch lengths are to be averaged.
+    
+    Returns:
+        int: The average branch length of all descendant branches.
+    """
     total_length = 0.0
     leaf_count = 0
     for leaf in node.iter_leaves():
@@ -114,7 +218,16 @@ def calculate_avg_length(node:object)->int:
         avg_length = 0.0
     return avg_length+(node.dist/leaf_count)
     
-def calculate_branch_length_relative_score(node:object)->int:
+def calculate_branch_length_relative_score(node: object) -> int:
+    """
+    Calculate a relative score based on the branch lengths of the given node and its descendants.
+    
+    Args:
+        node (object): The node for which to calculate the relative branch length score.
+    
+    Returns:
+        int: The calculated relative score based on branch lengths.
+    """
     if not node.is_leaf():
         avg_length=calculate_avg_length(node)
         sister = node.get_sisters()[0] if not node.is_root() else None
@@ -139,6 +252,15 @@ def calculate_branch_length_relative_score(node:object)->int:
             return 0.0
 
 def calculate_insertion_index(node):
+    """
+    Calculate the insertion index for a given node, typically used for determining the position to insert a node in a tree structure.
+    
+    Args:
+        node (object): The node for which to calculate the insertion index.
+    
+    Returns:
+        int: The calculated insertion index.
+    """
     insertion_index = 1.0 
     current_node = node
     while current_node.up:
@@ -158,6 +280,15 @@ def calculate_insertion_index(node):
 
   
 def prune_single(Phylo_t):
+    """
+    Prune (remove) all single-species clades from the given phylogenetic tree.
+    
+    Args:
+        Phylo_t (object): The phylogenetic tree object to be pruned.
+    
+    Returns:
+        object: The pruned phylogenetic tree object.
+    """
     rm_list=[]
     single_taxa_dict=get_node_single_taxa_dict(Phylo_t)
     for k,v in single_taxa_dict.items():
@@ -203,11 +334,31 @@ def prune_single(Phylo_t):
             diff = [a for a in total_leafs if a not in set(leafs)]
             Phylo_t.prune(diff,preserve_branch_length=True)
 
-def get_root_relative_branch_ratio(leaf:object,avg_length:int)->int:
+def get_root_relative_branch_ratio(leaf:object, avg_length:int) -> int:
+    """
+    Calculate the relative branch length ratio of a leaf node compared to the average branch length.
+
+    Args:
+        leaf (object): The leaf node whose branch length is to be compared.
+        avg_length (int): The average branch length among all descendants.
+
+    Returns:
+        int: The relative ratio of the leaf's branch length to the average branch length.
+    """
     branch_length=leaf.dist
     return (branch_length-avg_length)/avg_length
 
 def get_sister_relative_branch_ratio(node: object, sister: object) -> int:
+    """
+    Calculate the relative branch length ratio between a node and its sister node.
+
+    Args:
+        node (object): The node whose branch length is to be compared.
+        sister (object): The sister node for comparison.
+
+    Returns:
+        int: The relative ratio of the node's branch length to its sister's branch length.
+    """
     if node.is_leaf():
         branch_length = node.dist
     else:
@@ -225,21 +376,60 @@ def get_sister_relative_branch_ratio(node: object, sister: object) -> int:
 
     
 def calculate_insertion_depth(clade: object, node: object) -> int:
+    """
+    Calculate the insertion depth of a node within a given clade (subtree).
+
+    Args:
+        clade (object): The clade (subtree) in which the node is inserted.
+        node (object): The node whose insertion depth is to be calculated.
+
+    Returns:
+        int: The topological distance from the clade root to the node.
+    """
     if clade is None:
         return 0
     return clade.get_distance(node, topology_only=True)
 
 def calculate_insertion_coverage(clade: object, node: object) -> float:
+    """
+    Calculate the coverage ratio of a node within a given clade (subtree).
+
+    Args:
+        clade (object): The clade (subtree) containing the node.
+        node (object): The node whose coverage is to be calculated.
+
+    Returns:
+        float: The ratio of the number of leaves in the node to the number of leaves in the clade.
+    """
     if clade is None or node is None:
         return 0.0  
     return len(node) / len(clade)
 
 def calculate_insertion(clade:object, node:object)->int:
+    """
+    Calculate the insertion score of a node within a clade, based on depth and coverage.
+
+    Args:
+        clade (object): The clade (subtree) in which the node is inserted.
+        node (object): The node to be evaluated.
+
+    Returns:
+        int: The insertion score, calculated as depth divided by coverage.
+    """
     depth = calculate_insertion_depth(clade, node)
     coverage = calculate_insertion_coverage(clade, node)
     return depth / coverage if coverage != 0 else 0
 
 def get_target_clade(clade:object)->object:
+    """
+    Find the target clade containing exactly two species, traversing from the given clade up to the root.
+
+    Args:
+        clade (object): The starting clade (subtree) for the search.
+
+    Returns:
+        object: The ancestor clade containing exactly two species, or None if not found.
+    """
     node2root = clade.get_ancestors()
     target_clade = None
     for ancestor in node2root:
@@ -250,6 +440,15 @@ def get_target_clade(clade:object)->object:
     return target_clade
 
 def is_ancestor_sister_same(node:object)->bool:
+    """
+    Determine whether the sister of the node and the sister of its ancestor have the same species name.
+
+    Args:
+        node (object): The node to be checked.
+
+    Returns:
+        bool: True if the sister of the node and the sister of its ancestor have the same species name, otherwise False.
+    """
     sps = get_species_list(node)[0]
     sis=node.get_sisters()[0]
     sis_name=get_species_list(sis)[0]
@@ -265,9 +464,27 @@ def is_ancestor_sister_same(node:object)->bool:
             return sis_name==an_name
 
 def get_tips_avg_length(Phylo_t:object)->int:
+    """
+    Calculate the average distance from the root to all leaf nodes (tips) in the phylogenetic tree.
+
+    Args:
+        Phylo_t (object): The phylogenetic tree object.
+
+    Returns:
+        int: The average distance from the root to all tips.
+    """
     return sum([Phylo_t.get_distance(leaf) for leaf in Phylo_t])/len(Phylo_t)
 
 def get_node_avg_length(Phylo_t:object)->int:
+    """
+    Calculate the average branch length of all nodes in the phylogenetic tree.
+
+    Args:
+        Phylo_t (object): The phylogenetic tree object.
+
+    Returns:
+        int: The average branch length of all nodes in the tree.
+    """
     node_length=[]
     node_num=0
     for node in Phylo_t.traverse():
@@ -278,7 +495,20 @@ def get_node_avg_length(Phylo_t:object)->int:
     return sum(node_length)/node_num
 
 
-def remove_long_gene(Phylo_t:object, long_branch_index:int, outfile:str, tre_ID:str,new_named_gene2gene_dic:dict) -> object:
+def remove_long_gene(Phylo_t:object, long_branch_index:int, outfile:str, tre_ID:str, new_named_gene2gene_dic:dict) -> object:
+    """
+    Remove genes with long branches from the phylogenetic tree based on distance thresholds.
+
+    Args:
+        Phylo_t (object): The phylogenetic tree object.
+        long_branch_index (int): The threshold for identifying long branches.
+        outfile (str): Output file handle for writing removal information.
+        tre_ID (str): Tree identifier for output records.
+        new_named_gene2gene_dic (dict): Mapping from processed node names to original gene names.
+
+    Returns:
+        object: The pruned phylogenetic tree object with long branches removed.
+    """
     Phylo_t1 = Phylo_t.copy()
     remove_gene_set = set()
     tips_avg_length = get_tips_avg_length(Phylo_t1)
@@ -312,6 +542,19 @@ def remove_long_gene(Phylo_t:object, long_branch_index:int, outfile:str, tre_ID:
 
 
 def remove_insert_gene(Phylo_t:object,long_branch_index:int,outfile:str,tre_ID:str,new_named_gene2gene_dic:dict)->object:
+    """
+    Remove inserted genes from the phylogenetic tree based on insertion criteria.
+
+    Args:
+        Phylo_t (object): The phylogenetic tree object.
+        long_branch_index (int): The threshold for identifying insertions.
+        outfile (str): Output file handle for writing removal information.
+        tre_ID (str): Tree identifier for output records.
+        new_named_gene2gene_dic (dict): Mapping from processed node names to original gene names.
+
+    Returns:
+        object: The pruned phylogenetic tree object with insertions removed.
+    """
     Phylo_t1 = Phylo_t.copy()    
     taxa_clade = set()
     get_single_clades(Phylo_t1, taxa_clade)
@@ -338,18 +581,53 @@ def remove_insert_gene(Phylo_t:object,long_branch_index:int,outfile:str,tre_ID:s
     return Phylo_t1
 
 def generate_pdf_before(tre_ID,Phylo_t)->None:
+    """
+    Generate a PDF visualization of the phylogenetic tree before pruning or modification.
+
+    Args:
+        tre_ID (str): Tree identifier used in the PDF file name.
+        Phylo_t (object): The phylogenetic tree object to visualize.
+
+    Returns:
+        None
+    """
     ts = TreeStyle()
     ts.show_leaf_name = False
     ts.title.add_face(TextFace(tre_ID + '_before', fsize=10), column=0)
     Phylo_t.render(file_name=tre_ID + '_before.pdf', tree_style=ts)
 
 def generate_pdf_after(tre_ID,Phylo_t)->None:
+    """
+    Generate a PDF visualization of the phylogenetic tree after pruning or modification.
+
+    Args:
+        tre_ID (str): Tree identifier used in the PDF file name.
+        Phylo_t (object): The phylogenetic tree object to visualize.
+
+    Returns:
+        None
+    """
     ts = TreeStyle()
     ts.show_leaf_name = False
     ts.title.add_face(TextFace(tre_ID + '_after', fsize=10), column=0)
     Phylo_t.render(file_name=tre_ID + '_after.pdf', tree_style=ts)
 
-def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_branch_index:int,new_named_gene2gene_dic:dict,gene2new_named_gene_dic:dict,visual:bool=False)->None:
+def prune_main_Mono(tre_dic:dict, taxa_dic:dict, long_branch_index:int, insert_branch_index:int, new_named_gene2gene_dic:dict, gene2new_named_gene_dic:dict, visual:bool=False) -> None:
+    """
+    Main function for pruning phylogenetic trees in mono-copy ortholog analysis, including long branch and insertion branch removal, and optional visualization.
+
+    Args:
+        tre_dic (dict): Dictionary mapping tree IDs to tree file paths.
+        taxa_dic (dict): Mapping from gene names to species names.
+        long_branch_index (int): Threshold for identifying long branches.
+        insert_branch_index (int): Threshold for identifying insertion branches.
+        new_named_gene2gene_dic (dict): Mapping from processed node names to original gene names.
+        gene2new_named_gene_dic (dict): Mapping from original gene names to processed node names.
+        visual (bool, optional): Whether to generate and merge PDF visualizations. Defaults to False.
+
+    Returns:
+        None
+    """
     color_dic = get_color_dict(taxa_dic)
     dir_path1 = os.path.join(os.getcwd(), "orthofilter_mono/pruned_tree/")
     if os.path.exists(dir_path1):
