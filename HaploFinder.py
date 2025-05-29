@@ -194,18 +194,10 @@ def generate_dotplot(gff1,gff2,lens1,lens2,gd_pairs,spe1,spe2,file_name,target_c
     gene_loc_1=gene_location(gff_1,lens_1,step_1)
     gene_loc_2=gene_location(gff_2,lens_2,step_2) 
 
-    # sorted_data = dict(sorted(dict_gd.items()))
-    # sorted_data1 = dict(sorted(sorted_data.items(), key=lambda x: (x[0].split(':')[0], x[0].split(':')[1])))
-    # with open('color_label.txt','w') as file :
-    #     for pair, color in sorted_data1.items():
-    #         gene_a, gene_b = pair.split(":")
-    #         file.write(f'{gene_a}\t{gene_b}\t{color}\n')
-
-
     gene_conversion_list=find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,file_name)
 
     result_conversion=find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,file_name)
-    find_conversion_zones_with_ids_to_file(result_conversion)
+    find_conversion_zones_with_ids_to_file(result_conversion,dict_gff1, dict_gff2)
     t5=time.time() 
     print("Dealing lebel_pairs took "+str(t5-t4)+" second") 
     gc.collect() 
@@ -281,7 +273,7 @@ def judge_support(support,support_value):
             return False
 
 #####################################
-def find_dup_node(Phylo_t:object,sp1,sp2,new_named_gene2gene_dic,processed_lines,written_results,support_value=50)->list:
+def find_dup_node(Phylo_t:object,sp1,sp2,new_named_gene2gene_dic,processed_lines,written_results,support_value=50,pair_support=50)->list:
     """
     Find all duplication nodes in the phylogenetic tree.
     
@@ -308,13 +300,15 @@ def find_dup_node(Phylo_t:object,sp1,sp2,new_named_gene2gene_dic,processed_lines
             orthology=get_gene_pairs(dup_node,sp1,sp2)
             for i in orthology:
                 gene1, gene2 = i
-                gene_a=new_named_gene2gene_dic[gene1]
-                gene_b=new_named_gene2gene_dic[gene2]
-                result = f"{gene_a}\t{gene_b}\tred\n"
-                s = f"{gene2}-r"
-                if s not in written_results:
-                    processed_lines.append(result)
-                    written_results.add(s)
+                dup_node1 = Phylo_t.get_common_ancestor([gene1,gene2])
+                if judge_support(dup_node1.support,pair_support):
+                    gene_a=new_named_gene2gene_dic[gene1]
+                    gene_b=new_named_gene2gene_dic[gene2]
+                    result = f"{gene_a}\t{gene_b}\tred\n"
+                    s = f"{gene2}-r"
+                    if s not in written_results:
+                        processed_lines.append(result)
+                        written_results.add(s)
     return dup_node_list
 
 
@@ -326,14 +320,23 @@ def generate_combinations(list1, list2):
     return gene_pairs
 
 def get_gene_pairs(t,sp1,sp2):
-    sp_count = defaultdict(list)
-    for i in t.get_leaf_names():
-        sps = i.split('_')[0]
-        sp_count[sps].append(i)
+    def get_sps_info(t):
+        sp_count = defaultdict(list)
+        for i in t.get_leaf_names():
+            sps = i.split('_')[0]
+            sp_count[sps].append(i)
+        return sp_count
 
-    sp1_gene_list = list(sp_count[sp1])
-    sp2_gene_list = list(sp_count[sp2])
-    gene_pairs = generate_combinations(sp1_gene_list, sp2_gene_list)
+    child1,child2=t.get_children()
+    dic1=get_sps_info(child1)
+    dic2=get_sps_info(child2)
+
+    a_sp1_gene_list = list(dic1[sp1])
+    a_sp2_gene_list = list(dic1[sp2])
+    b_sp1_gene_list = list(dic2[sp1])
+    b_sp2_gene_list = list(dic2[sp2])
+
+    gene_pairs = generate_combinations(a_sp1_gene_list, b_sp2_gene_list)+ generate_combinations(b_sp1_gene_list, a_sp2_gene_list)
     return gene_pairs
 
 def find_independent_dup_nodes(dup_node_list, Phylo_t: object) -> list:
@@ -364,8 +367,11 @@ def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,gd_pairs)
     block_list = []
 
     for chr_a, chr_b in chrs_combinations:
-        
-        if chr_a==chr_b: 
+        chr1=int(chr_a[3:])
+        chr2=int(chr_b[3:])
+
+        if chr1+10==chr2:
+        # if chr_a==chr_b: 
             red_count = 0
             blue_count = 0
 
@@ -402,8 +408,8 @@ def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2,gd_pairs)
     return filter_block_list
 
 
-def find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,gd_pairs):
-    sort_lst=[]
+def find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2, gd_pairs):
+    sort_lst = []
     with open(f'gene_conversion_{gd_pairs}.txt', 'w') as f:
         for block in gene_conversion_list:
             chr_a = block["chr_a"]
@@ -411,43 +417,102 @@ def find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2,gd_p
 
             for pair, color in dict_gd.items():
                 gene_a, gene_b = pair.split(":")
-                chr_gene_a = dict_gff1.get(gene_a, [None])[0]
-                chr_gene_b = dict_gff2.get(gene_b, [None])[0]
+                chr_gene_a = dict_gff1.get(gene_a, [None])[0]  # 获取 gene_a 的染色体编号
+                chr_gene_b_info = dict_gff2.get(gene_b, [None, None, None])  # 获取 gene_b 的信息
+                chr_gene_b = chr_gene_b_info[0]  # 染色体编号
+                start_pos_b = chr_gene_b_info[1]  # 起始位置
 
-                if chr_gene_a == chr_a and chr_gene_b == chr_b:
-                    f.write(f'{gene_a}\t{gene_b}\t{color}\n')
-                    sort_lst.append((gene_a,gene_b,color))
-    return sort_lst
+                if chr_gene_a == chr_a and chr_gene_b == chr_b and start_pos_b is not None:
+                    start_pos_b_int = int(start_pos_b)
+                    sort_lst.append((gene_a, gene_b, color, chr_gene_b, start_pos_b_int))
 
-def find_conversion_zones_with_ids_to_file(data, output_file='gene_conversion.txt'):
-    conversion_zones = []  
-    n = len(data)          
-    zone_id = 1          
-    start = None         
+    # 按照染色体编号和 gene_b 的起始位置排序
+    sort_lst.sort(key=lambda x: (x[3], x[4]))  # x[3] 是 chr_gene_b, x[4] 是 start_pos_b
 
-    for i in range(1, n):
-        if data[i][2] == 'blue' and data[i - 1][2] == 'red':
-            if start is None:
-                start = i - 1  
-            end = i+1 
+    # 将排序后的结果写入文件
+    new_lst=[]
+    with open(f'gene_conversion_{gd_pairs}.txt', 'w') as f:
+        for gene_a, gene_b, color, _, _ in sort_lst:
+            f.write(f'{gene_a}\t{gene_b}\t{color}\n')
+            new_lst.append((gene_a, gene_b, color))
+    return new_lst
 
-            while end + 1 < n and data[end + 1][2] == 'red':
-                end += 1
+def find_conversion_zones_with_ids_to_file(data, dict_gff1, dict_gff2, output_file='gene_conversion.txt'):
+    conversion_zones = []  # 存储找到的转换区域
+    n = len(data)          # 数据长度
+    zone_id = 1            # 区域编号
+    i = 0                  # 当前索引
 
-            conversion_zones.append((zone_id, start, end))
-            zone_id += 1
+    # 遍历数据，寻找 red -> blue -> red 模式
+    while i < n - 1:
+        # 检测第一个 red 的开始
+        if data[i][2] == 'blue':
+            start_red1 = i  # 记录第一个 red 区域的起始索引
 
-            start = end
+            # 获取第一个 red 区域的染色体对
+            gene1, gene2, _ = data[start_red1]
+            if gene1 not in dict_gff1 or gene2 not in dict_gff2:
+                i += 1
+                continue  # 如果基因不在字典中，跳过
 
+            chrom1, chrom2 = dict_gff1[gene1][0], dict_gff2[gene2][0]
+
+            # 寻找第一个 red 区域的结束
+            while i < n and data[i][2] == 'blue' and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
+                i += 1
+            end_red1 = i - 1  # 记录第一个 red 区域的结束索引
+
+            # 检测 blue 的开始
+            if i < n and data[i][2] == 'red' and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
+                start_blue = i  # 记录 blue 区域的起始索引
+
+                # 寻找 blue 区域的结束
+                while i < n and data[i][2] == 'red' and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
+                    i += 1
+                end_blue = i - 1  # 记录 blue 区域的结束索引
+
+                # 检测第二个 red 的开始
+                if i < n and data[i][2] == 'blue' and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
+                    start_red2 = i  # 记录第二个 red 区域的起始索引
+
+                    # 寻找第二个 red 区域的结束
+                    while i < n and data[i][2] == 'blue' and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
+                        i += 1
+                    end_red2 = i - 1  # 记录第二个 red 区域的结束索引
+
+                    # 记录符合 red -> blue -> red 模式的区域
+                    conversion_zones.append((zone_id, start_red1, end_red2))
+                    zone_id += 1  # 更新区域编号
+
+                    # 下一个区域的第一个 red 区间从当前区域的第二个 red 区间开始
+                    i = start_red2  # 重置索引，确保下一个区域从第二个 red 开始
+                else:
+                    i += 1  # 如果没有找到第二个 red，继续遍历
+            else:
+                i += 1  # 如果没有找到 blue，继续遍历
+        else:
+            i += 1  # 如果没有找到第一个 red，继续遍历
+
+    # 将结果写入文件
     with open(output_file, 'w') as f:
         for zone in conversion_zones:
             zone_id, start, end = zone
-            f.write(f"Conversion Zone {zone_id}:\n")
+            first_gene1, first_gene2, _ = data[start]
+            contig1 = dict_gff1[first_gene1][0]
+            contig2 = dict_gff2[first_gene2][0]
+            f.write(f"# Conversion Zone {zone_id}: {contig1}&{contig2}\n")
             for j in range(start, end + 1):
-                f.write(f"{data[j]}\n")
-            f.write('*' * 20 + '\n')
+                if j >= n:  # 防止索引超出范围
+                    break
+                gene1, gene2, color = data[j]
+                if gene1 in dict_gff1 and gene2 in dict_gff2:
+                    chrom1, pos_start1, pos_end1 = dict_gff1[gene1][0], dict_gff1[gene1][1], dict_gff1[gene1][2]
+                    chrom2, pos_start2, pos_end2 = dict_gff2[gene2][0], dict_gff2[gene2][1], dict_gff2[gene2][2]
+                    position = f"{gene1}\t{pos_start1}\t{pos_end1}\t{gene2}\t{pos_start2}\t{pos_end2}"
+                    # 以制表符分隔的格式写入
+                    f.write(f"{position}\t{color}\n")
 
-def process_gd_result(gf,imap,sp1,sp2,support):
+def process_gd_result(gf,imap,sp1,sp2,support,pair_support):
     tre_dic=read_and_return_dict(gf)
     gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(imap)
     rename_sp1=taxa2voucher_dic[sp1]
@@ -467,7 +532,7 @@ def process_gd_result(gf,imap,sp1,sp2,support):
         if len(sps_tol)==2 and {sp1,sp2} not in sps_tol:
             continue
 
-        dup_node_list = find_dup_node(Phylo_t1,rename_sp1, rename_sp2,new_named_gene2gene_dic,processed_lines,written_results,support)
+        dup_node_list = find_dup_node(Phylo_t1,rename_sp1, rename_sp2,new_named_gene2gene_dic,processed_lines,written_results,support,pair_support)
         
 
         
@@ -526,6 +591,9 @@ def process_gd_result(gf,imap,sp1,sp2,support):
                             written_results.add(s)
 
     sorted_lines = sorted(processed_lines, key=lambda x: x.split('\t')[0])
+    with open('color_label.txt','w') as file :
+        for line in sorted_lines:
+            file.write(f'{line}')
     return sorted_lines
 
 if __name__=="__main__":
