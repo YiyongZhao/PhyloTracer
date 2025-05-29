@@ -225,7 +225,7 @@ def get_species_set(Phylo_t: object) -> set:
     """
     return set(get_species_list(Phylo_t))
 
-ef get_max_deepth(root:object)->int:
+def get_max_deepth(root:object)->int:
     """
     Calculate the maximum depth of a tree.
     Args:
@@ -302,29 +302,35 @@ def calculate_gd_num(Phylo_t: object) -> int:
     
     return gd_num
 
-def sps_dup_num(sps_list: list, unique_sps: list) -> int:
+def count_common_elements(scubclade1_sps: set, subclade2_sps: set) -> int:
     """
     Count the number of species that appear more than once in the list.
 
     Args:
-        sps_list (list): List of species names.
-        unique_sps (list): List of unique species names.
+        scubclade1_sps (list): List of subclade1 species names.
+        scubclade2_sps (list): List of subclade2 species names.
 
     Returns:
         int: Number of duplicated species.
     """
-    sps_num_dic = {i: 0 for i in unique_sps}
-    sps_dups = 0
+   
+    return len(scubclade1_sps & subclade2_sps)
 
-    for sps in sps_list:
-        if sps in sps_num_dic:
-            sps_num_dic[sps] += 1
-            if sps_num_dic[sps] == 2:
-                sps_dups += 1
-
-    return sps_dups
-
-
+def map_gene_tree_to_species(species_set: set, species_tree: object) -> object:
+    """
+    Map a set of species from the gene tree to the corresponding node in the species tree.
+    Args:
+        species_set (set): Set of species names from the gene tree.
+        species_tree (object): The species tree object.
+    Returns:
+        object: The corresponding node in the species tree.
+    """
+    if len(species_set) != 1:
+        clade = species_tree.get_common_ancestor(species_set)
+    else:
+        clade = species_tree & list(species_set)[0]
+    return clade
+    
 def find_tre_dup(Phylo_t: object) -> list:
     """
     Find all duplication events in a phylogenetic tree and return their sequence relationships.
