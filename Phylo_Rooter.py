@@ -4,7 +4,7 @@ from BranchLength_NumericConverter import write_tree_to_newick
 
 import numpy as np
 from scipy.stats import norm
-
+        
 def get_mapped_node_depth(root: object, species_tree: object = None) -> int:
     """
     Calculate the depth of the node in the species tree that corresponds to the given gene tree node.
@@ -37,7 +37,7 @@ def get_mapped_node_depth(root: object, species_tree: object = None) -> int:
         return depth 
     except Exception:
         return 0
-        
+
 def calculate_RF_distance(Phylo_t_OG_L: object, sptree: object) -> int:
     """
     Calculate the Robinson-Foulds (RF) distance between a gene tree and a species tree.
@@ -192,6 +192,14 @@ def calculate_tree_statistics(
     species_overlap = calculate_species_overlap(tree)
     return deep, var, RF, GD, species_overlap
 
+def read_weights_config(config_path):
+    df = pd.read_csv(config_path)
+    weights_multi = df[df["type"]=="multi"].iloc[0].to_dict()
+    weights_single = df[df["type"]=="single"].iloc[0].to_dict()
+
+    weights_multi.pop("type")
+    weights_single.pop("type")
+    return weights_multi, weights_single
 
 def root_main(
     tree_dict: dict,
@@ -217,23 +225,23 @@ def root_main(
         shutil.rmtree(dir_path)
     os.makedirs(dir_path)
     pbar = tqdm(total=len(tree_dict), desc="Processing trees", unit="tree")
-
+    
 
     stat_matrix = []
-    weights = {
-        "deep": 0.3, #0.5
-        "var": 0.05, #0.1
-        "RF": 0.5, #0.4
-        "GD": 0.1,
-        "species_overlap": 0.05
+    weights_multi = {
+        "deep": 0.1, #0.1
+        "var": 0.05, #0.05
+        "RF": 0.6, #0.5
+        "GD": 0.2, #0.3
+        "species_overlap": 0.05 #0.05
     }
 
-    weights1 = {
+    weights_single = {
         "deep": 0.5, #0.5
         "var": 0.1, #0.1
         "RF": 0.4, #0.4
     }
-
+    # weights_multi, weights_single = read_weights_config("weights_config.csv")
     try:
         for tree_id, tree_path in tree_dict.items():
             pbar.set_description(f"Processing {tree_id}")
@@ -253,7 +261,8 @@ def root_main(
             root_list = get_all_rerooted_trees(Phylo_t2)
             if root_list:
                 root_list = root_list[1:]  # Remove the first (original) root
-
+                
+            # 收集当前树的所有重根结果
             for n, tree in enumerate(root_list):
                 t1 = rename_input_tre(tree, new_name_to_gene)
                 t1.ladderize()
@@ -276,13 +285,15 @@ def root_main(
                     "species_overlap": species_overlap
                 })
             
+            # 对当前树的统计结果进行排序和评分
             current_df = pd.DataFrame(tree_stats)
-
+            # ========== 方式三：五参数归一化加权求和（越小越好用+，越大越好用-）==========
+            # 判断单拷贝还是多拷贝
             is_multi_copy = len(get_species_list(Phylo_t2)) != len(get_species_set(Phylo_t2))
+            # 选择权重
+            used_weights = weights_multi if is_multi_copy else weights_single
 
-            used_weights = weights if is_multi_copy else weights1
-
-
+            # 归一化加权求和
             def normalize_and_score(df, weights):
                 norm_deep = (df["deep"] - df["deep"].min()) / (df["deep"].max() - df["deep"].min()) if df["deep"].max() != df["deep"].min() else 0
                 norm_var = (df["var"] - df["var"].min()) / (df["var"].max() - df["var"].min()) if df["var"].max() != df["var"].min() else 0
@@ -305,6 +316,7 @@ def root_main(
 
             current_df["score"] = normalize_and_score(current_df, used_weights)
 
+            # 同步rank和score到tree_stats
             for i, stat in enumerate(tree_stats):
                 stat["weighted_norm_deep"] = current_df.iloc[i].get("weighted_norm_deep", None)
                 stat["weighted_norm_var"] = current_df.iloc[i].get("weighted_norm_var", None)
@@ -312,16 +324,19 @@ def root_main(
                 stat["weighted_norm_GD"] = current_df.iloc[i].get("weighted_norm_GD", None)
                 stat["weighted_norm_species_overlap"] = current_df.iloc[i].get("weighted_norm_species_overlap", None)
                 stat["score"] = current_df.iloc[i]["score"]
-
+            
+            # 找出当前树的最优重根结果并写出
             best_tree_row = current_df.loc[current_df["score"].idxmin()]
             best_tree_key = best_tree_row["Tree"]
             best_tree = tree_objects[best_tree_key]
             best_tree_str = best_tree.write(format=0)
             write_tree_to_newick(best_tree_str, f"{tree_id}", dir_path)
-
+            
+            # 将当前树的统计结果添加到总矩阵
             stat_matrix.extend(tree_stats)
             pbar.update(1)
 
+        # 创建总的统计报告
         stat_df = pd.DataFrame(stat_matrix)
         if not stat_df.empty:
             stat_df["tree_id"] = stat_df["Tree"].apply(lambda x: "_".join(x.split("_")[:-1]))
