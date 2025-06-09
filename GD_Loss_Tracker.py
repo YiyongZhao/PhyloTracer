@@ -30,33 +30,53 @@ def count_common_elements(set1, set2):
    
     return len(set1.intersection(set2))
 
-def find_dup_node(Phylo_t:object,renamed_sptree)->list:#After searching for duplication events, the list of node names where duplication events occurred is as follows:
-    events = Phylo_t.get_descendant_evol_events()
-    dup_node = []
-    for ev in events:
-        if ev.etype == "D":
-            i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
-            events_node_name_list = i.split(',')
-            common_ancestor_node= Phylo_t.get_common_ancestor(events_node_name_list)
+def find_dup_node(
+    gene_tree: object,
+    species_tree: object,
+    gd_support: int = 50,
+    clade_support: int = 0,
+    dup_species_num: int = 2,
+    dup_species_percent: int = 0,
+    max_topology_distance: int = 1
+) -> list:
+    """
+    Find duplication nodes in a gene tree based on evolutionary events and various filtering criteria.
 
-            clade_up = common_ancestor_node.get_children()[0]
-            clade_down = common_ancestor_node.get_children()[1]
+    Args:
+        gene_tree (object): The gene tree object to analyze.
+        species_tree (object): The reference species tree object.
+        gd_support (int): Minimum support value for a duplication node to be considered (default: 50).
+        clade_support (int): Minimum support value for sister clades (default: 0).
+        dup_species_num (int): Minimum number of duplicated species required (default: 2).
+        dup_species_percent (int): Minimum percentage of duplicated species required (default: 0).
+        max_topology_distance (int): Maximum allowed topological distance between mapped child nodes in the species tree (default: 1).
 
-            map_clade_up=renamed_sptree.get_common_ancestor(get_species_set(clade_up))
-            map_clade_down=renamed_sptree.get_common_ancestor(get_species_set(clade_down))
-            dup_sps=count_common_elements(get_species_set(clade_up),get_species_set(clade_down))
-            if judge_support(common_ancestor_node.support,50):
-                #if judge_support(clade_up.support,50) and judge_support(clade_down.support,50):
-                if dup_sps>=2:
-                    if len(get_species_set(map_clade_up)) >len(get_species_set(map_clade_down)):
-                        if renamed_sptree.get_distance(map_clade_up,map_clade_down, topology_only=True) <=1:
-                            dup_node.append(common_ancestor_node)
-                    elif len(get_species_set(map_clade_up)) <len(get_species_set(map_clade_down)):
-                        if renamed_sptree.get_distance(map_clade_down,map_clade_up, topology_only=True) <=1:
-                            dup_node.append(common_ancestor_node)
-                    else:
-                        dup_node.append(common_ancestor_node)
-    return dup_node
+    Returns:
+        list: A list of duplication node objects that meet all criteria.
+    """
+    dup_node_list = []
+    events = gene_tree.get_descendant_evol_events()
+    for event in events:
+        if event.etype == "D":
+            node_names = ",".join(event.in_seqs) + ',' + ",".join(event.out_seqs)
+            event_node_name_list = node_names.split(',')
+            common_ancestor_node = gene_tree.get_common_ancestor(event_node_name_list)
+            child_a, child_b = common_ancestor_node.get_children()
+            species_set = get_species_set(common_ancestor_node)
+            mapped_species_node = map_gene_tree_to_species(species_set, species_tree)
+            common_ancestor_node.add_feature('map', mapped_species_node.name)
+            mapped_a = map_gene_tree_to_species(get_species_set(child_a), species_tree)
+            mapped_b = map_gene_tree_to_species(get_species_set(child_b), species_tree)
+            dup_sps=count_common_elements(get_species_set(child_a), get_species_set(child_b))
+            dup_percent = dup_sps / len(get_species_set(common_ancestor_node))
+            if common_ancestor_node.support>=gd_support:
+                if child_a.support >= clade_support and child_b.support >= clade_support:
+                    if dup_percent>=dup_species_percent:
+                        if species_tree.get_distance(mapped_a, mapped_b, topology_only=True) <= max_topology_distance:
+                            dup_node_list.append(common_ancestor_node)
+
+                       
+    return dup_node_list
     
 def get_maptree_internal_node_name_set(node,sptree):
     sps=get_species_set(node)
@@ -171,49 +191,94 @@ def get_gene_loss_list(clade_up,clade_down,dup_sps):
 
     return gene_loss
 
+def gene_pair(clade:object) -> set:
+    """
+    Generate gene pairs from two child clades based on matching species codes in leaf names.
+
+    Args:
+        clade: A clade object with a method get_children(), whose children have get_leaf_names().
+
+    Returns:
+        set: A set of gene pair strings in the format 'geneA-geneB', 'geneA-null', or 'null-geneB'.
+    """
+    result_pairs = set()
+
+    children = clade.get_children()
+    child1, child2 = sorted(children, key=lambda c: len(c.get_leaf_names()), reverse=True)
+    leaves1, leaves2 = child1.get_leaf_names(), child2.get_leaf_names()
+
+    for tip1 in leaves1:
+        matching_tips = [tip2 for tip2 in leaves2 if tip1.split('_')[0] == tip2.split('_')[0]]
+        if matching_tips:
+            result_pairs.update(f"{tip1}-{tip2}" for tip2 in matching_tips)
+        else:
+            result_pairs.add(f"{tip1}-null")
+
+    for tip2 in leaves2:
+        if all(tip2.split('_')[0] != tip1.split('_')[0] for tip1 in leaves1):
+            result_pairs.add(f"null-{tip2}")
+
+    return result_pairs
 
 def get_path_str_with_count_num_lst(tre_id,gd_id,genetree,renamed_sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic,path2_treeid_dic):#统计一颗树中所有gd下不同的丢失情况
-
     path_str_with_count_num_lst = []
     dup_node_name_list = find_dup_node(genetree,renamed_sptree)
     for i in dup_node_name_list:
         sp = get_species_set(i)
+        max_clade2sp = mapp_gene_tree_to_species(sp, renamed_sptree)
         clade_up = i.get_children()[0]
         clade_down = i.get_children()[1]
-        up_tips='-'.join([new_named_gene2gene_dic[leaf] for leaf in clade_up.get_leaf_names()])
-        down_tips='-'.join([new_named_gene2gene_dic[leaf] for leaf in clade_down.get_leaf_names()])
-
-
+        new_path_str_lst = []
         if len(sp) != 1:
-            max_clade2sp = renamed_sptree.get_common_ancestor(sp)
-            sps_loss_1=set(max_clade2sp.get_leaf_names())-sp
-            sps_loss=[voucher2taxa_dic[i] for i in sps_loss_1]
-            dup_sps=get_species_set(clade_up)&get_species_set(clade_down)
-            gene_loss_1=get_gene_loss_list(clade_up,clade_down,dup_sps)
-            gene_loss=[new_named_gene2gene_dic[i] for i in gene_loss_1]
-
             dic,keys_with_zero_value=get_maptree_internal_node_name_count_dic(i,max_clade2sp,renamed_sptree)
-
-
             path_str_lst = get_tips_to_clade_path_lst(max_clade2sp,dic)
-            for i in path_str_lst:
-                if i in path2_treeid_dic:
-                    path2_treeid_dic[i].append(f'{tre_id}-{gd_id}')
+            for i1 in path_str_lst:
+                if i1 in path2_treeid_dic:
+                    path2_treeid_dic[i1].append(f'{tre_id}-{gd_id}')
                 else:
-                    path2_treeid_dic[i]=[f'{tre_id}-{gd_id}']
+                    path2_treeid_dic[i1]=[f'{tre_id}-{gd_id}']
 
             path_str_with_count_num_lst+=path_str_lst
-            out.write(tre_id+'\t'+str(gd_id)+'\t'+max_clade2sp.name+'\t'+up_tips+'\t'+down_tips+'\t'+'-'.join(keys_with_zero_value)+'\t'+'-'.join(sorted(sps_loss))+'\t'+'-'.join(sorted(gene_loss))+'\n')
-        else:
-            nodename=get_maptree_name(renamed_sptree,sp)
-            out.write(tre_id+'\t'+str(gd_id)+'\t'+voucher2taxa_dic.get(nodename,nodename)+'\t'+up_tips+'\t'+down_tips+'\n')
-        gd_id+=1
 
+           
+            for path_str in path_str_lst:
+                parts = path_str.split('->')
+                last = parts[-1]
+                key = last.split('(')[0]
+                if key in voucher2taxa_dic:
+                    parts[-1] = voucher2taxa_dic[key] + last[len(key):]
+                new_path_str_lst.append('->'.join(parts))
+        
+        species_set=get_species_list(max_clade2sp)
+        appeared_species = set()
+        gene_pairs = gene_pair(i)
+        for gene_pair_str in gene_pairs:
+            out.write(str(tre_id) + '\t' +str(gd_id) + '\t'+ str(i.support)+'\t'+voucher2taxa_dic.get(max_clade2sp.name,max_clade2sp.name) +'\t')
+            gene_a, gene_b = gene_pair_str.split('-')
+            if gene_a.split('_')[0] == gene_b.split('_')[0]:
+                species_code = gene_a.split('_')[0]
+            else:
+                if gene_a == 'null':
+                    species_code = gene_b.split('_')[0]
+                else:
+                    species_code = gene_a.split('_')[0]
+            appeared_species.add(species_code)
+            out.write(str(voucher2taxa_dic[species_code]) + '\t' +
+                        str(new_named_gene2gene_dic.get(gene_a, 'null')) + '\t' +
+                        str(new_named_gene2gene_dic.get(gene_b, 'null')) + '\t' +
+                        '@'.join(new_path_str_lst)+'\n'
+            )
+
+        for s in species_set:
+            if s not in appeared_species:
+                out.write(str(tre_id) + '\t' + str(gd_id) + '\t'+ str(i.support)+'\t' + voucher2taxa_dic.get(s,s)  + '\tNA\tNA\tNA\t'+ '@'.join(new_path_str_lst) + '\n')
+        gd_id+=1
+        
     set_path_str_with_count_num_lst = path_str_with_count_num_lst.copy()
 
     
     result = sorted(set_path_str_with_count_num_lst, reverse=True)
-        
+    
     return result,gd_id
 
 def num_sptree(sptree):
@@ -247,8 +312,8 @@ def get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2g
     renamed_sptree=rename_input_tre(sptree,taxa2voucher_dic)
     path2_treeid_dic={}
     path_str_num_dic={}
-    out=open('gd_summary.txt','w')
-    out.write(f'Tree_id\tGD_id\tSpecies_level\tGD_subclade1\tGD_subclade2\tNode_loss(twice)\tSpecies_Loss\tGene_Loss\n')
+    out=open('gd_loss_summary.txt','w')
+    out.write('tree_ID'+'\t'+'gd_ID'+'\t'+'gd_support'+'\t'+'level'+'\t'+'species'+'\t'+'gene1'+'\t'+'gene2'+'\t'+'loss_path'+'\n')
     gd_id=1
     for tre_id,tre_path in tre_dic.items():
         t=PhyloTree(tre_path)
@@ -292,7 +357,7 @@ def write_total_lost_path_counts_result(sp_dic, path_dic):
             else:
                 f1.write(f'{k1}\t' + '\t'.join(map(str, v1)) + '\n')
 
-def proecee_start_node(file, sptree):
+def process_start_node(file, sptree):
     with open(file, 'r') as f:
         species_list = [line.strip() for line in f.readlines()]
     try:
@@ -349,63 +414,76 @@ def write_gd_loss_info_of_node_to_species(sp_dic, start_node, species, path_dic)
                            (start_node, species))
 
 def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
-    lines = []
+    group_dict = {}
     with open(file_path, 'r') as file:
+        first_line = True
         for line in file:
-            line = line.strip() 
-            if line: 
-                lines.append(line)  
-
-    header_line = lines[1].strip()
-    columns = [col.split('(')[0] for col in header_line.split('->')]
-    columns.append("count") 
-    
-    rows = []
-
-    for line in lines[1:]:
-        line = line.strip() 
-        if not line:  
-            continue
-
-        match = re.findall(r'\((\d+)\)', line) 
-        count_match = re.search(r'\s+(\d+)$', line) 
-        
-
-        if count_match:
-            count = count_match.group(1)
-
-            if len(match) + 1 == len(columns): 
-                rows.append([*match, count])
-            else:
-                print(f"行解析不匹配的行: {line} (解析后元素数: {len(match) + 1}, 期望数: {len(columns)})")
-        else:
-            print(f"未找到计数值的行: {line}")
-
-    if rows:
-        df = pd.DataFrame(rows, columns=columns)
-    else:
-        print("没有有效的数据行。")
-        return
-
-
-    descriptions = []
-    for _, row in df.iterrows():
-        loss_desc = []
-        for i, col in enumerate(columns[:-1]):  
-            if int(row[col]) < 2: 
-                if i > 0:  
-                    prev_col = columns[i - 1]  
-                    loss_desc.append(f"Lost after {prev_col}")
+            if first_line:
+                first_line = False
+                continue  # 跳过第一行
+            if not line.strip():
+                continue  # 跳过空行
+            start_node = line.split('->')[0].split('(')[0]
+            species = line.split('->')[-1].split('(')[0]
+            key = (start_node, species)
+            if key not in group_dict:
+                group_dict[key] = []
+            group_dict[key].append(line)
+            
+    def parse_lines_to_df(lines):
+        header_line = lines[0].strip()
+        columns = [col.split('(')[0] for col in header_line.split('->')]
+        columns.append("gd_number")
+        rows = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            match = re.findall(r'\((\d+)\)', line)
+            count_match = re.search(r'\s+(\d+)$', line)
+            if count_match:
+                count = count_match.group(1)
+                if len(match) + 1 == len(columns):
+                    rows.append([*match, count])
                 else:
-                    loss_desc.append(f"Lost after {col}")
+                    print(f"行解析不匹配的行: {line} (解析后元素数: {len(match) + 1}, 期望数: {len(columns)})")
+            else:
+                print(f"未找到计数值的行: {line}")
+        if rows:
+            df = pd.DataFrame(rows, columns=columns)
+        else:
+            print("没有有效的数据行。")
+            return None
+        descriptions = []
+        for _, row in df.iterrows():
+            loss_desc = []
+            for i, col in enumerate(columns[:-1]):
+                if int(row[col]) < 2:
+                    if i > 0:
+                        prev_col = columns[i - 1]
+                        loss_desc.append(f"Lost after {prev_col}")
+                    else:
+                        loss_desc.append(f"Lost after {col}")
+            descriptions.append("No duplicate lost" if not loss_desc else loss_desc[0])
+        df["Rest # of duplicates"] = descriptions
+        df = df[["Rest # of duplicates"] + columns]
+        return df
 
-        descriptions.append("No duplicate lost" if not loss_desc else loss_desc[0])  # 添加描述
-
-    df["Rest # of duplicates"] = descriptions
-
-    df = df[["Rest # of duplicates"] + columns]
-
-    df.to_excel(output_file, index=False)
+    
+    with pd.ExcelWriter(output_file) as writer:
+        for value in group_dict.values():
+            dic = {}
+            for i in value:
+                path, num = i.strip().split('\t')
+                dic[path] = int(num)
+            sorted_dic = sort_dict_by_keys(dic)
+            input_data = [f'{k}\t{v}' for k, v in sorted_dic.items()]
+            df = parse_lines_to_df(input_data)
+            
+            start =value[0].split('->')[0].split('(')[0]
+            species = value[0].split('->')[-1].split('(')[0]
+            sheet_name = f'{start}_{species}'[:31]
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
 if __name__ == "__main__":
