@@ -50,14 +50,6 @@ def judge_support(support,support_value):
         else:
             return False
 
-def mapp_gene_tree_to_species(sp_set,sptree):
-    if len(sp_set) !=1:
-        clade=sptree.get_common_ancestor(sp_set)
-    else:
-        clade=sptree&list(sp_set)[0]
-
-    return clade
-
 def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_support:int=0,dup_species_num:int=2,dup_species_percent:int=0,deepvar:int=1) -> list:
     dup_node_name_list = []
     events = Phylo_t.get_descendant_evol_events()
@@ -402,7 +394,128 @@ def write_out(out, triple, outfile):
     print(out["BCAA"], "\t", sep="", end="", file=outfile)
     print(out["ABCD"], "\n", sep="", end="", file=outfile)
 
+
+
+def build_concatenated_matrix(all_genes):
+    # 统计所有基因的顺序和每个基因的长度
+    gene_order = list(all_genes.keys())
+    gene_len = {gene: len(seq) for gene, seq in all_genes.items()}
+    # 获取所有物种
+    species_set = set([gene.split('_')[0] for gene in all_genes.keys()])
+    # 初始化物种到各基因序列的映射
+    species2seq = {sp: [] for sp in species_set}
+    for gene in gene_order:
+        sp = gene.split('_')[0]
+        seq = all_genes[gene]
+        for s in species_set:
+            if s == sp:
+                species2seq[s].append(seq)
+            else:
+                species2seq[s].append('-' * gene_len[gene])
+    # 拼接每个物种的所有基因序列
+    concat_matrix = {sp: ''.join(seq_list) for sp, seq_list in species2seq.items()}
+    seq_length = max(len(seq) for seq in concat_matrix.values())
+    return concat_matrix, seq_length
+
+def run_hyde_from_matrix(all_genes:dict,voucher2taxa_dic:dict,outgroup:str):
+    concat_matrix,max_length = build_concatenated_matrix(all_genes)
+    with open("temp.imap", 'w') as imap_file:
+        for spsecies, seq in concat_matrix.items():
+            sp = spsecies.split('_')[0]
+            sp_0 = voucher2taxa_dic[sp]
+            imap_file.write(f'{sp_0}\t{sp_0}\n')
+
+    with open('temp.phy', 'w') as phy_file:
+        for species, sequence in concat_matrix.items():
+            phy_file.write(f'{voucher2taxa_dic[species]}\t{sequence}\n')
+
+    hyde_result_lst=[]
+    sps_num=len(concat_matrix)
+    dat = hd.HydeData("temp.phy", "temp.imap", outgroup, sps_num, sps_num, max_length)
+    res = dat.list_triples()
+    for t in res:
+        p1,hyb,p2=t
+        result=dat.test_triple(p1,hyb,p2)
+        combined_element = (t, result,len(res))
+        hyde_result_lst.append(combined_element)
+
+    header = ("P1\tHybrid\tP2\tZscore\tPvalue\tGamma\tAAAA\tAAAB\tAABA\tAABB\tAABC\tABAA\t""ABAB\tABAC\tABBA\tBAAA\tABBC\tCABC\tBACA\tBCAA\tABCD\n")
+    with open("hyde_out.txt", 'w') as out_file, open('hyde_filtered_out.txt', 'w') as filtered_out_file:
+        print(header, end="", file=out_file)
+        print(header, end="", file=filtered_out_file)
+
+        for t, res, t_num in hyde_result_lst:
+            write_out(res, t, out_file)
+            if is_filtered(res, t_num):
+                write_out(res, t, filtered_out_file)
+
+    # os.remove('temp.phy')
+    # os.remove('temp.imap')
+    return hyde_result_lst
+
 def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic,target_node=None,split_gd:bool=False):
+    hyde_tuple_lst=[]
+    all_genes = {}
+    all_seq_dic = {}
+    gd_lst=[]
+    gd_group=5
+    
+    for tre_id, tre_path in tre_dic.items():
+        t = read_phylo_tree(tre_path)
+        t1 = rename_input_tre(t, gene2new_named_gene_dic)
+        seq_dic = create_fasta_dict(seq_path_dic[tre_id], gene2new_named_gene_dic)
+        all_seq_dic.update(seq_dic)
+        gds = find_dup_node(t1, rename_sptree, 50)
+        gd_lst.extend(gds)
+
+    for gd in gd_lst:
+
+        for gene in gd.get_leaf_names():
+            all_genes[gene] = all_seq_dic[gene]
+  
+    vo='CEC'
+    hyde_result_lst=run_hyde_from_matrix(all_genes,voucher2taxa_dic,vo)
+    hyde_tuple_lst.extend(hyde_result_lst)
+    
+    
+    # group_hyde_result_lst=[]
+    # for i in range(0, len(gd_lst), gd_group):
+    #     group = gd_lst[i:i+gd_group]
+        
+    #     group_genes = {}
+    #     sps=set()
+    #     out=[]
+    #     for gd in group:
+    #         outgroup_gene = get_outgroup_gene(gd, rename_sptree)
+    #         out.append(outgroup_gene.split('_')[0] if outgroup_gene else None)
+    #         for gene in gd.get_leaf_names():
+    #             group_genes[gene] = all_seq_dic[gene]
+    #             sps.add(gene.split('_')[0] )
+                
+    #     out_filtered = [voucher2taxa_dic.get(x,'') for x in out if x is not None]
+    #     if 'Cercis_chinensis' in out_filtered:
+    #         vo='Cercis_chinensis'
+    #         if vo in group_genes:
+               
+    #             hyde_result_lst=run_hyde_from_matrix(group_genes,voucher2taxa_dic,vo)
+    #             group_hyde_result_lst.extend(hyde_result_lst)
+    #     else:
+    #         print('no outgroup')
+    #         continue
+            
+            
+
+        
+        
+
+
+
+
+
+
+
+
+def hyde_main1(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic,target_node=None,split_gd:bool=False):
     hyde_tuple_lst=[]
     gd_count_dic,gd_type_dic=get_gd_count_dic_and_gd_type_dic(tre_dic,gene2new_named_gene_dic,rename_sptree)
     data=count_elements_in_lists(gd_type_dic)
@@ -455,7 +568,7 @@ def is_filtered(res, t_num):
         res["Pvalue"] < (0.05 / t_num)
         and abs(res["Zscore"]) != 99999.9
         and 0.0 < res["Gamma"] < 1.0
-    )        
+    )
 
 
 
