@@ -69,6 +69,29 @@ def read_and_return_dict(filename: str, separator: str = "\t") -> dict:
         logging.error(f"Failed to parse mapping file {filename}: {e}")
         raise
 
+def mapp_gene_tree_to_species(sp_set: set, sptree: object) -> object:
+    """
+    Map a set of species names to their most recent common ancestor (MRCA) in a species tree.
+
+    Args:
+        sp_set (set): A set of species names (strings) corresponding to tip names in the species tree.
+        sptree (object): The input species tree (ETE3 Tree object).
+
+    Returns:
+        object: The tree node representing the most recent common ancestor (MRCA) of all species
+                in sp_set. If sp_set contains only one species, the corresponding leaf node is returned.
+
+    Example:
+        sp_set = {'Homo_sapiens', 'Mus_musculus'}
+        clade_node = mapp_gene_tree_to_species(sp_set, species_tree)
+    """
+    if len(sp_set) != 1:
+        clade = sptree.get_common_ancestor(sp_set)
+    else:
+        clade = sptree & list(sp_set)[0]
+    return clade
+
+
 def rename_input_tre(Phylo_t: object, gene2new_named_gene_dic: dict) -> object:
     """
     Rename the leaf nodes of a phylogenetic tree according to a mapping dictionary.
