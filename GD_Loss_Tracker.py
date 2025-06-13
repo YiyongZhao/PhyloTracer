@@ -1,30 +1,7 @@
 from __init__ import *
 import re
 
-def judge_support(support,support_value):
-    if  support <=1 and 0.5 <=support_value <=1:
-        if support>=support_value:
-            return True
-        else:
-            return False
-        
-    elif support <=1 and 50 <= support_value <=100:
-        support_value=support_value/100
-        if support>=support_value:
-            return True
-        else:
-            return False
-    elif support > 1 and 0.5 <=support_value <=1:
-        support_value=support_value*100
-        if support>=support_value:
-            return True
-        else:
-            return False
-    elif support > 1 and 50 <=support_value <=100:
-        if support>=support_value:
-            return True
-        else:
-            return False
+
 
 def count_common_elements(set1, set2):
    
@@ -319,6 +296,7 @@ def get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2g
         t=PhyloTree(tre_path)
         t1=rename_input_tre(t, gene2new_named_gene_dic)
         path_str_num_lst,gd_id=get_path_str_with_count_num_lst(tre_id,gd_id,t1,renamed_sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic,path2_treeid_dic)
+        
         for i in path_str_num_lst :
             if i in path_str_num_dic:
                 path_str_num_dic[i]+=1
@@ -328,162 +306,6 @@ def get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2g
     out.close()
     return path_str_num_dic,path2_treeid_dic
 
-def write_total_lost_path_counts_result(sp_dic, path_dic):
-    sorted_sp_keys = sorted(sp_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_sp_dict = {k: sp_dic[k] for k in sorted_sp_keys}
-
-    sorted_path_keys = sorted(path_dic.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_path_dict = {k: path_dic[k] for k in sorted_path_keys}
-
-    with open('gd_loss_count_summary.txt', 'w') as f:
-        f.write('GD Loss path\tGF count\n')
-        processed_sp = set()
-        for k, v in sorted_sp_dict.items():
-            last_char = k.split('->')[-1].split('(')[0]
-            if last_char not in processed_sp:
-                f.write(f'\n{k}\t{v}\n')
-                processed_sp.add(last_char)
-            else:
-                f.write(f'{k}\t{v}\n')
-
-    with open('gd_loss_gf_count_summary.txt', 'w') as f1:
-        f1.write('GD Loss path\tGF count\n')
-        processed_path = set()
-        for k1, v1 in sorted_path_dict.items():
-            last_char1 = k1.split('->')[-1].split('(')[0]
-            if last_char1 not in processed_path:
-                f1.write(f'\n{k1}\t' + '\t'.join(map(str, v1)) + '\n')
-                processed_path.add(last_char1)
-            else:
-                f1.write(f'{k1}\t' + '\t'.join(map(str, v1)) + '\n')
-
-def process_start_node(file, sptree):
-    with open(file, 'r') as f:
-        species_list = [line.strip() for line in f.readlines()]
-    try:
-        common_ancestor_node = sptree.get_common_ancestor(species_list)
-        return common_ancestor_node.name 
-    except:
-        print(f"Error: Unable to find a common ancestor for species: {species_list}")
-        return None
-
-def sort_dict_by_keys(input_dict):
-    sorted_keys = sorted(input_dict.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_dict = {k: input_dict[k] for k in sorted_keys}
-    return dict(sorted(sorted_dict.items(), key=lambda x: [int(n) for n in re.findall(r'\((\d+)\)', x[0])], reverse=True))
-
-def write_gd_loss_to_file(filename, data_dict, key_filter, filter_value):
-    with open(filename, 'w') as f:
-        f.write('GD Loss path\tGF count\n')
-        for k, v in data_dict.items():
-            if key_filter(k) == filter_value:
-                f.write(f'\n{k}\t{v}\n')
-
-def write_gd_loss_info_of_strart_node(sp_dic, start_node, path_dic):
-    sorted_dict1 = sort_dict_by_keys(sp_dic)
-    sorted_dict2 = sort_dict_by_keys(path_dic)
-
-    write_gd_loss_to_file('gd_loss_count_summary.txt', sorted_dict1, 
-                           lambda k: k.split('->')[0].split('(')[0], start_node)
-    
-    write_gd_loss_to_file('gd_loss_gf_count_summary.txt', sorted_dict2, 
-                           lambda k: k.split('->')[0].split('(')[0], start_node)
-
-def write_gd_loss_info_of_species(sp_dic, species, path_dic):
-    sorted_sp_dict = sort_dict_by_keys(sp_dic)
-    sorted_path_dict = sort_dict_by_keys(path_dic)
-
-    write_gd_loss_to_file('gd_loss_count_summary.txt', sorted_sp_dict, 
-                           lambda k: k.split('->')[-1].split('(')[0], species)
-
-    write_gd_loss_to_file('gd_loss_gf_count_summary.txt', sorted_path_dict, 
-                           lambda k: k.split('->')[-1].split('(')[0], species)
-
-def write_gd_loss_info_of_node_to_species(sp_dic, start_node, species, path_dic):
-    sorted_dict1 = sort_dict_by_keys(sp_dic)
-    sorted_dict2 = sort_dict_by_keys(path_dic)
-
-    write_gd_loss_to_file('gd_loss_count_summary.txt', sorted_dict1, 
-                           lambda k: (k.split('->')[0].split('(')[0], 
-                                       k.split('->')[-1].split('(')[0]), 
-                           (start_node, species))
-    
-    write_gd_loss_to_file('gd_loss_gf_count_summary.txt', sorted_dict2, 
-                           lambda k: (k.split('->')[0].split('(')[0], 
-                                       k.split('->')[-1].split('(')[0]), 
-                           (start_node, species))
-
-def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
-    group_dict = {}
-    with open(file_path, 'r') as file:
-        first_line = True
-        for line in file:
-            if first_line:
-                first_line = False
-                continue  # 跳过第一行
-            if not line.strip():
-                continue  # 跳过空行
-            start_node = line.split('->')[0].split('(')[0]
-            species = line.split('->')[-1].split('(')[0]
-            key = (start_node, species)
-            if key not in group_dict:
-                group_dict[key] = []
-            group_dict[key].append(line)
-            
-    def parse_lines_to_df(lines):
-        header_line = lines[0].strip()
-        columns = [col.split('(')[0] for col in header_line.split('->')]
-        columns.append("gd_number")
-        rows = []
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-            match = re.findall(r'\((\d+)\)', line)
-            count_match = re.search(r'\s+(\d+)$', line)
-            if count_match:
-                count = count_match.group(1)
-                if len(match) + 1 == len(columns):
-                    rows.append([*match, count])
-                else:
-                    print(f"行解析不匹配的行: {line} (解析后元素数: {len(match) + 1}, 期望数: {len(columns)})")
-            else:
-                print(f"未找到计数值的行: {line}")
-        if rows:
-            df = pd.DataFrame(rows, columns=columns)
-        else:
-            print("没有有效的数据行。")
-            return None
-        descriptions = []
-        for _, row in df.iterrows():
-            loss_desc = []
-            for i, col in enumerate(columns[:-1]):
-                if int(row[col]) < 2:
-                    if i > 0:
-                        prev_col = columns[i - 1]
-                        loss_desc.append(f"Lost after {prev_col}")
-                    else:
-                        loss_desc.append(f"Lost after {col}")
-            descriptions.append("No duplicate lost" if not loss_desc else loss_desc[0])
-        df["Rest # of duplicates"] = descriptions
-        df = df[["Rest # of duplicates"] + columns]
-        return df
-
-    
-    with pd.ExcelWriter(output_file) as writer:
-        for value in group_dict.values():
-            dic = {}
-            for i in value:
-                path, num = i.strip().split('\t')
-                dic[path] = int(num)
-            sorted_dic = sort_dict_by_keys(dic)
-            input_data = [f'{k}\t{v}' for k, v in sorted_dic.items()]
-            df = parse_lines_to_df(input_data)
-            
-            start =value[0].split('->')[0].split('(')[0]
-            species = value[0].split('->')[-1].split('(')[0]
-            sheet_name = f'{start}_{species}'[:31]
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 
 if __name__ == "__main__":
