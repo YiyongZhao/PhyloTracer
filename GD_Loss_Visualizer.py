@@ -1,8 +1,11 @@
+from hmac import new
 from __init__ import *
 import matplotlib.pyplot as plt
 import re 
 from PIL import Image
 import math
+from ete3 import PieChartFace,CircleFace
+
 
 def extract_numbers_in_parentheses(string):
     pattern = r"\((\d+)\)"
@@ -67,6 +70,8 @@ def generate_plt(full_path):
     sps = first_key.split('->')[-1].split('(')[0]
     
     visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id)
+
+
 
 def process_gd_loss_summary(file):
     element_counts = {}
@@ -147,17 +152,100 @@ def rejust_root_dist(sptree):
 
     return sptree
 
-def visualizer_sptree(result,sptree):
-    new_dict=transform_dict(result)
+
+def parse_file_to_dic(filepath):
+
+    result_dic = {}
+    gd_id_set=set()
+    with open(filepath) as f:
+        for line in f:
+            cols = line.strip().split('\t')
+    
+            gdid = cols[1]
+            
+               
+            if len(cols) < 8:
+                continue
+
+            if gdid not in gd_id_set:
+                path_strs = cols[7].split('@')
+                for path_str in path_strs:
+                    for node in path_str.split('->'):
+                        if '(' in node and node.endswith(')'):
+                            sp, num = node[:-1].split('(')
+                            num = int(num)
+                            if sp not in result_dic:
+                                result_dic[sp] = {2:0, 1:0, 0:0}
+                            if num in result_dic[sp]:
+                                result_dic[sp][num] += 1
+                gd_id_set.add(gdid)
+            else:
+                continue
+
+    
+    return result_dic
+
+
+def build_legend(ts):
+  
+    ts.title.add_face(TextFace(' ',fsize=10), column=0)
+    ts.title.add_face(CircleFace(5, color='green'), column=1)
+    ts.title.add_face(TextFace(' Two Retained ',fsize=10), column=2)
+    ts.title.add_face(CircleFace(5, color='blue'), column=3)
+    ts.title.add_face(TextFace(' One Retained ',fsize=10), column=4)
+    ts.title.add_face(CircleFace(5, color='red'), column=5)
+    ts.title.add_face(TextFace(' Zero Retained ',fsize=10), column=6)
+    ts.legend.add_face(TextFace(" Legend: (Green, Blue, Red)", fsize=9, fgcolor="gray"), column=0)
+    ts.legend_position = 3
+
+def visualizer_sptree(result_dic,sptree):
+    new_dic={}
+    for sp, count_dic in result_dic.items():
+        total = sum(count_dic.values())
+        if total == 0:
+            continue
+        a=[]
+        for v in count_dic.values():
+            b= int(v/ total * 100)
+            a.append(b)
+        diff = 100 - sum(a)
+        if diff != 0:
+            
+            idx = a.index(max(a))
+            a[idx] += diff
+        new_dic[sp]=a
+
     sptree.ladderize()
     sptree.sort_descendants("support")
 
-    ts = TreeStyle()
-    ts.title.add_face(TextFace("Green color : No-duplicate loss",fsize=5), column=1)
-    ts.title.add_face(TextFace("Blue color : One-duplicate loss", fsize=5),column=1)
-    ts.title.add_face(TextFace("Red color : Two-duplicate loss", fsize=5),column=1)
-    ts.title.add_face(TextFace("The number represents the number of statistical GDs", fsize=5),column=1)
+    for node in sptree.traverse():
+        node_id = node.name
+        if node_id in new_dic:
+            pie_values = new_dic[node_id]
+            total = sum(pie_values)
 
+           
+            pie_face = PieChartFace(pie_values, width=10, height=10, colors=['green', 'blue', 'red'])
+            node.add_face(pie_face, column=0, position="float")
+
+            labels = [str(va) for va in result_dic[node_id].values()]
+            
+            label_text = "(" + ",".join(labels) + ")"
+            label_face = TextFace(label_text, fsize=5)
+            node.add_face(label_face, column=-1, position="float")
+            node.add_face(TextFace(' ', fsize=5), column=-1, position="float")
+            
+
+        nstyle = NodeStyle()
+        nstyle["size"] = 0
+        node.set_style(nstyle)
+
+    
+    ts = TreeStyle()
+    ts.scale = 50
+    
+
+    build_legend(ts)
     ts.show_border = True
     ts.margin_bottom = 20
     ts.margin_left = 20
@@ -169,34 +257,11 @@ def visualizer_sptree(result,sptree):
     ts.extra_branch_line_color='black'
     ts.branch_vertical_margin = -1
 
-    for node in sptree.traverse():
-
-        nstyle = NodeStyle()
-        nstyle["fgcolor"] = "black"
-        nstyle["size"] = 0
-        nstyle["shape"] = "circle"
-        nstyle["vt_line_width"] = 1
-        nstyle["hz_line_width"] = 1
-        node.set_style(nstyle)
-        if node.name in new_dict:
-            loss_dic=new_dict[node.name]
-            for k,v in loss_dic.items():
-                if k=='2':
-                    color='green'
-                    node.add_face(TextFace(v, fsize=5, fgcolor=color), column=0, position="branch-top")
-                elif k=='1':
-                    color='blue'
-                    node.add_face(TextFace(v, fsize=5, fgcolor=color), column=1, position="branch-top")
-                else:
-                    color='red'
-                    node.add_face(TextFace(v, fsize=5, fgcolor=color), column=2, position="branch-top")
-    # for leaf in sptree:
-    #     if leaf.name in taxa:
-    #         leaf.name=taxa[leaf.name]
-            # node.add_face(TextFace(taxa[leaf.name], fsize=5, fgcolor='black',ftype='Arial'), column=0, position="aligned")
-    # realign_branch_length(sptree)
-    # rejust_root_dist(sptree)
+    realign_branch_length(sptree)
+    rejust_root_dist(sptree)
     sptree.render('gd_loss_visualizer.PDF',w=210, units="mm",tree_style=ts)
+
+
 if __name__ == "__main__":
     out='outfile'
     input_folder='input'
