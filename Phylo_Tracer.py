@@ -160,9 +160,7 @@ GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_
 GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='file',  required=True, help='File containing paths to gene tree files, one per line')
 GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
 GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
-GD_Loss_Tracker_parser.add_argument('--all', action='store_true', help='If specified, detects gene duplications (GD) and loss events across all nodes.')
-GD_Loss_Tracker_parser.add_argument('--start_node',  metavar='file',  required=False, help='The starting node for detecting gene duplications (GD) and losses. This limits the detection to the subtree rooted at the specified node.')
-GD_Loss_Tracker_parser.add_argument('--end_species', type=str,  required=False, help='The species where detection ends. Only events affecting species up to and including the specified species will be detected.')
+
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help',formatter_class=CustomHelpFormatter)
@@ -455,26 +453,8 @@ def main():
 
             tre_dic=read_and_return_dict(input_GF_list)
 
-            sp_dic1,path2_treeid_dic1=get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
-            sp_dic = {'->'.join(parts[:-1] + [parts[-1].replace(parts[-1].split('(')[0], voucher2taxa_dic.get(parts[-1].split('(')[0], parts[-1].split('(')[0]))]): v for k, v in sp_dic1.items() for parts in [k.split('->')]}
-            path2_treeid_dic= {'->'.join(parts[:-1] + [parts[-1].replace(parts[-1].split('(')[0], voucher2taxa_dic.get(parts[-1].split('(')[0], parts[-1].split('(')[0]))]): v for k, v in path2_treeid_dic1.items() for parts in [k.split('->')]}
-  
-            # if args.start_node and args.end_species:
-            #     start_node=process_start_node(args.start_node,sptree)
-            #     species=args.end_species
-                
-                
-            # elif args.all:   
-               
-                
-            # elif args.start_node:
-            #     start_node=process_start_node(args.start_node,sptree)
-                
-             
-            # elif args.end_species:
-            #     species=args.end_species
-                
-
+            get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
+            
             
 
             end_time = time.time()
@@ -539,7 +519,7 @@ def main():
             input_imap= args.input_imap
             sptree=read_phylo_tree(input_sps_tree)
             target_node_name = process_start_node(args.target_node, sptree) if args.target_node else None
-
+            print(target_node_name)
             tre_dic = read_and_return_dict(input_GF_list)
             seq_path_dic = read_and_return_dict(input_Seq_GF_list)
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
