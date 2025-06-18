@@ -180,7 +180,7 @@ Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='file',  requir
 Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
 Hybrid_Tracer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 Hybrid_Tracer_parser.add_argument('--target_node',  metavar='file', required=False, help='Specific node to process. Use "all" to process all gd_names.')
-Hybrid_Tracer_parser.add_argument('--gd_group', type=int, required=False, default=1, help='Split the gd to target number to run hyde')
+Hybrid_Tracer_parser.add_argument('--split_groups', type=int, required=False, default=1, help='Split the GD data into a target number of groups for Hyde processing, and default = 1')
 
 # Hybrid_Visualizer
 Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybrid_Visualizer help',formatter_class=CustomHelpFormatter)
