@@ -342,6 +342,7 @@ Required parameter:
     --input_sps_tree     A species tree file with Newick format
 Optional parameter:
     --target_node        File with species names mapped to specific GD nodes, one per line
+    --split_groups       Split the GD data into a target number of groups for Hyde processing, and default = 1
 Usage:
     Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_node N1.txt]
 ```
