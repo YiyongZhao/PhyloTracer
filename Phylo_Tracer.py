@@ -180,7 +180,7 @@ Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='file',  requir
 Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='file',  required=True, help='A species tree file with Newick format')
 Hybrid_Tracer_parser.add_argument('--input_imap', metavar='file',  required=True, help='File with classification information of species corresponding to genes')
 Hybrid_Tracer_parser.add_argument('--target_node',  metavar='file', required=False, help='Specific node to process. Use "all" to process all gd_names.')
-Hybrid_Tracer_parser.add_argument('--split_gd', action='store_true', help='Split the gd to run hyde')
+Hybrid_Tracer_parser.add_argument('--gd_group', type=int, required=False, default=1, help='Split the gd to target number to run hyde')
 
 # Hybrid_Visualizer
 Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybrid_Visualizer help',formatter_class=CustomHelpFormatter)
@@ -518,22 +518,26 @@ def main():
             input_sps_tree = args.input_sps_tree
             input_imap= args.input_imap
             sptree=read_phylo_tree(input_sps_tree)
-            target_node_name = process_start_node(args.target_node, sptree) if args.target_node else None
-            print(target_node_name)
-            tre_dic = read_and_return_dict(input_GF_list)
-            seq_path_dic = read_and_return_dict(input_Seq_GF_list)
-            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
-            
             num_tre_node(sptree)
-            rename_sptree=rename_input_tre(sptree,taxa2voucher_dic)
-            sptree.write(outfile='numed_sptree.nwk',format=1)
-
+            
+            target_node_name = process_start_node(args.target_node, sptree) if args.target_node else None
             
             if target_node_name:
                 print(f"Target node determined: {target_node_name}")
             else:
                 print("No target_species_file provided, processing all gd.")
-            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic,target_node=target_node_name,split_gd=args.split_gd)
+
+            tre_dic = read_and_return_dict(input_GF_list)
+            seq_path_dic = read_and_return_dict(input_Seq_GF_list)
+            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
+            
+            
+            rename_sptree=rename_input_tre(sptree,taxa2voucher_dic)
+            sptree.write(outfile='numed_sptree.nwk',format=1)
+
+            
+            
+            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic,target_node=target_node_name,gd_group=args.gd_group)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
