@@ -537,7 +537,7 @@ def main():
 
             
             
-            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic,target_node=target_node_name,gd_group=args.gd_group)
+            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic,target_node=target_node_name,gd_group=args.split_groups)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
