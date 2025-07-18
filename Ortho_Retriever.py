@@ -79,14 +79,14 @@ def offcut_tre(Phylo_t:object,renamed_len_dic:dict)-> list:
     filtered_offcut_ev_seqs_L0=rm_dup(filtered_offcut_ev_seqs_L0)
     return principal_gene_S,filtered_offcut_ev_seqs_L0# filtered_offcut_ev_seqs_L0=offcut_ev_seqs_L0
 
-def rm_dup(paralogs_L:list)->list: #[{1,2},{2,3}]
+def rm_dup(paralogs_L): #[{1,2},{2,3}]
     for ev_seqs1 in paralogs_L:
         for ev_seqs2 in paralogs_L:
             if ev_seqs1.issubset(ev_seqs2):
-                if ev_seqs1 in paralogs_L:
+                if ev_seqs1 not in paralogs_L:
                     paralogs_L.remove(ev_seqs1)
             elif ev_seqs2.issubset(ev_seqs1):
-                if ev_seqs2 in paralogs_L:
+                if ev_seqs2 not in paralogs_L:
                     paralogs_L.remove(ev_seqs2)
     return paralogs_L
 
