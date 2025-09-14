@@ -92,8 +92,8 @@ pip install PhyloTracer
 
 ### Required dependencies:
 
-* Python 3.0+
-* **Python modules**:
+* Python 3.0+ 
+* Python modules:
   * ete3==3.1.3
   * HyDe (https://github.com/pblischak/HyDe)
   * pandas==2.2.1
