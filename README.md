@@ -93,16 +93,27 @@ pip install PhyloTracer
 ### Required dependencies:
 
 * Python 3.0+
-* Python modules:
-  * ete3
-  * HyDe
-  * pandas
-  * numpy
-  * tqdm
-  * time
-  * pypdf4
-  * matplotlib
-  * pyqt5
+* **Python modules**:
+  * ete3==3.1.3
+  * HyDe (https://github.com/pblischak/HyDe)
+  * pandas==2.2.1
+  * numpy==1.26.4
+  * tqdm==4.66.2
+  * pypdf4==1.27.0
+  * matplotlib==3.8.3
+  * pyqt5==5.15.10
+  * pyqt5-qt5==5.15.12
+  * pyqt5-sip==12.13.0
+  * pillow==10.2.0
+  * fonttools==4.49.0
+  * cycler==0.12.1
+  * kiwisolver==1.4.5
+  * packaging==23.2
+  * pyparsing==3.1.1
+  * python-dateutil==2.8.2
+  * pytz==2024.1
+  * six==1.16.0
+  * tzdata==2024.1
     
 Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](http://etetoolkit.org/) and detects species hybridization signals using ABAB-BABA test by [HyDe](https://github.com/pblischak/HyDe).
 
