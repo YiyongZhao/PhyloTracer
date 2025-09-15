@@ -126,38 +126,46 @@ Mapping between gene family IDs and the path to their corresponding tree files (
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
-Mapping between gene IDs and their sequence lengths
+
+Mapping between gene IDs and their sequence lengths (two columns, separated by a TAB character)
 ------------gene2length.imap------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  201
 ATCG00500.1           1467
 Glyma.07G273800.2     3417
 
-------------gene2sps.imap #should sorted by second column with the recommended bash command: sort -k2,2 gene2sps.imap-------------
+Mapping between gene IDs and their corresponding species (two columns, separated by a TAB character)
+Should sorted by second column with the recommended bash command: sort -k2,2 gene2sps.imap
+------------gene2sps.imap---------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
 
-------------gene2family.imap #Mapping between gene IDs and their plant family-----------------------------------------------------
+Mapping between gene IDs and their plant family (two columns, separated by a TAB character)
+------------gene2family.imap------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborellaceae
 ATCG00500.1           Brassicaceae
 Glyma.07G273800.2     Fabaceae
 
-------------gene2order.imap #Mapping between gene IDs and their plant order-------------------------------------------------------
+Mapping between gene IDs and their plant order (two columns, separated by a TAB character)
+------------gene2order.imap-------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborellales
 ATCG00500.1           Brassicales
 Glyma.07G273800.2     Fabales
 
-------------gene2taxa.imap #Mapping between gene IDs and their higher-level taxa--------------------------------------------------
+Mapping between gene IDs and their higher-level taxa (two columns, separated by a TAB character)
+------------gene2taxa.imap--------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Angiosperm
 ATCG00500.1           Malvids
 Glyma.07G273800.2     Fabids
 
-------------gene2clade.imap #Mapping between gene IDs and their functional clade--------------------------------------------------
+Mapping between gene IDs and their functional clade (two columns, separated by a TAB character)
+------------gene2clade.imap-------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Nitrogen-fixing
 ATCG00500.1           Nitrogen-fixing
 Glyma.07G273800.2     non-Nitrogen-fixing
 
-------------gene2expression.imap #Mapping between gene IDs and their expression values--------------------------------------------
+Mapping between gene IDs and their expression values  (two columns, separated by a TAB character)
+------------gene2expression.imap--------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  5.0
 ATCG00500.1           12.0
 Glyma.07G273800.2     0.0
