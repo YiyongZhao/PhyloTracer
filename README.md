@@ -121,12 +121,13 @@ Note: PhyloTracer uses basic functions of analysis and visualization of trees fr
 ## Example input files
 The following input file should have two columns and be separated by a tab key.
 ```
-------------GF_ID2path.imap #Mapping between gene family IDs and the path to their corresponding tree files-----------------------
+Mapping between gene family IDs and the path to their corresponding tree files (two columns, separated by a TAB character)
+------------GF_ID2path.imap-------------------------------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
-
-------------gene2length.imap #Mapping between gene IDs and their sequence lengths------------------------------------------------- 
+Mapping between gene IDs and their sequence lengths
+------------gene2length.imap------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  201
 ATCG00500.1           1467
 Glyma.07G273800.2     3417
