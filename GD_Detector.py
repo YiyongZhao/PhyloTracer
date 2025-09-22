@@ -84,12 +84,27 @@ def find_dup_node(
             species_set = get_species_set(common_ancestor_node)
             mapped_species_node = map_gene_tree_to_species(species_set, species_tree)
             common_ancestor_node.add_feature('map', mapped_species_node.name)
+            
+            # 检查重复节点支持值
             if judge_support(common_ancestor_node.support, gd_support):
                 child_a, child_b = common_ancestor_node.get_children()
-                mapped_a = map_gene_tree_to_species(get_species_set(child_a), species_tree)
-                mapped_b = map_gene_tree_to_species(get_species_set(child_b), species_tree)
-                if species_tree.get_distance(mapped_a, mapped_b, topology_only=True) <= max_topology_distance:
-                    dup_node_list.append(common_ancestor_node)
+                
+                # 检查子分支支持值
+                if child_a.support >= clade_support and child_b.support >= clade_support:
+                    mapped_a = map_gene_tree_to_species(get_species_set(child_a), species_tree)
+                    mapped_b = map_gene_tree_to_species(get_species_set(child_b), species_tree)
+                    
+                    if len(get_species_set(common_ancestor_node))==1:
+                        dup_node_list.append(common_ancestor_node)
+                    else:
+                        # 计算重复物种数量和百分比
+                        dup_sps = count_common_elements(get_species_set(child_a), get_species_set(child_b))
+                        dup_percent = dup_sps / len(get_species_set(common_ancestor_node))
+                        # 检查重复物种数量和百分比是否满足条件
+                        if dup_sps >= dup_species_num and dup_percent >= dup_species_percent:
+                            # 检查拓扑距离
+                            if species_tree.get_distance(mapped_a, mapped_b, topology_only=True) <= max_topology_distance:
+                                dup_node_list.append(common_ancestor_node)
     return dup_node_list
 
 def write_gd_result(
@@ -124,6 +139,13 @@ def write_gd_result(
     Returns:
         None
     """
+    print(f"=== find_dup_node 参数信息 ===")
+    print(f"gd_support: {gd_support}")
+    print(f"clade_support: {clade_support}")
+    print(f"dup_species_num: {dup_species_num}")
+    print(f"dup_species_percent: {dup_species_percent}")
+    print(f"max_topology_distance: {max_topology_distance}")
+    print(f"==============================")
     with open(output_file, 'w') as file:
         file.write('#tree_ID\tgd_id\tgd_support\tgene1\tgene2\tlevel\tspecies\tGD_dup_sps\tdup_ratio\tgd_type\tcomment\n')
         gd_num = 1
@@ -131,6 +153,9 @@ def write_gd_result(
         for tree_id, tree_path in tree_dict.items():
             gene_tree = read_phylo_tree(tree_path)
             gene_tree = rename_input_tre(gene_tree, gene_to_new_name)
+            if len(gene_tree.children)!=2:
+                print(f'{tree_id} is not a binary tree')
+                continue
             num_tre_node(gene_tree)
             dup_node_list = find_dup_node(gene_tree, species_tree, gd_support, clade_support, dup_species_num, dup_species_percent, max_topology_distance)
             for node in dup_node_list:
@@ -139,7 +164,7 @@ def write_gd_result(
                 clade = node
                 parent = clade.map
                 child_a, child_b = clade.get_children()
-                dup_sps = sps_dup_num(get_species_list(clade), get_species_set(clade))
+                dup_sps =  count_common_elements(get_species_set(child_a), get_species_set(child_b))
                 dup_percent = dup_sps / len(get_species_set(clade))
                 model = get_model(clade, species_tree)
                 gene_pairs = gene_pair(clade)
