@@ -121,50 +121,50 @@ Note: PhyloTracer uses basic functions of analysis and visualization of trees fr
 ## Example input files
 The following input file should have two columns and be separated by a tab key.
 ```
-Mapping between gene family IDs and the path to their corresponding tree files (two columns, separated by a TAB character)
+Provide a two-column file in TSV format: each line contains <gene_family_IDs><TAB><file_paths>
 ------------GF_ID2path.imap-------------------------------------------------------------------------------------------------------
 OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
 OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
 
-Mapping between gene IDs and their sequence lengths (two columns, separated by a TAB character)
+Provide a two-column file in TSV format: each line contains <gene_id><TAB><sequence_length>
 ------------gene2length.imap------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  201
 ATCG00500.1           1467
 Glyma.07G273800.2     3417
 
-Mapping between gene IDs and their corresponding species (two columns, separated by a TAB character)
+Provide a two-column file in TSV format: each line contains <gene_id><TAB><species>
 Should sorted by second column with the recommended bash command: sort -k2,2 gene2sps.imap
 ------------gene2sps.imap---------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
 
-Mapping between gene IDs and their plant family (two columns, separated by a TAB character)
+Provide a two-column file in TSV format: each line contains <gene_id><TAB><plant_family>
 ------------gene2family.imap------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborellaceae
 ATCG00500.1           Brassicaceae
 Glyma.07G273800.2     Fabaceae
 
-Mapping between gene IDs and their plant order (two columns, separated by a TAB character)
+Provide a two-column file in TSV format: each line contains <gene_id><TAB><plant_order>
 ------------gene2order.imap-------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborellales
 ATCG00500.1           Brassicales
 Glyma.07G273800.2     Fabales
 
-Mapping between gene IDs and their higher-level taxa (two columns, separated by a TAB character)
+Provide a two-column file in TSV format: each line contains <gene_id><TAB><higher-level_taxa>
 ------------gene2taxa.imap--------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Angiosperm
 ATCG00500.1           Malvids
 Glyma.07G273800.2     Fabids
 
-Mapping between gene IDs and their functional clade (two columns, separated by a TAB character)
+Provide a two-column file in TSV format: each line contains <gene_id><TAB><functional_clade>
 ------------gene2clade.imap-------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Nitrogen-fixing
 ATCG00500.1           Nitrogen-fixing
 Glyma.07G273800.2     non-Nitrogen-fixing
 
-Mapping between gene IDs and their expression values  (two columns, separated by a TAB character)
+Provide a two-column file in TSV format: each line contains <gene_id><TAB><expression_values>
 ------------gene2expression.imap--------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  5.0
 ATCG00500.1           12.0
