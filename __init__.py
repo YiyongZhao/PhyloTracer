@@ -103,7 +103,7 @@ def rename_input_tre(Phylo_t: object, gene2new_named_gene_dic: dict) -> object:
     Returns:
         object: A copy of the tree with renamed nodes.
     """
-    Phylo_t1=Phylo_t.copy('newick')
+    Phylo_t1=Phylo_t.copy()
     for node in Phylo_t1.traverse():
         if node.name in gene2new_named_gene_dic:
             node.name = gene2new_named_gene_dic[node.name]
@@ -120,10 +120,9 @@ def read_tree(tree_path: str) -> object:
         object: Tree object.
     """
     try:
-        return Tree(tree_path)
-    except Exception as e:
-        logging.error(f"Failed to read tree from {tree_path}: {e}")
-        raise
+        return Tree(tree_path, format=0)
+    except:
+        return Tree(tree_path, format=1)
 
 def read_phylo_tree(tree_path: str) -> object:
     """
@@ -136,16 +135,45 @@ def read_phylo_tree(tree_path: str) -> object:
         object: PhyloTree object.
     """
     try:
-        return PhyloTree(tree_path)
-    except Exception as e:
-        logging.error(f"Failed to read phylo tree from {tree_path}: {e}")
-        raise
+        return PhyloTree(tree_path, format=0)
+    except:
+        try:
+            return PhyloTree(tree_path, format=1)
+        except Exception as e:
+            print(f"Error reading tree: {tree_path}")
+            raise e
 
-def root_tre_with_midpoint_outgroup(Phylo_t:object)->object:#Rooting the phylogenetic tree using the midpoint outgroup method.
-    Phylo_t1=Phylo_t.copy('newick')
-    mid_node=Phylo_t1.get_midpoint_outgroup()
-    Phylo_t1.set_outgroup(mid_node)
+def root_tre_with_midpoint_outgroup(Phylo_t: object) -> object:
+    """Rooting the phylogenetic tree using the midpoint outgroup method."""
+    Phylo_t1 = Phylo_t.copy('newick')
+    
+    # 检查树是否已经有根
+    if is_rooted(Phylo_t1):
+        return Phylo_t1
+    
+    # 检查树的节点数量，少于3个叶节点无需定根
+    leaves = Phylo_t1.get_leaves()
+    if len(leaves) < 3:
+        return Phylo_t1
+    
+    try:
+        mid_node = Phylo_t1.get_midpoint_outgroup()
+        
+        # 检查中点外群是否是根节点
+        if mid_node.is_root():
+            # 如果中点外群是根节点，使用第一个叶节点作为外群
+            Phylo_t1.set_outgroup(leaves[0])
+        else:
+            Phylo_t1.set_outgroup(mid_node)
+            
+    except Exception as e:
+        # 如果中点定根失败，使用第一个叶节点作为外群
+        print(f"Warning: Midpoint rooting failed ({e}), using first leaf as outgroup")
+        if leaves:
+            Phylo_t1.set_outgroup(leaves[0])
+    
     return Phylo_t1
+
 
 def is_rooted(Phylo_t: object) -> bool:
     """
@@ -299,6 +327,18 @@ def calculate_species_num(node: object) -> int:
     """
     species_num=len(get_species_set(node))
     return species_num
+    
+def sps_dup_num(sps_list:list, unique_sps:list)->int:
+    sps_num_dic = {i: 0 for i in unique_sps}
+    sps_dups = set()
+
+    for sps in sps_list:
+        if sps in sps_num_dic:
+            sps_num_dic[sps] += 1
+            if sps_num_dic[sps] > 1:
+                sps_dups.add(sps)
+
+    return len(sps_dups)
 
 def calculate_gd_num(Phylo_t: object) -> int:
     """
@@ -373,3 +413,41 @@ def find_tre_dup(Phylo_t: object) -> list:
         if ev.etype == "D":
             tre_ParaL.append(",".join(ev.in_seqs) + "<=>" + ",".join(ev.out_seqs))
     return tre_ParaL, GF_leaves_S
+
+
+def realign_branch_length(Phylo_t1:object)->object:
+    Phylo_t1.ladderize()
+    Phylo_t1.resolve_polytomy(recursive=True)
+    Phylo_t1.sort_descendants("support")
+    max_deep=get_max_deepth(Phylo_t1)
+    for node in Phylo_t1.traverse():
+        if not node.is_root():
+            node.dist=1
+            degree=node.get_distance(node.get_tree_root()) + 1
+            deep=get_max_deepth(node)
+            node.dist=max_deep-deep-degree
+    clade_up=Phylo_t1.get_children()[0]
+    clade_down=Phylo_t1.get_children()[1]
+    difference=abs(get_max_deepth(clade_up)-get_max_deepth(clade_down))+1
+    clade_up.dist=clade_up.dist+difference  
+    clade_down.dist=clade_down.dist+difference   
+    
+    return Phylo_t1
+
+def rejust_root_dist(sptree):
+    clade_up=sptree.get_children()[0]
+    clade_down=sptree.get_children()[1]
+    if len(clade_up)>len(clade_down):
+        clade_up.dist=1 
+        if clade_down.is_leaf():
+            clade_down.dist=get_max_deepth(sptree)-1
+        else:
+            clade_down.dist=get_max_deepth(sptree)-get_max_deepth(clade_down)
+    else:
+        clade_down.dist=1 
+        if clade_up.is_leaf():
+            clade_up.dist=get_max_deepth(sptree)-1
+        else:
+            clade_up.dist=get_max_deepth(sptree)-get_max_deepth(clade_up)
+
+    return sptree
