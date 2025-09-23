@@ -57,13 +57,14 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
     sptree.sort_descendants("support")
 
     ts = TreeStyle()
+    ts.scale = 20
     ts.extra_branch_line_type = 0
     ts.extra_branch_line_color = 'black'
     ts.branch_vertical_margin = -1
     ts.legend_position = 1  
-    ts.legend.add_face(TextFace("Legend:", fsize=8, bold=True), column=0)
-    ts.legend.add_face(TextFace("Red numbers: Gene duplication events", fsize=8, fgcolor="red"), column=0)
-    ts.legend.add_face(TextFace("Blue numbers: Node identifiers", fsize=8, fgcolor="blue"), column=0)
+    ts.legend.add_face(TextFace("  Legend:", fsize=8, bold=True), column=0)
+    ts.legend.add_face(TextFace("  Red numbers: Gene duplication events", fsize=8, fgcolor="red"), column=0)
+    ts.legend.add_face(TextFace("  Blue numbers: Node identifiers", fsize=8, fgcolor="blue"), column=0)
 
     for node in sptree.traverse():
         nstyle = NodeStyle()
@@ -75,7 +76,7 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
         node.set_style(nstyle)
 
         num = str(count_dic.get(node.name, 0))
-        node.add_face(TextFace(num, fsize=5, fgcolor="red"), column=0, position="branch-top")
+        node.add_face(TextFace(num+' ', fsize=5, fgcolor="red"), column=0, position="branch-top")
 
         if re.match(r'^N\d+$', node.name):
             node.add_face(TextFace(node.name+' ', fsize=5, fgcolor="blue"), column=0, position="branch-bottom")
