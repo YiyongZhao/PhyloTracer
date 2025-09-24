@@ -139,13 +139,13 @@ def write_gd_result(
     Returns:
         None
     """
-    print(f"=== find_dup_node 参数信息 ===")
-    print(f"gd_support: {gd_support}")
-    print(f"clade_support: {clade_support}")
-    print(f"dup_species_num: {dup_species_num}")
-    print(f"dup_species_percent: {dup_species_percent}")
-    print(f"max_topology_distance: {max_topology_distance}")
-    print(f"==============================")
+    print(f"=== Gene Duplication Detection Configuration ===")
+    print(f"GD node support threshold: {gd_support}")
+    print(f"Subclade support threshold: {clade_support}")
+    print(f"Minimum duplicated species count: {dup_species_num}")
+    print(f"Duplicated species percentage threshold: {dup_species_percent}")
+    print(f"Maximum topology distance: {max_topology_distance}")
+    print(f"===============================================")
     with open(output_file, 'w') as file:
         file.write('#tree_ID\tgd_id\tgd_support\tgene1\tgene2\tlevel\tspecies\tGD_dup_sps\tdup_ratio\tgd_type\tcomment\n')
         gd_num = 1
