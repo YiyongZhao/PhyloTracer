@@ -189,20 +189,26 @@ Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='file',  requi
 Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light")
 
 #HaploFinder
-HaploFinder = subparsers.add_parser('HaploFinder', help='HaploFinder help',formatter_class=CustomHelpFormatter)
-HaploFinder.add_argument('--input_GF_list', metavar='FILE', required=True, help='File containing paths to gene tree files, one per line file')
-HaploFinder.add_argument('--input_imap', metavar='FILE', required=True, help='File with classification information of species corresponding to genes')
-HaploFinder.add_argument('--species_a', type=str, required=True, help='Name of species A')
-HaploFinder.add_argument('--species_b', type=str, required=True, help='Name of species B')
-HaploFinder.add_argument('--species_a_gff', metavar='FILE', required=True, help='GFF file of species A')
-HaploFinder.add_argument('--species_b_gff', metavar='FILE', required=True, help='GFF file of species B')
-HaploFinder.add_argument('--species_a_lens', metavar='FILE', required=True, help='Lens file of species A')
-HaploFinder.add_argument('--species_b_lens', metavar='FILE', required=True, help='Lens file of species B')
+HaploFinder = subparsers.add_parser('HaploFinder', help='HaploFinder: Gene duplication detection and visualization between haplotypes, includes split utility for FASTA file separation',formatter_class=CustomHelpFormatter)
+HaploFinder.add_argument('--input_GF_list', metavar='FILE', required=False, help='File containing paths to gene tree files, one per line file (required for haplofinder mode)')
+HaploFinder.add_argument('--input_imap', metavar='FILE', required=False, help='File with classification information of species corresponding to genes (required for haplofinder mode)')
+HaploFinder.add_argument('--species_a', type=str, required=False, help='Name of species A (required for haplofinder mode)')
+HaploFinder.add_argument('--species_b', type=str, required=False, help='Name of species B (required for haplofinder mode)')
+HaploFinder.add_argument('--species_a_gff', metavar='FILE', required=False, help='GFF file of species A (required for haplofinder mode)')
+HaploFinder.add_argument('--species_b_gff', metavar='FILE', required=False, help='GFF file of species B (required for haplofinder mode)')
+HaploFinder.add_argument('--species_a_lens', metavar='FILE', required=False, help='Lens file of species A (required for haplofinder mode)')
+HaploFinder.add_argument('--species_b_lens', metavar='FILE', required=False, help='Lens file of species B (required for haplofinder mode)')
 HaploFinder.add_argument('--visual_chr_a', metavar='FILE', required=False, help='A file containing the chromosome numbers of species a')
 HaploFinder.add_argument('--visual_chr_b', metavar='FILE', required=False, help='A file containing the chromosome numbers of species b')
-HaploFinder.add_argument('--gd_support', type=int,required=True, default=50,help='GD node support [50-100]')
-HaploFinder.add_argument('--pair_support', type=int,required=True, default=50,help='gene pair support [50-100]')
+HaploFinder.add_argument('--gd_support', type=int,required=False, default=50,help='GD node support [50-100] (required for haplofinder mode)')
+HaploFinder.add_argument('--pair_support', type=int,required=False, default=50,help='gene pair support [50-100] (required for haplofinder mode)')
 HaploFinder.add_argument('--size', type=float, required=False, help='The size of each point in the dopolot graph and default = 0.0005')
+HaploFinder.add_argument('--mode', type=str, choices=['haplofinder', 'split'], default='haplofinder', help='Choose mode: "haplofinder" for gene duplication detection and visualization, "split" for FASTA file separation based on colorlabel')
+# Split mode specific arguments
+HaploFinder.add_argument('--hyb_sps', type=str, required=False, help='Name of hybrid species (required for split mode)')
+HaploFinder.add_argument('--parental_sps', type=str, required=False, help='Name of parental species (required for split mode)')
+HaploFinder.add_argument('--input_fasta', metavar='FILE', required=False, help='Input protein FASTA file (required for split mode)')
+HaploFinder.add_argument('--cluster_file', metavar='FILE', required=False, help='Input cluster file (required for split mode)')
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
 
@@ -356,7 +362,9 @@ def main():
             tree_style = args.tree_style
             gene_categories = args.gene_categories
             keep_branch = args.keep_branch
-            species_category_list = [read_and_return_dict(i) for i in gene_categories]
+            species_category_list = []
+            if gene_categories is not None:
+                species_category_list = [read_and_return_dict(i) for i in gene_categories]
             gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
             
             tre_dic = read_and_return_dict(input_GF_list)
@@ -454,7 +462,7 @@ def main():
             tre_dic=read_and_return_dict(input_GF_list)
 
             get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic)
-            
+            parse_text_to_excel('gd_loss_count_summary.txt')
             
 
             end_time = time.time()
@@ -479,6 +487,7 @@ def main():
             
 
             a=parse_file_to_dic(args.gd_loss_result)
+
             visualizer_sptree(a,sptree)
 
             #generate_plt(input_dir,out_dir)
@@ -565,31 +574,53 @@ def main():
             print("Required arguments for Hybrid_Visualizer command are missing.")
 
     elif args.command == 'HaploFinder':
-        required_args = [args.input_GF_list, args.input_imap, args.species_a, args.species_b,
-                     args.species_a_gff, args.species_b_gff, args.species_a_lens, args.species_b_lens,args.gd_support,args.pair_support]
-    
-        if all(required_args):
-            start_time = time.time()
-            
-            process_gd_pairs = process_gd_result(args.input_GF_list, args.input_imap, args.species_a, args.species_b,args.gd_support,args.pair_support)
-            
-            # GFF and lens variables
-            gff1, gff2 = args.species_a_gff, args.species_b_gff
-            lens1, lens2 = args.species_a_lens, args.species_b_lens
-            spe1, spe2 = args.species_a, args.species_b
+        if args.mode == 'split':
+            # Split mode
+            if args.input_GF_list and args.input_fasta and args.input_imap and args.cluster_file and args.hyb_sps and args.parental_sps and args.species_b_gff:
+                start_time = time.time()
 
-            target_chr1 = args.visual_chr_a
-            target_chr2 = args.visual_chr_b
-            size = args.size if args.size else 0.001
-
-            generate_dotplot(gff1, gff2, lens1, lens2, process_gd_pairs, spe1, spe2, 'gd_pairs', target_chr1, target_chr2, size)
-
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
+                input_GF_list = args.input_GF_list
+                input_imap= args.input_imap
+                sequences = read_fasta(args.input_fasta)
+                hyb_sps = args.hyb_sps
+                cluster_file = args.cluster_file
+                parental_sps = args.parental_sps.split() if args.parental_sps else []
+                split_sequences(sequences, input_GF_list ,input_imap,cluster_file,hyb_sps,parental_sps,args.species_b_gff)
+                
+                
+                end_time = time.time()
+                execution_time = end_time - start_time
+                formatted_time = format_time(execution_time)
+                print("Program execution time:", formatted_time)
+            else:
+                print("Required arguments for split mode are missing: --input_fasta, --input_imap, --input_GF_list")
         else:
-            print("Required arguments for HaploFinder command are missing.")
+            # Original HaploFinder mode
+            required_args = [args.input_GF_list, args.input_imap, args.species_a, args.species_b,
+                         args.species_a_gff, args.species_b_gff, args.species_a_lens, args.species_b_lens,args.gd_support,args.pair_support]
+        
+            if all(required_args):
+                start_time = time.time()
+                
+                process_gd_pairs = process_gd_result(args.input_GF_list, args.input_imap, args.species_a, args.species_b,args.gd_support,args.pair_support)
+                
+                # GFF and lens variables
+                gff1, gff2 = args.species_a_gff, args.species_b_gff
+                lens1, lens2 = args.species_a_lens, args.species_b_lens
+                spe1, spe2 = args.species_a, args.species_b
+
+                target_chr1 = args.visual_chr_a
+                target_chr2 = args.visual_chr_b
+                size = args.size if args.size else 0.001
+
+                generate_dotplot(gff1, gff2, lens1, lens2, process_gd_pairs, spe1, spe2, 'gd_pairs', target_chr1, target_chr2, size)
+
+                end_time = time.time()
+                execution_time = end_time - start_time
+                formatted_time = format_time(execution_time)
+                print("Program execution time:", formatted_time)
+            else:
+                print("Required arguments for HaploFinder command are missing.")
      
     else:
         print("Usage: python PhyloTracer.py  [-h]  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}")
