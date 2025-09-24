@@ -100,7 +100,7 @@ def write_relative_summary_with_ids(outfile: str, dic: dict, voucher2taxa_dic: d
     if top_n:
         output_path = f'merge_relative_top{top_n}.png'
         # 需要修改visualize_top_trees函数来处理新的数据结构
-        # visualize_top_trees(sorted_dict, output_path, voucher2taxa_dic, top_n)
+        visualize_top_trees(sorted_dict, output_path, voucher2taxa_dic, top_n)
     
     with open(f'relative_{outfile}.txt', 'w') as file:
         file.write('Topology_ID\tTopology_num\tTopology\tTree_IDs\n')
