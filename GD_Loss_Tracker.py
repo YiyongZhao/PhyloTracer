@@ -217,7 +217,7 @@ def get_path_str_with_count_num_lst(tre_id,gd_id,genetree,renamed_sptree,out,gen
 
             path_str_with_count_num_lst+=path_str_lst
 
-           
+
             for path_str in path_str_lst:
                 parts = path_str.split('->')
                 last = parts[-1]
@@ -294,19 +294,115 @@ def get_path_str_num_dic(tre_dic,sptree,gene2new_named_gene_dic,new_named_gene2g
     gd_id=1
     for tre_id,tre_path in tre_dic.items():
         t=PhyloTree(tre_path)
+        if len(t.children)!=2:
+            print(f'{tre_id} is not a binary tree')
+            continue
         t1=rename_input_tre(t, gene2new_named_gene_dic)
         path_str_num_lst,gd_id=get_path_str_with_count_num_lst(tre_id,gd_id,t1,renamed_sptree,out,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic,path2_treeid_dic)
-        
+      
         for i in path_str_num_lst :
+          
             if i in path_str_num_dic:
                 path_str_num_dic[i]+=1
             else:
                 path_str_num_dic[i]=1
             
     out.close()
+    sorted_sp_dict = sort_dict_by_keys(path_str_num_dic)
+    with open('gd_loss_count_summary.txt', 'w') as f:
+        f.write('GD Loss path\tGF count\n')
+        processed_sp = set()
+        for k, v in sorted_sp_dict.items():
+            # 创建new_k
+            last_char = k.split('->')[-1].split('(')[0]
+            converted_last_char = voucher2taxa_dic.get(last_char, last_char)
+            new_k = '->'.join(k.split('->')[:-1]) + '->' + k.split('->')[-1].replace(last_char, converted_last_char, 1)
+            
+            # 只有当最后一个元素是Arabidopsis_thaliana时才写入
+            # if converted_last_char == 'Arabidopsis_thaliana':
+            if last_char not in processed_sp:
+                f.write(f'\n{new_k}\t{v}\n')
+                processed_sp.add(last_char)
+            else:
+                f.write(f'{new_k}\t{v}\n')
     return path_str_num_dic,path2_treeid_dic
 
+def sort_dict_by_keys(input_dict):
+    sorted_keys = sorted(input_dict.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
+    sorted_dict = {k: input_dict[k] for k in sorted_keys}
+    return dict(sorted(sorted_dict.items(), key=lambda x: [int(n) for n in re.findall(r'\((\d+)\)', x[0])], reverse=True))
 
+def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
+    group_dict = {}
+    with open(file_path, 'r') as file:
+        first_line = True
+        for line in file:
+            if first_line:
+                first_line = False
+                continue  # 跳过第一行
+            if not line.strip():
+                continue  # 跳过空行
+            start_node = line.split('->')[0].split('(')[0]
+            species = line.split('->')[-1].split('(')[0]
+            key = (start_node, species)
+            if key not in group_dict:
+                group_dict[key] = []
+            group_dict[key].append(line)
+            
+    def parse_lines_to_df(lines):
+        header_line = lines[0].strip()
+        columns = [col.split('(')[0] for col in header_line.split('->')]
+        columns.append("gd_number")
+        rows = []
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            match = re.findall(r'\((\d+)\)', line)
+            count_match = re.search(r'\s+(\d+)$', line)
+            if count_match:
+                count = count_match.group(1)
+                if len(match) + 1 == len(columns):
+                    rows.append([*match, count])
+                else:
+                    print(f"行解析不匹配的行: {line} (解析后元素数: {len(match) + 1}, 期望数: {len(columns)})")
+            else:
+                print(f"未找到计数值的行: {line}")
+        if rows:
+            df = pd.DataFrame(rows, columns=columns)
+        else:
+            print("没有有效的数据行。")
+            return None
+        descriptions = []
+        for _, row in df.iterrows():
+            loss_desc = []
+            for i, col in enumerate(columns[:-1]):
+                if int(row[col]) < 2:
+                    if i > 0:
+                        prev_col = columns[i - 1]
+                        loss_desc.append(f"Lost after {prev_col}")
+                    else:
+                        loss_desc.append(f"Lost after {col}")
+            descriptions.append("No duplicate lost" if not loss_desc else loss_desc[0])
+        df["Rest # of duplicates"] = descriptions
+        df = df[["Rest # of duplicates"] + columns]
+        return df
+
+    
+    with pd.ExcelWriter(output_file) as writer:
+        for value in group_dict.values():
+            dic = {}
+            for i in value:
+                path, num = i.strip().split('\t')
+                dic[path] = int(num)
+            sorted_dic = sort_dict_by_keys(dic)
+            input_data = [f'{k}\t{v}' for k, v in sorted_dic.items()]
+            df = parse_lines_to_df(input_data)
+            
+            start =value[0].split('->')[0].split('(')[0]
+            species = value[0].split('->')[-1].split('(')[0]
+            sheet_name = f'{start}_{species}'[:31]
+            df.to_excel(writer, sheet_name=sheet_name, index=False)
 
 if __name__ == "__main__":
     out='outfile'
@@ -318,8 +414,7 @@ if __name__ == "__main__":
     sp_dic,path2_treeid_dic=get_path_str_num_dic(tre_dic)
 
     split_dicts=split_dict_by_first_last_char(sp_dic)
-    divide_path_results_into_individual_files_by_species(split_dicts,out)
-    write_total_lost_path_counts_result(sp_dic)
+
 
 
 
