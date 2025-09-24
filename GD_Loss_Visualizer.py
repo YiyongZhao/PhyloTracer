@@ -115,44 +115,6 @@ def transform_dict(original_dict):
 
     return new_dict
 
-def realign_branch_length(Phylo_t1:object)->object:
-    Phylo_t1.ladderize()
-    Phylo_t1.resolve_polytomy(recursive=True)
-    Phylo_t1.sort_descendants("support")
-    max_deep=get_max_deepth(Phylo_t1)
-    for node in Phylo_t1.traverse():
-        if not node.is_root():
-            node.dist=1
-            degree=node.get_distance(node.get_tree_root()) + 1
-            deep=get_max_deepth(node)
-            node.dist=max_deep-deep-degree
-    clade_up=Phylo_t1.get_children()[0]
-    clade_down=Phylo_t1.get_children()[1]
-    difference=abs(get_max_deepth(clade_up)-get_max_deepth(clade_down))+1
-    clade_up.dist=clade_up.dist+difference  
-    clade_down.dist=clade_down.dist+difference   
-    
-    return Phylo_t1
-
-def rejust_root_dist(sptree):
-    clade_up=sptree.get_children()[0]
-    clade_down=sptree.get_children()[1]
-    if len(clade_up)>len(clade_down):
-        clade_up.dist=1 
-        if clade_down.is_leaf():
-            clade_down.dist=get_max_deepth(sptree)-1
-        else:
-            clade_down.dist=get_max_deepth(sptree)-get_max_deepth(clade_down)
-    else:
-        clade_down.dist=1 
-        if clade_up.is_leaf():
-            clade_up.dist=get_max_deepth(sptree)-1
-        else:
-            clade_up.dist=get_max_deepth(sptree)-get_max_deepth(clade_up)
-
-    return sptree
-
-
 def parse_file_to_dic(filepath):
 
     result_dic = {}
@@ -168,6 +130,7 @@ def parse_file_to_dic(filepath):
                 continue
 
             if gdid not in gd_id_set:
+                gdid_species_set = set()
                 path_strs = cols[7].split('@')
                 for path_str in path_strs:
                     for node in path_str.split('->'):
@@ -176,8 +139,10 @@ def parse_file_to_dic(filepath):
                             num = int(num)
                             if sp not in result_dic:
                                 result_dic[sp] = {2:0, 1:0, 0:0}
-                            if num in result_dic[sp]:
-                                result_dic[sp][num] += 1
+                            gdid_species_set.add((sp, int(num)))
+                for sp, num in gdid_species_set:
+                    result_dic[sp][num] += 1
+
                 gd_id_set.add(gdid)
             else:
                 continue
@@ -190,11 +155,11 @@ def build_legend(ts):
   
     ts.title.add_face(TextFace(' ',fsize=10), column=0)
     ts.title.add_face(CircleFace(5, color='green'), column=1)
-    ts.title.add_face(TextFace(' Two Retained ',fsize=10), column=2)
+    ts.title.add_face(TextFace(' Two copies retained ',fsize=10), column=2)
     ts.title.add_face(CircleFace(5, color='blue'), column=3)
-    ts.title.add_face(TextFace(' One Retained ',fsize=10), column=4)
+    ts.title.add_face(TextFace(' One copy retained ',fsize=10), column=4)
     ts.title.add_face(CircleFace(5, color='red'), column=5)
-    ts.title.add_face(TextFace(' Zero Retained ',fsize=10), column=6)
+    ts.title.add_face(TextFace(' No copy retained ',fsize=10), column=6)
     ts.legend.add_face(TextFace(" Legend: (Green, Blue, Red)", fsize=9, fgcolor="gray"), column=0)
     ts.legend_position = 3
 
@@ -242,7 +207,7 @@ def visualizer_sptree(result_dic,sptree):
 
     
     ts = TreeStyle()
-    ts.scale = 50
+    ts.scale = 60
     
 
     build_legend(ts)
