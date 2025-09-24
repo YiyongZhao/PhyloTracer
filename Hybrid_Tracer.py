@@ -1,3 +1,4 @@
+from signal import SIGUSR2
 from __init__ import *
 from collections import defaultdict
 from Bio import SeqIO
@@ -42,89 +43,11 @@ def process_start_node(file_path: str, sptree: object) -> str:
         print(f"Error finding common ancestor in species tree: {e}")
         return None
 
-def format_time(seconds):
-    days = seconds // (24 * 3600)
-    hours = (seconds % (24 * 3600)) // 3600
-    minutes = (seconds % 3600) // 60
-    seconds = seconds % 60
-    return f"{int(days)} d, {int(hours)} h, {int(minutes)} m, {seconds:.2f} s"
-
-def calculate_depth(node1, node2):
-    if node1 in node2.iter_ancestors() or node2 in node1.iter_ancestors():
-        distance = node1.get_distance(node2, topology_only=True)+2
-        return distance
-    common_ancestor = node1.get_common_ancestor(node2)
-    return abs(node1.get_distance(common_ancestor, topology_only=True) - \
-           node2.get_distance(common_ancestor, topology_only=True))
-
-def calculate_distance(node1,node2):
-    distance = node1.get_distance(node2)
-    return distance
-
-def judge_support(support,support_value):
-    if  support <=1 and 0.5 <=support_value <=1:
-        if support>=support_value:
-            return True
-        else:
-            return False
-        
-    elif support <=1 and 50 <= support_value <=100:
-        support_value=support_value/100
-        if support>=support_value:
-            return True
-        else:
-            return False
-    elif support > 1 and 0.5 <=support_value <=1:
-        support_value=support_value*100
-        if support>=support_value:
-            return True
-        else:
-            return False
-    elif support > 1 and 50 <=support_value <=100:
-        if support>=support_value:
-            return True
-        else:
-            return False
-
-def find_dup_node(Phylo_t: object, sptree:object,gd_support: int = 50,clade_support:int=0,dup_species_num:int=2,dup_species_percent:int=0,deepvar:int=1) -> list:
-    dup_node_name_list = []
-    events = Phylo_t.get_descendant_evol_events()
-    for ev in events:
-        if ev.etype == "D":
-            i = ",".join(ev.in_seqs) + ',' + ",".join(ev.out_seqs)
-            events_node_name_list = i.split(',')
-            common_ancestor_node = Phylo_t.get_common_ancestor(events_node_name_list)
-            child1,child2=common_ancestor_node.get_children()
-            sp_set=get_species_set(common_ancestor_node)
-            mapp_sp_node=mapp_gene_tree_to_species(sp_set,sptree)
-            common_ancestor_node.add_feature('map',mapp_sp_node.name)
-
-            if judge_support(common_ancestor_node.support,gd_support):
-
-                child1, child2 = common_ancestor_node.get_children()
-                c1=mapp_gene_tree_to_species(get_species_set(child1),sptree)
-                c2=mapp_gene_tree_to_species(get_species_set(child2),sptree)
-                #dup_sps=sps_dup_num(get_species_list(common_ancestor_node),get_species_set(common_ancestor_node))
-                #dup_percent=dup_sps/len(get_species_set(common_ancestor_node))
-                #print(sptree.get_distance(c1,c2, topology_only=True))
-                if sptree.get_distance(c1,c2, topology_only=True) <=deepvar:
-                #if dup_sps>=dup_species_num and dup_percent>=dup_species_percent:
-                #if are_sister_supports_greater_than_num(child1,child2,clade_support):
-                    dup_node_name_list.append(common_ancestor_node)
-    return dup_node_name_list
-
 def create_fasta_dict(fasta_file,gene2new_named_gene_dic):
     fasta_dict = {}
     for record in SeqIO.parse(fasta_file, "fasta"):
         fasta_dict[gene2new_named_gene_dic[record.id]] = str(record.seq)
     return fasta_dict
-
-def get_seq(genes,seq_dic):
-    gene_seqs=[]
-    for gene in genes :
-        seq=seq_dic[gene]
-        gene_seqs.append(gene+'\t'+seq)
-    return gene_seqs
 
 def get_outgroup_gene(gd_clade, sptree):
     def get_outsps_sort_lst(map_t, sptree):
@@ -177,18 +100,6 @@ def get_outgroup_gene(gd_clade, sptree):
         target=get_target_gene(sis,sps)
         if target:
             return target
-
-
-def get_max_deepth(root:object)->int:
-    if not root:
-        return 0
-    
-    max_child_depth = 0
-    for child in root.children:
-        child_depth = get_max_deepth(child)
-        max_child_depth = max(max_child_depth, child_depth)
-    
-    return max_child_depth + 1
 
 def get_model(clade, sptree):
     sps = get_species_list(clade)
@@ -341,32 +252,6 @@ def write_out(out, triple, outfile):
     print(out["ABCD"], "\n", sep="", end="", file=outfile)
 
 
-
-def build_concatenated_matrix(all_genes):
-    gene_order = list(all_genes.keys())
-    gene_len = {gene: len(seq) for gene, seq in all_genes.items()}
-    species_set = set([gene.split('_')[0] for gene in all_genes.keys()])
-    
-    species_concat = {}
-    for gene in gene_order:
-        sp = gene.split('_')[0]
-        if sp not in species_concat:
-            species_concat[sp] = ''
-        species_concat[sp] += all_genes[gene]
-    
-    max_len = max(len(seq) for seq in species_concat.values()) if species_concat else 0
-    
-    concat_matrix = {}
-    for sp in species_set:
-        if sp in species_concat:
-
-            concat_matrix[sp] = species_concat[sp] + '-' * (max_len - len(species_concat[sp]))
-        else:
-           
-            concat_matrix[sp] = '-' * max_len
-    
-    return concat_matrix, max_len
-
 def run_hyde_from_matrix(all_genes:dict,voucher2taxa_dic:dict,clade:object):
     target_sps=clade.get_leaf_names()
     concat_matrix,max_length = build_concatenated_matrix(all_genes)
@@ -398,19 +283,20 @@ def run_hyde_from_matrix(all_genes:dict,voucher2taxa_dic:dict,clade:object):
         combined_element = (t, result,len(res))
         hyde_result_lst.append(combined_element)
 
-    os.remove('temp.phy')
-    os.remove('temp.imap')
+    #os.remove('temp.phy')
+    #os.remove('temp.imap')
     return hyde_result_lst
 
 
             
 def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, voucher2taxa_dic, taxa2voucher_dic,new_named_gene2gene_dic,target_node=None,gd_group:int=1):
+
     hyde_tuple_lst=[]
     gd_count_dic,gd_type_dic=get_gd_count_dic_and_gd_type_dic(tre_dic,gene2new_named_gene_dic,rename_sptree)
     data=count_elements_in_lists(gd_type_dic)
     gd_clades=get_process_gd_clade(data,gd_count_dic)
-    
 
+    sps_dic={}
     for gd in gd_clades:
         gd_name,gds=gd
         if target_node and gd_name != target_node:
@@ -418,12 +304,19 @@ def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, vou
 
         start_time = time.time()
         print(f'{gd_name} is processing')
-
+        # Display gene family processing statistics
+        print(f"Total gene duplication events in dataset: {len(gds)}")
+        print(f"Number of parallel processing groups: {gd_group}")
+        
         split_gds = np.array_split(gds, gd_group)
+        
+        # Display parallelization partitioning results
+        print(f"Gene duplication events partitioned into {len(split_gds)} processing batches")
+        for i, sub_group in enumerate(split_gds):
+            print(f"Batch {i+1}: {len(sub_group)} gene duplication events")
         for sub_group in split_gds:
-            tup = process_gd_group(sub_group, rename_sptree, gd_name, seq_path_dic, gene2new_named_gene_dic, voucher2taxa_dic)
-            hyde_tuple_lst.extend(tup)
-
+            hyde_result_lst=process_gd_group(sub_group, rename_sptree, gd_name, seq_path_dic, gene2new_named_gene_dic,new_named_gene2gene_dic, voucher2taxa_dic,sps_dic,target_node)
+            hyde_tuple_lst.extend(hyde_result_lst)
     header = ("P1\tHybrid\tP2\tZscore\tPvalue\tGamma\tAAAA\tAAAB\tAABA\tAABB\tAABC\tABAA\t""ABAB\tABAC\tABBA\tBAAA\tABBC\tCABC\tBACA\tBCAA\tABCD\n")
     with open('hyde_out.txt', 'w') as out_file, open('hyde_filtered_out.txt', 'w') as filtered_out_file:
         print(header, end="", file=out_file)
@@ -433,8 +326,8 @@ def hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, vou
             write_out(res, t, out_file)
             if is_filtered(res, t_num):
                 write_out(res, t, filtered_out_file)
-        
-def process_gd_group(gds, rename_sptree, gd_name, seq_path_dic, gene2new_named_gene_dic, voucher2taxa_dic):
+
+def process_gd_group(gds, rename_sptree, gd_name, seq_path_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic,sps_dic,target_node):
     """
     处理一组GD数据
     :param gds: GD数据列表
@@ -445,30 +338,251 @@ def process_gd_group(gds, rename_sptree, gd_name, seq_path_dic, gene2new_named_g
     :param voucher2taxa_dic: 凭证到分类的映射
     :return: 返回hyde处理结果
     """
-    clade = rename_sptree & gd_name
-    all_genes = {}
-    all_seq_dic = {}
-    outgroup_lst = set()
-    
+    target_clade=rename_sptree&target_node
+    all_matrices = []  # 收集所有的矩阵
+    col_counter = 1
+    seq_dic_all={}
     for gd_clade_set in gds:
         gdid = gd_clade_set[0]
         gd_clade = gd_clade_set[1]
 
         outfile = gdid
         tre_id1 = outfile.split('-')[0]
-            
-        seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
-        all_seq_dic.update(seq_dic)
         
+        try:
+            seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
+            seq_dic_all.update(seq_dic)
+        except KeyError as e:
+            print(f"KeyError encountered for GD {gdid}: {e}. Skipping this GD.")
+            continue 
+
         outgroup_gene = get_outgroup_gene(gd_clade, rename_sptree)
         if outgroup_gene is None:
             continue
+        if voucher2taxa_dic[outgroup_gene.split('_')[0]]=='MED':
+
+            one_gd_matrix=process_one_gd(gd_clade, outgroup_gene)
+            num_cols = one_gd_matrix.shape[1]
+            new_col_names = [f"col{col_counter + i}" for i in range(num_cols)]
+            one_gd_matrix.columns = new_col_names
+
+            # 更新列计数器
+            col_counter += num_cols
+
+            all_matrices.append(one_gd_matrix)
+        # print(one_gd_matrix)
+    
+    # Check if all_matrices is empty before concatenating
+    if not all_matrices:
+        print(f"Warning: No valid matrices found for GD group {gd_name}. Returning empty result.")
+        return []
         
-        all_genes[outgroup_gene] = all_seq_dic[outgroup_gene]
-        for gene in gd_clade.get_leaf_names():
-            all_genes[gene] = all_seq_dic[gene]
+    merged_matrix = pd.concat(all_matrices, axis=1)
+    merged_matrix = merged_matrix.fillna('-')
+
+    clean_matrix=clean_matrix_by_dash_count(merged_matrix)
+    hyde_result_lst=run_hyde_from_matrix_integrated(clean_matrix, seq_dic_all, voucher2taxa_dic, target_clade)
+    return hyde_result_lst
+
+def run_hyde_from_matrix_integrated(clean_matrix: pd.DataFrame, seq_dic: dict, voucher2taxa_dic: dict, clade: object, trim: bool = True):
+    """
+    整合 matrix_to_phy 和 HyDe 分析的完整流程
+    
+    参数:
+        clean_matrix: DataFrame，清洗后的基因矩阵
+        seq_dic: dict，基因ID到序列的映射
+        voucher2taxa_dic: dict，voucher到taxa的映射
+        clade: object，目标分支
+        trim: bool，是否裁剪序列
+    """
+    target_sps = clade.get_leaf_names()
+    
+    # 1. 使用 matrix_to_phy 生成 PHYLIP 文件
+    matrix_to_phy(clean_matrix, seq_dic, voucher2taxa_dic, "temp.phy", trim=trim)
+    
+    # 2. 创建 temp.imap 文件
+    imap = {}
+    with open("temp.imap", 'w') as imap_file:
+        # 从 clean_matrix 的索引（物种名）创建 imap
+        for species in clean_matrix.index:
+            sp_0 = voucher2taxa_dic[species]
+            if species not in target_sps:
+                imap[sp_0] = 'out'
+                imap_file.write(f'{sp_0}\tout\n')
+            else:
+                imap[sp_0] = sp_0
+                imap_file.write(f'{sp_0}\t{sp_0}\n')
+    
+    # 3. 读取生成的 PHYLIP 文件获取序列长度
+    with open("temp.phy", 'r') as f:
+        first_line = f.readline().strip()
+        num_species, max_length = map(int, first_line.split())
+    
+    # 4. 运行 HyDe 分析
+    hyde_result_lst = []
+    sps_num = len(imap.keys())
+    taxa_num = len(set(imap.values()))
+    
+    dat = hd.HydeData("temp.phy", "temp.imap", 'out', sps_num, taxa_num, max_length, quiet=True)
+    res = dat.list_triples()
+    
+    for t in res:
+        p1, hyb, p2 = t
+        result = dat.test_triple(p1, hyb, p2)
+        combined_element = (t, result, len(res))
+        hyde_result_lst.append(combined_element)
+    
+    # 5. 清理临时文件
+    os.remove('temp.phy')
+    os.remove('temp.imap')
+    
+    return hyde_result_lst
+
+def clean_matrix_by_dash_count(matrix: pd.DataFrame, max_allowed_dashes: int = 1):
+    """
+    清洗矩阵：
+    1. 删除重复列；
+    2. 删除含有 `'-'` 数量大于 max_allowed_dashes 的列；
+    3. 重命名列为 col1, col2, ...；
+    4. 保存为 CSV。
+
+    参数:
+        matrix: 输入 DataFrame
+        max_allowed_dashes: 允许列中最多出现几次 '-'（默认 0 表示完全不允许）
+        output_file: 输出文件路径
+    """
+
+
+    # 1. 删除重复列
+    matrix = matrix.T.drop_duplicates().T
+    # 2. 删除含有超过 max_allowed_dashes 个 '-' 的列
+    dash_counts = (matrix == '-').sum(axis=0)
+    matrix = matrix.loc[:, dash_counts <= max_allowed_dashes]
+
+    # 3. 重命名列
+    matrix.columns = [f"col{i+1}" for i in range(matrix.shape[1])]
+
+    return matrix
+
+def matrix_to_phy(clean_matrix: pd.DataFrame, seq_dic: dict, voucher2taxa_dic,output_file: str = "output.phy", trim: bool = True):
+    """
+    将清洗后的基因矩阵转换为 PHYLIP 格式，并可选择是否裁剪全为 '-' 的列。
+
+    参数:
+        clean_matrix: DataFrame，行是物种，列是不同 gene 编号（如 col1, col2...）
+        seq_dic: dict，gene_id -> 蛋白序列
+        output_file: str，输出的 .phy 文件路径
+        trim: bool，是否裁剪拼接序列中全是 '-' 的列
+    """
+    # 1. 构建每个物种的完整拼接序列
+    species_seqs = defaultdict(str)
+
+    for col in clean_matrix.columns:
+        for species, gene_id in clean_matrix[col].items():
+            sp=voucher2taxa_dic[species]
+            if gene_id != '-' and gene_id in seq_dic:
+                seq = seq_dic[gene_id]
+            else:
+                # 缺失或找不到就填充一个合适长度的 '-'
+                seq = '-' * max(len(s) for s in seq_dic.values())
+            species_seqs[sp] += seq
+
+    # 2. 可选裁剪：去除全是 '-' 的列
+    if trim:
+        def trimal_matrix(concat_matrix: dict):
+            """
+            去除全为 '-' 的列。自动修复拼接长度不一致的问题。
+
+            参数:
+                concat_matrix: dict，物种名 -> 拼接序列
+
+            返回:
+                filtered_matrix: dict，去除空列后的新矩阵
+                new_len: int，保留的列数
+            """
+            # 获取最长序列长度
+            max_len = max(len(seq) for seq in concat_matrix.values())
+
+            # 填补短序列为相同长度（右侧补 '-')
+            for sp in concat_matrix:
+                seq = concat_matrix[sp]
+                if len(seq) < max_len:
+                    concat_matrix[sp] = seq + '-' * (max_len - len(seq))
+
+            # 找到不是全 '-' 的列索引
+            valid_cols = [i for i in range(max_len) if any(concat_matrix[sp][i] != '-' for sp in concat_matrix)]
+
+            # 构建新矩阵
+            filtered_matrix = {
+                sp: ''.join(concat_matrix[sp][i] for i in valid_cols)
+                for sp in concat_matrix
+            }
+
+            return filtered_matrix, len(valid_cols)
+
+
+        species_seqs, trimmed_len = trimal_matrix(species_seqs)
+    else:
+        trimmed_len = len(next(iter(species_seqs.values())))
+
+    # 3. 写入 PHYLIP 文件
+    num_species = len(species_seqs)
+    with open(output_file, "w") as f:
+        f.write(f"{num_species} {trimmed_len}\n")
+        for species, seq in species_seqs.items():
+            name = species[:10].ljust(10)
+            f.write(f"{name} {seq}\n")
+
+def process_one_gd(gd_clade:object, outgroup_gene:str):
+    result = []
+    def is_dup_node(node): #改判断重复有问题 应该是上下分枝有重复的物种才能算作重复 不能简单的gene和species比对
+        genes = get_species_list(node)
+        species = get_species_set(node)
+        return len(genes) != len(species)
+
+    def traverse(node):
+        if is_dup_node(node):
+            for child in getattr(node, 'children', []):
+                traverse(child)
+        else:
+            genes = node.get_leaf_names() if hasattr(node, 'get_leaf_names') else []
+            tuple_genes = tuple(sorted(genes + [outgroup_gene], key=lambda x: x.split('_')[0]))
+            result.append(tuple_genes)
             
-    return run_hyde_from_matrix(all_genes, voucher2taxa_dic, clade)
+    traverse(gd_clade)
+    
+    # 将结果转换为矩阵格式
+    if not result:
+        return pd.DataFrame()
+    
+    # 获取所有唯一的物种
+    all_species = set()
+    for triple in result:
+        for gene in triple:
+            species = gene.split('_')[0]
+            all_species.add(species)
+    
+    all_species = sorted(list(all_species))
+    
+    # 创建矩阵，行为物种，列为每个triple
+    matrix_data = []
+    for i, triple in enumerate(result):
+        column_data = []
+        for species in all_species:
+            # 找到该物种在当前triple中的基因
+            genes_in_species = [gene for gene in triple if gene.split('_')[0] == species]
+            if genes_in_species:
+                column_data.append(';'.join(genes_in_species))  # 如果有多个基因，用分号分隔
+            else:
+                column_data.append('-')  # 如果该物种不在当前triple中
+        matrix_data.append(column_data)
+    
+    # 转置矩阵，使得行为物种，列为triple
+    matrix_df = pd.DataFrame(matrix_data).T
+    matrix_df.index = all_species
+    matrix_df.columns = [f'col_{i+1}' for i in range(len(result))]
+    
+    return matrix_df
 
 def is_filtered(res, t_num):
     """Check if the result passes filtering criteria."""
@@ -477,8 +591,7 @@ def is_filtered(res, t_num):
         and abs(res["Zscore"]) != 99999.9
         and 0.0 < res["Gamma"] < 1.0
     )
-
-
+    
 
 
 
