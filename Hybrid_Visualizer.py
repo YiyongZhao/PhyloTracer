@@ -428,8 +428,8 @@ def combine_fig(hybrid_species):
     
     if legend_start_y > 0:
         draw.text((legend_x, legend_start_y), "Red: hybrid", fill="red", font=font_legend)
-        draw.text((legend_x, legend_start_y + legend_spacing), "Yellow: y values", fill="orange", font=font_legend)
-        draw.text((legend_x, legend_start_y + legend_spacing * 2), "White: combinations", fill="black", font=font_legend)
+        draw.text((legend_x, legend_start_y + legend_spacing), "Yellow: y values", fill="yellow", font=font_legend)
+        draw.text((legend_x, legend_start_y + legend_spacing * 2), "White: number of hybridization combinations", fill="black", font=font_legend)
     
     # 在图例下方绘制1-y标记
     draw.text((oney_text_x, oney_text_y), oney_text, fill="black", font=font_title)
