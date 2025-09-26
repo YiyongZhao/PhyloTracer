@@ -134,9 +134,9 @@ def generate_tree_node(t,node,filename):
     t.render(file_name=filename+"_img_faces.png",h=3200,tree_style=ts)
 
 def from_summary_get_hyb_to_date(summary_dic,a_hyb_to_three_tup_list, leafs):
-    tup_df = pd.DataFrame(index=leafs, columns=leafs, data=0)
-    gamma_df = pd.DataFrame(index=leafs, columns=leafs, data=0)
-    pvalue_df=pd.DataFrame(index=leafs, columns=leafs, data=0)
+    tup_df = pd.DataFrame(index=leafs, columns=leafs, data=0,dtype=float)
+    gamma_df = pd.DataFrame(index=leafs, columns=leafs, data=0,dtype=float)
+    pvalue_df=pd.DataFrame(index=leafs, columns=leafs, data=0,dtype=float)
     for i in a_hyb_to_three_tup_list:
         tup = i.split('-')
         p1,hyb,p2=tup
@@ -228,7 +228,7 @@ def create_hot_map_node(summary_dic,hyb_dic,node, t,filename):
     gamma_result_df[mask_upper] = 0
 
     tup_annot = tup_result_df.astype(str).where(tup_result_df != 0, other='')
-    gamma_annot = gamma_result_df.applymap(lambda x: f"{x:.3f}" if x != 0 else '')
+    gamma_annot = gamma_result_df.map(lambda x: f"{x:.3f}" if x != 0 else '')
 
     fig = plt.figure(figsize=(30, 30))
 
@@ -263,13 +263,14 @@ def create_hot_map_node(summary_dic,hyb_dic,node, t,filename):
     plt.savefig(filename+"_hotmap.png", dpi=200)
     plt.cla()
     plt.close("all")
-        
+    
     
 def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename):
     sp = t.get_leaf_names()
-    tup_df = pd.DataFrame(index=sp, columns=sp, data=0)
-    gamma_df = pd.DataFrame(index=sp, columns=sp, data=0)
-    pvalue_df=pd.DataFrame(index=sp, columns=sp, data=0)
+    tup_df = pd.DataFrame(index=sp, columns=sp, data=0,dtype=float)
+    gamma_df = pd.DataFrame(index=sp, columns=sp, data=0,dtype=float)
+    pvalue_df=pd.DataFrame(index=sp, columns=sp, data=0,dtype=float)
+
     for i in a_hyb_to_three_tup_list:
         tup = i.split('-')
         p1,hyb,p2=tup
@@ -281,38 +282,47 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename):
         gamma = calculate_gamma(same_tups)
         pvalue=calculate_pvalue(same_tups)
 
-        tup_df.loc[p1, p2] = num
-        gamma_df.loc[p1, p2] = round(gamma, 3)
-        pvalue_df.loc[p1, p2]=pvalue
-    
-    for p1 in sp:
-        for p2 in sp:
-            if p1 != p2:
-                if pvalue_df.loc[p1, p2] < pvalue_df.loc[p2, p1]:
-                    gamma_df.loc[p2, p1] = 0
-                else:
-                    gamma_df.loc[p1, p2] = 0
+        tup_df.at[p1, p2] = num
+        gamma_df.at[p1, p2] = round(gamma, 3)
+        pvalue_df.at[p1, p2]=pvalue
 
+    
     fig = plt.figure(figsize=(30, 30))
     
     border_width = 0.001
     ax_size = [0 + border_width, 0 + border_width, 1 - 2 * border_width, 1 - 2 * border_width]
     ax = fig.add_axes(ax_size)
     
-    # mask_upper = np.triu(np.ones_like(gamma_df, dtype=bool), k=1)
-    # gamma_df[mask_upper] = 0
-    # tup_df[mask_upper] = 0
+
+
+    processed_pairs = set()
+    for p1 in sp:
+        for p2 in sp:
+            if p1 != p2:
+                pair_key = tuple(sorted([p1, p2]))
+                if pair_key in processed_pairs:
+                    continue
+                processed_pairs.add(pair_key)
+
+                pvalue_p1_p2 = pvalue_df.loc[p1, p2]
+                pvalue_p2_p1 = pvalue_df.loc[p2, p1]
+                
+                if pvalue_p1_p2 > pvalue_p2_p1:
+                    gamma_df.loc[p2, p1] = 0
+                else:
+                    gamma_df.loc[p1, p2] = 0
+                    
 
     tup_annot = tup_df.astype(str).where(tup_df != 0, other='')
-    gamma_annot = gamma_df.applymap(lambda x: f"{x:.3f}" if x != 0 else '')
+    gamma_annot = gamma_df.map(lambda x: f"{x:.3f}" if x != 0 else '')
     # 第一个 heatmap，显示非零数值
     sns.heatmap(tup_df, annot=tup_annot, fmt="", cmap='Greys', ax=ax,
-                annot_kws={'color':'#FFFFFF','size': 60,'va':'top'},
+                annot_kws={'color':'#FFFFFF','va':'top'},
                 xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
     
     # 第二个 heatmap，显示非零数值
     sns.heatmap(gamma_df, annot=gamma_annot, fmt="", cmap='Greys', ax=ax,
-                annot_kws={'color':'#F5EF70','size': 60,'va':'bottom'},
+                annot_kws={'color':'#F5EF70','va':'bottom'},
                 xticklabels=False, yticklabels=False, cbar=False, linewidths=1.5, linecolor='black',square=True)
 
    
@@ -327,69 +337,105 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t,filename):
     position=fig.add_axes([0.9, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
     cbar.ax.tick_params(labelsize=40)  
-    #cbar.set_label('Heatmap of y Values', fontsize=50,labelpad=10)
+    cbar.set_label('Heatmap of y Values',fontsize=20,labelpad=2)
     
     plt.savefig(filename+"_hotmap.png", dpi=300)
     plt.cla()
     plt.close("all")
+    # print(tup_df)
+    # print(gamma_df)
+    # print(pvalue_df)
 
-#     plt.show()
     
 
 def combine_fig(hybrid_species):
     treepic = Image.open(f"{hybrid_species}_img_faces.png")
     treepic_size = treepic.size
-    combine_fig_size = treepic_size[0] + treepic_size[1]
+    
+    # 旋转90度的基因树，获取旋转后的尺寸
+    treepic_rotate = treepic.rotate(90, expand=1)
+    rotate_size = treepic_rotate.size
+    
+    # 计算需要的画布大小，确保所有元素都能放下
+    # 考虑原始树、旋转树、热图和边距
+    min_width = max(treepic_size[0] + treepic_size[1] + 60, 
+                    treepic_size[0] + rotate_size[0] + 60)
+    min_height = max(treepic_size[1] + rotate_size[1] + 60,
+                     treepic_size[0] + treepic_size[1] + 60)
+    combine_fig_size = max(min_width, min_height)
 
     combine = Image.new("RGB", (combine_fig_size, combine_fig_size), "#FFFFFF")
 
-    combine.paste(treepic, (40,40))
-    treepic_rotate = treepic.rotate(90, expand = 1) #treepic旋转90度后粘贴
-    combine.paste(treepic_rotate, (treepic_size[0] - 40, int(treepic_size[1]) - 40))
+    # 原始基因树放在左上角
+    combine.paste(treepic, (40, 40))
+    
+    # 旋转90度的基因树放在右下角，确保不超出边界
+    rotate_x = min(treepic_size[0] + 20, combine_fig_size - rotate_size[0] - 20)
+    rotate_y = min(treepic_size[1] + 20, combine_fig_size - rotate_size[1] - 20)
+    combine.paste(treepic_rotate, (rotate_x, rotate_y))
 
+    # 热图放在右上角，确保不与tips重叠
     hotpic = Image.open(f"{hybrid_species}_hotmap.png")
     hotpic.thumbnail((treepic_size[1], treepic_size[1]))
-    combine.paste(hotpic, (treepic_size[0] - 40, 40))
+    hotmap_x = min(treepic_size[0] + 20, combine_fig_size - hotpic.size[0] - 20)
+    hotmap_y = 40
+    combine.paste(hotpic, (hotmap_x, hotmap_y))
 
+    # 在图像上添加文字标注
+    draw = ImageDraw.Draw(combine)
+    
+    # 根据图像大小自适应设置字体大小
+    base_font_size = max(16, int(combine_fig_size / 50))  # 基础字体大小，最小16px
+    title_font_size = max(18, int(combine_fig_size / 45))  # 标题字体稍大
+    legend_font_size = max(14, int(combine_fig_size / 55))  # 图例字体稍小
+    
+    try:
+        # 尝试使用系统字体，如果失败则使用默认字体
+        font_base = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", base_font_size)
+        font_title = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", title_font_size)
+        font_legend = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", legend_font_size)
+    except:
+        font_base = ImageFont.load_default()
+        font_title = ImageFont.load_default()
+        font_legend = ImageFont.load_default()
+
+    # 确保文字不超出图像边界
+    max_width = combine_fig_size
+    max_height = combine_fig_size
+
+    # 左上角标注：y值 - 确保在图像内
+    y_text = "y (hybridization)"
+    y_text_x = max(10, min(50, max_width - 200))
+    y_text_y = 15
+    draw.text((y_text_x, y_text_y), y_text, fill="black", font=font_title)
+    
+    # 右下角标注：1-y值 - 确保在图像内且不超出边界
+    oney_text = "1-y (complement)"
+    # 计算文字的大概宽度，为文字预留足够空间
+    text_width_estimate = len(oney_text) * (title_font_size * 0.6)  # 估算文字宽度
+    oney_text_x = max(10, min(rotate_x + 10, max_width - text_width_estimate - 20))
+    oney_text_y = min(rotate_y + treepic_rotate.size[1] + 5, max_height - title_font_size - 10)
+    
+    # 图例放在1-y标记的上方
+    legend_x = oney_text_x
+    legend_spacing = max(18, int(legend_font_size * 1.3))  # 行间距自适应
+    legend_end_y = oney_text_y - 15  # 在1-y标记上方留更多间距
+    legend_start_y = legend_end_y - (legend_spacing * 3)  # 图例总高度
+    
+    # 确保图例不超出顶部边界和右边界
+    legend_text_width = max(len("Red: hybrid"), len("Yellow: y values"), len("White: combinations")) * (legend_font_size * 0.6)
+    legend_x = max(10, min(legend_x, max_width - legend_text_width - 20))
+    
+    if legend_start_y > 0:
+        draw.text((legend_x, legend_start_y), "Red: hybrid", fill="red", font=font_legend)
+        draw.text((legend_x, legend_start_y + legend_spacing), "Yellow: y values", fill="orange", font=font_legend)
+        draw.text((legend_x, legend_start_y + legend_spacing * 2), "White: combinations", fill="black", font=font_legend)
+    
+    # 在图例下方绘制1-y标记
+    draw.text((oney_text_x, oney_text_y), oney_text, fill="black", font=font_title)
+    
     combine.save(hybrid_species + ".png")
 
-
-def realign_branch_length(Phylo_t1:object)->object:
-    Phylo_t1.ladderize()
-    Phylo_t1.resolve_polytomy(recursive=True)
-    Phylo_t1.sort_descendants("support")
-    max_deep=get_max_deepth(Phylo_t1)
-    for node in Phylo_t1.traverse():
-        if not node.is_root():
-            node.dist=1
-            degree=node.get_distance(node.get_tree_root()) + 1
-            deep=get_max_deepth(node)
-            node.dist=max_deep-deep-degree
-    clade_up=Phylo_t1.get_children()[0]
-    clade_down=Phylo_t1.get_children()[1]
-    difference=abs(get_max_deepth(clade_up)-get_max_deepth(clade_down))+1
-    clade_up.dist=clade_up.dist+difference  
-    clade_down.dist=clade_down.dist+difference   
-    
-    return Phylo_t1
-
-def rejust_root_dist(sptree):
-    clade_up=sptree.get_children()[0]
-    clade_down=sptree.get_children()[1]
-    if len(clade_up)>len(clade_down):
-        clade_up.dist=1 
-        if clade_down.is_leaf():
-            clade_down.dist=get_max_deepth(sptree)-1
-        else:
-            clade_down.dist=get_max_deepth(sptree)-get_max_deepth(clade_down)
-    else:
-        clade_down.dist=1 
-        if clade_up.is_leaf():
-            clade_up.dist=get_max_deepth(sptree)-1
-        else:
-            clade_up.dist=get_max_deepth(sptree)-get_max_deepth(clade_up)
-
-    return sptree
 
 def hyde_visual_leaf_main(out_file_name,sptree):
     out1=parse_hyde_out(out_file_name)
@@ -427,5 +473,5 @@ def hyde_visual_node_main(out_file_name,sptree):
 if __name__ == "__main__":
     sptree=Tree('sptree.nwk')
     hyde_visual_leaf_main(sptree)
-    #hyde_visual_node_main(sptree) 
+    #hyde_visual_node_main(sptree)
 
