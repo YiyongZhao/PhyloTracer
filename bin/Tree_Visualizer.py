@@ -76,7 +76,7 @@ def dup_nodeids_from_numbered_gfs(phylo_t: object) -> tuple:
     if not is_rooted(phylo_t):
         phylo_t = root_tre_with_midpoint_outgroup(phylo_t)
     phylo_t = num_tre_node(phylo_t)
-    dup_node_name_list = find_dup_node(phylo_t)
+    dup_node_name_list = find_dup_node_simple(phylo_t)
     phylo_t1 = Tree(phylo_t.write())
     num_tre_node(phylo_t1)
     return phylo_t1, dup_node_name_list
@@ -741,7 +741,7 @@ def view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,t
     os.makedirs(dir_path)
     color_dicts = generate_color_dict(gene_categories)
     sps_color_dict=get_color_dict(voucher2taxa_dic)
-    gene_color_dict = None  # 保证变量总是有定义
+    gene_color_dict = None  
     if gene2fam is not None:
         gene_color_dict=get_color_dict(gene2fam)
     pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
