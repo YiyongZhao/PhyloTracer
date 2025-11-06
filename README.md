@@ -282,7 +282,7 @@ Required parameter:
     --input_GF_list       File containing paths to gene tree files, one per line
     --input_imap          File with classification information of species corresponding to genes
     --keep_branch         1 or 0 indicates whether or not to preserve branch length information
-    --tree_style          The tree style, 'r' is meaning rectangular, 'c' is meaning circular
+    --tree_style          The tree style, 'r' means rectangular, 'c' means circular
 Optional parameter:
     --gene_categories     File with taxonomic information for species
     --gene_family         File with family classification information corresponding to genes
