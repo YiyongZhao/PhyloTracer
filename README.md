@@ -304,7 +304,7 @@ Required parameter:
     --dup_species_proportion   The proportion of overlapped species from two subclades for a GD event with range [0-1] and default = 0.2
     --dup_species_num          The number of species with species duplications under the GD node
     --input_sps_tree           A species tree file with Newick format
-    --deepvar                  Maximum variance of deepth and default = 1
+    --deepvar                  Maximum variance of depth and default = 1
 Usage:
     Phylo_Tracer.py GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk --deepvar 1
 ```
