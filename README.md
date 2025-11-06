@@ -53,8 +53,8 @@ A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree
 11. **GD_Loss_Tracker:** To track the gene duplication loss event starting across each node/tip from a specific GD burst event in the species tree.
 12. **GD_Loss_Visualizer:** To visualize the summary of gene duplication loss event counts for each node/tip in the context of the species tree.
 13. **Ortho_Retriever:** To rapidly infer putative single-copy orthologs by splitting paralogs from large-scale gene family trees across multiple species.
-14. **Hybrid_Tracer:** To detect hybridization signals for each potential GD burst event across species tree by using phylogenetic invariants.
-15. **Hybrid_Visualizer:** To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals.
+14. **Hybrid_Tracer:** To detect hybridization signals from duplicated genes at specific nodes using phylogenetic invariants under the coalescent model with hybridization.
+15. **Hybrid_Visualizer:** To visualize hybridization signals across the species tree, highlighting support information and the hybridization proportion (γ).
 16. **HaploFinder:** Distinguishing ancient genome recombination events including gene conversions and crossovers by tracing subgenome haplotypes through phylogenomic profiling.
 ---
 ### Clone and install environment:
