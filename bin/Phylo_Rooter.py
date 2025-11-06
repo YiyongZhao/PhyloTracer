@@ -294,25 +294,7 @@ def root_main(
             used_weights = weights_multi if is_multi_copy else weights_single
 
             # 归一化加权求和
-            def normalize_and_score(df, weights):
-                norm_deep = (df["deep"] - df["deep"].min()) / (df["deep"].max() - df["deep"].min()) if df["deep"].max() != df["deep"].min() else 0
-                norm_var = (df["var"] - df["var"].min()) / (df["var"].max() - df["var"].min()) if df["var"].max() != df["var"].min() else 0
-                norm_RF = (df["RF"] - df["RF"].min()) / (df["RF"].max() - df["RF"].min()) if df["RF"].max() != df["RF"].min() else 0
-                norm_GD = (df["GD"] - df["GD"].min()) / (df["GD"].max() - df["GD"].min()) if df["GD"].max() != df["GD"].min() else 0
-                norm_dup_species_overlap = (df["species_overlap"] - df["species_overlap"].min()) / (df["species_overlap"].max() - df["species_overlap"].min()) if df["species_overlap"].max() != df["species_overlap"].min() else 0
-                df["weighted_norm_deep"] = norm_deep * weights.get("deep", 0)
-                df["weighted_norm_var"] = norm_var * weights.get("var", 0)
-                df["weighted_norm_RF"] = norm_RF * weights.get("RF", 0)
-                df["weighted_norm_GD"] = norm_GD * weights.get("GD", 0)
-                df["weighted_norm_dup_species_overlap"] = norm_dup_species_overlap * weights.get("species_overlap", 0)
-                score = (
-                    df["weighted_norm_deep"] +
-                    df["weighted_norm_var"] +
-                    df["weighted_norm_RF"] +
-                    df["weighted_norm_GD"] -
-                    df["weighted_norm_dup_species_overlap"]
-                )
-                return score
+
 
             current_df["score"] = normalize_and_score(current_df, used_weights)
 
@@ -341,7 +323,27 @@ def root_main(
         if not stat_df.empty:
             stat_df["tree_id"] = stat_df["Tree"].apply(lambda x: "_".join(x.split("_")[:-1]))
             stat_df = stat_df.sort_values(by=["tree_id", "score"], ascending=[True, True])
-            stat_df.to_csv("stat_matrix3.csv", index=False)
+            stat_df.to_csv("stat_matrix.csv", index=False)
             
     finally:
         pbar.close()
+
+def normalize_and_score(df, weights):
+    norm_deep = (df["deep"] - df["deep"].min()) / (df["deep"].max() - df["deep"].min()) if df["deep"].max() != df["deep"].min() else 0
+    norm_var = (df["var"] - df["var"].min()) / (df["var"].max() - df["var"].min()) if df["var"].max() != df["var"].min() else 0
+    norm_RF = (df["RF"] - df["RF"].min()) / (df["RF"].max() - df["RF"].min()) if df["RF"].max() != df["RF"].min() else 0
+    norm_GD = (df["GD"] - df["GD"].min()) / (df["GD"].max() - df["GD"].min()) if df["GD"].max() != df["GD"].min() else 0
+    norm_dup_species_overlap = (df["species_overlap"] - df["species_overlap"].min()) / (df["species_overlap"].max() - df["species_overlap"].min()) if df["species_overlap"].max() != df["species_overlap"].min() else 0
+    df["weighted_norm_deep"] = norm_deep * weights.get("deep", 0)
+    df["weighted_norm_var"] = norm_var * weights.get("var", 0)
+    df["weighted_norm_RF"] = norm_RF * weights.get("RF", 0)
+    df["weighted_norm_GD"] = norm_GD * weights.get("GD", 0)
+    df["weighted_norm_dup_species_overlap"] = norm_dup_species_overlap * weights.get("species_overlap", 0)
+    score = (
+        df["weighted_norm_deep"] +
+        df["weighted_norm_var"] +
+        df["weighted_norm_RF"] +
+        df["weighted_norm_GD"] -
+        df["weighted_norm_dup_species_overlap"]
+    )
+    return score
