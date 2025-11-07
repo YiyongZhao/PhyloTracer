@@ -63,6 +63,83 @@ PhyloTracer integrates 16 modular tools covering phylogenetic preprocessing, roo
 *Together, these modules provide a comprehensive workflow for constructing, refining, and interpreting large-scale phylogenomic data.*
 
 ---
+flowchart TD
+  %% ========= Inputs =========
+  A[Raw gene family trees<br/>(Newick)]:::in --> P1
+  ST[Species tree<br/>(Newick)]:::in
+
+  %% ========= 1) Preprocessing =========
+  subgraph G1[1) Tree Preprocessing]
+    direction LR
+    P1[PhyloTree_CollapseExpand<br/>collapse/re-expand by support] --> P2[PhyloSupport_Scaler<br/>normalize supports]
+    P2 --> P3[BranchLength_NumericConverter<br/>coerce numeric branch lengths]
+  end
+  class G1 stage;
+
+  %% ========= 2) Rooting =========
+  subgraph G2[2) Tree Rooting]
+    direction LR
+    R1[Phylo_Rooter<br/>accurate automated rooting]
+  end
+  class G2 stage;
+
+  %% ========= 3) Noise pruning & orthology =========
+  subgraph G3[3) Noise Pruning & Orthology]
+    direction LR
+    F1[OrthoFilter_LB<br/>remove long-branch tips] --> F2[OrthoFilter_Mono<br/>enforce monophyly constraints]
+    F2 --> OR[Ortho_Retriever<br/>split paralogs → SC-OGs]
+  end
+  class G3 stage;
+
+  %% ========= 4) GD & Loss =========
+  subgraph G4[4) Gene Duplication & Loss]
+    direction LR
+    GD[GD_Detector<br/>reconcile gene↔species] --> GDV[GD_Visualizer]
+    GD --> GL[GD_Loss_Tracker] --> GLV[GD_Loss_Visualizer]
+  end
+  class G4 stage;
+
+  %% ========= 5) Topology & Visualization =========
+  subgraph G5[5) Topology Summary & Visualization]
+    direction LR
+    TS[TreeTopology_Summarizer] --> TV[Tree_Visualizer]
+  end
+  class G5 stage;
+
+  %% ========= 6) Hybridization & Haplotype =========
+  subgraph G6[6) Hybridization & Haplotype]
+    direction LR
+    HY[Hybrid_Tracer] --> HYV[Hybrid_Visualizer]
+    HF[HaploFinder]
+  end
+  class G6 stage;
+
+  %% ========= Main flow wiring =========
+  P3 --> R1
+  R1 --> F1
+  ST --> R1
+  R1 --> TS
+  OR --> GD
+  OR --> TS
+  GD --> TS
+  ST --> GD
+  OR --> HY
+  ST --> HY
+  OR --> HF
+
+  %% ========= Outputs =========
+  TS --> O1[Topology stats (absolute/relative)]:::out
+  GDV --> O2[GD events on species tree]:::out
+  GLV --> O3[Node/tip-wise loss summaries]:::out
+  HYV --> O4[Hybridization map (γ, support)]:::out
+  HF --> O5[Subgenome haplotype recombination]:::out
+  TV --> O6[Annotated trees / figures]:::out
+
+  %% ========= Styles =========
+  classDef stage fill:#f5f7ff,stroke:#9aa7ff,stroke-width:1px,rx:6,ry:6;
+  classDef in fill:#eefaf2,stroke:#77c28a,stroke-width:1px,rx:6,ry:6;
+  classDef out fill:#fff7ec,stroke:#f4a259,stroke-width:1px,rx:6,ry:6;
+
 ### Clone and install environment:
 
 ```bash
