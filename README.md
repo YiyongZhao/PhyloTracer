@@ -90,8 +90,8 @@ pip install PhyloTracer
 ---
 ## Features
 
-- **Rooting (core, via `Phylo_Rooter`):**  
-  Uses a **composite rooting score** combining five metrics, with **different weights** for multi-copy vs. single-copy gene families.  
+- Rooting (core, via `Phylo_Rooter`):  
+  Uses a composite rooting score combining five metrics, with different weights for multi-copy vs. single-copy gene families.  
   Metrics include: outgroup depth (OD), ingroup branch-length variance (BLV), Robinson–Foulds distance (RF), GD events count (GD), and GD-clade species overlap (SO).
 
   <details>
@@ -109,44 +109,42 @@ pip install PhyloTracer
 
 ---
 
-- **Topology statistics (via `TreeTopology_Summarizer`):**  
-  Computes the **absolute** and **relative** topology frequencies **for single-copy gene trees**.  
-  Supports **grouped summarization** by user-provided **labels** (e.g., family/order tags) when supplied.
+- Topology statistics (via `TreeTopology_Summarizer`):  
+  Computes the absolute and relative topology frequencies for single-copy gene trees.  
+  Supports grouped summarization by user-provided labels (e.g., family/order tags) when supplied.
 
 ---
 
-- **Hybridization screening (via `Hybrid_Tracer`):**  
-  `Hybrid_Tracer` extends conventional HyDe-style hybridization detection by leveraging **gene duplication (GD)–based signal extraction**, offering both **grouped** and **ungrouped** analytical modes for cleaner and more node-specific hybridization inference.
+- Hybridization screening (via `Hybrid_Tracer`):  
+  `Hybrid_Tracer` extends conventional HyDe-style hybridization detection by leveraging gene duplication (GD)–based signal extraction, offering both grouped and ungrouped analytical modes for cleaner and more node-specific hybridization inference.
 
-  **Two complementary strategies are implemented:**
+  Two complementary strategies are implemented:
 
-  - **Ungrouped mode (concatenation-based):**  
-    For a specific ancestral node, `Hybrid_Tracer` concatenates the alignment sequences from **all duplicated genes descending from that node’s GD events**, forming a targeted alignment matrix.  
-    This enables **direct HyDe-like inference** of hybridization signals while minimizing unrelated noise, since only genes phylogenetically tied to that duplication origin are included.
+  - Ungrouped mode (concatenation-based):  
+    For a specific ancestral node, `Hybrid_Tracer` concatenates the alignment sequences from all duplicated genes descending from that node’s GD events, forming a targeted alignment matrix.  
+    This enables direct HyDe-like inference of hybridization signals while minimizing unrelated noise, since only genes phylogenetically tied to that duplication origin are included.
 
-  - **Grouped mode (signal integration):**  
-    Alternatively, GD events can be **partitioned into multiple groups** according to their gene tree topology or taxonomic context.  
-    Each group is analyzed independently to estimate its **hybridization proportion (γ)** and support.  
-    These group-level results are then **integrated (e.g., averaged or weighted)** to infer the overall hybridization signal of that ancestral node.
+  - Grouped mode (signal integration):  
+    Alternatively, GD events can be partitioned into multiple groups according to their gene tree topology or taxonomic context.  
+    Each group is analyzed independently to estimate its hybridization proportion (γ) and support.  
+    These group-level results are then integrated (e.g., averaged or weighted) to infer the overall hybridization signal of that ancestral node.
 
-  Compared with the traditional HyDe pipeline that concatenates all single-copy genes across the genome, `Hybrid_Tracer` focuses exclusively on **GD-derived gene sets** related to the evolutionary node of interest.  
-  This design produces **cleaner, more interpretable, and more localized hybridization signals**, reducing interference from unrelated loci and improving the biological relevance of γ estimates.
+  Compared with the traditional HyDe pipeline that concatenates all single-copy genes across the genome, `Hybrid_Tracer` focuses exclusively on GD-derived gene sets related to the evolutionary node of interest.  
+  This design produces cleaner, more interpretable, and more localized hybridization signals, reducing interference from unrelated loci and improving the biological relevance of γ estimates.
 
 ---
 
-- **GD & loss profiling (via `GD_Detector` and `GD_Loss_Tracker`):**  
-  Reconciles gene–species trees to summarize **gene duplication events** and **lineage-specific loss** patterns.  
+- GD & loss profiling (via `GD_Detector` and `GD_Loss_Tracker`):  
+  Reconciles gene–species trees to summarize gene duplication events and lineage-specific loss patterns.  
   Paired visualizers (`GD_Visualizer`, `GD_Loss_Visualizer`) assist in comparative interpretation.
 
 ---
 
-- **HaploFinder:**  
-  Detects **ancient genome recombination signals**, including **gene conversions** and **crossover events**, by tracing **subgenome-specific haplotypes**    through phylogenomic profiling.  
+- HaploFinder:  
+  Detects ancient genome recombination signals, including gene conversions and crossover events, by tracing subgenome-specific haplotypes through phylogenomic profiling.  
   This module helps characterize the historical exchange of genetic material between subgenomes and provides insights into genome evolution following duplication or hybridization.
 
 
-
-  
 ---
 ## Installation
 
