@@ -145,20 +145,6 @@ pip install PhyloTracer
 
   ---
 
-  #### **Workflow overview**
-  ```mermaid
-  flowchart TD
-      A[Gene family trees] --> B[Identify GD events]
-      B --> C{Select ancestral node}
-      C --> D1[Ungrouped mode<br/>(concatenate all GD genes)]
-      C --> D2[Grouped mode<br/>(partition GDs into groups)]
-      D1 --> E1[HyDe-like test → γ, support]
-      D2 --> E2[Independent HyDe-like tests per group]
-      E2 --> F[Integrate or average γ values]
-      E1 --> G[Node-level hybridization signal]
-      F --> G
-      G --> H[Visualization via Hybrid_Visualizer]
-
 - **GD & loss profiling (via `GD_Detector` and `GD_Loss_Tracker`):**  
   Reconciles gene–species trees to summarize **gene duplication events** and **lineage-specific loss** patterns; paired visualizers aid interpretation.
 
