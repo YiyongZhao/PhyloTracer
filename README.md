@@ -107,11 +107,9 @@ pip install PhyloTracer
 
   </details>
 
-  *Status:* validated on internal datasets; users should verify settings on their own species tree and data characteristics.
-
 - **Topology statistics (via `TreeTopology_Summarizer`):**  
   Computes the **absolute** and **relative** topology frequencies **for single-copy gene trees**.  
-  Supports **grouped summarization** by user-provided **species labels**（e.g., family/order tags）when supplied. *(No ABAB/ABBA counting is included.)*
+  Supports **grouped summarization** by user-provided **species labels**（e.g., family/order tags）when supplied.
 
 - **Hybridization screening (via `Hybrid_Tracer`):**  
   Provides **screening** of hybridization-like signals using duplicated-gene information under a coalescent-with-hybridization framework.  
