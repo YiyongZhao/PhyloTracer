@@ -140,9 +140,10 @@ pip install PhyloTracer
 
 ---
 
-- **Subgenome-aware ortholog assignment (via `Ortho_Retriever` + `HaploFinder` utilities):**  
-  Assists **ortholog retrieval** and **subgenome assignment** by leveraging **orthologous/paralogous** relationships across multi-species gene families.  
-  When subgenome annotations are provided, modules align outputs to these assignments for downstream analyses.
+- **HaploFinder:**  
+  Detects **ancient genome recombination signals**, including **gene conversions** and **crossover events**, by tracing **subgenome-specific haplotypes**    through phylogenomic profiling.  
+  This module helps characterize the historical exchange of genetic material between subgenomes and provides insights into genome evolution following duplication or hybridization.
+
 
 
   
