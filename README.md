@@ -31,12 +31,13 @@
 ---
 # PhyloTracer
 
-A User-Friendly Toolkit for Comprehensive inference for the Manipulation of Tree Format, Gene Tree Rooting, the Origin and Loss of Gene Duplication Events, Ortholog Retrieval, Phylogenetic Noise Elimination, Gene Tree Topology Summary, Species Hybridization Detection, and Visualization.
+A user-friendly toolkit for gene tree rooting, topology summarization, species hybridization signal screening, gene-duplication (GD) and loss profiling, and subgenome-aware ortholog splitting, with practical utilities for tree format manipulation and visualization.
 
 ---
 ## Introduction
 
-`PhyloTracer` aims to provide more accurate rooting of gene trees, serving as a foundation for inferring putative orthologous genes. It also includes functions to statistically summarize the topology types for models like ABAB-ABBA, aiding in identifying hybridization signals.
+`PhyloTracer` provides a reproducible workflow centered on accurate gene tree rooting and topology statistics. It further offers utilities for screening hybridization-like signals (via topology patterns such as ABAB/ABBA variants), summarizing GD and loss patterns, and subgenome-informed splitting of multi-copy families.
+All modules are designed to be used independently or combined in larger phylogenomic pipelines. Where applicable, methods are documented with input assumptions and recommended validation steps to ensure rigorous interpretation.
 
 ---
 ## Module Features
@@ -74,7 +75,7 @@ conda activate phylotracer
 
 #Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:
 chmod +x install_packages.sh
-bash install_package.sh
+bash install_packages.sh
 
 #Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
 #Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
@@ -88,10 +89,41 @@ pip install PhyloTracer
 ```
 ---
 ## Features
-* Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroup branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.
-* Use GD clade to verify hybridization signals between species.
-* Introducing the concept of long-branch genes for noise filtration in gene trees.
-* Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.
+
+- **Rooting (core, via `Phylo_Rooter`):**  
+  Uses a **composite rooting score** combining five metrics, with **different weights** for multi-copy vs. single-copy gene families.  
+  Metrics include: outgroup depth (OD), ingroup branch-length variance (BLV), Robinson–Foulds distance (RF), GD events count (GD), and GD-clade species overlap (SO).
+
+  <details>
+  <summary>📊 Show metric weights for <code>Phylo_Rooter</code></summary>
+
+  | Metric | Multi-copy GFs | Single-copy GFs |
+  |---|---:|---:|
+  | Outgroup depth (OD) | 0.10 | 0.50 |
+  | Branch length variance (BLV) | 0.05 | 0.10 |
+  | Robinson–Foulds distance (RF) | 0.60 | 0.40 |
+  | GD events count (GD) | 0.20 | 0.00 |
+  | GD clade species overlap (SO) | 0.05 | 0.00 |
+
+  </details>
+
+  *Status:* validated on internal datasets; users should verify settings on their own species tree and data characteristics.
+
+- **Topology statistics (via `TreeTopology_Summarizer`):**  
+  Computes the **absolute** and **relative** topology frequencies **for single-copy gene trees**.  
+  Supports **grouped summarization** by user-provided **species labels**（e.g., family/order tags）when supplied. *(No ABAB/ABBA counting is included.)*
+
+- **Hybridization screening (via `Hybrid_Tracer`):**  
+  Provides **screening** of hybridization-like signals using duplicated-gene information under a coalescent-with-hybridization framework.  
+  Results are **exploratory** and require independent confirmation with formal tests.
+
+- **GD & loss profiling (via `GD_Detector` and `GD_Loss_Tracker`):**  
+  Reconciles gene–species trees to summarize **gene duplication events** and **lineage-specific loss** patterns; paired visualizers aid interpretation.
+
+- **Subgenome-aware ortholog assignment (via `Ortho_Retriever` + `HaploFinder` utilities):**  
+  Assists **ortholog retrieval** and **subgenome assignment** by leveraging **orthologous/paralogous** relationships across multi-species gene families.  
+  When subgenome annotations are provided, modules align outputs to these assignments for downstream analyses.
+
   
 ---
 ## Installation
