@@ -109,11 +109,55 @@ pip install PhyloTracer
 
 - **Topology statistics (via `TreeTopology_Summarizer`):**  
   Computes the **absolute** and **relative** topology frequencies **for single-copy gene trees**.  
-  Supports **grouped summarization** by user-provided **species labels**（e.g., family/order tags）when supplied.
+  Supports **grouped summarization** by user-provided **labels**（e.g., family/order tags）when supplied.
 
-- **Hybridization screening (via `Hybrid_Tracer`):**  
-  Provides **screening** of hybridization-like signals using duplicated-gene information under a coalescent-with-hybridization framework.  
-  Results are **exploratory** and require independent confirmation with formal tests.
+- **Hybridization screening (via `Hybrid_Tracer`):**
+
+  <details>
+  <summary>🧬 Click to expand the design, strategies, and workflow of <code>Hybrid_Tracer</code></summary>
+
+  `Hybrid_Tracer` extends conventional HyDe-style hybridization detection by leveraging **gene duplication (GD)–based signal extraction**, offering both **grouped** and **ungrouped** analytical modes for cleaner, node-specific hybridization inference.
+
+  ---
+
+  #### **1️⃣ Ungrouped mode — Concatenation-based hybridization test**
+  For a target ancestral node, `Hybrid_Tracer` concatenates all **duplicated genes descended from its GD events** into a single alignment matrix.  
+  This provides a **direct HyDe-like inference** of hybridization proportions (γ) and support, focusing only on genes that originated from the specific duplication burst.  
+  Compared with traditional HyDe—which concatenates all single-copy genes across the genome—this mode yields a **cleaner and more localized signal**, as unrelated noise is largely removed.
+
+  ---
+
+  #### **2️⃣ Grouped mode — Multi-signal integration**
+  Alternatively, GD events can be **divided into multiple groups** according to their phylogenetic placement or taxonomic association.  
+  Each group is analyzed **independently**, yielding a separate hybridization estimate (γ, support).  
+  These group-level signals are then **integrated or averaged** to infer a robust hybridization trend for that ancestral node.
+
+  ---
+
+  #### **Key advantages over classical HyDe**
+  | Feature | HyDe (traditional) | `Hybrid_Tracer` |
+  |:--|:--|:--|
+  | Input genes | All concatenated single-copy genes | GD-derived genes linked to target node |
+  | Signal scope | Genome-wide, mixed | Node-specific, duplication-aware |
+  | Noise level | High (unrelated loci) | Reduced (GD-focused) |
+  | Output | Global γ estimate | Localized γ, group-wise γ, averaged γ |
+  | Interpretation | Broad signal | Clean, evolutionarily contextualized signal |
+
+  ---
+
+  #### **Workflow overview**
+  ```mermaid
+  flowchart TD
+      A[Gene family trees] --> B[Identify GD events]
+      B --> C{Select ancestral node}
+      C --> D1[Ungrouped mode<br/>(concatenate all GD genes)]
+      C --> D2[Grouped mode<br/>(partition GDs into groups)]
+      D1 --> E1[HyDe-like test → γ, support]
+      D2 --> E2[Independent HyDe-like tests per group]
+      E2 --> F[Integrate or average γ values]
+      E1 --> G[Node-level hybridization signal]
+      F --> G
+      G --> H[Visualization via Hybrid_Visualizer]
 
 - **GD & loss profiling (via `GD_Detector` and `GD_Loss_Tracker`):**  
   Reconciles gene–species trees to summarize **gene duplication events** and **lineage-specific loss** patterns; paired visualizers aid interpretation.
