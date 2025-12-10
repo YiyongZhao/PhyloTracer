@@ -219,26 +219,6 @@ def get_species_list(node: object) -> list:
         return []
     return [leaf.name.split('_')[0] for leaf in node.iter_leaves()]
 
-def calculate_species_overlap(gene_tree: object) -> float:
-    """
-    Calculate the species overlap ratio between two clades of the largest duplication node.
-
-    Args:
-        gene_tree (object): Gene tree object.
-
-    Returns:
-        float: Overlap ratio (0.0-1.0).
-    """
-    dup_nodes = find_dup_node_simple(gene_tree)
-    if not dup_nodes:
-        return 0.0
-    largest_tree = max(dup_nodes, key=lambda node: len(node.get_leaves()))
-    up_clade = largest_tree.children[1]
-    down_clade = largest_tree.children[0]
-    species_list_a = get_species_list(up_clade)
-    species_list_b = get_species_list(down_clade)
-    overlap_ratio = len(set(species_list_a) & set(species_list_b)) / len(set(species_list_a) | set(species_list_b))
-    return overlap_ratio
 
 def find_dup_node_simple(Phylo_t: Tree) -> list:
     """
