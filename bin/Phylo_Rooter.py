@@ -1,179 +1,232 @@
 from Ortho_Retriever import *
 from __init__ import *
 from BranchLength_NumericConverter import write_tree_to_newick
+import math
+import pandas as pd
+import os
+import shutil
+from tqdm import tqdm
 
-import numpy as np
-from scipy.stats import norm
-        
-def get_mapped_node_depth(root: object, species_tree: object = None) -> int:
-    """
-    Calculate the depth of the node in the species tree that corresponds to the given gene tree node.
-    The function maps the gene tree node to the species tree (using the set of species under the node),
-    then counts the number of nodes from the mapped node up to the root (depth).
+# --------------------------
+# 1. 辅助函数区
+# --------------------------
 
-    Args:
-        root (object): The gene tree node to be mapped.
-        species_tree (object, optional): The species tree for mapping.
-
-    Returns:
-        int: The depth of the mapped node in the species tree (number of nodes from mapped node to root).
-    """
-    if not root or not species_tree:
-        return 0
-    species_set = get_species_set(root)
-    if not species_set:
-        return 0
-    try:
-        if len(species_set) == 1:
-            species_name = list(species_set)[0]
-            mapped_node = species_tree & species_name
+def get_species_map_and_depth(species_tree):
+    """预计算物种树节点的深度，用于快速查询。"""
+    species_depth = {}
+    for node in species_tree.traverse("preorder"):
+        if node.is_root():
+            depth = 0
         else:
-            mapped_node = species_tree.get_common_ancestor(species_set)
-        depth = 0
-        current = mapped_node
-        while not current.is_root():
-            depth += 1
-            current = current.up
-        return depth 
-    except Exception:
-        return 0
+            depth = species_depth[node.up] + 1
+        species_depth[node] = depth
+    return species_depth
 
-def calculate_RF_distance(Phylo_t_OG_L: object, sptree: object) -> int:
+def annotate_mapped_depths(gene_tree: object, species_tree: object) -> object:
     """
-    Calculate the Robinson-Foulds (RF) distance between a gene tree and a species tree.
-
-    Args:
-        Phylo_t_OG_L (object): The gene tree object.
-        sptree (object): The species tree object.
-
-    Returns:
-        int: The RF distance.
+    将基因树节点映射到物种树，并标记深度。
+    使用缓存机制加速。
     """
-    for leaf in Phylo_t_OG_L:
-        leaf.name = leaf.name.split('_')[0]
-    RF = Phylo_t_OG_L.robinson_foulds(sptree)[0]
-    return RF
-
-def has_multiple_species(node: object) -> bool:
-    """
-    Determine whether a node contains genes from multiple species.
-
-    Args:
-        node (object): The tree node object, should support calculate_species_num.
-
-    Returns:
-        bool: True if the node contains genes from more than one species, otherwise False.
-    """
-    return calculate_species_num(node) > 1
-
-def get_traversal_string(node: object) -> str:
-    """
-    Recursively traverse the node and generate a string of node names separated by '-'.
-
-    Args:
-        node (object): The tree node object.
-
-    Returns:
-        str: A string of node names separated by '-'.
-    """
-    if has_multiple_species(node):
-        return f"{node.name}-{get_traversal_string(node.children[0])}-{get_traversal_string(node.children[1])}"
-    return node.name
-
-def generate_rerooted_trees(tree: object, node_name_list: list) -> list:
-    """
-    Generate a list of rerooted tree objects by setting each node in node_name_list as the outgroup.
-
-    Args:
-        tree (object): The original tree object, should support copy, set_outgroup, and name attributes.
-        node_name_list (list): List of node names to be used as outgroups.
-
-    Returns:
-        list: A list of rerooted tree objects.
-    """
-    rerooted_trees = []
-    for node_name in node_name_list:
-        tree_copy = tree.copy('newick')
-        outgroup_node = tree_copy & node_name
-        tree_copy.set_outgroup(outgroup_node)
-        tree_copy.name = node_name
-        rerooted_trees.append(tree_copy)
-    return rerooted_trees
-
-def get_all_rerooted_trees(tree: object) -> list:
-    """
-    Get a list of rerooted tree objects after rooting them at each eligible node.
-
-    Args:
-        tree (object): The input tree object.
-
-    Returns:
-        list: A list of rerooted tree objects.
-    """
-    tree = num_tre_node(tree)
-    node_name_list = get_traversal_string(tree).split('-')
-    # Remove root node names from the list
-    node_name_list = [name for name in node_name_list if not (tree & name).is_root()]
-    rerooted_trees = generate_rerooted_trees(tree, node_name_list)
-    return rerooted_trees
-
-def rename_output_tre(tree: object, name_mapping: dict, tree_id: str, output_dir: str) -> None:
-    """
-    Restore the original gene names in the phylogenetic tree and save it to a file.
-
-    Args:
-        tree (object): The phylogenetic tree object.
-        name_mapping (dict): Mapping from new gene names to original gene names.
-        tree_id (str): Identifier for the tree.
-        output_dir (str): Directory to save the output tree file.
-
-    Returns:
-        object: The updated phylogenetic tree object.
-    """
-    for node in tree.traverse():
-        if node.name in name_mapping:
-            node.name = name_mapping[node.name]
-
-    tree_str=tree.write(format=0)
-    write_tree_to_newick(tree_str,tree_id,output_dir)
+    if not gene_tree or not species_tree:
+        return gene_tree
     
-def calculate_tree_statistics(
-    tree: object,
-    voucher_to_taxa: dict,
-    gene_to_new_name: dict,
-    tree_id: str,
-    tree_path: str,
-    renamed_length_dict: dict,
-    new_name_to_gene: dict,
-    renamed_species_tree: object
-) -> tuple:
+    # 获取预计算的物种树深度字典
+    sp_depths = get_species_map_and_depth(species_tree)
+    
+    cache = {}
+    for node in gene_tree.traverse():
+        species_set = get_species_set(node)
+        if not species_set:
+            node.add_feature('mapped_depth', 0)
+            continue
+            
+        key = frozenset(species_set)
+        if key in cache:
+            node.add_feature('mapped_depth', cache[key])
+            continue
+            
+        try:
+            if len(species_set) == 1:
+                species_name = list(species_set)[0]
+                mapped_node = species_tree & species_name
+            else:
+                mapped_node = species_tree.get_common_ancestor(species_set)
+            
+            # 直接查字典获取深度，比 while 循环快
+            depth = sp_depths.get(mapped_node, 0)
+            
+            cache[key] = depth
+            node.add_feature('mapped_depth', depth)
+        except Exception:
+            node.add_feature('mapped_depth', 0)
+    return gene_tree
+
+def get_species_tree_basal_set(species_tree_obj: object) -> set:
+    """获取物种树的基部类群集合。"""
+    if len(species_tree_obj.get_children()) < 2:
+        return set(species_tree_obj.get_leaf_names())
+    children = species_tree_obj.get_children()
+    child_0_leaves = set(children[0].get_leaf_names())
+    child_1_leaves = set(children[1].get_leaf_names())
+    return child_0_leaves if len(child_0_leaves) < len(child_1_leaves) else child_1_leaves
+
+def get_dynamic_basal_set(gene_tree_species_set: set, species_tree_root: object) -> set:
     """
-    Calculate various statistics for a given phylogenetic tree.
-
+    根据基因树中存在的物种，在物种树上动态寻找“相对基部类群”。
+    
     Args:
-        tree (object): The phylogenetic tree object.
-        voucher_to_taxa (dict): Mapping from voucher to taxa.
-        gene_to_new_name (dict): Mapping from gene to new gene name.
-        tree_id (str): Identifier for the tree.
-        tree_path (str): Path to the tree file.
-        renamed_length_dict (dict): Mapping for renamed branch lengths.
-        new_name_to_gene (dict): Mapping from new gene name to original gene.
-        renamed_species_tree (object): The renamed species tree object.
-
+        gene_tree_species_set: 当前基因树包含的所有物种集合 (set of strings)
+        species_tree_root: 物种树的根节点 (ETE3 TreeNode)
+        
     Returns:
-        tuple: (deep, var, RF, GD, species_overlap)
+        set: 适用于当前基因树的有效基部物种集合。
+    """
+    # 递归终止条件：到达叶子节点
+    if species_tree_root.is_leaf():
+        return set([species_tree_root.name])
+    
+    children = species_tree_root.get_children()
+    
+    # 假设物种树是二叉的（如果有三叉，逻辑需微调，这里按标准二叉树处理）
+    # 如果有多个子节点，我们需要判断基因树跨越了哪次分化
+    
+    # 获取物种树当前节点两个子分支下的所有物种名
+    # 注意：这里需要缓存优化，否则大树会慢。但物种树通常不大，直接遍历也可。
+    clade_sets = []
+    for child in children:
+        clade_sets.append(set(child.get_leaf_names()))
+        
+    # 检查基因树的物种落在哪些分支里
+    present_flags = [] # 记录每个分支里是否有基因树的物种
+    for c_set in clade_sets:
+        # 如果基因树物种与该分支有交集，记为 True
+        if not gene_tree_species_set.isdisjoint(c_set):
+            present_flags.append(True)
+        else:
+            present_flags.append(False)
+            
+    # --- 核心判断逻辑 ---
+    
+    # 情况 A：基因树的物种跨越了当前的分歧点（即至少在两个子分支里都有分布）
+    # 例如：既有单子叶，又有双子叶。
+    if sum(present_flags) >= 2:
+        # 此时，这就是我们要找的最早分歧点。
+        # 我们选择叶子数量较少的那个分支作为“相对外群”。
+        # (通常 Outgroup 分支物种数 < Ingroup 分支)
+        
+        # 找到包含基因树物种的所有分支，并按物种树上的叶子总数排序
+        valid_children = []
+        for i, has_gene in enumerate(present_flags):
+            if has_gene:
+                valid_children.append((children[i], len(clade_sets[i])))
+        
+        # 按该分支在物种树上的大小排序（从小到大）
+        valid_children.sort(key=lambda x: x[1])
+        
+        # 返回最小分支的所有物种作为 Basal Set
+        # 这意味着：如果 Os(单子叶) 和 AT(双子叶) 都在，且单子叶分支小，则 Os 是基部。
+        best_outgroup_node = valid_children[0][0]
+        return set(best_outgroup_node.get_leaf_names())
+
+    # 情况 B：基因树的物种完全落在一个子分支里（例如 Amborella 丢了，都在另一个分支里）
+    # 此时我们需要“深入”那个分支继续找
+    elif sum(present_flags) == 1:
+        for i, has_gene in enumerate(present_flags):
+            if has_gene:
+                return get_dynamic_basal_set(gene_tree_species_set, children[i])
+                
+    # 情况 C：基因树物种都不在（理论不应发生），返回空
+    return set()
+
+def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set) -> list:
+    """基部类群过滤 + 候选树生成。"""
+    rerooted_trees = []
+    # 确保节点有唯一名字以便查找
+    num_tre_node(tree)
+
+    for node in tree.traverse("preorder"):
+        if node.is_root(): continue
+        # if node.is_leaf(): continue # 通常我们不在叶子上定根，除非是单系
+        
+        # 获取当前分支下的物种（去除基因名后缀）
+        node_species = set([leaf.split('_')[0] for leaf in node.get_leaf_names()])
+        
+        # 过滤：如果当前分支不包含任何基部物种，跳过
+        if not node_species.issubset(basal_species_set):
+            continue
+            
+        tree_copy = tree.copy()
+        try:
+            target_node = tree_copy.search_nodes(name=node.name)[0]
+            tree_copy.set_outgroup(target_node)
+            tree_copy.name = node.name
+            rerooted_trees.append(tree_copy)
+        except Exception:
+            continue
+    return rerooted_trees
+
+def calculate_tree_statistics(tree: object, renamed_species_tree: object) -> tuple:
+    """
+    Stage 1 快速统计 (不含 RF)。
     """
     up_clade = tree.children[1]
     down_clade = tree.children[0]
+    
+    var_up = compute_tip_to_root_branch_length_variance(up_clade)
+    var_down = compute_tip_to_root_branch_length_variance(down_clade)
+    var = abs(var_up - var_down)
+    
+    # 使用预计算的 mapped_depth
     if len(up_clade.get_leaf_names()) > len(down_clade.get_leaf_names()):
-        var = abs(compute_tip_to_root_branch_length_variance(up_clade) - compute_tip_to_root_branch_length_variance(down_clade))
-        deep = get_mapped_node_depth(down_clade,renamed_species_tree)
+        deep = getattr(down_clade, 'mapped_depth', 0)
     else:
-        var = abs(compute_tip_to_root_branch_length_variance(down_clade) - compute_tip_to_root_branch_length_variance(up_clade))
-        deep = get_mapped_node_depth(up_clade,renamed_species_tree)
-    if len(get_species_list(tree)) == len(get_species_set(tree)):
-        RF = calculate_RF_distance(tree, renamed_species_tree)
+        deep = getattr(up_clade, 'mapped_depth', 0)
+        
+    species_overlap, GD = calculate_species_overlap_gd_num(tree)
+    return deep, var, GD, species_overlap
+
+def calculate_species_overlap_gd_num(gene_tree: object) -> float:
+    dup_nodes = find_dup_node_simple(gene_tree)
+    if not dup_nodes:
+        return 0.0, 0
+    largest_tree = max(dup_nodes, key=lambda node: len(node.get_leaves()))
+    up_clade = largest_tree.children[1]
+    down_clade = largest_tree.children[0]
+    species_list_a = get_species_list(up_clade)
+    species_list_b = get_species_list(down_clade)
+    
+    union_len = len(set(species_list_a) | set(species_list_b))
+    if union_len == 0: return 0.0, len(dup_nodes)
+    
+    overlap_ratio = len(set(species_list_a) & set(species_list_b)) / union_len
+    return overlap_ratio, len(dup_nodes)
+
+# --------------------------
+# 2. 核心 RF 计算逻辑 (集成用户代码)
+# --------------------------
+
+def calculate_rf_strategy(
+    tree: object, 
+    renamed_species_tree: object,
+    renamed_length_dict: dict,
+    gene_to_new_name: dict, 
+    new_name_to_gene: dict,
+    tree_path: str, 
+    tree_id: str
+) -> float:
+    """
+    根据单拷贝/多拷贝选择不同的 RF 计算策略。
+    """
+    species_list = get_species_list(tree)
+    species_set = get_species_set(tree)
+    
+    # --- 情况 A: 单拷贝 ---
+    if len(species_list) == len(species_set):
+        return calculate_RF_distance(tree, renamed_species_tree)
+    
+    # --- 情况 B: 多拷贝 (集成用户逻辑) ---
     else:
+        # 1. 拆分 Principal Gene Set 和 Offcuts
         principal_gene_set, filtered_offcut_ev_seqs = offcut_tre(tree, renamed_length_dict)
         minor_orthologs = []
         minor_orthologs = iterator(filtered_offcut_ev_seqs, tree, gene_to_new_name, minor_orthologs, tree_path, renamed_length_dict)
@@ -186,20 +239,52 @@ def calculate_tree_statistics(
             phylo_tree_OG_list = extract_tree(OG_list, phylo_tree)
             phylo_tree_OG_list = rename_input_tre(phylo_tree_OG_list, gene_to_new_name)
             RF += calculate_RF_distance(phylo_tree_OG_list, renamed_species_tree)
+            
+        return RF
 
-    tre_ParaL, GF_leaves_S = find_tre_dup(tree)
-    GD = len(tre_ParaL) if tre_ParaL else 0
-    species_overlap = calculate_species_overlap(tree)
-    return deep, var, RF, GD, species_overlap
+def calculate_RF_distance(Phylo_t_OG_L: object, sptree: object) -> int:
+    tcopy = Phylo_t_OG_L.copy()
+    for leaf in tcopy:
+        if "_" in leaf.name:
+            leaf.name = leaf.name.split('_')[0]
+    try:
+        rf, _ = tcopy.robinson_foulds(sptree)[:2]
+        return rf
+    except:
+        return 100# 错误惩罚
 
-def read_weights_config(config_path):
-    df = pd.read_csv(config_path)
-    weights_multi = df[df["type"]=="multi"].iloc[0].to_dict()
-    weights_single = df[df["type"]=="single"].iloc[0].to_dict()
+# --------------------------
+# 3. 评分与归一化
+# --------------------------
 
-    weights_multi.pop("type")
-    weights_single.pop("type")
-    return weights_multi, weights_single
+def normalize_and_score(df, weights, include_rf=True):
+    # 辅助 lambda: 防止分母为 0
+    norm = lambda x: (x - x.min()) / (x.max() - x.min()) if x.max() != x.min() else 0
+    
+    # deep/var/GD 越小越好；overlap 越大越好
+    norm_deep = norm(df["deep"])
+    norm_var = norm(df["var"])
+    norm_GD = norm(df["GD"])
+    norm_species_overlap = norm(df["species_overlap"]) # Overlap 越大越好
+
+    weighted_norm_RF = 0
+    if include_rf and "RF" in df.columns:
+        norm_RF = norm(df["RF"])
+        weighted_norm_RF = norm_RF * weights.get("RF", 0)
+
+    weighted_norm_overlap = norm_species_overlap * weights.get("species_overlap", 0)
+    score = (
+        norm_deep * weights.get("deep", 0) +
+        norm_var * weights.get("var", 0) +
+        norm_GD * weights.get("GD", 0) -
+        weighted_norm_overlap +
+        weighted_norm_RF
+    )
+    return score
+
+# --------------------------
+# 4. 主流程
+# --------------------------
 
 def root_main(
     tree_dict: dict,
@@ -209,141 +294,152 @@ def root_main(
     renamed_species_tree: object,
     voucher_to_taxa: dict
 ) -> None:
-    """
-    Main function for rerooting gene trees, calculating statistics, and selecting the best tree.
-
-    Args:
-        tree_dict (dict): Mapping from tree ID to tree file path.
-        gene_to_new_name (dict): Mapping from gene to new gene name.
-        renamed_length_dict (dict): Mapping for renamed branch lengths.
-        new_name_to_gene (dict): Mapping from new gene name to original gene.
-        renamed_species_tree (object): The renamed species tree object.
-        voucher_to_taxa (dict): Mapping from voucher to taxa.
-    """
     dir_path = os.path.join(os.getcwd(), "rooted_trees/")
     if os.path.exists(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path)
-    pbar = tqdm(total=len(tree_dict), desc="Processing trees", unit="tree")
     
+    # 预处理：获取基部类群
+    basal_species_set = get_species_tree_basal_set(renamed_species_tree)
+    print(f"Basal Filter: {len(basal_species_set)} species")
 
+    pbar = tqdm(total=len(tree_dict), desc="Processing trees", unit="tree")
     stat_matrix = []
-    weights_multi = {
-        "deep": 0.1, #0.1
-        "var": 0.05, #0.05
-        "RF": 0.6, #0.5
-        "GD": 0.2, #0.3
-        "species_overlap": 0.05 #0.05
-    }
+    
+    stage1_weights_multi = {"deep": 0.3, "var": 0.1, "RF": 0.0, "GD": 0.5, "species_overlap": 0.1}
+    stage1_weights_single = {"deep": 0.7, "var": 0.3, "RF": 0.0}
 
-    weights_single = {
-        "deep": 0.5, #0.5
-        "var": 0.1, #0.1
-        "RF": 0.4, #0.4
-    }
-    # weights_multi, weights_single = read_weights_config("weights_config.csv")
     try:
         for tree_id, tree_path in tree_dict.items():
             pbar.set_description(f"Processing {tree_id}")
-            tree_stats = []
-            tree_objects = {}
             
+            # 1. 读取与初步处理
             Phylo_t0 = read_phylo_tree(tree_path)
             Phylo_t1 = root_tre_with_midpoint_outgroup(Phylo_t0)
             Phylo_t2 = rename_input_tre(Phylo_t1, gene_to_new_name)
 
-            if len(get_species_set(Phylo_t2)) ==1 or len(get_species_list(Phylo_t2))<=3:
-                tree_str = Phylo_t2.write()
+            # 2. 简单情况处理
+            if len(get_species_set(Phylo_t2)) == 1 or len(get_species_list(Phylo_t2)) <= 3:
                 rename_output_tre(Phylo_t2, new_name_to_gene, tree_id, dir_path)
                 pbar.update(1)
                 continue
+            
+            # 3. 深度注释 & 基部过滤
+            Phylo_t2 = annotate_mapped_depths(Phylo_t2, renamed_species_tree) 
 
-            root_list = get_all_rerooted_trees(Phylo_t2)
-            if root_list:
-                root_list = root_list[1:]  # Remove the first (original) root
-                
-            # 收集当前树的所有重根结果
+            current_gene_species = set(get_species_list(Phylo_t2))
+            dynamic_basal_set = get_dynamic_basal_set(current_gene_species, renamed_species_tree)
+            root_list = get_all_rerooted_trees_filtered(Phylo_t2, dynamic_basal_set)
+            
+            if not root_list:
+                print("No valid root candidates after basal filter.")
+                rename_output_tre(Phylo_t2, new_name_to_gene, tree_id, dir_path)
+                pbar.update(1)
+                continue
+            
+            # ==========================================
+            # Stage 1: 快速筛选 (无 RF)
+            # ==========================================
+            tree_objects = {} 
+            temp_stats = []
+            
             for n, tree in enumerate(root_list):
-                t1 = rename_input_tre(tree, new_name_to_gene)
-                t1.ladderize()
-                t1.sort_descendants("support")
-
+                # tree 已经是 rename 过的 Taxa ID 格式
                 tree_key = f"{tree_id}_{n+1}"
-                tree_objects[tree_key] = t1
+                tree_objects[tree_key] = tree 
+                # print(rename_input_tre(tree, new_name_to_gene))
+                deep, var, GD, species_overlap = calculate_tree_statistics(tree, renamed_species_tree)
+                # print(deep, var, GD, species_overlap)
+                temp_stats.append({
+                    "Tree": tree_key,
+                    "deep": deep, "var": var, "GD": GD, 
+                    "species_overlap": species_overlap, "RF": 0,
+                    "tree_obj_ref": tree # 暂存对象引用，Stage 2 用
+                })
+
+            current_df = pd.DataFrame(temp_stats)
+            
+            # 权重选择
+            is_multi_copy = len(get_species_list(Phylo_t2)) != len(get_species_set(Phylo_t2))
+            used_weights = stage1_weights_multi if is_multi_copy else stage1_weights_single
+            
+            # 初步评分
+            current_df["score"] = normalize_and_score(current_df, used_weights, include_rf=False)
+            
+            # ==========================================
+            # Stage 2: 精细筛选 (Top N 算复杂 RF)
+            # ==========================================
+            total_candidates = len(current_df)
+            # 策略：取前 40% 或前 20 名 (保持之前的宽松漏斗，防止漏掉 RF 好的树)
+            top_n = max(20, math.ceil(total_candidates * 0.8)) 
+            top_n = min(top_n, total_candidates)
+            
+            # 1. 选出初试成绩最好的 Top N
+            top_candidates_df = current_df.nsmallest(top_n, "score").copy()
+            # print('-'*50)
+            # for _, row in top_candidates_df.iterrows():
+            #     tk = row["Tree"]
+            #     t = tree_objects[tk]
+            #     t_print = t.copy('newick')
+            #     for nd in t_print.traverse():
+            #         if nd.name in new_name_to_gene:
+            #             nd.name = new_name_to_gene[nd.name]
+            #     print(t_print)
+            
+            # 2. 对 Top N 计算 RF (面试)
+            for idx, row in top_candidates_df.iterrows():
+                target_tree = row["tree_obj_ref"]
                 
-                deep, var, RF, GD, species_overlap = calculate_tree_statistics(
-                    tree, voucher_to_taxa, gene_to_new_name, tree_id, tree_path,
-                    renamed_length_dict, new_name_to_gene, renamed_species_tree
+                # 计算 RF
+                rf_val = calculate_rf_strategy(
+                    tree=target_tree,
+                    renamed_species_tree=renamed_species_tree,
+                    renamed_length_dict=renamed_length_dict,
+                    gene_to_new_name=gene_to_new_name,
+                    new_name_to_gene=new_name_to_gene,
+                    tree_path=tree_path,
+                    tree_id=tree_id
                 )
                 
-                tree_stats.append({
-                    "Tree": tree_key,
-                    "deep": deep,
-                    "var": var,
-                    "RF": RF,
-                    "GD": GD,
-                    "species_overlap": species_overlap
-                })
+                top_candidates_df.at[idx, "RF"] = rf_val
             
-            # 对当前树的统计结果进行排序和评分
-            current_df = pd.DataFrame(tree_stats)
-            # ========== 方式三：五参数归一化加权求和（越小越好用+，越大越好用-）==========
-            # 判断单拷贝还是多拷贝
-            is_multi_copy = len(get_species_list(Phylo_t2)) != len(get_species_set(Phylo_t2))
-            # 选择权重
-            used_weights = weights_multi if is_multi_copy else weights_single
-
-            # 归一化加权求和
-
-
-            current_df["score"] = normalize_and_score(current_df, used_weights)
-
-            # 同步rank和score到tree_stats
-            for i, stat in enumerate(tree_stats):
-                stat["weighted_norm_deep"] = current_df.iloc[i].get("weighted_norm_deep", None)
-                stat["weighted_norm_var"] = current_df.iloc[i].get("weighted_norm_var", None)
-                stat["weighted_norm_RF"] = current_df.iloc[i].get("weighted_norm_RF", None)
-                stat["weighted_norm_GD"] = current_df.iloc[i].get("weighted_norm_GD", None)
-                stat["weighted_norm_species_overlap"] = current_df.iloc[i].get("weighted_norm_species_overlap", None)
-                stat["score"] = current_df.iloc[i]["score"]
+            # 3. 【核心修改】直接排序选最优，不再重新加权
+            # 逻辑：优先看 RF (越小越好)，RF 如果一样，看 Stage 1 的 Score (越小越好)
+            best_row = top_candidates_df.sort_values(
+                by=["RF", "score"], 
+                ascending=[True, True]
+            ).iloc[0]
             
-            # 找出当前树的最优重根结果并写出
-            best_tree_row = current_df.loc[current_df["score"].idxmin()]
-            best_tree_key = best_tree_row["Tree"]
+            # ==========================================
+            # 输出
+            # ==========================================
+            best_tree_key = best_row["Tree"]
             best_tree = tree_objects[best_tree_key]
-            best_tree_str = best_tree.write(format=0)
-            write_tree_to_newick(best_tree_str, f"{tree_id}", dir_path)
             
-            # 将当前树的统计结果添加到总矩阵
-            stat_matrix.extend(tree_stats)
+            rename_output_tre(best_tree, new_name_to_gene, tree_id, dir_path)
+            
+           
+            record = best_row.to_dict()
+            del record["tree_obj_ref"]
+            stat_matrix.append(record)
+            
             pbar.update(1)
 
-        # 创建总的统计报告
+        # 保存报表
         stat_df = pd.DataFrame(stat_matrix)
         if not stat_df.empty:
             stat_df["tree_id"] = stat_df["Tree"].apply(lambda x: "_".join(x.split("_")[:-1]))
-            stat_df = stat_df.sort_values(by=["tree_id", "score"], ascending=[True, True])
+            cols = ["Tree", "score", "deep", "var", "GD", "species_overlap", "RF"]
+            stat_df = stat_df.sort_values(by=["tree_id", "score"])[cols]
             stat_df.to_csv("stat_matrix.csv", index=False)
             
     finally:
         pbar.close()
 
-def normalize_and_score(df, weights):
-    norm_deep = (df["deep"] - df["deep"].min()) / (df["deep"].max() - df["deep"].min()) if df["deep"].max() != df["deep"].min() else 0
-    norm_var = (df["var"] - df["var"].min()) / (df["var"].max() - df["var"].min()) if df["var"].max() != df["var"].min() else 0
-    norm_RF = (df["RF"] - df["RF"].min()) / (df["RF"].max() - df["RF"].min()) if df["RF"].max() != df["RF"].min() else 0
-    norm_GD = (df["GD"] - df["GD"].min()) / (df["GD"].max() - df["GD"].min()) if df["GD"].max() != df["GD"].min() else 0
-    norm_dup_species_overlap = (df["species_overlap"] - df["species_overlap"].min()) / (df["species_overlap"].max() - df["species_overlap"].min()) if df["species_overlap"].max() != df["species_overlap"].min() else 0
-    df["weighted_norm_deep"] = norm_deep * weights.get("deep", 0)
-    df["weighted_norm_var"] = norm_var * weights.get("var", 0)
-    df["weighted_norm_RF"] = norm_RF * weights.get("RF", 0)
-    df["weighted_norm_GD"] = norm_GD * weights.get("GD", 0)
-    df["weighted_norm_dup_species_overlap"] = norm_dup_species_overlap * weights.get("species_overlap", 0)
-    score = (
-        df["weighted_norm_deep"] +
-        df["weighted_norm_var"] +
-        df["weighted_norm_RF"] +
-        df["weighted_norm_GD"] -
-        df["weighted_norm_dup_species_overlap"]
-    )
-    return score
+def rename_output_tre(tree: object, name_mapping: dict, tree_id: str, output_dir: str) -> None:
+    # 还原名字
+    for node in tree.traverse():
+        if node.name in name_mapping:
+            node.name = name_mapping[node.name]
+    tree_str = tree.write(format=0)
+    write_tree_to_newick(tree_str, tree_id, output_dir)
