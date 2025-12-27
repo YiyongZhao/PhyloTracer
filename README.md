@@ -279,22 +279,39 @@ Usage:
 ```
 ### OrthoFilter_LB
 
-**Description:** Prunes phylogenomic noise by removing "tips" (sequences) with abnormally long branches. It calculates two relative ratios to identify evolutionary outliers.
+**Description:** Prunes phylogenomic noise from both single-copy and multi-copy gene family trees by removing tips with abnormally long branches. This module helps eliminate potential artifacts such as Long Branch Attraction (LBA).
 
-#### 1. Root Relative Branch Ratio (RRBR)
-Measures how much a gene's branch length deviates from the **global average** of the gene family.
+**1. Root Relative Branch Ratio (RRBR)**
 
-$$RRBR = \frac{Branch\_Length - Average\_Branch\_Length}{Average\_Branch\_Length}$$
+**Concept:** Measures the deviation of a specific gene's branch length relative to the **global average** of the entire gene family tree.
 
-#### 2. Sister Relative Branch Ratio (SRBR)
-Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister gene). This is crucial for detecting local branch length asymmetry.
+* **Purpose:** Detects outlier sequences evolving significantly faster or slower than the family norm.
+* **Formula:**
 
-$$SRBR = \frac{Branch\_Length - Sister\_Branch\_Length}{Sister\_Branch\_Length}$$
+$$
+\text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
+$$
 
-**Parameters:**
-- **Branch Length**: The length of the specific gene branch being evaluated.
-- **Average Branch Length**: The arithmetic mean of all branch lengths in the tree.
-- **Sister Branch Length**: The branch length of the nearest "sister" gene.
+* **Interpretation:** An RRBR of 1.0 indicates the branch is twice the length of the family average.
+
+**2. Sister Relative Branch Ratio (SRBR)**
+
+**Concept:** Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister taxon).
+
+* **Purpose:** Identifies local branch length asymmetry. A gene significantly longer than its "sister" is a high-risk candidate for phylogenetic noise, even in fast-evolving families.
+* **Formula:**
+
+$$
+\text{SRBR} = \frac{\text{Branch Length} - \text{Sister Branch Length}}{\text{Sister Branch Length}}
+$$
+
+* **Interpretation:** An SRBR of 2.0 indicates the branch is three times the length of its sister branch.
+
+**Where:**
+
+* **Branch Length:** The branch length of the specified gene.
+* **Average Branch Length:** The arithmetic mean of all branch lengths in the gene family tree.
+* **Sister Branch Length:** The branch length of the nearest "neighbor" or "sister" gene.
 
 ```
 Description:
