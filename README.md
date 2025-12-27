@@ -294,7 +294,7 @@ $$
 
 **2. Sister Relative Branch Ratio (SRBR)**
 
-**Concept:** Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister taxon).
+**Concept:** Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister branch).
 
 * **Purpose:** Identifies local branch length asymmetry. A gene significantly longer than its "sister" is a high-risk candidate for phylogenetic noise, even in fast-evolving families.
 * **Formula:**
