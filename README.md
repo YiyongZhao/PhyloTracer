@@ -278,21 +278,23 @@ Usage:
     Phylo_Tracer.py Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk 
 ```
 ### OrthoFilter_LB
-Root Relative Branch Ratio (RRBR): The relative branch length ratio based on the root. It represents the ratio between the branch length of a gene and the average branch length of all genes in the gene family tree.
-$$
-\text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
-$$
 
-Sister Relative Branch Ratio (SRBR): The relative branch length ratio based on the nearest neighbor or "sister" gene. It represents the ratio between the branch length of a gene and the branch length of its nearest neighbor gene.
+**Description:** Prunes phylogenomic noise by removing "tips" (sequences) with abnormally long branches. It calculates two relative ratios to identify evolutionary outliers.
 
-$$
-\text{SRBR} = \frac{\text{Branch Length} - \text{Sister Branch Length}}{\text{Sister Branch Length}}
-$$
+#### 1. Root Relative Branch Ratio (RRBR)
+Measures how much a gene's branch length deviates from the **global average** of the gene family.
 
-Where:
-- **Branch Length** : is the branch length of the specified gene.
-- **Average Branch Length** : is the average branch length of all genes in the gene family tree.
-- **Sister Branch Length** : is the branch length of the nearest "neighbor" or "sister" gene of the specified gene.
+$$RRBR = \frac{Branch\_Length - Average\_Branch\_Length}{Average\_Branch\_Length}$$
+
+#### 2. Sister Relative Branch Ratio (SRBR)
+Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister gene). This is crucial for detecting local branch length asymmetry.
+
+$$SRBR = \frac{Branch\_Length - Sister\_Branch\_Length}{Sister\_Branch\_Length}$$
+
+**Parameters:**
+- **Branch Length**: The length of the specific gene branch being evaluated.
+- **Average Branch Length**: The arithmetic mean of all branch lengths in the tree.
+- **Sister Branch Length**: The branch length of the nearest "sister" gene.
 
 ```
 Description:
