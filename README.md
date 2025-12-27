@@ -292,8 +292,6 @@ $$
 \text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
 $$
 
-* **Interpretation:** An RRBR of 1.0 indicates the branch is twice the length of the family average.
-
 **2. Sister Relative Branch Ratio (SRBR)**
 
 **Concept:** Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister taxon).
@@ -304,8 +302,6 @@ $$
 $$
 \text{SRBR} = \frac{\text{Branch Length} - \text{Sister Branch Length}}{\text{Sister Branch Length}}
 $$
-
-* **Interpretation:** An SRBR of 2.0 indicates the branch is three times the length of its sister branch.
 
 **Where:**
 
