@@ -284,12 +284,12 @@ Usage:
 #### 1. Root Relative Branch Ratio (RRBR)
 Measures how much a gene's branch length deviates from the **global average** of the gene family.
 
-$$RRBR = \frac{Branch\_Length - Average\_Branch\_Length}{Average\_Branch\_Length}$$
+$$RRBR = \frac{Branch\Length - Average\Branch\Length}{Average\Branch\Length}$$
 
 #### 2. Sister Relative Branch Ratio (SRBR)
 Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister gene). This is crucial for detecting local branch length asymmetry.
 
-$$SRBR = \frac{Branch\_Length - Sister\_Branch\_Length}{Sister\_Branch\_Length}$$
+$$SRBR = \frac{Branch\Length - Sister\Branch\Length}{Sister\Branch\Length}$$
 
 **Parameters:**
 - **Branch Length**: The length of the specific gene branch being evaluated.
