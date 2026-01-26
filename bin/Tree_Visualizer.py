@@ -1,653 +1,802 @@
-import sys, textwrap
-import argparse
-import time
-from PhyloTree_CollapseExpand import *
-from PhyloSupport_Scaler import *
-from BranchLength_NumericConverter import *
-from Phylo_Rooter import *
-from OrthoFilter_LB import *
-from OrthoFilter_Mono import *
-from TreeTopology_Summarizer import *
-from Tree_Visualizer import *
-from GD_Detector import *
-from GD_Visualizer import *
-from GD_Loss_Tracker import *
-from GD_Loss_Visualizer import *
-from Ortho_Retriever import *
-from Hybrid_Tracer import *
-from Hybrid_Visualizer import *
-from HaploFinder import *
-
-
-
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+import re
+import string
 from __init__ import *
-##################################################################
-print(textwrap.dedent("""
-###############################################################################################
-#                                                                                             #
-# ██████╗ ██╗  ██╗██╗   ██╗██╗      ██████╗ ████████╗██████╗  █████╗  ██████╗███████╗██████╗  #
-# ██╔══██╗██║  ██║╚██╗ ██╔╝██║     ██╔═══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗ #
-# ██████╔╝███████║ ╚████╔╝ ██║     ██║   ██║   ██║   ██████╔╝███████║██║     █████╗  ██████╔╝ #
-# ██╔═══╝ ██╔══██║  ╚██╔╝  ██║     ██║   ██║   ██║   ██╔══██╗██╔══██║██║     ██╔══╝  ██╔══██╗ #
-# ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║ #
-# ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝ # 
-#                                                                                             #
-#    PhyloTracer: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication             #
-#    Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species              #
-#    Hybridization Detection,and Visualization.                                               #
-#                                                                                             #
-#    Pypi: https://pypi.org/project/PhyloTracer                                               #
-#    Github: https://github.com/YiyongZhao/PhyloTracer                                        #
-#    Licence: MIT license                                                                     #
-#    Release Date: 2023-7                                                                     #
-#    Please cite: Li et al. 2024, XXXX.                                                       #
-#    Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                     #
-#                                                                                             #
-###############################################################################################
-"""))
-
-# Check Python version
-if sys.version_info.major == 2:
-    print('You are using Python 2. Please upgrade to Python 3. PhyloTracer quit now...')
-    sys.exit()
-
-# Custom help formatter for better formatting of subcommands and section titles
-class CustomHelpFormatter(argparse.HelpFormatter):
-    def _format_action(self, action):
-        if action.dest == 'command' and action.choices:
-            # Format the list of available subcommands
-            choices = ', '.join(action.choices)
-            return f"Available programs:\n  {choices}\n"
-        return super()._format_action(action)
-
-    def add_usage(self, usage, actions, groups, prefix=None):
-        # Customize the "usage" section prefix
-        if prefix is None:
-            prefix = "Usage: "  # Change "usage" to "Usage"
-        super().add_usage(usage, actions, groups, prefix)
-
-    def start_section(self, heading):
-        # Customize section titles
-        if heading == "options":
-            heading = "Options"  # Change "options" to "Options"
-        super().start_section(heading)
-
-# Create the main parser
-parser = argparse.ArgumentParser(prog='PhyloTracer',description='A toolkit for phylogenetic tree analysis and visualization.',formatter_class=argparse.RawTextHelpFormatter,add_help=False)
-
-# Add subparsers for commands
-subparsers = parser.add_subparsers(dest='command',help='Available programs for phylogenetic tree processing')
 
 
+def realign_branch_length(Phylo_t1: object) -> object:
+    """
+    Realign the branch lengths of a phylogenetic tree for visualization purposes.
+    The function ladderizes the tree, resolves polytomies, sorts descendants by support,
+    and adjusts branch lengths so that the tree is visually balanced.
 
-# PhyloTree_CollapseExpand command
-PhyloTree_CollapseExpand_parser = subparsers.add_parser('PhyloTree_CollapseExpand', help='Transform a phylogenetic tree into a "comb" structure based on a support value or revert it to a binary tree',formatter_class=CustomHelpFormatter)
-PhyloTree_CollapseExpand_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-PhyloTree_CollapseExpand_parser.add_argument('--support_value', metavar='INT', type=int, required=True, help='Support threshold for collapsing nodes')
-PhyloTree_CollapseExpand_parser.add_argument('--revert', action='store_true', help='Revert the "comb" structure back to a fully resolved binary tree')
+    Args:
+        Phylo_t1 (object): The input phylogenetic tree object.
 
-# PhyloSupport_Scaler command
-PhyloSupport_Scaler_parser = subparsers.add_parser('PhyloSupport_Scaler', help='Scale support values of gene trees', formatter_class=CustomHelpFormatter)
-PhyloSupport_Scaler_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-PhyloSupport_Scaler_parser.add_argument('--scale_to', metavar='1|100', choices=['1', '100'], required=True, help='Scale support values to 0-1 ("1") or 1-100 ("100")')
+    Returns:
+        object: The phylogenetic tree object with realigned branch lengths.
+    """
+    Phylo_t1.ladderize()
+    Phylo_t1.resolve_polytomy(recursive=True)
+    Phylo_t1.sort_descendants("support")
+    max_depth = get_max_deepth(Phylo_t1)
+    for node in Phylo_t1.traverse():
+        if not node.is_root():
+            node.dist = 1
+            degree = node.get_distance(node.get_tree_root()) + 1
+            depth = get_max_deepth(node)
+            node.dist = max_depth - depth - degree
+    clade_up = Phylo_t1.get_children()[0]
+    clade_down = Phylo_t1.get_children()[1]
+    difference = abs(get_max_deepth(clade_up) - get_max_deepth(clade_down)) + 1
+    clade_up.dist += difference
+    clade_down.dist += difference
+    return Phylo_t1
 
-# BranchLength_NumericConverter command
-BranchLength_NumericConverter_parser = subparsers.add_parser('BranchLength_NumericConverter', help='Convert branch length values to a specified number of decimal places',formatter_class=CustomHelpFormatter)
-BranchLength_NumericConverter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-BranchLength_NumericConverter_parser.add_argument('--decimal_place', metavar='INT', type=int, default=10, help='Number of decimal places for branch lengths')
+def rejust_root_dist(sptree: object) -> None:
+    """
+    Adjust the branch lengths of the root's immediate children to balance the tree for visualization.
+    The longer clade is assigned a minimal distance, while the shorter clade's distance is set based on its depth.
 
-# Phylo_Rooter command
-Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Phylo_Rooter help',formatter_class=CustomHelpFormatter)
-Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-Phylo_Rooter_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Species-to-gene mapping file')
-Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Gene length information file')
-Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree in Newick format')
+    Args:
+        sptree (object): The input phylogenetic tree object (rooted).
 
-# OrthoFilter_LB command
-OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='OrthoFilter_LB help',formatter_class=CustomHelpFormatter)
-OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-OrthoFilter_LB_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-OrthoFilter_LB_parser.add_argument('--absolute_branch_length', metavar='INT', type=int, default=5, required=True, help='Absolute branch length multiplier and default = 5')
-OrthoFilter_LB_parser.add_argument('--relative_branch_length', metavar='FLOAT', type=float, default=2.5, required=True, help='Relative branch length multiplier and default = 2.5')
-OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
-
-# OrthoFilter_Mono command
-OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='OrthoFilter_Mono help',formatter_class=CustomHelpFormatter)
-OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='TAXA_LIST', required=True, help='Input taxa file')
-OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-OrthoFilter_Mono_parser.add_argument('--branch_length_multiples', metavar='INT', type=int, default=5, required=True, help='Branch_length_multiples and default = 10')
-OrthoFilter_Mono_parser.add_argument('--insert_branch_index', metavar='INT', type=int, default=5, required=True, help='Insert_branch_index and default = 10')
-OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
-
-# TreeTopology_Summarizer command
-TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help',formatter_class=CustomHelpFormatter)
-TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-TreeTopology_Summarizer_parser.add_argument('--visual_top', metavar='INT', type=int,  required=False, default=10,help='Visualize the result of provide number,default=10')
-
-# Tree_Visualizer command
-Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Tree_Visualizer help',formatter_class=CustomHelpFormatter)
-Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-Tree_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-Tree_Visualizer_parser.add_argument('--gene_categories', metavar='TAXA_LIST', nargs='+',  help='File with taxonomic information for species')
-Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Preserve branch lengths (1) or not (0)')
-Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree style: rectangular (r) or circular (c)')
-Tree_Visualizer_parser.add_argument('--gene_family', metavar='GENE_FAMILY', help='File to mark gene families')
-Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', help='Species tree in Newick format')
-Tree_Visualizer_parser.add_argument('--gene_expression', metavar='EXPRESSION_FILE', help='Gene expression data (Excel/CSV)')
-Tree_Visualizer_parser.add_argument('--visual_gd', action='store_true', help='Visualize the gd node of gene family trees')
-
-# GD_Detector command
-GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help',formatter_class=CustomHelpFormatter)
-GD_Detector_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-GD_Detector_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-GD_Detector_parser.add_argument('--gd_support', metavar='INT', type=int,required=True, help='GD node support [50-100]')
-GD_Detector_parser.add_argument('--subclade_support', metavar='INT', type=int,required=True, help='The subclade support of GD node [0-100]')
-GD_Detector_parser.add_argument('--dup_species_proportion', metavar='FLOAT', type=float ,required=True,help='The proportion of overlappped species from two subclade for a GD event with range [0-1] and default = 0.2')
-GD_Detector_parser.add_argument('--dup_species_num', metavar='INT', type=int ,required=True,help='The number of species with species duplications under the GD node')
-GD_Detector_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE',  required=True, help='A species tree file with Newick format')
-GD_Detector_parser.add_argument('--deepvar',metavar='INT', type=int,required=True, help='Maximum variance of deepth and default = 1')
-
-# GD_Visualizer command
-GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='GD_Visualizer help',formatter_class=CustomHelpFormatter)
-GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE',  required=True, help='A numbered species tree file with Newick format')
-GD_Visualizer_parser.add_argument('--gd_result', metavar='GD_RESULT',  required=True, help='Result file of GD_Detecto')
-GD_Visualizer_parser.add_argument('--input_imap', metavar='IMAP',  required=True, help='File with classification information of species corresponding to genes')
-
-# GD_Loss_Tracker command
-GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_Tracker help',formatter_class=CustomHelpFormatter)
-GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST',  required=True, help='File containing paths to gene tree files, one per line')
-GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE',  required=True, help='A species tree file with Newick format')
-GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='IMAP',  required=True, help='File with classification information of species corresponding to genes')
-GD_Loss_Tracker_parser.add_argument('--target_species', metavar='SP', action='append', default=None,help='Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.')
-GD_Loss_Tracker_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None,help='Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.')
-
-# GD_Loss_Visualizer command
-GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help',formatter_class=CustomHelpFormatter)
-GD_Loss_Visualizer_parser.add_argument('--gd_loss_result', metavar='GD_LOSS_RESULT',  required=True, help='Result file of gd loss count summary of GD_Loss_Tracker')
-GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE',  required=False, help='A numbered species tree file with Newick format')
-
-# Ortho_Retriever command
-Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help',formatter_class=CustomHelpFormatter)
-Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST',  required=True, help='File containing paths to gene tree files, one per line')
-Ortho_Retriever_parser.add_argument('--input_imap', metavar='IMAP',  required=True, help='File with classification information of species corresponding to genes')
-Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST',  required=True, help='File with information corresponding to gene length')
-
-# Hybrid_Tracer
-Hybrid_Tracer_parser = subparsers.add_parser('Hybrid_Tracer', help='Hybrid_Tracer help',formatter_class=CustomHelpFormatter)
-Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST',  required=True, help='File containing paths to gene tree files, one per line')
-Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='ALIGNMENT_LIST',  required=True, help='File containing paths to sequence alignment files corresponding to the gene trees')
-Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE',  required=True, help='A species tree file with Newick format')
-Hybrid_Tracer_parser.add_argument('--input_imap', metavar='IMAP',  required=True, help='File with classification information of species corresponding to genes')
-Hybrid_Tracer_parser.add_argument('--target_node',  metavar='NODE', required=False, help='Specific node to process. Use "all" to process all gd_names.')
-Hybrid_Tracer_parser.add_argument('--split_groups', type=int, required=False, default=1, help='Split the GD data into a target number of groups for Hyde processing, and default = 1')
-
-# Hybrid_Visualizer
-Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybrid_Visualizer help',formatter_class=CustomHelpFormatter)
-Hybrid_Visualizer_parser.add_argument('--hyde_out', metavar='HYDE_OUT',  required=True, help='File containing result of hyde')
-Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE',  required=True, help='A species tree file with Newick format')
-Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light")
-
-#HaploFinder
-HaploFinder = subparsers.add_parser('HaploFinder', help='HaploFinder: Gene duplication detection and visualization between haplotypes, includes split utility for FASTA file separation',formatter_class=CustomHelpFormatter)
-HaploFinder.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=False, help='File containing paths to gene tree files, one per line file (required for haplofinder mode)')
-HaploFinder.add_argument('--input_imap', metavar='IMAP', required=False, help='File with classification information of species corresponding to genes (required for haplofinder mode)')
-HaploFinder.add_argument('--species_a', metavar='SPECIES_A', type=str, required=False, help='Name of species A (required for haplofinder mode)')
-HaploFinder.add_argument('--species_b', metavar='SPECIES_B', type=str, required=False, help='Name of species B (required for haplofinder mode)')
-HaploFinder.add_argument('--species_a_gff', metavar='GFF', required=False, help='GFF file of species A (required for haplofinder mode)')
-HaploFinder.add_argument('--species_b_gff', metavar='GFF', required=False, help='GFF file of species B (required for haplofinder mode)')
-HaploFinder.add_argument('--species_a_lens', metavar='LENS', required=False, help='Lens file of species A (required for haplofinder mode)')
-HaploFinder.add_argument('--species_b_lens', metavar='LENS', required=False, help='Lens file of species B (required for haplofinder mode)')
-HaploFinder.add_argument('--visual_chr_a', metavar='CHR_LIST', required=False, help='A file containing the chromosome numbers of species a')
-HaploFinder.add_argument('--visual_chr_b', metavar='CHR_LIST', required=False, help='A file containing the chromosome numbers of species b')
-HaploFinder.add_argument('--gd_support',metavar='INT[50-100]', type=int,required=False, default=50,help='GD node support [50-100] (required for haplofinder mode)')
-HaploFinder.add_argument('--pair_support', metavar='INT[50-100]', type=int,required=False, default=50,help='gene pair support [50-100] (required for haplofinder mode)')
-HaploFinder.add_argument('--size', type=float, required=False, default=0.0005, help='The size of each point in the dopolot graph and default = 0.0005')
-HaploFinder.add_argument('--mode', metavar='MODE', type=str, choices=['haplofinder', 'split'], default='haplofinder', help='Choose mode: "haplofinder" for gene duplication detection and visualization, "split" for FASTA file separation based on colorlabel')
-# Split mode specific arguments
-HaploFinder.add_argument('--hyb_sps', metavar='HYBRID_SPECIES', type=str, required=False,help='Name of the hybrid species (required in split mode)')
-HaploFinder.add_argument('--parental_sps', metavar='PARENTAL_SPECIES', type=str, required=False,help='Name of the parental species (required in split mode; use space-separated if multiple)')
-HaploFinder.add_argument('--input_fasta', metavar='FASTA_FILE', required=False, help='Input protein FASTA file (required in split mode)')
-HaploFinder.add_argument('--cluster_file', metavar='CLUSTER_FILE', required=False, help='Input cluster file (required in split mode)')
-parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
-# Analyze command line parameters
-
-args = parser.parse_args()
-
-def format_time(seconds):
-    days = seconds // (24 * 3600)
-    hours = (seconds % (24 * 3600)) // 3600
-    minutes = (seconds % 3600) // 60
-    seconds = seconds % 60
-    return f"{int(days)} d, {int(hours)} h, {int(minutes)} m, {seconds:.2f} s"
-
-def main():
-    if args.command == 'PhyloTree_CollapseExpand':
-        # Execute the PhyloTree_CollapseExpand function
-        if args.input_GF_list and args.support_value:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            support_value = args.support_value
-            tre_dic = read_and_return_dict(input_GF_list)
-            collapse_expand_main(tre_dic, support_value,revert=args.revert)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
+    Returns:
+        None
+    """
+    clade_up = sptree.get_children()[0]
+    clade_down = sptree.get_children()[1]
+    if len(clade_up) > len(clade_down):
+        clade_up.dist = 1
+        if clade_down.is_leaf():
+            clade_down.dist = get_max_deepth(sptree) - 1
         else:
-            print("Required arguments for PhyloTree_CollapseExpand command are missing.")
-
-
-    elif args.command == 'PhyloSupport_Scaler':
-        # Execute the PhyloSupport_Scaler function
-        if args.input_GF_list and args.scale_to :
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            scale = args.scale_to
-            tre_dic = read_and_return_dict(input_GF_list)
-            support_scaler_main(tre_dic,scale)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
+            clade_down.dist = get_max_deepth(sptree) - get_max_deepth(clade_down)
+    else:
+        clade_down.dist = 1
+        if clade_up.is_leaf():
+            clade_up.dist = get_max_deepth(sptree) - 1
         else:
-            print("Required arguments for PhyloSupport_Scaler command are missing.")
+            clade_up.dist = get_max_deepth(sptree) - get_max_deepth(clade_up)
 
+    return sptree
+#############################################################################################################
+def dup_nodeids_from_numbered_gfs(phylo_t: object,species_tree: object) -> tuple:
+    """
+    Root the tree if necessary, number all nodes, and find duplication nodes.
+    Returns a new tree object with numbered nodes and a list of duplication node names.
 
-    elif args.command == 'BranchLength_NumericConverter':
-        # Execute the BranchLength_NumericConverter function
-        if args.input_GF_list:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            decimal_place=args.decimal_place
-            tre_dic = read_and_return_dict(input_GF_list)
-            branch_length_numeric_converter_main(tre_dic,decimal_place)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for BranchLength_NumericConverter command are missing.")
+    Args:
+        phylo_t (object): The input phylogenetic tree object.
 
+    Returns:
+        tuple: (numbered_tree (object), dup_node_name_list (list))
+    """
+    if not is_rooted(phylo_t):
+        phylo_t = root_tre_with_midpoint_outgroup(phylo_t)
+    phylo_t = num_tre_node(phylo_t)
+    dup_node_list = find_dup_node(phylo_t,species_tree)
+    phylo_t1 = Tree(phylo_t.write())
+    num_tre_node(phylo_t1)
+    return phylo_t1, dup_node_list
 
-    elif args.command == 'Phylo_Rooter':
-        # Execute the Phylo_Rooter function
-        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.input_gene_length:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            input_sps_tree = args.input_sps_tree
-            input_gene_length = args.input_gene_length
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer(input_imap)
-            len_dic = read_and_return_dict(input_gene_length)
-            renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
-            sptree = PhyloTree(input_sps_tree)
-            renamed_sptree=rename_input_tre(sptree,taxa2voucher_dic)
-            tre_dic = read_and_return_dict(input_GF_list)
-            root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, renamed_sptree)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Phylo_Rooter command are missing.")
-        
-    elif args.command == 'OrthoFilter_LB':
-        # Execute the OrthoFilter_LB function
-        if args.input_GF_list and args.input_imap and args.absolute_branch_length and args.relative_branch_length :
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            absolute_branch_length=args.absolute_branch_length-1
-            relative_branch_length=args.relative_branch_length-1
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer(input_imap)
-            
-            tre_dic = read_and_return_dict(input_GF_list)
-            prune_main_LB(tre_dic,voucher2taxa_dic,gene2new_named_gene_dic, new_named_gene2gene_dic,absolute_branch_length,relative_branch_length,visual=args.visual)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for OrthoFilter_LB command are missing.")
+def create_tree_style(tree_style: str, tree_id: str, visual: bool = False) -> object:
+    """
+    Create and configure a TreeStyle object for tree visualization.
 
+    Args:
+        tree_style (str): The display mode for the tree (e.g., 'circular', 'rectangular').
+        tree_id (str): The identifier for the tree, used in the title.
+        visual (bool, optional): Whether to add duplication event legends. Defaults to False.
 
-    elif args.command == 'OrthoFilter_Mono':
-        # Execute the OrthoFilter_Mono function
-        if args.input_GF_list and args.input_taxa and args.branch_length_multiples and args.insert_branch_index:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_taxa=args.input_taxa
-            input_imap = args.input_imap
-            long_branch_index=args.branch_length_multiples
-            insert_branch_index=args.insert_branch_index
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer(input_imap)
-            tre_dic = read_and_return_dict(input_GF_list)
-            taxa_dic=read_and_return_dict(input_taxa)
-            prune_main_Mono(tre_dic,taxa_dic,long_branch_index,insert_branch_index,new_named_gene2gene_dic,gene2new_named_gene_dic,visual=args.visual)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for OrthoFilter_Mono command are missing.")
-
-
-    elif args.command == 'TreeTopology_Summarizer':
-        # Execute the TreeTopology_Summarizer function
-        if args.input_GF_list and args.input_imap :
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            top_n=args.visual_top if args.visual_top else None
-            outfile='topology'
-            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
-            tre_dic = read_and_return_dict(input_GF_list)
-            statistical_main(tre_dic,outfile,gene2new_named_gene_dic,voucher2taxa_dic,top_n)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for TreeTopology_Summarizer command are missing.")
-
-
-    # Perform the corresponding functions according to the parameters
-    elif args.command == 'Tree_Visualizer':
-        # Execute the Tree_Visualizer function
-        if args.input_GF_list and args.input_imap :
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            tree_style = args.tree_style
-            gene_categories = args.gene_categories
-            keep_branch = args.keep_branch
-            species_category_list = []
-            if gene_categories is not None:
-                species_category_list = [read_and_return_dict(i) for i in gene_categories]
-            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
-            
-            tre_dic = read_and_return_dict(input_GF_list)
-            gene2fam = None
-            df = None
-            
-            if args.gene_family and args.input_sps_tree:
-                gene2fam = read_and_return_dict(args.gene_family)
-                gene2sps = read_and_return_dict(input_imap)
-                sptree = Tree(args.input_sps_tree)
-                sptree1=rename_input_tre(sptree,taxa2voucher_dic)
-                mark_gene_to_sptree_main(tre_dic, species_category_list, sptree1, gene2fam, gene2sps,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic)
-            
-            if args.gene_expression:
-                file_extension = os.path.splitext(args.gene_expression)[1]  # 获取文件扩展名
-                
-                if file_extension == '.xlsx' or file_extension == '.xls':
-                    df = pd.read_excel(args.gene_expression, index_col=0)
-                elif file_extension == '.csv':
-                    df = pd.read_csv(args.gene_expression, index_col=0)
-                else:
-                    raise ValueError("Unsupported file format. Please provide an Excel or CSV file.")
-
-            view_main(tre_dic, sptree1,gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch, new_named_gene2gene_dic, gene2fam, df,visual=args.visual_gd)
-
-            # 计算并格式化程序执行时间
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Tree_Visualizer command are missing.")
+    Returns:
+        object: Configured TreeStyle object.
+    """
+    ts = TreeStyle()
+    ts.title.add_face(TextFace("★", fgcolor="white", ftype='Arial'), column=0)
+    ts.title.add_face(TextFace(tree_id, ftype='Arial'), column=1)
+    if visual:
+        ts.title.add_face(TextFace("★", fgcolor="red", ftype='Arial'), column=0)
+        ts.title.add_face(TextFace("Interspecific gene duplication event", ftype='Arial'), column=1)
+        ts.title.add_face(TextFace("★", fgcolor="blue", ftype='Arial'), column=0)
+        ts.title.add_face(TextFace("Intraspecific gene duplication event", ftype='Arial'), column=1)
+    ts.mode = tree_style
+    ts.scale = 20
+    ts.show_border = True
+    ts.margin_bottom = 20
+    ts.margin_left = 20
+    ts.margin_right = 50
+    ts.margin_top = 20
+    ts.show_leaf_name = False
+    ts.show_branch_support = True
+    ts.extra_branch_line_type = 0
+    ts.extra_branch_line_color = 'black'
+    ts.branch_vertical_margin = -1
 
     
-    elif args.command == 'GD_Detector':
-        # Execute the GD_Detector function
-        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.gd_support is not None and args.subclade_support is not None and args.dup_species_proportion is not None and args.dup_species_num is not None and args.deepvar is not None:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            input_sps_tree = args.input_sps_tree
-            gd_support=args.gd_support
-            subclade_support=args.subclade_support
-            dup_species_percent = args.dup_species_proportion
-            dup_species_num = args.dup_species_num
-            deep_var=args.deepvar
-            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
-            sptree=PhyloTree(args.input_sps_tree)
-            num_sptree(sptree)
-            sptree.write(outfile='numed_sptree.nwk',format=1,format_root_node=True)
-            renamed_sptree=rename_input_tre(sptree, taxa2voucher_dic)
-            tre_dic = read_and_return_dict(input_GF_list)
-            filename = 'gd_result.txt'
-            write_gene_duplication_results(filename, tre_dic, gd_support,subclade_support,dup_species_percent, dup_species_num,renamed_sptree,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,deep_var)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for GD_Detector command are missing.")
+    return ts
+
+def set_node_style(node: object, dup_node_name_list: list, visual: bool = False) -> object:
+    """
+    Set the visual style for a tree node, highlighting duplication nodes if present.
+
+    Args:
+        node (object): The tree node to style.
+        dup_node_name_list (list): List of duplication node names.
+        visual (bool, optional): Whether to apply duplication event coloring. Defaults to False.
+
+    Returns:
+        object: Configured NodeStyle object.
+    """
+    nstyle = NodeStyle()
+    splist = set(get_species_list(node))
+    nstyle["vt_line_width"] = 1
+    nstyle["hz_line_width"] = 1
+    nstyle["vt_line_type"] = 0
+    nstyle["hz_line_type"] = 0
+    nstyle["size"] = 0
+    nstyle["shape"] = "circle"
+    nstyle["fgcolor"] = "black"
+    
+
+    if visual:
+        if node.name in dup_node_name_list and len(splist) == 1:
+            node.add_face(TextFace("★", fsize=7, fgcolor="blue",ftype='Arial'), column=1, position="branch-top")
+        elif node.name in dup_node_name_list and len(splist) != 1:
+            node.add_face(TextFace("★", fsize=7, fgcolor="red",ftype='Arial'), column=1, position="branch-top")
+    
+    node.set_style(nstyle)
+
+    
+def get_treestyle(Phylo_t:object,tree_style:str,tre_ID:str,visual:bool=False,species_tree:object=None)->object:
+    Phylo_t1, dup_node_list = dup_nodeids_from_numbered_gfs(Phylo_t,species_tree)
+    ts = create_tree_style(tree_style,tre_ID,visual)
+    dup_node_name_list=[node.name for node in dup_node_list]
+    for node in Phylo_t1.traverse():
+        set_node_style(node, dup_node_name_list,visual)
+    
+    return Phylo_t1, ts
 
 
-    elif args.command == 'GD_Visualizer':
-        # Execute the GD_Visualizer function
-        if args.input_sps_tree and args.gd_result and args.input_imap :
-            start_time = time.time()
-            sptree=Tree(args.input_sps_tree,format=1)
-            gd_result = args.gd_result
-            taxa=read_and_return_dict(args.input_imap)
-            gd_visualizer_main(sptree,gd_result,taxa)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for GD_Visualizer command are missing.")
+####################################################################################################################
+def get_color_dict(dictionary: dict) -> dict:
+    """
+    Generate a color mapping dictionary for unique values in the input dictionary using a rainbow colormap.
+    Each key in the input dictionary is mapped to a string combining its value and the corresponding color hex code.
+
+    Args:
+        dictionary (dict): Input dictionary with keys to be colored and values as categories.
+
+    Returns:
+        dict: A dictionary mapping each key to a string formatted as 'category@#hexcolor'.
+    """
+    colormap = plt.get_cmap("rainbow")
+    unique_values = set(dictionary.values())
+    colors_list = [colors.rgb2hex(colormap(i)) for i in np.linspace(0, 1, len(unique_values))]
+    color_dict = dict(zip(unique_values, colors_list))
+    sps_color_list = {k: f"{v}@{color_dict.get(v)}" for k, v in dictionary.items() if v in color_dict}
+    return sps_color_list
 
 
-    elif args.command == 'GD_Loss_Tracker':
-        if args.input_GF_list and args.input_sps_tree and args.input_imap:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            input_sps_tree = args.input_sps_tree
+def generate_color_dict(gene_categories: list[dict]) -> list[dict]:
+    """
+    Generate a list of color mapping dictionaries for a list of gene category dictionaries.
 
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
-            sptree = PhyloTree(input_sps_tree)
-            num_sptree(sptree)
+    Args:
+        gene_categories (list[dict]): List of dictionaries, each mapping gene identifiers to categories.
 
-            tre_dic = read_and_return_dict(input_GF_list)
-
-            allowed_gd_species_sets = set()
-            if args.mrca_node:
-                for pair_str in args.mrca_node:
-                    if ',' not in pair_str:
-                        print(f"Warning: Invalid mrca_node format '{pair_str}'. Skipping.")
-                        continue
-                    sp1, sp2 = [x.strip() for x in pair_str.split(',', 1)]
-                    try:
-                        # 用原始 sptree 找到 MRCA
-                        mrca_clade = sptree.get_common_ancestor(sp1, sp2)
-                        species_under_mrca = frozenset(mrca_clade.get_leaf_names())
-                        allowed_gd_species_sets.add(species_under_mrca)
-                        print(f"GD event restricted to EXACT MRCA of {sp1} and {sp2}")
-                        print(f"   -> Covers species: {sorted(species_under_mrca)}")
-                    except Exception as e:
-                        print(f"ERROR: Cannot find MRCA for {sp1},{sp2}: {e}")
-                        print("Available species:", sorted([l.name for l in sptree.get_leaves()]))
-
-            # 调用函数，传这个集合
-            get_path_str_num_dic(
-                tre_dic, sptree,
-                gene2new_named_gene_dic, new_named_gene2gene_dic,
-                voucher2taxa_dic, taxa2voucher_dic,
-                target_species_list=args.target_species,
-                allowed_gd_species_sets=allowed_gd_species_sets  # 新参数
-            )
-
-            parse_text_to_excel('gd_loss_count_summary.txt')
-
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for GD_Loss_Tracker command are missing.")
-
-    elif args.command == 'GD_Loss_Visualizer':
-        # Execute the GD_Loss_Visualizer function
-        if args.input_sps_tree and args.gd_loss_result :
-        # if args.input_folder and  args.output_folder :
-            start_time = time.time()
-            
-
-            input_sps_tree=args.input_sps_tree
-            sptree=Tree(input_sps_tree,format=1)
-            
-
-            visualizer_sptree(args.gd_loss_result,sptree)
-
-            #generate_plt(input_dir,out_dir)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for GD_Loss_Visualizer command are missing.")
-
-    elif args.command == 'Ortho_Retriever':
-        # Execute the Ortho_Retriever function
-        if args.input_GF_list and args.input_imap  and args.input_gene_length:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            input_gene_length = args.input_gene_length
-            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
-            tre_dic = read_and_return_dict(input_GF_list)
-            len_dic = read_and_return_dict(input_gene_length)
-            renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
-            split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic,renamed_len_dic)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Ortho_Retriever command are missing.")
+    Returns:
+        list[dict]: List of color mapping dictionaries for each input dictionary.
+    """
+    return [get_color_dict(category_dict) for category_dict in gene_categories]
 
 
-    elif args.command == 'Hybrid_Tracer':
-        # Execute the Hybrid_Tracer function
-        if args.input_GF_list and args.input_Seq_GF_list  and args.input_sps_tree and args.input_imap:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_Seq_GF_list = args.input_Seq_GF_list
-            input_sps_tree = args.input_sps_tree
-            input_imap= args.input_imap
-            sptree=read_phylo_tree(input_sps_tree)
-            num_tre_node(sptree)
-            
-            target_node_name = process_start_node(args.target_node, sptree) if args.target_node else None
-            
-            if target_node_name:
-                print(f"Target node determined: {target_node_name}")
-            else:
-                print("No target_species_file provided, processing all gd.")
+def generate_string(index: int) -> str:
+    """
+    Generate a string label based on the given index, using uppercase and lowercase English letters.
+    For index >= 52, returns a string representation of the index.
 
-            tre_dic = read_and_return_dict(input_GF_list)
-            seq_path_dic = read_and_return_dict(input_Seq_GF_list)
-            gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic,taxa2voucher_dic= gene_id_transfer(input_imap)
-            
-            
-            rename_sptree=rename_input_tre(sptree,taxa2voucher_dic)
-            sptree.write(outfile='numed_sptree.nwk',format=1)
+    Args:
+        index (int): The index to convert to a string label.
 
-            
-            
-            hyde_main(tre_dic,seq_path_dic,rename_sptree,gene2new_named_gene_dic,voucher2taxa_dic,taxa2voucher_dic,new_named_gene2gene_dic,target_node=target_node_name,gd_group=args.split_groups)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Hybrid_Tracer command are missing.")
-
-    elif args.command == 'Hybrid_Visualizer':
-        # Execute the Hybrid_Visualizer function
-        if args.hyde_out  and args.input_sps_tree :
-            start_time = time.time()
-            hyde_out=args.hyde_out
-            input_sps_tree = args.input_sps_tree
-            sptree=read_tree(input_sps_tree)
-            if args.node:
-                hyde_visual_node_main(hyde_out,sptree) 
-            else:
-                hyde_visual_leaf_main(hyde_out,sptree)
-            
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Hybrid_Visualizer command are missing.")
-
-    elif args.command == 'HaploFinder':
-        if args.mode == 'split':
-            # Split mode
-            if args.input_GF_list and args.input_fasta and args.input_imap and args.cluster_file and args.hyb_sps and args.parental_sps and args.species_b_gff:
-                start_time = time.time()
-
-                input_GF_list = args.input_GF_list
-                input_imap= args.input_imap
-                sequences = read_fasta(args.input_fasta)
-                hyb_sps = args.hyb_sps
-                cluster_file = args.cluster_file
-                parental_sps = args.parental_sps.split() if args.parental_sps else []
-                split_sequences(sequences, input_GF_list ,input_imap,cluster_file,hyb_sps,parental_sps,args.species_b_gff)
-                
-                
-                end_time = time.time()
-                execution_time = end_time - start_time
-                formatted_time = format_time(execution_time)
-                print("Program execution time:", formatted_time)
-            else:
-                print("Required arguments for split mode are missing: --input_fasta, --input_imap, --input_GF_list")
-        else:
-            # Original HaploFinder mode
-            required_args = [args.input_GF_list, args.input_imap, args.species_a, args.species_b,
-                         args.species_a_gff, args.species_b_gff, args.species_a_lens, args.species_b_lens,args.gd_support,args.pair_support]
-        
-            if all(required_args):
-                start_time = time.time()
-                
-                process_gd_pairs = process_gd_result(args.input_GF_list, args.input_imap, args.species_a, args.species_b,args.gd_support,args.pair_support)
-                
-                # GFF and lens variables
-                gff1, gff2 = args.species_a_gff, args.species_b_gff
-                lens1, lens2 = args.species_a_lens, args.species_b_lens
-                spe1, spe2 = args.species_a, args.species_b
-
-                target_chr1 = args.visual_chr_a
-                target_chr2 = args.visual_chr_b
-                size = args.size if args.size else 0.001
-
-                generate_dotplot(gff1, gff2, lens1, lens2, process_gd_pairs, spe1, spe2, 'gd_pairs', target_chr1, target_chr2, size)
-
-                end_time = time.time()
-                execution_time = end_time - start_time
-                formatted_time = format_time(execution_time)
-                print("Program execution time:", formatted_time)
-            else:
-                print("Required arguments for HaploFinder command are missing.")
-     
+    Returns:
+        str: The generated string label.
+    """
+    letters = list(string.ascii_uppercase) + list(string.ascii_lowercase)
+    if index < len(letters):
+        return "@" + letters[index]
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}")
-        print()
-        print("Optional arguments:")
-        print('  -h, --help            show this help message and exit')
-        print()
-        print('Available programs:')
-        print('  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}')
+        first_letter = letters[(index - len(letters)) // 52]
+        second_letter = letters[(index - len(letters)) % 52]
+        return "@" + first_letter + second_letter
+
+def get_new_sorted_dict(gene2fam: dict) -> dict:
+    """
+    Generate a sorted dictionary mapping each unique family to its color and a unique suffix.
+    The color is extracted from the color dictionary, and the suffix is generated by index.
+
+    Args:
+        gene2fam (dict): Dictionary mapping gene identifiers to family names.
+
+    Returns:
+        dict: Sorted dictionary mapping family names to color hex codes with unique suffixes.
+    """
+    uniq_fam = set(get_color_dict(gene2fam).values())
+    fam2color = {i.split('@')[0]: i.split('@')[-1] for i in uniq_fam}
+    sorted_dict = dict(sorted(fam2color.items(), key=lambda x: x[0], reverse=False))
+    for index, key in enumerate(sorted_dict.keys()):
+        suffix = generate_string(index)
+        sorted_dict[key] += suffix
+    return sorted_dict
 
 
+def fuzzy_match(search_string: str, key: str) -> re.Match:
+    """
+    Perform a fuzzy (regex-based) match between the search string and the key.
+
+    Args:
+        search_string (str): The regex pattern to search for.
+        key (str): The string to be searched.
+
+    Returns:
+        re.Match: The match object if a match is found, otherwise None.
+    """
+    return re.search(search_string, key)
+
+def tips_mark(
+    Phylo_t1: object,
+    voucher2taxa_dic: dict,
+    color_dicts: list,
+    sps_color_dict: dict,
+    tre_ID,
+    ts,
+    new_named_gene2gene_dic: dict,
+    dir_path,
+    gene_color_dict=None,
+    df=None
+) -> object:
+    """
+    Annotate the phylogenetic tree with colored faces for species and gene information.
+    This function adds visual marks to tree nodes based on species and gene categories, using color dictionaries.
+
+    Args:
+        Phylo_t1 (object): The phylogenetic tree object to annotate.
+        voucher2taxa_dic (dict): Mapping from voucher names to taxa labels.
+        color_dicts (list): List of color mapping dictionaries for gene categories.
+        sps_color_dict (dict): Color mapping dictionary for species.
+        tre_ID: Tree identifier.
+        ts: TreeStyle object for visualization.
+        new_named_gene2gene_dic (dict): Mapping from renamed gene IDs to original gene IDs.
+        dir_path: Directory path for output or resources.
+        gene_color_dict (dict, optional): Color mapping dictionary for genes. Defaults to None.
+        df (optional): DataFrame or additional data for annotation. Defaults to None.
+
+    Returns:
+        object: The annotated phylogenetic tree object.
+    """
+    def add_face_to_node(node: object, face: object, column: int, position: str = "aligned") -> None:
+        """
+        Add a face (visual annotation) to a tree node if it has not already been added at the specified column and position.
+
+        Args:
+            node (object): The tree node to which the face will be added.
+            face (object): The face object to add (e.g., TextFace).
+            column (int): The column index for the face.
+            position (str): The position for the face (default is "aligned").
+        """
+        if (node, column, position) not in faces_added:
+            node.add_face(face, column=column, position=position)
+            faces_added.add((node, column, position))
+
+    def generate_face_mark(node: object, species: str, column: int, color_dict: dict) -> None:
+        """
+        Generate and add a colored face mark for a species on a tree node.
+        If the species is in the color dictionary, use its color; otherwise, use white.
+
+        Args:
+            node (object): The tree node to annotate.
+            species (str): The species label for the node.
+            column (int): The column index for the face.
+            color_dict (dict): Mapping from species to color annotation strings.
+        """
+        if (node, column, "aligned") not in faces_added:
+            if species in color_dict:
+                color = color_dict[species].split('@')[-1]
+                face = TextFace("  ▐" + '  ' + color_dict[species].split('@')[0], fgcolor=color, ftype='Arial')
+                add_face_to_node(node, face, column, position="aligned")
+            else:
+                color = 'white'
+                face = TextFace("  ▐" + '  ' + ''*len(species), fgcolor=color, ftype='Arial')
+                add_face_to_node(node, face, column, position="aligned")
+
+
+    def add_species_face(node: object, gene: str, species: str, sps_color_dict: dict) -> None:
+        """
+        Add colored faces for gene and species information to a tree node.
+        The gene face is colored and italicized, and the species face uses the species color.
+
+        Args:
+            node (object): The tree node to annotate.
+            gene (str): The gene label for the node.
+            species (str): The species label for the node.
+            sps_color_dict (dict): Mapping from species to color annotation strings.
+        """
+        if species in sps_color_dict:
+            color = sps_color_dict[species].split('@')[-1]
+            gene_face = TextFace(' ' + gene, fgcolor=color, ftype='Arial', fstyle='italic')
+            node.add_face(gene_face, column=-1)
+        if species in sps_color_dict:
+            color = sps_color_dict[species].split('@')[-1]
+            species_face = TextFace("  ▐" + '  ' + sps_color_dict[species].split('@')[0], fgcolor=color, ftype='Arial', fstyle='italic')
+            add_face_to_node(node, species_face, 0, position="aligned")
+
+    def add_gene_face(node: object, gene: str, column: int) -> None:
+        """
+        Add a gene label face to a tree node at the specified column.
+
+        Args:
+            node (object): The tree node to annotate.
+            gene (str): The gene label for the node.
+            column (int): The column index for the face.
+        """
+        matched_key = None
+        matched_value = None
+        for key in gene_color_dict:
+            if fuzzy_match(key, gene):
+                matched_key = key
+                matched_value = gene_color_dict.get(key)
+                break
+        if matched_value:
+            color = matched_value.split('@')[-1]
+            face5 = TextFace("  ▐" + '  ' +  matched_value.split('@')[0], fgcolor=color,ftype='Arial')
+            add_face_to_node(node, face5, column, position="aligned")
+        
+
+    def get_color(value: float) -> str:
+        """
+        Map a numeric value to a specific color hex code for heatmap visualization.
+    
+        Args:
+            value (float): The numeric value to be mapped to a color. Can be NaN.
+    
+        Returns:
+            str: The hex color code corresponding to the value. Returns 'white' if value is NaN.
+        """
+        if np.isnan(value): 
+            return 'white'
+        else:
+            if 0 <= value <= 5:
+                return '#006599'
+            elif 5 < value <= 10:
+                return '#408ca6'
+            elif 10 < value <= 15:
+                return '#7fb2b2'
+            elif 15 < value <= 20:
+                return '#bfd9bf'
+            elif 20 < value <= 25:
+                return '#ffffcc'
+            elif 25 < value <= 30:
+                return '#f7deab'
+            elif 30 < value <= 35:
+                return '#eebc88'
+            elif 35 < value <= 40:
+                return '#e69966'
+            elif 40 < value <= 45:
+                return '#dc7845'
+            elif 45 < value <= 50:
+                return '#d55623'
+            else:
+                return '#cc3300'
+        
+    def add_heat_map_to_node(tree:object, df:pd.DataFrame, new_named_gene2gene_dic: dict, start_col: int) -> None:
+        """
+        Add a heatmap to each node of the tree based on values from a DataFrame.
+    
+        Args:
+            tree: The phylogenetic tree object whose nodes will be annotated.
+            df: pandas.DataFrame containing the heatmap values, indexed by gene names.
+            new_named_gene2gene_dic (dict): Mapping from node names to gene names.
+            start_col (int): The starting column index for the heatmap faces.
+    
+        Returns:
+            None
+        """
+        columns = df.columns.tolist()
+        for node in tree:
+            gene = new_named_gene2gene_dic[node.name]
+            matched_key = None
+            for key in df.index:
+                if fuzzy_match(key, gene):
+                    matched_key = key
+                    break
+            for ind, col_name in enumerate(columns):
+                col_idx = start_col + ind
+                if node.is_leaf() and matched_key in df.index:
+                    color = get_color(df[col_name][matched_key])
+                else:
+                    color = '#F5F5F5'
+                face = RectFace(width=10, height=10, fgcolor=color, bgcolor=color)
+                node.add_face(face, column=col_idx, position='aligned')
+                    
+    def add_header_to_tree(ts: any, df: pd.DataFrame, new_start: int) -> None:
+        """
+        Add a rotated header to the tree visualization, labeling each column with the DataFrame's column names.
+    
+        Args:
+            ts (any): The TreeStyle or visualization object to which the header will be added.
+            df (pd.DataFrame): DataFrame whose columns will be used as header labels.
+            new_start (int): The starting column index for header placement.
+    
+        Returns:
+            None
+        """
+        labels = df.columns.to_list()
+        for ind, i in enumerate(labels):
+            face = TextFace(' ' + i, fgcolor='black', ftype='Arial', fsize=9)
+            face.rotation = -90
+            face.vt_align = 2
+            ts.aligned_header.add_face(face, new_start + ind)
+    
+    
+    def add_color_bar(ts: any) -> None:
+        """
+        Add a color bar legend to the tree visualization, showing the mapping from value ranges to colors.
+    
+        Args:
+            ts (any): The TreeStyle or visualization object to which the color bar will be added.
+    
+        Returns:
+            None
+        """
+        ts.legend.add_face(TextFace(' '), column=0)
+        bar_face = TextFace('Color Bar ', ftype='Arial')
+        ts.legend.add_face(bar_face, column=0)
+        cols = ['#006599', '#408ca6', '#7fb2b2', '#bfd9bf', '#ffffcc', '#f7deab', '#eebc88', '#e69966', '#dc7845', '#d55623', '#cc3300']
+        bounds = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+        col_dic = dict(zip(bounds, cols))
+        n = 1
+        for k, v in col_dic.items():
+            colorbar_face = RectFace(width=20, height=20, fgcolor=v, bgcolor=v)
+            ts.legend.add_face(TextFace(' ' + str(k)), column=n)
+            ts.legend.add_face(colorbar_face, column=n)
+            n += 1
+        ts.legend_position = 2
+
+    
+    
+    faces_added = set()  # used to track the added faces
+    
+
+    for node in Phylo_t1.traverse():
+        if node.is_leaf():
+            gene = new_named_gene2gene_dic[node.name]
+            species = voucher2taxa_dic[node.name.split("_")[0]]
+            rename_species=node.name.split("_")[0]
+            add_species_face(node, gene,rename_species,sps_color_dict)
+            column = 1
+            for color_dict in color_dicts:
+                generate_face_mark(node, gene, column, color_dict)
+                column += 1
+
+            if gene_color_dict is not None and gene in gene_color_dict:
+                add_gene_face(node, gene, column)
+            else:
+                face_placeholder = TextFace("  ▐", fgcolor='white', ftype='Arial')
+                add_face_to_node(node, face_placeholder, column, position="aligned")
+            column += 1
+    if df is not None:
+        add_heat_map_to_node(Phylo_t1,df,new_named_gene2gene_dic,column)
+        add_header_to_tree(ts,df,column)
+        add_color_bar(ts)
+
+    
+    return Phylo_t1.render(dir_path+tre_ID+'.pdf',w=210, units="mm",tree_style=ts)
+
+
+def get_matched_value(gene: str, gene2fam: dict) -> tuple:
+    """
+    Fuzzy match a gene name to the keys in gene2fam and return the matched key and its family value.
+
+    Args:
+        gene (str): The gene name to match.
+        gene2fam (dict): Dictionary mapping gene names to family names.
+
+    Returns:
+        tuple: (matched_gene, matched_family) if found, otherwise (None, None).
+    """
+    for key, value in gene2fam.items():
+        if fuzzy_match(gene, key):
+            return key, value
+    return None, None
+
+
+def get_fam_dic(t: any, gene2fam: dict, new_named_gene2gene_dic: dict) -> dict:
+    """
+    Build a dictionary mapping each gene family to a list of node names belonging to that family.
+
+    Args:
+        t (any): The phylogenetic tree object to iterate over its nodes.
+        gene2fam (dict): Dictionary mapping gene names to family names.
+        new_named_gene2gene_dic (dict): Mapping from node names to gene names.
+
+    Returns:
+        dict: Dictionary mapping family names to lists of node names.
+    """
+    fam_dic = {}
+    for i in t:
+        gene = new_named_gene2gene_dic[i.name]
+        match_gene, match_family = get_matched_value(gene, gene2fam)
+        if match_family and match_family in gene2fam.values():
+            fam_dic.setdefault(match_family, []).append(i.name)
+    return fam_dic
+
+def find_combinations(my_list: list) -> list:
+    """
+    Generate all unique pairwise combinations from a list.
+
+    Args:
+        my_list (list): The input list from which to generate combinations.
+
+    Returns:
+        list: List of tuple pairs, each representing a unique combination.
+    """
+    combinations = []
+    for i in range(len(my_list)):
+        for j in range(i+1, len(my_list)):
+            combinations.append((my_list[i], my_list[j]))
+    return combinations
+
+
+def get_dup_family_dic(t: any, gene2fam: dict, new_named_gene2gene_dic: dict) -> dict:
+    """
+    Build a dictionary mapping each gene family to the set of node names representing duplication events.
+
+    Args:
+        t (any): The phylogenetic tree object.
+        gene2fam (dict): Dictionary mapping gene names to family names.
+        new_named_gene2gene_dic (dict): Mapping from node names to gene names.
+
+    Returns:
+        dict: Dictionary mapping family names to sets of node names (duplication nodes).
+    """
+    fam_node_dic = {}
+    fam_dic = get_fam_dic(t, gene2fam, new_named_gene2gene_dic)
+    for k, v in fam_dic.items():
+        nodes = set()
+        com = find_combinations(v)
+        for i in com:
+            clade = t.get_common_ancestor(i)
+            nodes.add(clade.name)
+        fam_node_dic[k] = nodes
+    return fam_node_dic
+
+
+def mapping_sptree(t: any, sptree: any, sp_node_dic: dict, gene2fam: dict, new_named_gene2gene_dic: dict) -> None:
+    """
+    Map duplication nodes from the gene tree to the species tree based on shared species.
+
+    Args:
+        t (any): The gene phylogenetic tree object.
+        sptree (any): The species phylogenetic tree object.
+        sp_node_dic (dict): Dictionary to store mapping from species tree nodes to gene families.
+        gene2fam (dict): Dictionary mapping gene names to family names.
+        new_named_gene2gene_dic (dict): Mapping from node names to gene names.
+
+    Returns:
+        None
+    """
+    fam_node_dic = get_dup_family_dic(t, gene2fam, new_named_gene2gene_dic)
+    for k, v in fam_node_dic.items():
+        for i in v:
+            clade = t & i
+            sps = get_species_list(clade)
+            uniq_sps = set(sps)
+            clade2sptree = sptree.get_common_ancestor(uniq_sps)
+            sp_node_dic.setdefault(clade2sptree.name, set()).add(k)
+
+
+def get_sptree_style(sorted_dict: dict) -> any:
+    """
+    Create and configure a TreeStyle object for species tree visualization with legend.
+
+    Args:
+        sorted_dict (dict): Dictionary mapping family names to color and label strings.
+
+    Returns:
+        any: Configured TreeStyle object for visualization.
+    """
+    ts = TreeStyle()
+    ts.legend_position = 1
+    ts.mode = 'r'
+    ts.scale = 30
+    ts.show_border = True
+    ts.margin_bottom = 20
+    ts.margin_left = 20
+    ts.margin_right = 50
+    ts.margin_top = 20
+    ts.show_leaf_name = True
+    ts.extra_branch_line_type = 0
+    ts.extra_branch_line_color = 'black'
+    ts.branch_vertical_margin = -1
+    for k, v in sorted_dict.items():
+        ts.legend.add_face(TextFace(v.split('@')[1] + ' ' + k, fsize=20, fgcolor=v.split('@')[0]), column=0)
+    return ts
+
+def create_species_mappings(dict_list: list[dict[str, str]]) -> list[dict[str, str]]:
+    """
+    Create mappings from species to family, order, and clade based on gene-level dictionaries.
+
+    Args:
+        dict_list (list[dict[str, str]]):
+            A list containing four dictionaries: gene2sps, gene2family, gene2order, gene2clade.
+            Each dictionary maps gene names to their respective species, family, order, or clade.
+
+    Returns:
+        list[dict[str, str]]: A list containing three dictionaries:
+            - sps2family: species to family mapping
+            - sps2order: species to order mapping
+            - sps2clade: species to clade mapping
+    """
+    gene2sps, gene2family, gene2order, gene2clade = dict_list
+    sps2family = {}
+    sps2order = {}
+    sps2clade = {}
+    for gene, sps in gene2sps.items():
+        if gene in gene2family:
+            sps2family[sps] = gene2family[gene]
+        if gene in gene2order:
+            sps2order[sps] = gene2order[gene]
+        if gene in gene2clade:
+            sps2clade[sps] = gene2clade[gene]
+    return [sps2family, sps2order, sps2clade]
+
+def mark_gene_to_sptree(
+    sptree,
+    sp_node_dic: dict,
+    gene_categories: list,
+    sorted_dict: dict,
+    gene2sps: dict,
+    voucher2taxa_dic: dict
+) -> None:
+    """
+    Mark gene categories on the species tree by adding colored faces to nodes.
+
+    Args:
+        sptree: The species tree object (e.g., ete3.Tree).
+        sp_node_dic (dict): Mapping from species names to tree nodes.
+        gene_categories (list): List of gene category dictionaries.
+        sorted_dict (dict): Dictionary for sorting or grouping genes.
+        gene2sps (dict): Mapping from gene names to species names.
+        voucher2taxa_dic (dict): Mapping from voucher codes to taxa names.
+
+    Returns:
+        None
+    """
+    gene_categories_1 = gene_categories.copy()
+    gene_categories_1.insert(0, gene2sps)
+    gene_categories_2 = create_species_mappings(gene_categories_1)
+    color_dicts = generate_color_dict(gene_categories_2)
+    faces_added = set()  # used to track the added faces
+    def add_face_to_node(node, face, column, position="aligned"):
+        if (node, column, position) not in faces_added:
+            node.add_face(face, column=column, position=position)
+            faces_added.add((color_dict[node.name].split('@')[0], column, position))
+    def generate_face_mark(node, species, column, color_dict):
+        if (color_dict[node.name].split('@')[0], column, "aligned") not in faces_added:
+            if species in color_dict:
+                color = color_dict[species].split('@')[-1]
+                face = TextFace("   ▐" + '  ' + color_dict[species].split('@')[0], fgcolor=color,ftype='Arial', fstyle='italic')
+                add_face_to_node(node, face, column, position="aligned")
+        else:
+            color = color_dict[species].split('@')[-1]
+            face = TextFace("   ▐" + '  ' , fgcolor=color,ftype='Arial', fstyle='italic')
+            add_face_to_node(node, face, column, position="aligned")
+                
+    for i in sptree.traverse():
+        if not i.is_leaf():
+            for k, v in sp_node_dic.items():
+                if i.name == k:
+                    n = len(v)
+                    for index, value in enumerate(sorted(v)):
+                        position = 'branch-top' if n == 1 or index < n / 2 else 'branch-bottom'
+                        column = index if n == 1 or index < n / 2 else index - n / 2
+                        
+                        i.add_face(TextFace(sorted_dict[value].split('@')[1], fgcolor=sorted_dict[value].split('@')[0]), column=column, position=position)
+        else:
+            column = 1
+            species=i.name
+            for color_dict in color_dicts:
+                generate_face_mark(i, species, column, color_dict)
+                column += 1
+
+
+def rename_sptree(sptree) -> None:
+    """
+    Set the style for each node in the species tree for visualization.
+
+    Args:
+        sptree: The species tree object (e.g., ete3.Tree).
+
+    Returns:
+        None
+    """
+    for i in sptree.traverse():
+        nstyle = NodeStyle()
+        nstyle["vt_line_width"] = 1
+        nstyle["hz_line_width"] = 1
+        nstyle["vt_line_type"] = 0
+        nstyle["hz_line_type"] = 0
+        nstyle["size"] = 0
+        nstyle["shape"] = "circle"
+        nstyle["fgcolor"] = "black"
+        i.set_style(nstyle)
+        #if i.name in sp:
+        #    i.name=sp[i.name]
+
+def view_main(tre_dic,sptree,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic,gene2fam=None,df=None,visual:bool=False):
+    dir_path = os.path.join(os.getcwd(), "tree_visualizer/")
+    if os.path.exists(dir_path):
+        shutil.rmtree(dir_path)
+    os.makedirs(dir_path)
+    color_dicts = generate_color_dict(gene_categories)
+    sps_color_dict=get_color_dict(voucher2taxa_dic)
+    gene_color_dict = None  
+    if gene2fam is not None:
+        gene_color_dict=get_color_dict(gene2fam)
+    pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
+    for tre_ID,tre_path in tre_dic.items():
+        pbar.set_description(f"Processing {tre_ID}")
+        Phylo_t0=read_phylo_tree(tre_path)
+        Phylo_t0=rename_input_tre(Phylo_t0,gene2new_named_gene_dic)
+        Phylo_t1,ts=get_treestyle(Phylo_t0,tree_style,tre_ID,visual,species_tree=sptree)
+        Phylo_t1.ladderize()
+        Phylo_t1.resolve_polytomy(recursive=True)
+        Phylo_t1.sort_descendants("support")
+        if keep_branch !='1' :
+            realign_branch_length(Phylo_t1)
+            rejust_root_dist(Phylo_t1)
+
+        tips_mark(Phylo_t1,voucher2taxa_dic,color_dicts,sps_color_dict,tre_ID,ts,new_named_gene2gene_dic,dir_path,gene_color_dict,df)
+        pbar.update(1)
+    pbar.close()
+
+def mark_gene_to_sptree_main(tre_dic,gene_categories,sptree,gene2fam,gene2sps,gene2new_named_gene_dic,new_named_gene2gene_dic,voucher2taxa_dic):
+    sorted_dict=get_new_sorted_dict(gene2fam)
+    num_tre_node(sptree)
+    sp_node_dic={}
+    for k,v in tre_dic.items():
+        t=read_phylo_tree(v)
+        num_tre_node(t)
+        t1=rename_input_tre(t,gene2new_named_gene_dic)
+        mapping_sptree(t1,sptree,sp_node_dic,gene2fam,new_named_gene2gene_dic)
+
+    sp2=rename_input_tre(sptree,voucher2taxa_dic)
+
+    mark_gene_to_sptree(sp2,sp_node_dic,gene_categories,sorted_dict,gene2sps,voucher2taxa_dic)
+
+    rename_sptree(sp2)
+    ts=get_sptree_style(sorted_dict)
+    realign_branch_length(sp2)
+    clade_up=sp2.get_children()[0]
+    clade_down=sp2.get_children()[1]
+    clade_up.dist=1
+    clade_down.dist=get_max_deepth(clade_up)
+    sp2.render(file_name='genefamily_map2_sptree.pdf',tree_style=ts)
+
+####################################################################################
 if __name__ == "__main__":
-    main()
-
+    os.makedirs(os.path.join(os.getcwd(), "pdf_result"))
+    gene2new_named_gene_dic, new_named_gene2gene_dic,voucher2taxa_dic=gene_id_transfer("imap")
+    #gene2fam=read_and_return_dict('gene2fam')
+    sp2order=read_and_return_dict('order')
+    sp2family=read_and_return_dict('genus')
+    tre_dic=read_and_return_dict('GF.txt')
+    gene_categories=[]
+    gene_categories.append(sp2family)
+    gene_categories.append(sp2order)
+    tree_style='r'
+    keep_branch =1 
+    view_main(tre_dic,gene2new_named_gene_dic,voucher2taxa_dic,gene_categories,tree_style,keep_branch,new_named_gene2gene_dic)
+    
+    
