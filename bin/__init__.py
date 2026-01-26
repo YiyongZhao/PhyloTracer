@@ -454,57 +454,75 @@ def find_dup_node(
     gd_support: int = 50,
     clade_support: int = 0,
     dup_species_num: int = 2,
-    dup_species_percent: int = 0,
+    dup_species_percent: float = 0.2,
     max_topology_distance: int = 1
 ) -> list:
     """
-    Find duplication nodes in a gene tree based on evolutionary events and various filtering criteria.
-
-    Args:
-        gene_tree (object): The gene tree object to analyze.
-        species_tree (object): The reference species tree object.
-        gd_support (int): Minimum support value for a duplication node to be considered (default: 50).
-        clade_support (int): Minimum support value for sister clades (default: 0).
-        dup_species_num (int): Minimum number of duplicated species required (default: 2).
-        dup_species_percent (int): Minimum percentage of duplicated species required (default: 0).
-        max_topology_distance (int): Maximum allowed topological distance between mapped child nodes in the species tree (default: 1).
-
-    Returns:
-        list: A list of duplication node objects that meet all criteria.
+    Find duplication nodes using reconciliation events,
+    but return them in strict post-order (tree2gd-compatible).
     """
-    dup_node_list = []
+
+    # 1️⃣ 先从 event 中拿到 duplication 对应的节点（集合）
+    dup_nodes = set()
+
     events = gene_tree.get_descendant_evol_events()
     for event in events:
-        if event.etype == "D":
-            node_names = ",".join(event.in_seqs) + ',' + ",".join(event.out_seqs)
-            event_node_name_list = node_names.split(',')
-            common_ancestor_node = gene_tree.get_common_ancestor(event_node_name_list)
-            child_a, child_b = common_ancestor_node.get_children()
-            species_set = get_species_set(common_ancestor_node)
-            mapped_species_node = map_gene_tree_to_species(species_set, species_tree)
-            common_ancestor_node.add_feature('map', mapped_species_node.name)
-            
-            # 检查重复节点支持值
-            if judge_support(common_ancestor_node.support, gd_support):
-                child_a, child_b = common_ancestor_node.get_children()
-                
-                # 检查子分支支持值
-                if child_a.support >= clade_support and child_b.support >= clade_support:
-                    mapped_a = map_gene_tree_to_species(get_species_set(child_a), species_tree)
-                    mapped_b = map_gene_tree_to_species(get_species_set(child_b), species_tree)
-                    
-                    if len(get_species_set(common_ancestor_node))==1:
-                        dup_node_list.append(common_ancestor_node)
-                    else:
-                        # 计算重复物种数量和百分比
-                        dup_sps = count_common_elements(get_species_set(child_a), get_species_set(child_b))
-                        dup_percent = dup_sps / len(get_species_set(common_ancestor_node))
-                        # 检查重复物种数量和百分比是否满足条件
-                        if dup_sps >= dup_species_num and dup_percent >= dup_species_percent:
-                            # 检查拓扑距离
-                            if species_tree.get_distance(mapped_a, mapped_b, topology_only=True) <= max_topology_distance:
-                                dup_node_list.append(common_ancestor_node)
+        if event.etype != "D":
+            continue
+
+        node_names = list(event.in_seqs) + list(event.out_seqs)
+        ca = gene_tree.get_common_ancestor(node_names)
+
+        dup_nodes.add(ca)
+
+    # 2️⃣ 再 post-order 遍历，按顺序筛选
+    dup_node_list = []
+
+    for node in gene_tree.traverse("postorder"):
+        if node not in dup_nodes:
+            continue
+
+        if not judge_support(node.support, gd_support):
+            continue
+
+        children = node.get_children()
+        if len(children) != 2:
+            continue
+        child_a, child_b = children
+
+        if child_a.support < clade_support or child_b.support < clade_support:
+            continue
+
+        species_set = get_species_set(node)
+
+        mapped = map_gene_tree_to_species(species_set, species_tree)
+        node.add_feature('map', mapped.name)
+
+        if len(species_set) == 1:
+            dup_node_list.append(node)
+            continue
+
+        dup_sps = count_common_elements(
+            get_species_set(child_a),
+            get_species_set(child_b)
+        )
+        dup_percent = dup_sps / len(species_set)
+
+        if dup_sps < dup_species_num or dup_percent < dup_species_percent:
+            continue
+
+        mapped_a = map_gene_tree_to_species(get_species_set(child_a), species_tree)
+        mapped_b = map_gene_tree_to_species(get_species_set(child_b), species_tree)
+
+        if species_tree.get_distance(
+            mapped_a, mapped_b, topology_only=True
+        ) > max_topology_distance:
+            continue
+
+        dup_node_list.append(node)
+
     return dup_node_list
+
 
 def judge_support(support: float, support_value: float) -> bool:
     """
