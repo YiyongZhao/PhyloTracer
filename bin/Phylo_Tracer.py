@@ -389,7 +389,7 @@ def main():
                 else:
                     raise ValueError("Unsupported file format. Please provide an Excel or CSV file.")
 
-            view_main(tre_dic, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch, new_named_gene2gene_dic, gene2fam, df,visual=args.visual_gd)
+            view_main(tre_dic, sptree1,gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch, new_named_gene2gene_dic, gene2fam, df,visual=args.visual_gd)
 
             # 计算并格式化程序执行时间
             end_time = time.time()
