@@ -192,7 +192,6 @@ ATCG00500.1           1467
 Glyma.07G273800.2     3417
 
 Provide a two-column file in TSV format: each line contains <gene_id><TAB><species>
-Should sorted by second column with the recommended bash command: sort -k2,2 gene2sps.imap
 ------------gene2sps.imap---------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborella_trichopoda
 ATCG00500.1           Arabidopsis_thaliana
