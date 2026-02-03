@@ -1,68 +1,102 @@
+"""
+Branch-length formatting and export utilities for the PhyloTracer pipeline.
+
+This module converts branch lengths to fixed decimal precision and writes
+standardized Newick outputs for downstream analyses and visualization.
+"""
+
 from __init__ import *
 
-def trans_branch_length(Phylo_t: object, decimal_places: int = 10) -> str:
-    """
-    Convert a phylogenetic tree object to a Newick string with branch lengths formatted to a specified number of decimal places.
+# =========================
+# Low-Level Tree Utilities
+# =========================
+
+
+def trans_branch_length(phylo_tree: object, decimal_places: int = 10) -> str:
+    """Convert a phylogenetic tree to a Newick string with formatted branch lengths.
 
     Args:
-        Phylo_t (object): The phylogenetic tree object, must have a 'write' method.
-        decimal_places (int): Number of decimal places for branch lengths (default is 10).
+        phylo_tree (object): Phylogenetic tree object that provides a ``write`` method.
+        decimal_places (int): Number of decimal places for branch lengths.
 
     Returns:
         str: Newick string representation of the tree with formatted branch lengths.
 
     Raises:
-        ValueError: If decimal_places is not a non-negative integer.
-        AttributeError: If Phylo_t does not have a 'write' method.
+        ValueError: If ``decimal_places`` is not a non-negative integer.
+        AttributeError: If ``phylo_tree`` does not provide a ``write`` method.
+        RuntimeError: If tree serialization fails.
+
+    Assumptions:
+        The tree object supports ``write(format=0, dist_formatter=...)`` as in ete3.
     """
     if not isinstance(decimal_places, int) or decimal_places < 0:
         raise ValueError("decimal_places must be a non-negative integer.")
-    if not hasattr(Phylo_t, "write"):
-        raise AttributeError("Phylo_t must have a 'write' method.")
+    if not hasattr(phylo_tree, "write"):
+        raise AttributeError("phylo_tree must have a 'write' method.")
     try:
-        tree_str = Phylo_t.write(format=0, dist_formatter='%.{}f'.format(decimal_places))
-    except Exception as e:
-        raise RuntimeError(f"Failed to convert tree to Newick string: {e}")
+        tree_str = phylo_tree.write(
+            format=0,
+            dist_formatter="%.{}f".format(decimal_places),
+        )
+    except Exception as exc:
+        raise RuntimeError(f"Failed to convert tree to Newick string: {exc}")
     return tree_str
 
-def write_tree_to_newick(tree_str: str, tre_ID: str, dir_path: str) -> None:
-    """
-    Write a Newick tree string to a file in the specified directory.
+
+def write_tree_to_newick(tree_str: str, tree_id: str, dir_path: str) -> None:
+    """Write a Newick tree string to disk.
 
     Args:
-        tree_str (str): The Newick tree string.
-        tre_ID (str): The tree identifier, used as the file name.
-        dir_path (str): The directory path to save the file.
+        tree_str (str): Newick tree string to write.
+        tree_id (str): Tree identifier used as the output filename stem.
+        dir_path (str): Output directory path.
 
     Raises:
-        ValueError: If tree_str is not a string.
-        OSError: If file writing fails.
+        ValueError: If ``tree_str`` is not a string.
+        OSError: If file creation or writing fails.
+
+    Assumptions:
+        The output directory is writable; a trailing newline is appended.
     """
     if not isinstance(tree_str, str):
         raise ValueError("tree_str must be a string.")
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
     try:
-        with open(os.path.join(dir_path, tre_ID + '.nwk'), 'w') as f:
-            f.write(tree_str + '\n')
-    except Exception as e:
-        raise OSError(f"Failed to write tree to file: {e}")
+        with open(os.path.join(dir_path, tree_id + ".nwk"), "w") as f:
+            f.write(tree_str + "\n")
+    except Exception as exc:
+        raise OSError(f"Failed to write tree to file: {exc}")
 
-def branch_length_numeric_converter_main(tre_dic: dict, decimal_places: int = 10) -> None:
-    """
-    Convert branch lengths of multiple trees to a specified decimal precision and write to files.
+
+# =========================
+# Batch Processing & Orchestration
+# =========================
+
+
+def branch_length_numeric_converter_main(
+    tree_dict: dict,
+    decimal_places: int = 10,
+) -> None:
+    """Batch-convert branch lengths to fixed precision and write Newick files.
 
     Args:
-        tre_dic (dict): Dictionary mapping tree IDs to tree file paths.
+        tree_dict (dict): Mapping from tree identifiers to tree file paths.
         decimal_places (int): Number of decimal places for branch lengths.
 
     Raises:
-        ValueError: If tre_dic is not a dict or decimal_places is invalid.
-        OSError: If directory or file operations fail.
+        ValueError: If ``tree_dict`` is not a dict or ``decimal_places`` is invalid.
+        OSError: If output directory creation or cleanup fails.
+
+    Assumptions:
+        Tree paths are valid and refer to Newick-readable trees.
     """
-    if not isinstance(tre_dic, dict):
-        raise ValueError("tre_dic must be a dictionary.")
-    if decimal_places is not None and (not isinstance(decimal_places, int) or decimal_places < 0):
+    if not isinstance(tree_dict, dict):
+        raise ValueError("tree_dict must be a dictionary.")
+    if decimal_places is not None and (
+        not isinstance(decimal_places, int) or decimal_places < 0
+    ):
         raise ValueError("decimal_places must be a non-negative integer or None.")
 
     dir_path = os.path.join(os.getcwd(), "converter_tree/")
@@ -70,22 +104,23 @@ def branch_length_numeric_converter_main(tre_dic: dict, decimal_places: int = 10
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)
         os.makedirs(dir_path)
-    except Exception as e:
-        raise OSError(f"Failed to prepare output directory: {e}")
+    except Exception as exc:
+        raise OSError(f"Failed to prepare output directory: {exc}")
 
-    pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
-    for tre_ID, tre_path in tre_dic.items():
+    pbar = tqdm(total=len(tree_dict), desc="Processing trees", unit="tree")
+    for tree_id, tree_path in tree_dict.items():
         try:
-            t = Tree(tre_path)
+            tree = read_tree(tree_path)
             if decimal_places is None:
-                tree_str = trans_branch_length(t)
+                tree_str = trans_branch_length(tree)
             else:
-                tree_str = trans_branch_length(t, decimal_places)
-            write_tree_to_newick(tree_str, tre_ID, dir_path)
-        except Exception as e:
-            print(f"Error processing {tre_ID}: {e}")
+                tree_str = trans_branch_length(tree, decimal_places)
+            write_tree_to_newick(tree_str, tree_id, dir_path)
+        except Exception as exc:
+            print(f"Error processing {tree_id}: {exc}")
         pbar.update(1)
     pbar.close()
+
 
 if __name__ == "__main__":
     """
@@ -93,13 +128,9 @@ if __name__ == "__main__":
     Reads a tree dictionary from a file and writes formatted Newick trees to disk.
     """
     try:
-        input_file = 'test.txt'
-        decimal_places = 10  # 可以根据需要修改或通过命令行参数传入
+        input_file = "test.txt"
+        decimal_places = 10  # You can modify it as needed or pass it via command-line parameters.
         tre_dic = read_and_return_dict(input_file)
         branch_length_numeric_converter_main(tre_dic, decimal_places)
     except Exception as e:
         print(f"Error in main execution: {e}")
-    
-
-
-

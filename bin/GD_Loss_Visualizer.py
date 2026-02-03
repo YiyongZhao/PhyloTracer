@@ -1,235 +1,312 @@
-from hmac import new
+"""
+Gene duplication loss visualization for the PhyloTracer pipeline.
+
+This module summarizes duplication losses from tabular outputs and renders
+annotated species trees with loss statistics and legends.
+"""
+
+import re
+from collections import defaultdict
+
 from __init__ import *
-import matplotlib.pyplot as plt
-import re 
-from PIL import Image
-import math
-from ete3 import PieChartFace,CircleFace
+from ete3 import CircleFace, PieChartFace
+
+# ======================================================
+# Section 1: Loss Parsing and Statistics
+# ======================================================
 
 
-def extract_numbers_in_parentheses(string):
-    pattern = r"\((\d+)\)"
-    matches = re.findall(pattern, string)
-    return matches
+def identify_loss_detail(path_str):
+    """
+    Parse a loss path string and identify loss nodes and types.
 
-def get_gd_node_to_species_loss_dic(sp_dic):
-    loss_dic = {'No-duplicate loss': [], 'One-duplicate loss': [], 'Two-duplicate loss': []}
+    Parameters
+    ----------
+    path_str : str
+        Path string formatted as ``node(count)->node(count)``.
 
-    for k, v in sp_dic.items():
-        s = extract_numbers_in_parentheses(k)
-        s_set = set(s)
-        
-        if s_set == {'2'}:
-            loss_dic['No-duplicate loss'].append(v)
-        elif s_set == {'2', '1'} or s_set == {'2', '1', '0'} or s_set == {'1', '0'}:
-            loss_dic['One-duplicate loss'].append(v)
-        else:
-            loss_dic['Two-duplicate loss'].append(v)
-    
-    for key in loss_dic:
-        filtered_values = []
-        for val in loss_dic[key]:
-            if isinstance(val, str) and not val.isdigit():
-                continue
-            filtered_values.append(int(val) if isinstance(val, str) and val.isdigit() else float(val))
-        loss_dic[key] = filtered_values
+    Returns
+    -------
+    list
+        List of (node, loss_type) tuples.
 
-    sum_loss_dic = {key: sum(value) for key, value in loss_dic.items()}
-    
-    return sum_loss_dic
+    Assumptions
+    -----------
+    Path strings encode copy numbers in parentheses.
+    """
+    if not path_str or path_str == "NA":
+        return []
 
-def visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id):
-    keys = list(sum_loss_dic.keys())
-    values = list(sum_loss_dic.values())
-    color = 'lightblue'
+    steps = path_str.split("->")
+    parsed_steps = []
 
-    plt.figure(figsize=(10, 6))  
+    for step in steps:
+        step = step.strip()
+        match = re.search(r"(.+?)\((\d+)\)$", step)
+        if not match:
+            continue
+        parsed_steps.append((match.group(1).strip(), int(match.group(2))))
 
-    bars = plt.bar(keys, values, color=color)
+    if len(parsed_steps) < 2:
+        return []
 
-    plt.ylabel('GD num', fontsize=14) 
-    plt.title('Count of ' + sps + ' Species under Node ' + gd_id, fontsize=16)  
-    plt.yticks(fontsize=12)  
+    identified_losses = []
 
-    for key, value in zip(keys, values):
-        plt.text(key, value, str(value), ha='center', va='bottom', fontsize=12)
+    for i in range(1, len(parsed_steps)):
+        prev_node, prev_copy = parsed_steps[i - 1]
+        curr_node, curr_copy = parsed_steps[i]
 
-    plt.tight_layout()  
-    plt.savefig(f'{gd_id}_{sps}.png')
-    plt.cla()
-    plt.close("all")  
-    
-def generate_plt(full_path):
-    new_dic = read_and_return_dict(full_path)
- 
-    sum_loss_dic = get_gd_node_to_species_loss_dic(new_dic)
+        if curr_copy < prev_copy:
+            l_type = None
+            if prev_copy == 2 and curr_copy == 0:
+                l_type = "2-0"
+            elif prev_copy == 2 and curr_copy == 1:
+                l_type = "2-1"
+            elif prev_copy == 1 and curr_copy == 0:
+                l_type = "1-0"
+            else:
+                diff = prev_copy - curr_copy
+                l_type = "2-0" if diff >= 2 else "2-1"
 
-    first_key = list(new_dic.keys())[1]
-    
-    gd_id = first_key.split('->')[0].split('(')[0]
-    sps = first_key.split('->')[-1].split('(')[0]
-    
-    visualizer_sum_loss_dic(sum_loss_dic, sps, gd_id)
+            if l_type:
+                identified_losses.append((curr_node, l_type))
+
+    return identified_losses
 
 
+def get_stats_deduplicated(filepath):
+    """
+    Deduplicate GD events and compute birth and loss statistics.
 
-def process_gd_loss_summary(file):
-    element_counts = {}
-    
-    with open(file, 'r') as f:
-        lines = f.readlines()
+    Parameters
+    ----------
+    filepath : str
+        Path to the loss summary file.
 
-        for line in lines[2:]:  
-            line = line.strip()
-            if not line:  
-                continue
-            path = line.split('\t')[0]
-            input_string = line.split('\t')[1]
-            treeid= [og.strip().strip("'") for og in input_string.split(',')]
-            elements = path.split('->')
-            for i in elements:
-                if i in element_counts:
-                    element_counts[i].update(treeid)  
-                else:
-                    element_counts[i] = set(treeid)  
-    new_dic={}
-    for key in element_counts:
-        new_dic[key] = len(element_counts[key])
+    Returns
+    -------
+    tuple
+        (gd_births, loss_counts) dictionaries.
 
-    return new_dic
+    Assumptions
+    -----------
+    Tree ID and GD ID together form a unique event key.
+    """
+    gd_birth_sets = defaultdict(set)
+    loss_tracker = defaultdict(lambda: {"2-0": set(), "2-1": set(), "1-0": set()})
 
-def transform_dict(original_dict):
-    new_dict = {}
-
-    for key, value in original_dict.items():
-        gene_name, number = key.split('(') 
-        number = number.strip(')') 
-
-        if gene_name not in new_dict:
-            new_dict[gene_name] = {}
-        
-        if number not in new_dict[gene_name]:
-            new_dict[gene_name][number] = 0
-        
-        new_dict[gene_name][number] += value  
-
-    return new_dict
-
-def parse_file_to_dic(filepath):
-
-    result_dic = {}
-    gd_id_set=set()
-    with open(filepath) as f:
+    print(f"Reading file: {filepath}...")
+    with open(filepath, "r") as f:
+        header = f.readline()
         for line in f:
-            cols = line.strip().split('\t')
-    
-            gdid = cols[1]
-            
-               
+            line = line.strip()
+            if not line:
+                continue
+            cols = line.split("\t")
             if len(cols) < 8:
                 continue
 
-            if gdid not in gd_id_set:
-                gdid_species_set = set()
-                path_strs = cols[7].split('@')
-                for path_str in path_strs:
-                    for node in path_str.split('->'):
-                        if '(' in node and node.endswith(')'):
-                            sp, num = node[:-1].split('(')
-                            num = int(num)
-                            if sp not in result_dic:
-                                result_dic[sp] = {2:0, 1:0, 0:0}
-                            gdid_species_set.add((sp, int(num)))
-                for sp, num in gdid_species_set:
-                    result_dic[sp][num] += 1
+            tree_id = cols[0]
+            gd_id_raw = cols[1]
+            unique_key = f"{tree_id}|{gd_id_raw}"
 
-                gd_id_set.add(gdid)
-            else:
-                continue
+            level_node = cols[3]
+            gd_birth_sets[level_node].add(unique_key)
 
-    
-    return result_dic
+            loss_path = cols[7].strip()
+            all_losses = identify_loss_detail(loss_path)
+
+            for loss_node, loss_type in all_losses:
+                loss_tracker[loss_node][loss_type].add(unique_key)
+
+    final_births = {k: len(v) for k, v in gd_birth_sets.items()}
+    final_losses = {}
+    for node, types in loss_tracker.items():
+        final_losses[node] = {
+            "2-0": len(types["2-0"]),
+            "2-1": len(types["2-1"]),
+            "1-0": len(types["1-0"]),
+        }
+
+    return final_births, final_losses
 
 
-def build_legend(ts):
-  
-    ts.title.add_face(TextFace(' ',fsize=10), column=0)
-    ts.title.add_face(CircleFace(5, color='green'), column=1)
-    ts.title.add_face(TextFace(' Two copies retained ',fsize=10), column=2)
-    ts.title.add_face(CircleFace(5, color='blue'), column=3)
-    ts.title.add_face(TextFace(' One copy retained ',fsize=10), column=4)
-    ts.title.add_face(CircleFace(5, color='red'), column=5)
-    ts.title.add_face(TextFace(' No copy retained ',fsize=10), column=6)
-    ts.legend.add_face(TextFace(" Legend: (Green, Blue, Red)", fsize=9, fgcolor="gray"), column=0)
-    ts.legend_position = 3
+# ======================================================
+# Section 2: Reporting Utilities
+# ======================================================
 
-def visualizer_sptree(result_dic,sptree):
-    new_dic={}
-    for sp, count_dic in result_dic.items():
-        total = sum(count_dic.values())
-        if total == 0:
-            continue
-        a=[]
-        for v in count_dic.values():
-            b= int(v/ total * 100)
-            a.append(b)
-        diff = 100 - sum(a)
-        if diff != 0:
-            
-            idx = a.index(max(a))
-            a[idx] += diff
-        new_dic[sp]=a
+
+def print_path_stats(sptree, final_losses, target_species="Arabidopsis_thaliana"):
+    """
+    Print loss statistics along the path to a target species.
+
+    Parameters
+    ----------
+    sptree : object
+        Species tree object.
+    final_losses : dict
+        Loss counts by node and type.
+    target_species : str, optional
+        Target species name for path reporting.
+
+    Returns
+    -------
+    None
+
+    Assumptions
+    -----------
+    The species name exists in the tree.
+    """
+    target_nodes = sptree.search_nodes(name=target_species)
+    if not target_nodes:
+        print(f"Error: Species '{target_species}' not found in tree")
+        return
+
+    leaf = target_nodes[0]
+    path_nodes = leaf.get_ancestors()
+    path_nodes.reverse()
+    path_nodes.append(leaf)
+
+    print(f"\n{'='*20} Path: Root -> {target_species} {'='*20}")
+    print(f"{'Node':<20} | {'2->0':<10} | {'2->1':<10} | {'1->0':<10} | {'Total'}")
+    print("-" * 80)
+
+    for node in path_nodes:
+        node_name = node.name
+        if node_name in final_losses:
+            stats = final_losses[node_name]
+            m = stats["2-0"]
+            n1 = stats["2-1"]
+            n0 = stats["1-0"]
+            total = m + n1 + n0
+            if total > 0:
+                print(f"{node_name:<20} | {m:<10} | {n1:<10} | {n0:<10} | {total}")
+    print("=" * 75)
+
+
+# ======================================================
+# Section 3: Visualization Rendering
+# ======================================================
+
+
+def visualizer_sptree(filepath, sptree, output_file="gd_loss_pie_visualizer.PDF"):
+    """
+    Render GD loss statistics on a species tree.
+
+    Parameters
+    ----------
+    filepath : str
+        Path to the loss summary file.
+    sptree : object
+        Species tree object to annotate.
+    output_file : str, optional
+        Output PDF file path.
+
+    Returns
+    -------
+    None
+
+    Assumptions
+    -----------
+    Loss summary file follows the expected tabular format.
+    """
+    gd_births, loss_data = get_stats_deduplicated(filepath)
 
     sptree.ladderize()
-    sptree.sort_descendants("support")
+
+    colors = {
+        "2-0": "#D62728",
+        "2-1": "#FF7F0E",
+        "1-0": "#1F77B4",
+    }
+    color_list = [colors["2-0"], colors["2-1"], colors["1-0"]]
+
+    print(f"\n{'Node':<15} | {'GD Birth':<10} | {'2->0':<8} | {'2->1':<8} | {'1->0':<8}")
+    print("-" * 80)
 
     for node in sptree.traverse():
-        node_id = node.name
-        if node_id in new_dic:
-            pie_values = new_dic[node_id]
-            total = sum(pie_values)
-
-           
-            pie_face = PieChartFace(pie_values, width=10, height=10, colors=['green', 'blue', 'red'])
-            node.add_face(pie_face, column=0, position="float")
-
-            labels = [str(va) for va in result_dic[node_id].values()]
-            
-            label_text = "(" + ",".join(labels) + ")"
-            label_face = TextFace(label_text, fsize=5)
-            node.add_face(label_face, column=-1, position="float")
-            node.add_face(TextFace(' ', fsize=5), column=-1, position="float")
-            
-
         nstyle = NodeStyle()
         nstyle["size"] = 0
         node.set_style(nstyle)
 
-    
-    ts = TreeStyle()
-    ts.scale = 60
-    
+        node_name = node.name
 
-    build_legend(ts)
-    ts.show_border = True
-    ts.margin_bottom = 20
-    ts.margin_left = 20
-    ts.margin_right = 50
-    ts.margin_top = 20
+        if node_name in gd_births and gd_births[node_name] > 0:
+            cnt = gd_births[node_name]
+            face = TextFace(f"{cnt}", fsize=6, fgcolor="blue")
+            node.add_face(face, column=0, position="branch-top")
+
+        if node_name in loss_data:
+            stats = loss_data[node_name]
+            c_2_0 = stats["2-0"]
+            c_2_1 = stats["2-1"]
+            c_1_0 = stats["1-0"]
+
+            total_loss = c_2_0 + c_2_1 + c_1_0
+            node.add_face(
+                TextFace(f"{c_2_0}/{c_2_1}/{c_1_0}", fsize=6, fgcolor="red"),
+                column=0,
+                position="branch-bottom",
+            )
+            if total_loss > 0:
+                print(
+                    f"{node_name:<15} | {gd_births.get(node_name,0):<10} | "
+                    f"{c_2_0:<8} | {c_2_1:<8} | {c_1_0:<8}"
+                )
+
+            # percents = [
+            #     (c_2_0 / total_loss) * 100,
+            #     (c_2_1 / total_loss) * 100,
+            #     (c_1_0 / total_loss) * 100,
+            # ]
+            # pie = PieChartFace(percents, width=6, height=6, colors=color_list)
+            # node.add_face(pie, column=0, position="branch-bottom")
+
+    ts = TreeStyle()
+    ts.scale = 20
     ts.show_leaf_name = True
     ts.show_branch_support = False
-    ts.extra_branch_line_type =0
-    ts.extra_branch_line_color='black'
-    ts.branch_vertical_margin = -1
+    ts.show_branch_length = False
+    ts.show_border = False
 
-    realign_branch_length(sptree)
-    rejust_root_dist(sptree)
-    sptree.render('gd_loss_visualizer.PDF',w=210, units="mm",tree_style=ts)
+    ts.title.add_face(TextFace("Legend:", bold=True, fsize=10), column=0)
+    ts.title.add_face(
+        TextFace("  Blue Number (Top): GD Events Generated", fsize=6, fgcolor="blue"),
+        column=0,
+    )
+    ts.title.add_face(
+        TextFace("  Pie Chart (Bottom): Loss Types Distribution", fsize=6),
+        column=0,
+    )
 
+    c1 = CircleFace(radius=4, color=colors["2-0"], style="circle")
+    t1 = TextFace(" 2->0 (Severe Loss)", fsize=6)
+    ts.title.add_face(c1, column=0)
+    ts.title.add_face(t1, column=1)
+
+    c2 = CircleFace(radius=4, color=colors["2-1"], style="circle")
+    t2 = TextFace(" 2->1 (Partial Loss)", fsize=6)
+    ts.title.add_face(c2, column=0)
+    ts.title.add_face(t2, column=1)
+
+    c3 = CircleFace(radius=4, color=colors["1-0"], style="circle")
+    t3 = TextFace(" 1->0 (Final Loss)", fsize=6)
+    ts.title.add_face(c3, column=0)
+    ts.title.add_face(t3, column=1)
+
+    try:
+        realign_branch_length(sptree)
+        rejust_root_dist(sptree)
+    except Exception:
+        pass
+
+    sptree.render(output_file, w=210, units="mm", tree_style=ts)
+    print(f"\nVisualization saved to {output_file}")
+
+
+# ======================================================
+# Section 4: CLI Entry Point
+# ======================================================
 
 if __name__ == "__main__":
-    out='outfile'
-    input_folder='input'
-    os.makedirs(out, exist_ok=True)
-    generate_plt(input_folder,out)
-
+    pass

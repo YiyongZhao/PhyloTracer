@@ -1,260 +1,439 @@
-from __init__ import *
+"""
+Long-branch pruning and visualization for gene trees in the PhyloTracer pipeline.
+
+This module identifies outlier terminal branches in gene trees, optionally
+produces before/after visualizations, and writes pruned trees for downstream
+orthology-aware analyses.
+"""
+
+import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
+from __init__ import *
+from BranchLength_NumericConverter import (
+    trans_branch_length,
+    write_tree_to_newick,
+)
 from PyPDF4 import PdfFileReader, PdfFileWriter
-from BranchLength_NumericConverter import trans_branch_length, write_tree_to_newick
-import os
-import shutil
-from tqdm import tqdm
 
-def has_multiple_copies(phylo_t: object) -> bool:
-    """
-    Check if the tree has multiple copies based on unique species.
-    Args:
-        phylo_t (object): The phylogenetic tree object.
-    Returns:
-        bool: True if the tree contains multiple copies, False otherwise.
-    """
-    leaf_names = phylo_t.get_leaf_names()
-    unique_species = get_species_set(phylo_t)
-    return len(leaf_names) != len(unique_species)
+# ======================================================
+# Section 1: Tree Property Utilities
+# ======================================================
 
-def style_tree(phylo_t: object, color_dict: dict, new_named_gene2gene_dic: dict) -> object:
+
+def has_multiple_copies(tree: object) -> bool:
     """
-    Set styles for tree nodes based on gene colors.
-    Args:
-        phylo_t (object): The phylogenetic tree object.
-        color_dict (dict): Mapping from species to color.
-        new_named_gene2gene_dic (dict): Mapping from renamed gene to original gene name.
-    Returns:
-        object: The styled phylogenetic tree object.
+    Determine whether a gene tree contains multiple gene copies.
+
+    Parameters
+    ----------
+    tree : object
+        ETE tree object representing a gene tree.
+
+    Returns
+    -------
+    bool
+        True if the number of leaves differs from the number of unique species.
+
+    Assumptions
+    -----------
+    Leaf names encode species identifiers that can be parsed by
+    ``get_species_set`` from the project utilities.
     """
-    for node in phylo_t.traverse():
-        nstyle = NodeStyle()
-        nstyle["size"] = 0
-        nstyle["shape"] = "circle"
-        nstyle["fgcolor"] = "black"
-        node.set_style(nstyle)
+    return len(tree.get_leaf_names()) != len(get_species_set(tree))
+
+
+def get_average_tip_length(tree: object) -> float:
+    """
+    Compute the mean branch length of terminal leaves.
+
+    Parameters
+    ----------
+    tree : object
+        ETE tree object representing a gene tree.
+
+    Returns
+    -------
+    float
+        Mean terminal branch length across all leaves.
+
+    Assumptions
+    -----------
+    The tree contains at least one leaf and branch lengths are defined.
+    """
+    return sum(leaf.dist for leaf in tree) / len(tree)
+
+
+def get_average_node_length(subtree: object) -> float:
+    """
+    Compute the mean distance from a subtree root to its descendant leaves.
+
+    Parameters
+    ----------
+    subtree : object
+        ETE tree object representing a subtree.
+
+    Returns
+    -------
+    float
+        Mean distance from the subtree root to each descendant leaf.
+
+    Assumptions
+    -----------
+    Branch lengths are defined for all relevant edges.
+    """
+    leaves = list(subtree)
+    total_distance = sum(
+        subtree.get_distance(leaf) + subtree.dist for leaf in leaves
+    )
+    return total_distance / len(leaves)
+
+
+# ======================================================
+# Section 2: Visualization Utilities
+# ======================================================
+
+def create_color_mapping(voucher2taxa: Dict[str, str]) -> Dict[str, str]:
+    """
+    Assign distinct colors to taxa labels for tree visualization.
+
+    Parameters
+    ----------
+    voucher2taxa : Dict[str, str]
+        Mapping from voucher identifiers to taxa names.
+
+    Returns
+    -------
+    Dict[str, str]
+        Mapping from voucher identifiers to color-annotated taxa labels.
+
+    Assumptions
+    -----------
+    Taxa names are finite and can be uniquely mapped to colors.
+    """
+    unique_taxa = sorted(set(voucher2taxa.values()))
+    cmap = plt.get_cmap("gist_rainbow")
+    color_values = [
+        mcolors.rgb2hex(cmap(i))
+        for i in np.linspace(0, 1, len(unique_taxa))
+    ]
+    taxa_color = dict(zip(unique_taxa, color_values))
+    return {k: f"{v}*{taxa_color[v]}" for k, v in voucher2taxa.items()}
+
+
+def style_tree(
+    tree: object,
+    color_map: Dict[str, str],
+    renamed2gene: Dict[str, str],
+) -> object:
+    """
+    Apply node styles and colored gene labels to a tree.
+
+    Parameters
+    ----------
+    tree : object
+        ETE tree object to be styled.
+    color_map : Dict[str, str]
+        Mapping from species identifiers to color-annotated taxa labels.
+    renamed2gene : Dict[str, str]
+        Mapping from renamed gene identifiers to original gene names.
+
+    Returns
+    -------
+    object
+        Styled ETE tree object.
+
+    Assumptions
+    -----------
+    Leaf names encode species identifiers separated by underscores.
+    """
+    for node in tree.traverse():
+        style = NodeStyle()
+        style["size"] = 0
+        style["shape"] = "circle"
+        style["fgcolor"] = "black"
+        node.set_style(style)
+
         if node.is_leaf():
-            parts = node.name.split("_")
-            species_name = parts[0]
-            gene = new_named_gene2gene_dic[node.name]
-            if species_name in color_dict:
-                color = color_dict[species_name].split('*')[-1]
-                face = TextFace(f'{gene}', fgcolor=color, fstyle='italic')
-                node.add_face(face, column=0)
-    return phylo_t
+            species = node.name.split("_")[0]
+            gene_name = renamed2gene.get(node.name, node.name)
 
-def create_color_mapping(dictionary: dict) -> dict:
-    """
-    Create a color mapping for unique values in the dictionary.
-    Args:
-        dictionary (dict): Input dictionary with values to be mapped to colors.
-    Returns:
-        dict: Mapping from original keys to color strings.
-    """
-    colormap = plt.get_cmap("gist_rainbow")
-    unique_values = set(dictionary.values())
-    colors_list = [colors.rgb2hex(colormap(i)) for i in np.linspace(0, 1, len(unique_values))]
-    color_dict = dict(zip(unique_values, colors_list)) 
-    return {k: v + '*' + color_dict.get(v) for k, v in dictionary.items() if v in color_dict}
+            if species in color_map:
+                color = color_map[species].split("*")[-1]
+                node.add_face(
+                    TextFace(gene_name, fgcolor=color, fstyle="italic"),
+                    column=0,
+                )
+    return tree
 
-def merge_pdfs(file1: str, file2: str, output_file: str) -> None:
+
+def generate_tree_pdf(tree_id: str, tree: object, suffix: str) -> None:
     """
-    Merge two PDF files side by side.
-    Args:
-        file1 (str): Path to the first PDF file.
-        file2 (str): Path to the second PDF file.
-        output_file (str): Path to the output merged PDF file.
-    Returns:
-        None
+    Render a tree into a single-page PDF file.
+
+    Parameters
+    ----------
+    tree_id : str
+        Identifier of the gene tree.
+    tree : object
+        ETE tree object to be rendered.
+    suffix : str
+        Suffix appended to the output filename for disambiguation.
+
+    Returns
+    -------
+    None
+
+    Assumptions
+    -----------
+    The ETE rendering backend is available in the runtime environment.
     """
-    pdf_writer = PdfFileWriter()
-    with open(file1, 'rb') as f1, open(file2, 'rb') as f2:
-        pdf1 = PdfFileReader(f1)
-        pdf2 = PdfFileReader(f2)
-        page1 = pdf1.getPage(0)
-        page2 = pdf2.getPage(0)
-        new_page_width = page1.mediaBox.getWidth() + page2.mediaBox.getWidth()
-        new_page_height = max(page1.mediaBox.getHeight(), page2.mediaBox.getHeight())
-        new_page = pdf_writer.addBlankPage(new_page_width, new_page_height)
+    ts = TreeStyle()
+    ts.show_leaf_name = False
+    ts.title.add_face(TextFace(f"{tree_id}_{suffix}", fsize=10), column=0)
+    tree.render(file_name=f"{tree_id}_{suffix}.pdf", tree_style=ts)
+
+
+def merge_pdfs(left_pdf: str, right_pdf: str, output_pdf: str) -> None:
+    """
+    Merge two single-page PDFs into a single horizontal layout.
+
+    Parameters
+    ----------
+    left_pdf : str
+        Path to the left PDF file.
+    right_pdf : str
+        Path to the right PDF file.
+    output_pdf : str
+        Path to the merged output PDF.
+
+    Returns
+    -------
+    None
+
+    Assumptions
+    -----------
+    Each input PDF contains at least one page.
+    """
+    writer = PdfFileWriter()
+
+    with open(left_pdf, "rb") as f1, open(right_pdf, "rb") as f2:
+        pdf1, pdf2 = PdfFileReader(f1), PdfFileReader(f2)
+        page1, page2 = pdf1.getPage(0), pdf2.getPage(0)
+
+        width = page1.mediaBox.getWidth() + page2.mediaBox.getWidth()
+        height = max(page1.mediaBox.getHeight(), page2.mediaBox.getHeight())
+
+        new_page = writer.addBlankPage(width, height)
         new_page.mergeTranslatedPage(page1, 0, 0)
         new_page.mergeTranslatedPage(page2, page1.mediaBox.getWidth(), 0)
-        with open(output_file, 'wb') as output:
-            pdf_writer.write(output)
 
-def get_average_tip_length(phylo_t: object) -> float:
-    """
-    Calculate the average length of tips in the phylogenetic tree.
-    Args:
-        phylo_t (object): The phylogenetic tree object.
-    Returns:
-        float: The average tip length.
-    """
-    return sum(leaf.dist for leaf in phylo_t)/len(phylo_t)
+        with open(output_pdf, "wb") as out:
+            writer.write(out)
 
-def get_average_node_length(phylo_t: object) -> float:
-    """
-    Calculate the average length of nodes in the phylogenetic tree.
-    Args:
-        phylo_t (object): The phylogenetic tree object.
-    Returns:
-        float: The average node length.
-    """
-    return sum(phylo_t.get_distance(i)+phylo_t.dist for i in phylo_t)/ len(phylo_t)
 
-def remove_long_branches(phylo_t: object, absolute_branch_length: int, relative_branch_length: int,outfile: str, tre_ID: str, new_named_gene2gene_dic: dict) -> object:
-    """
-    Remove branches longer than the specified index from the phylogenetic tree.
-    Args:
-        phylo_t (object): The phylogenetic tree object.
-        absolute_branch_length (int): Threshold for absolute branch length ratio.
-        relative_branch_length (int): Threshold for relative branch length ratio.
-        outfile (str): Output file handle for logging removed genes.
-        tre_ID (str): Tree identifier.
-        new_named_gene2gene_dic (dict): Mapping from renamed gene to original gene name.
-    Returns:
-        object: The pruned phylogenetic tree object.
-    """
-    phylo_t1 = phylo_t.copy()
-    remove_gene_set = set()
-    tips_avg_length = get_average_tip_length(phylo_t1)
-  
-    for leaf in phylo_t1:
-        sps_gene = leaf.name
-        distance = leaf.dist
-        distance_to_root_ratio = (distance-tips_avg_length) / tips_avg_length
-        sister = leaf.get_sisters()[0]
-        if sister.is_leaf():
-            sister_avg_length=sister.dist
-            if sister_avg_length==0:
-                leaf_to_sister_ratio=4
-            else:
-                leaf_to_sister_ratio = (distance - sister_avg_length) / sister_avg_length
-        else:
-            sister_avg_length=get_average_node_length(sister)
-            if sister_avg_length==0:
-                leaf_to_sister_ratio=4
-            else:
-                leaf_to_sister_ratio = (distance - sister_avg_length) / sister_avg_length
-        if leaf.dist!=0:
-            if distance_to_root_ratio >= absolute_branch_length:
-                if leaf_to_sister_ratio >= relative_branch_length:
-                    outfile.write(f"{tre_ID}\t*\t{new_named_gene2gene_dic[sps_gene]}\t{distance_to_root_ratio}\t{leaf_to_sister_ratio}\n")
-                    remove_gene_set.add(leaf.name)
-                else:
-                    outfile.write(f"{tre_ID}\t\t{new_named_gene2gene_dic[sps_gene]}\t{distance_to_root_ratio}\t{leaf_to_sister_ratio}\n")
+# ======================================================
+# Section 3: Long Branch Pruning Logic (Core)
+# ======================================================
 
-                #is_modified = True  
-            else:
-                outfile.write(f"{tre_ID}\t\t{new_named_gene2gene_dic[sps_gene]}\t{distance_to_root_ratio}\t{leaf_to_sister_ratio}\n")
-        else:
-            outfile.write(f"{tre_ID}\t\t{new_named_gene2gene_dic[sps_gene]}\t{distance_to_root_ratio}\t{leaf_to_sister_ratio}\n")
+def remove_long_branches(
+    tree: object,
+    abs_threshold: float,
+    rel_threshold: float,
+    log_handle,
+    tree_id: str,
+    renamed2gene: Dict[str, str],
+) -> object:
+    """
+    Prune leaves whose branch lengths exceed absolute and relative thresholds.
+
+    Parameters
+    ----------
+    tree : object
+        ETE tree object representing a gene tree.
+    abs_threshold : float
+        Absolute threshold on the root-relative branch ratio.
+    rel_threshold : float
+        Relative threshold on the sister-relative branch ratio.
+    log_handle : object
+        File handle for recording pruning decisions.
+    tree_id : str
+        Identifier of the gene tree.
+    renamed2gene : Dict[str, str]
+        Mapping from renamed gene identifiers to original gene names.
+
+    Returns
+    -------
+    object
+        Pruned ETE tree object.
+
+    Assumptions
+    -----------
+    Tree is rooted and branch lengths are comparable across leaves.
+    """
+    pruned_tree = tree.copy()
+    to_remove: Set[str] = set()
+
+    avg_tip_length = get_average_tip_length(pruned_tree)
+
+    for leaf in pruned_tree:
+        leaf_name = leaf.name
+        leaf_dist = leaf.dist
+        gene_name = renamed2gene.get(leaf_name, leaf_name)
+
+        if leaf_dist == 0:
+            log_handle.write(f"{tree_id}\t\t{gene_name}\t0\t0\n")
             continue
 
-    # if not is_modified:
-    #     break
-        
-    total_leafs_set = set(phylo_t1.get_leaf_names())
-    diff = total_leafs_set - remove_gene_set
-    phylo_t1.prune(diff, preserve_branch_length=True)
-    
-    return phylo_t1
+        root_ratio = (leaf_dist - avg_tip_length) / avg_tip_length
 
-def generate_pdf_before(tre_ID: str, phylo_t: object) -> None:
+        sister = leaf.get_sisters()[0]
+        if sister.is_leaf():
+            sister_avg = sister.dist or 1e-6
+        else:
+            sister_avg = get_average_node_length(sister) or 1e-6
+
+        sister_ratio = (leaf_dist - sister_avg) / sister_avg
+
+        if root_ratio >= abs_threshold:
+            if sister_ratio >= rel_threshold:
+                log_handle.write(
+                    f"{tree_id}\t*\t{gene_name}\t{root_ratio}\t{sister_ratio}\n"
+                )
+                to_remove.add(leaf_name)
+            else:
+                log_handle.write(
+                    f"{tree_id}\t\t{gene_name}\t{root_ratio}\t{sister_ratio}\n"
+                )
+        else:
+            log_handle.write(
+                f"{tree_id}\t\t{gene_name}\t{root_ratio}\t{sister_ratio}\n"
+            )
+
+    keep_leaves = set(pruned_tree.get_leaf_names()) - to_remove
+    pruned_tree.prune(keep_leaves, preserve_branch_length=True)
+    return pruned_tree
+
+
+# ======================================================
+# Section 4: Main Pipeline (Orchestration)
+# ======================================================
+
+def prune_main_LB(
+    tree_dict: Dict[str, str],
+    voucher2taxa: Dict[str, str],
+    gene2renamed: Dict[str, str],
+    renamed2gene: Dict[str, str],
+    absolute_branch_length: float = 5,
+    relative_branch_length: float = 5,
+    visual: bool = False,
+) -> None:
     """
-    Generate a PDF from the phylogenetic tree before pruning.
-    Args:
-        tre_ID (str): Tree identifier.
-        phylo_t (object): The phylogenetic tree object.
-    Returns:
-        None
+    Run the long-branch pruning workflow across a set of gene trees.
+
+    Parameters
+    ----------
+    tree_dict : Dict[str, str]
+        Mapping from tree identifiers to Newick file paths.
+    voucher2taxa : Dict[str, str]
+        Mapping from voucher identifiers to taxa names.
+    gene2renamed : Dict[str, str]
+        Mapping from original gene identifiers to renamed identifiers.
+    renamed2gene : Dict[str, str]
+        Mapping from renamed gene identifiers to original gene names.
+    absolute_branch_length : float, optional
+        Absolute threshold for the root-relative branch ratio.
+    relative_branch_length : float, optional
+        Relative threshold for the sister-relative branch ratio.
+    visual : bool, optional
+        Whether to generate before/after tree visualization PDFs.
+
+    Returns
+    -------
+    None
+
+    Assumptions
+    -----------
+    Input trees are valid Newick files and names can be mapped by the provided
+    gene identifier dictionaries.
     """
-    ts = TreeStyle()
-    ts.show_leaf_name = False
-    ts.title.add_face(TextFace(f'{tre_ID}_before', fsize=10), column=0)
-    phylo_t.render(file_name=f'{tre_ID}_before.pdf', tree_style=ts)
+    color_map = create_color_mapping(voucher2taxa)
 
-def generate_pdf_after(tre_ID: str, phylo_t: object) -> None:
-    """
-    Generate a PDF from the phylogenetic tree after pruning.
-    Args:
-        tre_ID (str): Tree identifier.
-        phylo_t (object): The phylogenetic tree object.
-    Returns:
-        None
-    """
-    ts = TreeStyle()
-    ts.show_leaf_name = False
-    ts.title.add_face(TextFace(f'{tre_ID}_after', fsize=10), column=0)
-    phylo_t.render(file_name=f'{tre_ID}_after.pdf', tree_style=ts)
+    base_dir = os.getcwd()
+    pruned_dir = os.path.join(base_dir, "orthofilter_lb/pruned_tree")
+    log_dir = os.path.join(base_dir, "orthofilter_lb/long_branch_gene")
+    pdf_dir = os.path.join(base_dir, "orthofilter_lb/pruned_tree_pdf")
 
-def prune_main_LB(tre_dic: dict, voucher2taxa_dic: dict, gene2new_named_gene_dic: dict, new_named_gene2gene_dic: dict, absolute_branch_length:int=5, relative_branch_length: int=5, visual: bool = False) -> None:
-    """
-    Main function to prune long branches from phylogenetic trees and visualize the results.
-    Args:
-        tre_dic (dict): Dictionary mapping tree IDs to tree file paths.
-        voucher2taxa_dic (dict): Mapping from voucher to taxa.
-        gene2new_named_gene_dic (dict): Mapping from gene to renamed gene.
-        new_named_gene2gene_dic (dict): Mapping from renamed gene to original gene name.
-        absolute_branch_length (int, optional): Threshold for absolute branch length ratio. Default is 5.
-        relative_branch_length (int, optional): Threshold for relative branch length ratio. Default is 5.
-        visual (bool, optional): Whether to generate PDF visualizations. Default is False.
-    Returns:
-        None
-    """
-    color_dic = create_color_mapping(voucher2taxa_dic)
+    for d in (pruned_dir, log_dir, pdf_dir):
+        shutil.rmtree(d, ignore_errors=True)
+        os.makedirs(d, exist_ok=True)
 
-    dir_path_pruned = os.path.join(os.getcwd(), "orthofilter_lb/pruned_tree/")
-    shutil.rmtree(dir_path_pruned, ignore_errors=True)
-    os.makedirs(dir_path_pruned)
+    pbar = tqdm(tree_dict.items(), desc="Processing trees", unit="tree")
 
-    if visual:
-        dir_path_pdf = os.path.join(os.getcwd(), "orthofilter_lb/pruned_tree_pdf/")
-        shutil.rmtree(dir_path_pdf, ignore_errors=True)
-        os.makedirs(dir_path_pdf)
+    for tree_id, tree_path in pbar:
+        tree = Tree(tree_path)
+        tree.ladderize()
+        tree.resolve_polytomy(recursive=True)
+        tree.sort_descendants("support")
 
-    dir_path_long_branch = os.path.join(os.getcwd(), "orthofilter_lb/long_branch_gene/")
-    shutil.rmtree(dir_path_long_branch, ignore_errors=True)
-    os.makedirs(dir_path_long_branch)
+        tree = rename_input_tre(tree, gene2renamed)
+        num_tre_node(tree)
 
-    pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
-    for tre_ID, tre_path in tre_dic.items():
-        pbar.set_description(f"Processing {tre_ID}")
-        t0 = Tree(tre_path)
-        t0.ladderize()
-        t0.resolve_polytomy(recursive=True)
-        t0.sort_descendants("support")
-        t=rename_input_tre(t0,gene2new_named_gene_dic)
-        num_tre_node(t)
+        log_path = os.path.join(log_dir, f"{tree_id}_delete_gene.txt")
+        with open(log_path, "w") as log:
+            log.write(
+                "tre_ID\tlong_branch_label\tgene\t"
+                "root_relative_branch_ratio\tsister_relative_branch_ratio\n"
+            )
 
-        output_file = open(os.path.join(dir_path_long_branch, f'{tre_ID}_delete_gene.txt'), 'w')
-        output_file.write('tre_ID\tlong_branch_label\tgene\troot_relative_branch_ratio\tsister_relative_branch_ratio\n')        
-        
+            if visual:
+                styled = style_tree(tree, color_map, renamed2gene)
+                generate_tree_pdf(tree_id, styled, "before")
+
+            pruned_tree = remove_long_branches(
+                tree,
+                absolute_branch_length,
+                relative_branch_length,
+                log,
+                tree_id,
+                renamed2gene,
+            )
+
         if visual:
-            style_tree(t, color_dic, new_named_gene2gene_dic)
-            generate_pdf_before(tre_ID, t)
+            generate_tree_pdf(tree_id, pruned_tree, "after")
+            merge_pdfs(
+                f"{tree_id}_before.pdf",
+                f"{tree_id}_after.pdf",
+                os.path.join(pdf_dir, f"{tree_id}.pdf"),
+            )
+            os.remove(f"{tree_id}_before.pdf")
+            os.remove(f"{tree_id}_after.pdf")
 
-        t1 = remove_long_branches(t, absolute_branch_length, relative_branch_length,output_file, tre_ID, new_named_gene2gene_dic)
-        output_file.close()
+        restored_tree = rename_input_tre(pruned_tree, renamed2gene)
+        tree_str = trans_branch_length(restored_tree)
+        write_tree_to_newick(tree_str, tree_id, pruned_dir)
 
-        if visual:
-            generate_pdf_after(tre_ID, t1)
-            merge_pdfs(f"{tre_ID}_before.pdf", f"{tre_ID}_after.pdf", os.path.join(dir_path_pdf, f"{tre_ID}.pdf"))
-            os.remove(f"{tre_ID}_before.pdf")
-            os.remove(f"{tre_ID}_after.pdf")
-
-        t2 = rename_input_tre(t1, new_named_gene2gene_dic)
-        tree_str = trans_branch_length(t2)
-        write_tree_to_newick(tree_str, tre_ID, dir_path_pruned)
-        
-
-        pbar.update(1)
     pbar.close()
 
+
+# ======================================================
+# Section 5: CLI Entry Point
+# ======================================================
+
 if __name__ == "__main__":
-    tre_dic = read_and_return_dict('gf')
-    gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic,taxa2voucher_dic = gene_id_transfer('imap.txt')
-    absolute_branch_length=4
-    relative_branch_length=1.5
-    prune_main_LB(tre_dic, voucher2taxa_dic,gene2new_named_gene_dic, new_named_gene2gene_dic, absolute_branch_length,relative_branch_length, visual=True)
+    tree_dict = read_and_return_dict("gf")
+    (
+        gene2renamed,
+        renamed2gene,
+        voucher2taxa,
+        taxa2voucher,
+    ) = gene_id_transfer("imap.txt")
+
+    prune_main_LB(
+        tree_dict,
+        voucher2taxa,
+        gene2renamed,
+        renamed2gene,
+        absolute_branch_length=4,
+        relative_branch_length=1.5,
+        visual=True,
+    )
