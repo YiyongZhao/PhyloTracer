@@ -1,6 +1,19 @@
-from __init__ import *
+"""
+Gene duplication detection and reporting for the PhyloTracer pipeline.
+
+This module identifies duplication clades in gene trees relative to a species
+framework, classifies duplication patterns, and writes detailed summaries for
+phylogenomic interpretation.
+"""
+
 from collections import Counter
-import pandas as pd
+
+from __init__ import *
+
+# ======================================================
+# Section 1: Duplication Detection and Reporting
+# ======================================================
+
 
 def write_gene_duplication_results(
     output_file: str,
@@ -13,49 +26,78 @@ def write_gene_duplication_results(
     gene_to_new_name: dict,
     new_name_to_gene: dict,
     voucher_to_taxa: dict,
-    max_topology_distance: int
-):
+    max_topology_distance: int,
+) -> None:
     """
-    Write gene duplication detection results to a file for a set of gene trees.
+    Detect gene duplications and write detailed and summary outputs.
 
-    Args:
-        output_file (str): Path to the output file.
-        tree_paths (dict): Dictionary mapping tree IDs to tree file paths.
-        duplication_support_threshold (int): Minimum support value for a duplication node to be considered.
-        subclade_support_threshold (int): Minimum support value for sister clades.
-        duplicated_species_percentage_threshold (float): Minimum percentage of duplicated species required.
-        duplicated_species_count_threshold (int): Minimum number of duplicated species required.
-        species_tree (object): The reference species tree object.
-        gene_to_new_name (dict): Mapping from gene names to new names.
-        new_name_to_gene (dict): Mapping from new names back to gene names.
-        voucher_to_taxa (dict): Mapping from voucher IDs to taxa.
-        max_topology_distance (int): Maximum allowed topological distance between mapped child nodes in the species tree.
+    Parameters
+    ----------
+    output_file : str
+        Path to the duplication result table.
+    tree_paths : dict
+        Mapping from tree identifiers to file paths.
+    duplication_support_threshold : int
+        Minimum support required for a duplication node.
+    subclade_support_threshold : int
+        Minimum support required for subclade validation.
+    duplicated_species_percentage_threshold : float
+        Minimum duplicated species proportion for GD classification.
+    duplicated_species_count_threshold : int
+        Minimum duplicated species count for GD classification.
+    species_tree : object
+        Species tree object used for reconciliation.
+    gene_to_new_name : dict
+        Mapping from original gene identifiers to renamed identifiers.
+    new_name_to_gene : dict
+        Mapping from renamed identifiers to original gene identifiers.
+    voucher_to_taxa : dict
+        Mapping from voucher identifiers to taxa labels.
+    max_topology_distance : int
+        Maximum allowed topological deviation for model classification.
 
-    Returns:
-        None
+    Returns
+    -------
+    None
+
+    Assumptions
+    -----------
+    Gene trees are compatible with the species tree and ETE utilities.
     """
     print("=== Gene Duplication Detection Configuration ===")
     print(f"GD node support threshold: {duplication_support_threshold}")
     print(f"Subclade support threshold: {subclade_support_threshold}")
     print(f"Minimum duplicated species count: {duplicated_species_count_threshold}")
-    print(f"Duplicated species percentage threshold: {duplicated_species_percentage_threshold}")
-    print(f"Maximum topology distance: {max_topology_distance}")
+    print(
+        "Duplicated species percentage threshold: "
+        f"{duplicated_species_percentage_threshold}"
+    )
+    print(f"Maximum variance of deepth: {max_topology_distance}")
     print("===============================================")
 
-    gd_type_dict = {}
-    gd_num = 1
-    null = 'null'
+    gd_type_dict: dict[str, list[str]] = {}
+    gd_clade_count: dict[str, set[object]] = {}
+    gd_num_dict: dict[str, set[object]] = {}
 
-    with open(output_file, 'w') as file:
-        file.write('#tree_ID\tgd_id\tgd_support\tgene1\tgene2\tlevel\tspecies\tGD_dup_sps\tdup_ratio\tgd_type\tcomment\n')
+    gd_num = 1
+
+    with open(output_file, "w") as fout:
+        fout.write(
+            "#tree_ID\tgd_id\tgd_support\tgene1\tgene2\t"
+            "level\tspecies\tGD_dup_sps\tdup_ratio\tgd_type\tcomment\n"
+        )
 
         for tree_id, tree_path in tree_paths.items():
             gene_tree = read_phylo_tree(tree_path)
             gene_tree = rename_input_tre(gene_tree, gene_to_new_name)
+
             if len(gene_tree.children) != 2:
-                print(f'{tree_id} is not a binary tree')
+                print(f"[Skip] {tree_id} is not a binary tree")
                 continue
+
             num_tre_node(gene_tree)
+            annotate_gene_tree(gene_tree, species_tree)
+
             dup_node_list = find_dup_node(
                 gene_tree,
                 species_tree,
@@ -63,274 +105,249 @@ def write_gene_duplication_results(
                 subclade_support_threshold,
                 duplicated_species_count_threshold,
                 duplicated_species_percentage_threshold,
-                max_topology_distance
+                max_topology_distance,
             )
-            for node in dup_node_list:
-                clade = node
+
+            for node in gene_tree.traverse("postorder"):
+                if not hasattr(node, "map"):
+                    continue
+                parent = node.up
+                if parent and hasattr(parent, "map") and parent.map == node.map:
+                    continue
+                level = voucher_to_taxa.get(node.map, node.map)
+                if (species_tree & node.map).is_leaf():
+                    continue
+                gd_clade_count.setdefault(level, set()).add(node)
+
+            for clade in dup_node_list:
                 species_set = get_species_set(clade)
-                mapped_species_node = map_gene_tree_to_species(species_set, species_tree)
                 child_a, child_b = clade.get_children()
-                child_a_species_set = get_species_set(child_a)
-                child_b_species_set = get_species_set(child_b)
-                dup_species_count = count_common_elements(child_a_species_set, child_b_species_set)
-                dup_percentage = dup_species_count / len(species_set) if species_set else 0
-                model = get_model(clade, species_tree)
-                gene_pairs = gene_pair(clade)
-                parent = clade.map if hasattr(clade, 'map') else None
+                dup_species_count = len(get_species_set(child_a) & get_species_set(child_b))
+                dup_ratio = dup_species_count / len(species_set) if species_set else 0
+                gd_num_dict.setdefault(
+                    voucher_to_taxa.get(clade.map, clade.map),
+                    set(),
+                ).add(clade)
 
-                if not mapped_species_node.is_leaf():
-                    if mapped_species_node.name in gd_type_dict:
-                        gd_type_dict[mapped_species_node.name].append(model)
-                    else:
-                        gd_type_dict[mapped_species_node.name] = [model]
+                if dup_species_count == 1:
+                    raw_model = "Complex"
+                else:
+                    raw_model = get_model(clade, species_tree, max_topology_distance)
 
-                for gene_pair_str in gene_pairs:
-                    gene_a, gene_b = gene_pair_str.split('-')
-                    if gene_a.split('_')[0] == gene_b.split('_')[0]:
-                        species_code = gene_a.split('_')[0]
-                    else:
-                        species_code = gene_b.split('_')[0] if gene_a == 'null' else gene_a.split('_')[0]
-                    level = voucher_to_taxa.get(parent, parent) if parent else 'unknown'
-                    species = voucher_to_taxa.get(species_code, species_code)
-                    file.write(
+                mapped_parent = species_tree & clade.map
+                if mapped_parent.is_leaf():
+                    continue
+
+                gd_type_for_output = normalize_model(raw_model)
+
+                gd_type_dict.setdefault(
+                    voucher_to_taxa.get(clade.map, clade.map),
+                    [],
+                ).append(gd_type_for_output)
+
+                gene_pairs = get_gene_pairs(clade)
+                parent = clade.map if hasattr(clade, "map") else None
+                level = voucher_to_taxa.get(parent, parent) if parent else "unknown"
+
+                for sp, gene_a, gene_b in gene_pairs:
+                    species = voucher_to_taxa.get(sp, sp)
+
+                    fout.write(
                         f"{tree_id}\t{gd_num}\t{clade.support}\t"
-                        f"{new_name_to_gene.get(gene_a, null)}\t{new_name_to_gene.get(gene_b, null)}\t"
-                        f"{level}\t{species}\t{dup_species_count}\t{round(dup_percentage, 2)}\t"
-                        f"{model}\t-\n"
+                        f"{new_name_to_gene.get(gene_a, 'NA')}\t"
+                        f"{new_name_to_gene.get(gene_b, 'NA')}\t"
+                        f"{level}\t{species}\t"
+                        f"{dup_species_count}\t{round(dup_ratio, 4)}\t"
+                        f"{gd_type_for_output}\t-\n"
                     )
+
                 gd_num += 1
 
-    merged_data = count_elements_in_lists(gd_type_dict)
-    df = pd.DataFrame.from_dict(merged_data, orient='index').fillna(0)
-    df.to_csv('gd_type.tsv', sep='\t')
+    rows = []
 
-def merge_and_filter_types(
-    data: dict,
-    merge_map: dict
-) -> dict:
+    for node_name in gd_clade_count:
+        gd_num = len(gd_num_dict.get(node_name, set()))
+        clade_count = len(gd_clade_count[node_name])
+        ratio = round(gd_num / clade_count, 2)
+
+        type_counter = Counter(gd_type_dict.get(node_name, []))
+
+        rows.append(
+            {
+                "Newick_label": node_name,
+                "GD": gd_num,
+                "NUM": clade_count,
+                "GD_ratio": ratio,
+                "ABAB": type_counter.get("ABAB", 0),
+                "ABB": type_counter.get("ABB", 0),
+                "AAB": type_counter.get("AAB", 0),
+                "Complex": type_counter.get("Complex", 0),
+            }
+        )
+
+    df = pd.DataFrame(rows)
+    df = df.sort_values("Newick_label", key=lambda x: x.str[1:].astype(int))
+    df.to_csv("gd_type.tsv", sep="\t", index=False)
+
+
+# ======================================================
+# Section 2: Model Classification Utilities
+# ======================================================
+
+
+def normalize_model(raw_model: str) -> str:
     """
-    Merge and filter event types in the input data according to the merge_map.
+    Normalize a raw duplication model string into canonical types.
 
-    Args:
-        data (dict): A dictionary where keys are identifiers and values are Counter objects of event types.
-        merge_map (dict): A mapping from new event types to lists of event types to be merged.
+    Parameters
+    ----------
+    raw_model : str
+        Raw model string composed of A/B/X labels.
 
-    Returns:
-        dict: A dictionary with the same keys as data, but with merged event type counts.
+    Returns
+    -------
+    str
+        Canonical model label (ABAB, AAB, ABB, or Complex).
+
+    Assumptions
+    -----------
+    Canonical models are defined by A/B counts and symmetry rules.
     """
-    merged_data = {}
-    for key, counter in data.items():
-        new_counter = Counter()
-        for event_type, count in counter.items():
-            merged = False
-            for new_type, types_to_merge in merge_map.items():
-                if event_type in types_to_merge:
-                    new_counter[new_type] += count
-                    merged = True
-                    break
-            if not merged and event_type == 'AB<=>AB':
-                new_counter['ABAB'] += count
-        merged_data[key] = new_counter
-    return merged_data
+    nA = raw_model.count("A")
+    nB = raw_model.count("B")
 
-def count_elements_in_lists(data: dict) -> dict:
+    if nA == 2 and nB == 2:
+        return "ABAB"
+
+    if nA >= 2 and nB == 1:
+        return "AAB"
+
+    if nB >= 2 and nA == 1:
+        return "ABB"
+
+    return "Complex"
+
+
+def get_model(clade: object, species_tree: object, max_topology_distance: int) -> str:
     """
-    Count and merge event types in nested lists using merge_and_filter_types.
+    Assign a duplication model string based on clade mapping and topology.
 
-    Args:
-        data (dict): A dictionary where keys are identifiers and values are lists of event types.
+    Parameters
+    ----------
+    clade : object
+        Gene clade whose children define duplication pattern.
+    species_tree : object
+        Species tree used for topological comparison.
+    max_topology_distance : int
+        Maximum allowed distance for label assignment.
 
-    Returns:
-        dict: A dictionary with merged event type counts for each identifier.
+    Returns
+    -------
+    str
+        Raw model string composed of A/B/X labels.
+
+    Assumptions
+    -----------
+    Clade and species tree mappings are defined in ``clade.map``.
     """
-    counted_data = {key: Counter(value) for key, value in data.items()}
-    merge_map = {
-        'ABB': ['AB<=>B', 'B<=>AB', 'XB<=>AB', 'AB<=>XB'],
-        'AAB': ['AB<=>A', 'A<=>AB', 'AX<=>AB', 'AB<=>AX']
-    }
-    return merge_and_filter_types(counted_data, merge_map)
+    map_node = species_tree & clade.map
+    map_node_A, map_node_B = map_node.get_children()
+    child_a, child_b = clade.get_children()
+    child_a_a, child_a_b = child_a.get_children()
+    child_b_a, child_b_b = child_b.get_children()
 
-def get_model(clade: object, species_tree: object) -> str:
-    """
-    Assign labels to species clades and generate a model string based on the gene clade and species tree.
-
-    Args:
-        clade (object): The gene clade object, whose leaves contain species information in their names.
-        species_tree (object): The species tree object, supporting methods like get_common_ancestor and get_children.
-
-    Returns:
-        str: A string representing the model type, e.g., 'AAB', 'ABB', etc.
-    """
-    species_list = get_species_list(clade)
-    species_clade = species_tree.get_common_ancestor(set(species_list))
-
-    if not species_clade.get_children():
-        return ''
-
-    species_clade_a, species_clade_b = species_clade.get_children()[:2]
-
-    if species_clade_a.is_leaf():
-        species_clade_a.add_feature('label', 'Aa')
+    if calculate_deepvar(map_node_A, species_tree & child_a_a.map) <= max_topology_distance:
+        label_a_a = "A"
     else:
-        children = species_clade_a.get_children()[:2]
-        if children:
-            species_clade_a_1, species_clade_a_2 = children
-            for leaf in species_clade_a_1.get_leaves():
-                leaf.add_feature('label', 'A')
-            for leaf in species_clade_a_2.get_leaves():
-                leaf.add_feature('label', 'a')
+        label_a_a = "X"
 
-    if species_clade_b.is_leaf():
-        species_clade_b.add_feature('label', 'Bb')
+    if calculate_deepvar(map_node_B, species_tree & child_a_b.map) <= max_topology_distance:
+        label_a_b = "B"
     else:
-        children = species_clade_b.get_children()[:2]
-        if children:
-            species_clade_b_1, species_clade_b_2 = children
-            for leaf in species_clade_b_1.get_leaves():
-                leaf.add_feature('label', 'B')
-            for leaf in species_clade_b_2.get_leaves():
-                leaf.add_feature('label', 'b')
+        label_a_b = "X"
 
-    for node in clade.get_leaves():
-        species = node.name.split('_')[0]
-        species_leaf = species_clade & species
-        if species_leaf:
-            node.add_feature('label', species_leaf.label)
+    if calculate_deepvar(map_node_A, species_tree & child_b_a.map) <= max_topology_distance:
+        label_b_a = "A"
+    else:
+        label_b_a = "X"
 
-    children = clade.get_children()
+    if calculate_deepvar(map_node_B, species_tree & child_b_b.map) <= max_topology_distance:
+        label_b_b = "B"
+    else:
+        label_b_b = "X"
+
+    return label_a_a + label_a_b + label_b_a + label_b_b
+
+
+# ======================================================
+# Section 3: Gene Pair Extraction
+# ======================================================
+
+
+def get_gene_pairs(gd_node):
+    """
+    Extract gene pairs from a duplication node by species matching.
+
+    Parameters
+    ----------
+    gd_node : object
+        Duplication node whose child clades define gene pairs.
+
+    Returns
+    -------
+    list
+        List of (species, gene_left, gene_right) tuples.
+
+    Assumptions
+    -----------
+    Leaf names are formatted as ``species_gene`` strings.
+    """
+    children = gd_node.get_children()
     if len(children) != 2:
-        return ''
+        return []
 
-    up_clade = ''
-    up_clade += ''.join(node.label for node in children[0].get_leaves() if hasattr(node, 'label'))
-    up_clade += '<=>'
-    up_clade += ''.join(node.label for node in children[1].get_leaves() if hasattr(node, 'label'))
+    def collect_genes_by_species(clade):
+        sp2genes = {}
+        for leaf in clade.get_leaves():
+            sp = leaf.name.split("_", 1)[0]
+            if sp not in sp2genes:
+                sp2genes[sp] = []
+            sp2genes[sp].append(leaf.name)
+        return sp2genes
 
-    clade_up = set(up_clade.split('<=>')[0])
-    clade_down = set(up_clade.split('<=>')[1])
-    clade_up_sorted = ''.join(sorted(''.join(clade_up), key=lambda x: (x.lower(), x.isupper())))
-    clade_down_sorted = ''.join(sorted(''.join(clade_down), key=lambda x: (x.lower(), x.isupper())))
-    clade_model = clade_up_sorted + '<=>' + clade_down_sorted
+    left_map = collect_genes_by_species(children[0])
+    right_map = collect_genes_by_species(children[1])
 
-    return process_string(clade_model)
+    all_species = set(left_map.keys()) | set(right_map.keys())
 
-def process_string(input_string: str) -> str:
-    """
-    Process the input string by replacing specific character combinations.
+    pairs = []
+    for sp in all_species:
+        left_genes = left_map.get(sp, [None])
+        right_genes = right_map.get(sp, [None])
 
-    Args:
-        input_string (str): The input string to be processed.
+        for g1 in left_genes:
+            for g2 in right_genes:
+                pairs.append((sp, g1, g2))
 
-    Returns:
-        str: The processed string with specific character combinations replaced.
-    """
-    result = []
-    i = 0
-    length = len(input_string)
-    while i < length:
-        if i < length - 1 and input_string[i].upper() == input_string[i+1].upper() and input_string[i].lower() == input_string[i+1].lower():
-            result.append(input_string[i].upper())
-            i += 2
-        else:
-            char = input_string[i]
-            if char.upper() in ['A', 'B']:
-                result.append('X')
-            else:
-                result.append(char)
-            i += 1
-    return ''.join(result)
+    return pairs
 
-def get_model_dic(interspecies_node_list: list, gene_tree: object, species_tree: object) -> dict:
-    """
-    Generate a dictionary mapping model types to interspecies nodes based on the gene tree and species tree.
 
-    Args:
-        interspecies_node_list (list): A list of interspecies node identifiers.
-        gene_tree (object): The gene tree object, supporting '&' operation to extract clades.
-        species_tree (object): The species tree object, used to determine the model type for each clade.
-
-    Returns:
-        dict: A dictionary where keys are model types (as determined by get_model) and values are lists of interspecies node identifiers.
-    """
-    model_dict = {}
-    for node_id in interspecies_node_list:
-        clade = gene_tree & node_id
-        if clade:
-            model_type = get_model(clade, species_tree)
-            model_dict.setdefault(model_type, []).append(node_id)
-    return model_dict
-
-def get_empty_count_dict(species_tree: object) -> dict:
-    """
-    Generate an empty count dictionary for each node in the species tree.
-
-    Args:
-        species_tree (object): The species tree object, each node should have a name attribute.
-
-    Returns:
-        dict: A dictionary with node names as keys and zero as values.
-    """
-    return {node.name: 0 for node in species_tree.traverse() if hasattr(node, 'name')}
-
-def gene_pair(clade: object) -> set:
-    """
-    Generate gene pairs from two child clades based on matching species codes in leaf names.
-
-    Args:
-        clade: A clade object with a method get_children(), whose children have get_leaf_names().
-
-    Returns:
-        set: A set of gene pair strings in the format 'geneA-geneB', 'geneA-null', or 'null-geneB'.
-    """
-    result_pairs = set()
-    children = clade.get_children()
-    if len(children) != 2:
-        return result_pairs
-
-    child1, child2 = sorted(children, key=lambda c: len(c.get_leaf_names()), reverse=True)
-    leaves1 = child1.get_leaf_names()
-    leaves2 = child2.get_leaf_names()
-
-    species_to_genes1 = {}
-    for tip in leaves1:
-        species = tip.split('_')[0]
-        species_to_genes1.setdefault(species, []).append(tip)
-
-    species_to_genes2 = {}
-    for tip in leaves2:
-        species = tip.split('_')[0]
-        species_to_genes2.setdefault(species, []).append(tip)
-
-    all_species = set(species_to_genes1) | set(species_to_genes2)
-
-    for species in all_species:
-        genes1 = species_to_genes1.get(species, [])
-        genes2 = species_to_genes2.get(species, [])
-        if genes1 and genes2:
-            for g1 in genes1:
-                for g2 in genes2:
-                    result_pairs.add(f"{g1}-{g2}")
-        elif genes1:
-            for g1 in genes1:
-                result_pairs.add(f"{g1}-null")
-        elif genes2:
-            for g2 in genes2:
-                result_pairs.add(f"null-{g2}")
-
-    return result_pairs
+# ======================================================
+# Section 4: CLI Entry Point
+# ======================================================
 
 if __name__ == "__main__":
     duplication_support_threshold = 50
-    subclade_support_threshold = 50  # Assuming same as duplication_support_threshold based on original usage
+    subclade_support_threshold = 50
     duplicated_species_percentage_threshold = 0.5
     duplicated_species_count_threshold = 2
-    max_topology_distance = 0  # Assuming default value; adjust if needed
+    max_topology_distance = 0
     gene_to_new_name, new_name_to_gene, voucher_to_taxa = gene_id_transfer("imap.txt")
-    species_tree = PhyloTree('30sptree.nwk')
+    species_tree = PhyloTree("30sptree.nwk")
     species_tree = rename_species_tree(species_tree, voucher_to_taxa)
     num_tre_node(species_tree)
-    tree_paths = read_and_return_dict('GF.txt')
-    output_file = 'result.txt'
+    tree_paths = read_and_return_dict("GF.txt")
+    output_file = "result.txt"
     write_gene_duplication_results(
         output_file,
         tree_paths,
@@ -342,5 +359,5 @@ if __name__ == "__main__":
         gene_to_new_name,
         new_name_to_gene,
         voucher_to_taxa,
-        max_topology_distance
+        max_topology_distance,
     )

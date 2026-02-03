@@ -1,121 +1,260 @@
-from __init__ import *
+"""
+Gene duplication visualization utilities for the PhyloTracer pipeline.
+
+This module parses duplication results, aggregates events by species-tree
+nodes, and renders annotated species trees with duplication summaries.
+"""
+
 import re
+from collections import defaultdict
+
+from __init__ import *
+from ete3 import CircleFace, PieChartFace
+
+# ======================================================
+# Section 1: GD Result Parsing and Aggregation
+# ======================================================
+
 
 def process_gd_result(gd_file: str) -> list:
     """
-    Process the gene duplication result file and extract relevant data.
+    Parse gene duplication results produced by the pipeline.
 
-    Args:
-        gd_file (str): Path to the gene duplication result file.
+    Parameters
+    ----------
+    gd_file : str
+        Path to the gene duplication result file.
 
-    Returns:
-        list: A list of tuples containing gene duplication ID and level.
+    Returns
+    -------
+    list
+        List of (gd_id, level, gd_type) tuples.
+
+    Assumptions
+    -----------
+    The input file is tab-delimited with a header line starting with '#'.
     """
-    gds = []
-    with open(gd_file, 'r') as f:
+    records = []
+    with open(gd_file) as f:
         for line in f:
-            if line.startswith('#'):
+            if line.startswith("#"):
                 continue
-            parts = line.strip().split('\t')
-            gds.append((parts[1], parts[5]))
-    return gds
-	
+            parts = line.rstrip().split("\t")
+            if len(parts) < 10:
+                continue
+
+            gd_id = parts[1]
+            level = parts[5]
+            gd_type = parts[9]
+
+            records.append((gd_id, level, gd_type))
+
+    return records
+
+
 def get_count_dic(gene_duplications: list) -> dict:
     """
-    Count unique gene duplication events by level
+    Count unique duplication events per level and GD type.
 
-    Args:
-        gene_duplications (list): List of tuples containing (gene_dup_id, level)
+    Parameters
+    ----------
+    gene_duplications : list
+        List of (gd_id, level, gd_type) tuples.
 
-    Returns:
-        dict: Dictionary with levels as keys and counts as values
+    Returns
+    -------
+    dict
+        Nested dictionary mapping level to GD-type counts.
+
+    Assumptions
+    -----------
+    Each GD identifier is unique per level.
     """
-    count_dict = {}
-    seen_ids = set()
+    level_type_count = defaultdict(lambda: defaultdict(int))
+    seen_ids_per_level = defaultdict(set)
 
-    for dup_id, level in gene_duplications:
-        if dup_id not in seen_ids:
-            count_dict[level] = count_dict.get(level, 0) + 1
-            seen_ids.add(dup_id)
+    for gd_id, level, gd_type in gene_duplications:
+        if gd_id not in seen_ids_per_level[level]:
+            level_type_count[level][gd_type] += 1
+            seen_ids_per_level[level].add(gd_id)
 
-    return count_dict
+    return dict(level_type_count)
+
+
+# ======================================================
+# Section 2: Species Tree Annotation and Rendering
+# ======================================================
 
 
 def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
     """
-    Marks a species tree with gene duplication counts and taxa labels.
+    Annotate a species tree with duplication summaries and taxa labels.
 
-    Args:
-        sptree (object): The species tree object to be marked.
-        count_dic (dict): A dictionary mapping node names to gene duplication counts.
-        taxa (dict): A dictionary mapping leaf names to taxa labels.
+    Parameters
+    ----------
+    sptree : object
+        Species tree object to annotate and render.
+    count_dic : dict
+        Duplication counts by species-tree node and GD type.
+    taxa : dict
+        Mapping from leaf names to taxa labels.
 
-    Returns:
-        object: The marked species tree object.
+    Returns
+    -------
+    object
+        Rendered output from ``Tree.render``.
+
+    Assumptions
+    -----------
+    Species tree node names match those used in duplication summaries.
     """
     sptree.ladderize()
     sptree.sort_descendants("support")
 
     ts = TreeStyle()
     ts.scale = 20
+    ts.legend_position = 1
+    ts.show_leaf_name = False
+    ts.guiding_lines_type = 0
+    ts.guiding_lines_color = "black"
+    ts.draw_guiding_lines = True
     ts.extra_branch_line_type = 0
-    ts.extra_branch_line_color = 'black'
-    ts.branch_vertical_margin = -1
-    ts.legend_position = 1  
-    ts.legend.add_face(TextFace("  Legend:", fsize=8, bold=True), column=0)
-    ts.legend.add_face(TextFace("  Red numbers: Gene duplication events", fsize=8, fgcolor="red"), column=0)
-    ts.legend.add_face(TextFace("  Blue numbers: Node identifiers", fsize=8, fgcolor="blue"), column=0)
+    ts.extra_branch_line_color = "black"
 
-    for node in sptree.traverse():
-        nstyle = NodeStyle()
-        nstyle["fgcolor"] = "black"
-        nstyle["size"] = 0
-        nstyle["shape"] = "circle"
-        nstyle["vt_line_width"] = 1
-        nstyle["hz_line_width"] = 1
-        node.set_style(nstyle)
+    ts.legend.add_face(TextFace("  Legend:", fsize=6, ftype="Arial"), column=0)
+    ts.legend.add_face(
+        TextFace(
+            "  Red numbers: Gene duplication events",
+            fsize=6,
+            fgcolor="red",
+            ftype="Arial",
+        ),
+        column=0,
+    )
+    ts.legend.add_face(
+        TextFace(
+            "  Blue numbers: Node identifiers",
+            fsize=6,
+            fgcolor="blue",
+            ftype="Arial",
+        ),
+        column=0,
+    )
 
-        num = str(count_dic.get(node.name, 0))
-        node.add_face(TextFace(num+' ', fsize=5, fgcolor="red"), column=0, position="branch-top")
+    type_colors = {
+        "ABAB": "#1f77b4",
+        "ABB": "#ff7f0e",
+        "AAB": "#2ca02c",
+    }
+    type_order = ["ABAB", "ABB", "AAB"]
 
-        if re.match(r'^N\d+$', node.name):
-            node.add_face(TextFace(node.name+' ', fsize=5, fgcolor="blue"), column=0, position="branch-bottom")
+    ts.title.add_face(TextFace(" GD Events Distribution ", fsize=6, ftype="Arial"), column=0)
+    ts.title.add_face(CircleFace(4, type_colors["ABAB"]), column=1)
+    ts.title.add_face(TextFace(" ABAB", fsize=6, ftype="Arial"), column=2)
+    ts.title.add_face(CircleFace(4, type_colors["ABB"]), column=3)
+    ts.title.add_face(TextFace(" ABB", fsize=6), column=4)
+    ts.title.add_face(CircleFace(4, type_colors["AAB"]), column=5)
+    ts.title.add_face(TextFace(" AAB", fsize=6, ftype="Arial"), column=6)
 
     for leaf in sptree:
         if leaf.name in taxa:
             leaf.name = taxa[leaf.name]
 
+    for node in sptree.traverse():
+        nstyle = NodeStyle()
+        nstyle["size"] = 0
+        node.set_style(nstyle)
+        node_name = node.name
+
+        pie_face = None
+        if node_name in count_dic:
+            counts = {t: count_dic[node_name].get(t, 0) for t in type_order}
+            values = [counts[t] for t in type_order]
+            colors = [type_colors[t] for t in type_order]
+            total = sum(values)
+            if total > 0:
+                percentages = [round(v / total * 100, 1) for v in values]
+                diff = 100.0 - sum(percentages)
+                if percentages:
+                    percentages[0] += diff
+                pie_face = PieChartFace(percentages, width=6, height=6, colors=colors)
+
+        gd_text_face = None
+        if node_name in count_dic:
+            total_gd = sum(count_dic[node_name].values())
+            if total_gd > 0:
+                gd_text_face = TextFace(f"{total_gd}", fsize=6, fgcolor="red", ftype="Arial")
+
+        if node.is_leaf():
+            if pie_face:
+                node.add_face(pie_face, column=1, position="branch-top")
+            if gd_text_face:
+                node.add_face(gd_text_face, column=0, position="branch-top")
+            name_face = TextFace(node_name, fsize=6, fgcolor="black", ftype="Arial", fstyle="italic")
+            node.add_face(name_face, column=1, position="aligned")
+
+        else:
+            if gd_text_face:
+                node.add_face(gd_text_face, column=0, position="branch-top")
+            if pie_face:
+                node.add_face(pie_face, column=1, position="branch-top")
+            if re.match(r"^N\d+$", node_name):
+                id_face = TextFace(node_name, fsize=6, fgcolor="blue", ftype="Arial")
+                node.add_face(id_face, column=0, position="branch-bottom")
+
     realign_branch_length(sptree)
     rejust_root_dist(sptree)
 
-    return sptree.render('phylotracer_gd_visualizer.pdf', w=210, units="mm", tree_style=ts)
+    return sptree.render("phylotracer_gd_visualizer.pdf", w=210, units="mm", tree_style=ts)
+
+
+# ======================================================
+# Section 3: Main Pipeline (Orchestration)
+# ======================================================
+
 
 def gd_visualizer_main(sptree, gd_result, taxa):
     """
-    Main function to visualize gene duplication events on a species tree.
+    Visualize gene duplication events on a species tree.
 
-    Args:
-        sptree (object): The species tree object to be visualized.
-        gd_result (str): Path to the gene duplication result file.
-        taxa (dict): A dictionary mapping leaf names to taxa labels.
+    Parameters
+    ----------
+    sptree : object
+        Species tree object to be visualized.
+    gd_result : str
+        Path to the gene duplication result file.
+    taxa : dict
+        Mapping from leaf names to taxa labels.
+
+    Returns
+    -------
+    None
+
+    Assumptions
+    -----------
+    The GD result file uses canonical GD labels per event.
     """
     gds = process_gd_result(gd_result)
     count_dic = get_count_dic(gds)
     mark_sptree(sptree, count_dic, taxa)
 
+
+# ======================================================
+# Section 4: CLI Entry Point
+# ======================================================
+
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) != 4:
         print("Usage: python GD_Visualizer.py <species_tree_file> <gd_result_file> <taxa_file>")
         sys.exit(1)
-    
+
     species_tree_file = sys.argv[1]
     gd_result_file = sys.argv[2]
     taxa_file = sys.argv[3]
-    
+
     sptree = load_species_tree(species_tree_file)
     taxa_data = load_taxa(taxa_file)
-    
+
     gd_visualizer_main(sptree, gd_result_file, taxa_data)
-
-
