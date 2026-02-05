@@ -259,11 +259,14 @@ def get_path_str_with_count_num_lst(
     records = []
     path_info_list = []
     dup_nodes = find_dup_node(genetree, renamed_sptree)
+
     gd_id = gd_id_start
 
     for dup_node in dup_nodes:
         sp = get_species_set(dup_node)
-        max_clade2sp = mapp_gene_tree_to_species(sp, renamed_sptree)
+
+        max_clade2sp = map_species_set_to_node(renamed_sptree,sp)
+        
         gd_node_name = max_clade2sp.name
 
         voucher_to_pretty_path = {}
@@ -443,11 +446,12 @@ def get_path_str_num_dic(
 
     for tre_id, tre_path in tre_dic.items():
         t = PhyloTree(tre_path)
+        
         if len(t.children) != 2:
             print(f"{tre_id} is not a binary tree, skipping.")
             continue
         t1 = rename_input_tre(t, gene2new_named_gene_dic)
-
+        annotate_gene_tree(t1,renamed_sptree)
         records, path_info_list, new_gd_id = get_path_str_with_count_num_lst(
             tre_id,
             global_gd_id,

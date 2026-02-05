@@ -118,8 +118,7 @@ OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='OrthoF
 OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
 OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='TAXA_LIST', required=True, help='Input taxa file')
 OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-OrthoFilter_Mono_parser.add_argument('--branch_length_multiples', metavar='INT', type=int, default=5, required=True, help='Branch_length_multiples and default = 10')
-OrthoFilter_Mono_parser.add_argument('--insert_branch_index', metavar='INT', type=int, default=5, required=True, help='Insert_branch_index and default = 10')
+OrthoFilter_Mono_parser.add_argument('--inserted_depth', metavar='INT', type=int, default=5, required=True, help='Inserted_depth and default = 5')
 OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
 
 # TreeTopology_Summarizer command
@@ -315,17 +314,16 @@ def main():
 
     elif args.command == 'OrthoFilter_Mono':
         # Execute the OrthoFilter_Mono function
-        if args.input_GF_list and args.input_taxa and args.branch_length_multiples and args.insert_branch_index:
+        if args.input_GF_list and args.input_taxa and args.inserted_depth:
             start_time = time.time()
             input_GF_list = args.input_GF_list
             input_taxa = args.input_taxa
             input_imap = args.input_imap
-            long_branch_index = args.branch_length_multiples
-            insert_branch_index = args.insert_branch_index
+            inserted_deep = args.inserted_depth
             gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
             tre_dic = read_and_return_dict(input_GF_list)
             taxa_dic = read_and_return_dict(input_taxa)
-            prune_main_Mono(tre_dic, taxa_dic, long_branch_index, insert_branch_index, new_named_gene2gene_dic, gene2new_named_gene_dic, visual=args.visual)
+            prune_main_Mono(tre_dic, taxa_dic, inserted_deep, new_named_gene2gene_dic, gene2new_named_gene_dic, visual=args.visual)
             end_time = time.time()
             execution_time = end_time - start_time
             formatted_time = format_time(execution_time)
