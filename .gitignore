@@ -1,2 +1,15 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# MacOS
 .DS_Store
-**/.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+
+
