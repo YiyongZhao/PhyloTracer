@@ -11,6 +11,7 @@ import random
 import shutil
 from typing import Dict, List, Set, Tuple
 
+import re
 import numpy as np
 import pandas as pd
 from ete3 import NodeStyle, PhyloTree, TextFace, Tree, TreeStyle
@@ -246,6 +247,20 @@ def root_tre_with_midpoint_outgroup(tree: Tree) -> Tree:
 # =========================
 
 
+def num_sptree(sptree):
+    idx = 0
+    num=1
+    for i in sptree.traverse("postorder"):
+        i.add_feature("num", num)
+        num += 1
+        if not i.is_leaf():
+            i.name = f"S{idx}"
+            idx += 1
+
+    sptree.write(outfile="numed_sptree.nwk", format=1, format_root_node=True)
+    return sptree
+
+
 def num_tre_node(tree: Tree) -> Tree:
     """Assign deterministic internal-node identifiers in postorder.
 
@@ -389,9 +404,10 @@ def calculate_species_num(node) -> int:
 def annotate_gene_tree(gene_tree, species_tree):
     """Annotate a gene tree with species mapping and duplication features.
 
-    This function attaches three features to each node: ``map`` (species-tree
-    LCA name), ``overlap`` (species overlap between child clades), and
-    ``is_gd`` (duplication flag).
+    This function attaches four features to each node: ``map`` (species-tree
+    LCA name), ``depth`` (topological depth of the mapped node in the species
+    tree), ``overlap`` (species overlap between child clades), and ``is_gd``
+    (duplication flag).
 
     Args:
         gene_tree: ete3 PhyloTree representing a gene family.
@@ -404,25 +420,33 @@ def annotate_gene_tree(gene_tree, species_tree):
         Leaf names encode species as the prefix before ``_`` and the species
         tree contains matching leaf labels. Duplication is flagged when the
         overlap between child species sets is at least one (legacy criterion).
+        The ``depth`` feature is defined on the species tree (root = 0) and
+        reflects the evolutionary depth of the mapped LCA.
     """
+    for s_node in species_tree.traverse("preorder"):
+        if s_node.up is None:
+            s_node.add_feature("depth", 0)
+        else:
+            s_node.add_feature("depth", s_node.up.depth + 1)
+
     for node in gene_tree.traverse("postorder"):
-        # Map gene-tree nodes to species-tree labels for reconciliation.
         curr_sps = get_species_set(node)
 
         if not curr_sps:
             continue
 
-        # Map the node to the species-tree LCA of its descendant species.
         try:
             if len(curr_sps) == 1:
                 mapped_node = species_tree & list(curr_sps)[0]
             else:
                 mapped_node = species_tree.get_common_ancestor(list(curr_sps))
+
             node.add_feature("map", mapped_node.name)
+            node.add_feature("depth", mapped_node.depth)
         except Exception:
             node.add_feature("map", "unknown")
+            node.add_feature("depth", None)
 
-        # Overlap between child species sets is the legacy GD signal.
         if not node.is_leaf():
             children = node.get_children()
             if len(children) == 2:
@@ -655,7 +679,7 @@ def map_species_set_to_node(species_tree, species_set):
 
 def find_dup_node(
     gene_tree: PhyloTree,
-    species_tree: Tree,
+    species_tree: PhyloTree,
     gd_support: int = 50,
     clade_support: int = 0,
     dup_species_num: int = 2,
@@ -688,7 +712,7 @@ def find_dup_node(
     for node in gene_tree.traverse("postorder"):
         if node.is_leaf() or not getattr(node, "is_gd", False):
             continue
-
+        
         if not judge_support(node.support, gd_support):
             continue
 
@@ -702,31 +726,44 @@ def find_dup_node(
         species_set = get_species_set(node)
         if not species_set:
             continue
+        
 
-        sps_a = get_species_set(children[0])
-        sps_b = get_species_set(children[1])
-        overlap_sps = sps_a & sps_b
-        overlap_num = len(overlap_sps)
-
-        # Exclude small-scale duplications by enforcing a minimum overlap.
-        if overlap_num < dup_species_num:
+        if len(species_set) == 1:
+            dup_nodes.append(node)
             continue
 
-        if overlap_num / len(species_set) < dup_species_percent:
-            continue
+        elif len(species_set) == 2:
+            sps_tree_lca = species_tree.get_common_ancestor(list(species_set))
+            s_tree_leaves = set(sps_tree_lca.get_leaf_names())
+            
+            if species_set == s_tree_leaves:
+                dup_nodes.append(node)
+                continue
 
-        # Map overlap species to the species-tree LCA for topology validation.
-        dup_map = map_species_set_to_node(species_tree, overlap_sps)
+        else:
+            sps_a = get_species_set(children[0])
+            sps_b = get_species_set(children[1])
+            overlap_sps = sps_a & sps_b
+            overlap_num = len(overlap_sps)
+            # Exclude small-scale duplications by enforcing a minimum overlap.
+            if overlap_num < dup_species_num:
+                continue
 
-        clade_map = species_tree & node.map
+            if overlap_num / len(species_set) < dup_species_percent:
+                continue
 
-        if (
-            species_tree.get_distance(dup_map, clade_map, topology_only=False)
-            > max_topology_distance
-        ):
-            continue
+            # Map overlap species to the species-tree LCA for topology validation.
+            dup_map = map_species_set_to_node(species_tree, overlap_sps)
 
-        dup_nodes.append(node)
+            clade_map = species_tree & node.map
+
+            # if abs(children[0].depth-children[1].depth)  >max_topology_distance:
+            #     continue
+
+            if abs(clade_map.depth - dup_map.depth) > max_topology_distance:
+                continue
+
+            dup_nodes.append(node)
 
     return dup_nodes
 

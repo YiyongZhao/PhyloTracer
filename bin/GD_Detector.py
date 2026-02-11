@@ -6,6 +6,7 @@ framework, classifies duplication patterns, and writes detailed summaries for
 phylogenomic interpretation.
 """
 
+from calendar import c
 from collections import Counter
 
 from __init__ import *
@@ -79,7 +80,9 @@ def write_gene_duplication_results(
     gd_clade_count: dict[str, set[object]] = {}
     gd_num_dict: dict[str, set[object]] = {}
 
+
     gd_num = 1
+    pbar = tqdm(total=len(tree_paths), desc="Processing trees", unit="tree")
 
     with open(output_file, "w") as fout:
         fout.write(
@@ -88,16 +91,17 @@ def write_gene_duplication_results(
         )
 
         for tree_id, tree_path in tree_paths.items():
+            pbar.set_description(f"Processing {tree_id}")
             gene_tree = read_phylo_tree(tree_path)
             gene_tree = rename_input_tre(gene_tree, gene_to_new_name)
-
+            
             if len(gene_tree.children) != 2:
                 print(f"[Skip] {tree_id} is not a binary tree")
                 continue
 
             num_tre_node(gene_tree)
             annotate_gene_tree(gene_tree, species_tree)
-
+            
             dup_node_list = find_dup_node(
                 gene_tree,
                 species_tree,
@@ -108,6 +112,7 @@ def write_gene_duplication_results(
                 max_topology_distance,
             )
 
+
             for node in gene_tree.traverse("postorder"):
                 if not hasattr(node, "map"):
                     continue
@@ -117,8 +122,9 @@ def write_gene_duplication_results(
                 level = voucher_to_taxa.get(node.map, node.map)
                 if (species_tree & node.map).is_leaf():
                     continue
-                gd_clade_count.setdefault(level, set()).add(node)
 
+                gd_clade_count.setdefault(level, set()).add(node)
+            vis_num=1
             for clade in dup_node_list:
                 species_set = get_species_set(clade)
                 child_a, child_b = clade.get_children()
@@ -129,17 +135,67 @@ def write_gene_duplication_results(
                     set(),
                 ).add(clade)
 
-                if dup_species_count == 1:
+                
+                if len(get_species_set(clade)) == 1:
                     raw_model = "Complex"
                 else:
-                    raw_model = get_model(clade, species_tree, max_topology_distance)
+                    raw_model = get_model(clade, species_tree)
 
                 mapped_parent = species_tree & clade.map
+                
                 if mapped_parent.is_leaf():
                     continue
+                
+
+                # overlap_sps = get_species_set(child_a) & get_species_set(child_b)
+                # overlap_sps_mapped = map_species_set_to_node(species_tree, overlap_sps)
+
+
+
+                # if clade.map=='S45':                    
+                #     vis_clade=rename_input_tre(clade,new_name_to_gene)
+                #     vis_clade.add_face(TextFace(clade.map, fsize=6, ftype="Arial",fgcolor='red'),column=0)
+                #     vis_clade.add_face(TextFace(f"{clade.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
+                #     a,b=vis_clade.get_children()
+                #     a.add_face(TextFace(a.map, fsize=6, ftype="Arial",fgcolor='red'),column=0)
+                #     a.add_face(TextFace(f"{a.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
+                #     b.add_face(TextFace(b.map, fsize=6, ftype="Arial",fgcolor='red'),column=0)
+                #     b.add_face(TextFace(f"{b.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
+                #     a_a,a_b=a.get_children()
+                #     b_a,b_b=b.get_children()
+
+                #     a_a.add_face(TextFace(voucher_to_taxa.get(a_a.map, a_a.map), fsize=6, ftype="Arial",fgcolor='red'),column=0)
+                #     a_a.add_face(TextFace(f"{a_a.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
+                #     a_b.add_face(TextFace(f"{a_b.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
+                #     a_b.add_face(TextFace(voucher_to_taxa.get(a_b.map, a_b.map), fsize=6, ftype="Arial",fgcolor='red'),column=0)
+                #     b_a.add_face(TextFace(f"{b_a.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
+                #     b_b.add_face(TextFace(f"{b_b.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
+                #     b_a.add_face(TextFace(voucher_to_taxa.get(b_a.map, b_a.map), fsize=6, ftype="Arial",fgcolor='red'),column=0)
+                #     b_b.add_face(TextFace(voucher_to_taxa.get(b_b.map, b_b.map), fsize=6, ftype="Arial",fgcolor='red'),column=0)
+                    
+                #     ts = TreeStyle()
+                #     ts.scale = 10
+                #     ts.legend_position = 1
+                #     ts.show_leaf_name = False
+                #     ts.guiding_lines_type = 0
+                #     ts.guiding_lines_color = "black"
+                #     ts.draw_guiding_lines = True
+                #     ts.extra_branch_line_type = 0
+                #     ts.extra_branch_line_color = "black"
+                #     ts.legend.add_face(TextFace(f'Clade gd type is {raw_model}', fsize=6, ftype="Arial",fgcolor='red'), column=0)
+                #     ts.legend.add_face(TextFace(f"Clade name is {clade.map} Overlap name is {overlap_sps_mapped.name}", fsize=6, ftype="Arial",fgcolor='red'), column=0)
+                #     ts.legend.add_face(TextFace(f"Clade depth is {clade.depth} Overlap depth is {overlap_sps_mapped.depth}", fsize=6, ftype="Arial",fgcolor='red'), column=0)
+                #     ts.legend.add_face(TextFace(f"Deepvar is ({abs(clade.depth-overlap_sps_mapped.depth)})", fsize=6, ftype="Arial",fgcolor='red'), column=0)
+
+                #     vis_clade.render(f"{tree_id}_{vis_num}_{clade.map}.pdf", tree_style=ts)
+                #     vis_num+=1
+
+                
+
+
 
                 gd_type_for_output = normalize_model(raw_model)
-
+                
                 gd_type_dict.setdefault(
                     voucher_to_taxa.get(clade.map, clade.map),
                     [],
@@ -162,6 +218,8 @@ def write_gene_duplication_results(
                     )
 
                 gd_num += 1
+            pbar.update()
+        pbar.close()
 
     rows = []
 
@@ -178,9 +236,9 @@ def write_gene_duplication_results(
                 "GD": gd_num,
                 "NUM": clade_count,
                 "GD_ratio": ratio,
-                "ABAB": type_counter.get("ABAB", 0),
-                "ABB": type_counter.get("ABB", 0),
-                "AAB": type_counter.get("AAB", 0),
+                "AABB": type_counter.get("AABB", 0),
+                "AXBB": type_counter.get("AXBB", 0),
+                "AABX": type_counter.get("AABX", 0),
                 "Complex": type_counter.get("Complex", 0),
             }
         )
@@ -213,71 +271,53 @@ def normalize_model(raw_model: str) -> str:
     -----------
     Canonical models are defined by A/B counts and symmetry rules.
     """
-    nA = raw_model.count("A")
-    nB = raw_model.count("B")
+    if raw_model in ("AXBB", "XABB"):
+        return "AXBB"
+    if raw_model in ("AABX", "AAXB"):
+        return "AABX"
+    else:
+        return raw_model
 
-    if nA == 2 and nB == 2:
-        return "ABAB"
+def order_children_by_name(n):
+    c1, c2 = n.get_children()
+    def key(x):
+        m = x.num
+        return int(m) if m else 10**18
+    return (c1, c2) if key(c1) <= key(c2) else (c2, c1)
 
-    if nA >= 2 and nB == 1:
-        return "AAB"
-
-    if nB >= 2 and nA == 1:
-        return "ABB"
-
-    return "Complex"
-
-
-def get_model(clade: object, species_tree: object, max_topology_distance: int) -> str:
+def get_model(clade: object, species_tree: object) -> str:
     """
-    Assign a duplication model string based on clade mapping and topology.
+    Assign GD type (ABAB / ABB / AAB / OTHER) in a tree2gd-equivalent manner.
 
-    Parameters
-    ----------
-    clade : object
-        Gene clade whose children define duplication pattern.
-    species_tree : object
-        Species tree used for topological comparison.
-    max_topology_distance : int
-        Maximum allowed distance for label assignment.
-
-    Returns
-    -------
-    str
-        Raw model string composed of A/B/X labels.
-
-    Assumptions
-    -----------
-    Clade and species tree mappings are defined in ``clade.map``.
+    Notes
+    -----
+    - max_topology_distance is ignored (kept only for interface compatibility)
+    - No topology distance is used
+    - No grandchild decomposition is used
     """
+
+    # 1. duplication node 在 species tree 上的映射节点 S
     map_node = species_tree & clade.map
-    map_node_A, map_node_B = map_node.get_children()
-    child_a, child_b = clade.get_children()
-    child_a_a, child_a_b = child_a.get_children()
-    child_b_a, child_b_b = child_b.get_children()
 
-    if calculate_deepvar(map_node_A, species_tree & child_a_a.map) <= max_topology_distance:
-        label_a_a = "A"
-    else:
-        label_a_a = "X"
+    # 2. species tree 的二分：A / B
+    map_node_A, map_node_B = order_children_by_name(map_node)
+    A_species = get_species_set(map_node_A)
+    B_species = get_species_set(map_node_B)
 
-    if calculate_deepvar(map_node_B, species_tree & child_a_b.map) <= max_topology_distance:
-        label_a_b = "B"
-    else:
-        label_a_b = "X"
+    # 3. duplication node 的两个子 clade（只看这一层）
+    left_clade, right_clade = clade.get_children()
 
-    if calculate_deepvar(map_node_A, species_tree & child_b_a.map) <= max_topology_distance:
-        label_b_a = "A"
-    else:
-        label_b_a = "X"
+    # 4. 各子 clade 覆盖的物种集合
+    left_species = get_species_set(left_clade)
+    right_species = get_species_set(right_clade)
 
-    if calculate_deepvar(map_node_B, species_tree & child_b_b.map) <= max_topology_distance:
-        label_b_b = "B"
-    else:
-        label_b_b = "X"
+    gdtype=''
+    gdtype+='A' if left_species & A_species else 'X'
+    gdtype+='A' if right_species & A_species else 'X'
+    gdtype+='B' if left_species & B_species else 'X'
+    gdtype+='B' if right_species & B_species else 'X'
 
-    return label_a_a + label_a_b + label_b_a + label_b_b
-
+    return gdtype
 
 # ======================================================
 # Section 3: Gene Pair Extraction

@@ -110,6 +110,7 @@ def branch_length_numeric_converter_main(
     pbar = tqdm(total=len(tree_dict), desc="Processing trees", unit="tree")
     for tree_id, tree_path in tree_dict.items():
         try:
+            pbar.set_description(f"Processing {tree_id}")
             tree = read_tree(tree_path)
             if decimal_places is None:
                 tree_str = trans_branch_length(tree)

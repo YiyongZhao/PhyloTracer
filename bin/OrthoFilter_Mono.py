@@ -1,34 +1,27 @@
 """
-Monophyletic ortholog pruning based on insertion topology for PhyloTracer.
+Monophyletic ortholog pruning guided by dominant-lineage purity in PhyloTracer.
 
-This module removes insertion artifacts from gene trees using topology-based
-insertion depth and coverage metrics. It optionally renders diagnostic PDFs
-and writes pruned trees for downstream orthology inference.
+This module detects dominant Brassicaceae lineages in gene trees and removes
+alien tips using species-tree distance, coverage, and insertion depth metrics.
+It optionally renders diagnostic PDFs and writes pruned trees for downstream
+orthology inference.
 
 Long-branch filtering is intentionally excluded and handled in a separate module.
 """
 
-# ======================================================
-# Imports
-# ======================================================
+import matplotlib.colors as colors
+import matplotlib.pyplot as plt
+from PyPDF4 import PdfFileReader, PdfFileWriter
 
 from __init__ import *
-
-import os
-import shutil
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-
-from PyPDF4 import PdfFileReader, PdfFileWriter
 from BranchLength_NumericConverter import (
     trans_branch_length,
     write_tree_to_newick,
 )
 
-# ======================================================
-# Section 1: Naming & Tree Utilities
-# ======================================================
+# --------------------------
+# 1. Naming and Tree Utilities
+# --------------------------
 
 
 def rename_input_single_tre(
@@ -36,32 +29,24 @@ def rename_input_single_tre(
     taxa_dic: dict,
     new_named_gene2gene_dic: dict,
 ) -> object:
-    """
-    Prefix species names to gene identifiers on leaf nodes.
+    """Prefix species names to gene identifiers on leaf nodes.
 
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE gene tree whose leaves will be renamed.
-    taxa_dic : dict
-        Mapping from gene identifiers to species names.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed identifiers to original gene names.
+    Args:
+        Phylo_t (object): ETE gene tree whose leaves will be renamed.
+        taxa_dic (dict): Mapping from gene identifiers to species names.
+        new_named_gene2gene_dic (dict): Mapping from renamed identifiers to original gene names.
 
-    Returns
-    -------
-    object
-        Tree with leaf names updated as ``species_gene``.
+    Returns:
+        object: Tree with leaf names updated as ``species_gene``.
 
-    Assumptions
-    -----------
-    Gene identifiers can be mapped to species using ``taxa_dic``.
+    Assumptions:
+        Gene identifiers can be mapped to species using ``taxa_dic``.
     """
     for node in Phylo_t:
         gene = new_named_gene2gene_dic.get(node.name, node.name)
-        species = taxa_dic.get(gene)
-        if species:
-            node.name = f"{species}_{node.name}"
+        lineage = taxa_dic.get(gene)
+        if lineage:
+            node.name = f"{lineage}|{node.name}"
     return Phylo_t
 
 
@@ -69,459 +54,582 @@ def rename_output_tre(
     Phylo_t: object,
     new_named_gene2gene_dic: dict,
 ) -> object:
-    """
-    Restore original gene identifiers from composite leaf names.
+    """Restore original gene identifiers from composite leaf names.
 
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE gene tree whose leaves will be renamed.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed identifiers to original gene names.
+    Args:
+        Phylo_t (object): ETE gene tree whose leaves will be renamed.
+        new_named_gene2gene_dic (dict): Mapping from renamed identifiers to original gene names.
 
-    Returns
-    -------
-    object
-        Tree with restored gene identifiers.
+    Returns:
+        object: Tree with restored gene identifiers.
 
-    Assumptions
-    -----------
-    Leaf names follow the ``species_gene`` composite convention.
+    Assumptions:
+        Leaf names follow the ``species|gene`` composite convention.
     """
     for node in Phylo_t:
-        parts = node.name.split("_")
-        gene = "_".join(parts[1:]) if len(parts) > 1 else node.name
+        parts = node.name.split("|")
+        gene = parts[1]
         node.name = new_named_gene2gene_dic.get(gene, gene)
     return Phylo_t
 
 
-def _resolve_original_gene_name(
+# --------------------------
+# 4. Dominant-Lineage Metrics
+# --------------------------
+
+
+def parse_leaf_components(leaf_name: str) -> tuple:
+    """Parse clade, voucher, and gene index components from a leaf name.
+
+    Args:
+        leaf_name (str): Leaf name encoded as ``clade|voucher_index``.
+
+    Returns:
+        tuple: (clade_label, voucher_code, gene_index) with empty strings
+            when components cannot be inferred.
+
+    Assumptions:
+        The final two vertical bar-delimited tokens represent the voucher and 
+        gene index, while any preceding tokens belong to the clade label.
+    """
+    parts = leaf_name.split("|")
+    if len(parts) >= 3:
+        clade_label = "|".join(parts[:-2])
+        voucher_code = parts[-2]
+        gene_index = parts[-1]
+        return clade_label, voucher_code, gene_index
+    if len(parts) == 2:
+        return parts[0], parts[1], ""
+    return leaf_name, "", ""
+
+
+def get_leaf_clade(
     leaf_name: str,
+    taxa_dic: dict,
     new_named_gene2gene_dic: dict,
 ) -> str:
+    """Resolve the clade label for a leaf node.
+
+    Args:
+        leaf_name (str): Leaf name encoded as ``clade|voucher_index``.
+        taxa_dic (dict): Mapping from original gene IDs to clade labels.
+        new_named_gene2gene_dic (dict): Mapping from renamed identifiers to original gene names.
+
+    Returns:
+        str: Clade label for the leaf.
+
+    Assumptions:
+        Leaf names were prefixed with clade labels using ``rename_input_single_tre``.
     """
-    Resolve original gene identifier from a composite leaf name.
+    clade_label, _, _ = parse_leaf_components(leaf_name)
+    if clade_label and clade_label != leaf_name:
+        return clade_label
+    gene = leaf_name.split("|")[-1]
+    return taxa_dic.get(gene, clade_label)
 
-    Parameters
-    ----------
-    leaf_name : str
-        Leaf name encoded as ``species_gene`` or a raw gene ID.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed identifiers to original gene names.
 
-    Returns
-    -------
-    str
-        Original gene identifier.
+def get_leaf_voucher(leaf_name: str) -> str:
+    """Extract voucher code from a leaf name.
 
-    Assumptions
-    -----------
-    Composite names use underscores to separate species and gene parts.
+    Args:
+        leaf_name (str): Leaf name encoded as ``clade|voucher_index`` or ``voucher_index``.
+
+    Returns:
+        str: Voucher code parsed from the leaf name.
+
+    Assumptions:
+        Voucher codes are the second-to-last token when a clade prefix exists,
+        or the first token when only ``voucher_index`` is present.
     """
-    parts = leaf_name.split("_")
-    candidate = "_".join(parts[1:]) if len(parts) > 1 else leaf_name
-    return new_named_gene2gene_dic.get(candidate, leaf_name)
-
-
-# ======================================================
-# Section 2: Copy Number & Taxon Structure
-# ======================================================
-
-
-def is_multi_copy_tree(Phylo_t: object) -> bool:
-    """
-    Determine whether a tree contains multiple copies per species.
-
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE gene tree to evaluate.
-
-    Returns
-    -------
-    bool
-        True if leaf count differs from the number of unique species.
-
-    Assumptions
-    -----------
-    Species identifiers can be parsed by ``get_species_set``.
-    """
-    return len(Phylo_t.get_leaf_names()) != len(get_species_set(Phylo_t))
-
-
-def get_single_clades(Phylo_t: object, result_set: set) -> None:
-    """
-    Recursively collect clades containing a single species.
-
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE tree or subtree to traverse.
-    result_set : set
-        Mutable set to collect single-taxon clades.
-
-    Returns
-    -------
-    None
-
-    Assumptions
-    -----------
-    Species counts are computed by ``get_species_set``.
-    """
-    if len(get_species_set(Phylo_t)) == 1:
-        result_set.add(Phylo_t)
-        return
-    for child in Phylo_t.get_children():
-        get_single_clades(child, result_set)
-
-
-def get_node_single_taxa_dict(Phylo_t: object) -> dict:
-    """
-    Map each species to its corresponding single-taxon clades.
-
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE gene tree to analyze.
-
-    Returns
-    -------
-    dict
-        Mapping from species to lists of single-taxon clades.
-
-    Assumptions
-    -----------
-    Each single-taxon clade contains exactly one species label.
-    """
-    result = {}
-    clades = set()
-    get_single_clades(Phylo_t, clades)
-
-    for clade in clades:
-        species = get_species_list(clade)[0]
-        result.setdefault(species, []).append(clade)
-
-    return dict(sorted(result.items(), key=lambda x: len(x[1]), reverse=True))
-
-
-def is_single_tree(Phylo_t: object) -> bool:
-    """
-    Check whether each species appears in only one clade.
-
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE gene tree to evaluate.
-
-    Returns
-    -------
-    bool
-        True if each species maps to exactly one clade.
-
-    Assumptions
-    -----------
-    Single-taxon clades are identified by ``get_node_single_taxa_dict``.
-    """
-    return all(len(v) == 1 for v in get_node_single_taxa_dict(Phylo_t).values())
-
-
-# ======================================================
-# Section 3: Insertion Metrics (Topology-Based)
-# ======================================================
-
-
-def calculate_insertion_index(node: object) -> float:
-    """
-    Compute minimum insertion ratio along the path to root.
-
-    Parameters
-    ----------
-    node : object
-        ETE node for which the insertion ratio is computed.
-
-    Returns
-    -------
-    float
-        Minimum ratio of node leaf count to ancestor leaf count.
-
-    Assumptions
-    -----------
-    Node leaf counts are non-zero along the ancestor path.
-    """
-    index = 1.0
-    current = node
-
-    while current.up:
-        parent = current.up
-        if len(parent) == 0:
-            return 0.0
-        ratio = len(node) / len(current)
-        index = min(index, ratio)
-        current = parent
-
-    return index
-
-
-def calculate_insertion_depth(clade: object, node: object) -> int:
-    """
-    Compute topological distance between clade root and node.
-
-    Parameters
-    ----------
-    clade : object
-        Clade used as the reference root.
-    node : object
-        Node whose depth is measured within the clade.
-
-    Returns
-    -------
-    int
-        Topological distance from clade to node.
-
-    Assumptions
-    -----------
-    Topology-only distances are supported by the tree object.
-    """
-    return clade.get_distance(node, topology_only=True) if clade else 0
-
-
-def calculate_insertion_coverage(clade: object, node: object) -> float:
-    """
-    Compute coverage ratio of node tips relative to clade tips.
-
-    Parameters
-    ----------
-    clade : object
-        Clade used as the reference set of tips.
-    node : object
-        Node whose tip coverage is measured.
-
-    Returns
-    -------
-    float
-        Ratio of node tips to clade tips.
-
-    Assumptions
-    -----------
-    Clade size is non-zero when defined.
-    """
-    return len(node) / len(clade) if clade and len(clade) else 0.0
-
-
-def calculate_insertion(clade: object, node: object) -> float:
-    """
-    Compute insertion score as depth divided by coverage.
-
-    Parameters
-    ----------
-    clade : object
-        Reference clade for depth calculation.
-    node : object
-        Node to score.
-
-    Returns
-    -------
-    float
-        Insertion score for the node.
-
-    Assumptions
-    -----------
-    Coverage values of zero yield a score of 0.0.
-    """
-    coverage = calculate_insertion_coverage(clade, node)
-    return calculate_insertion_depth(clade, node) / coverage if coverage != 0 else 0.0
-
-
-def get_target_clade(clade: object) -> object:
-    """
-    Identify nearest ancestor containing exactly two species.
-
-    Parameters
-    ----------
-    clade : object
-        Starting clade for ancestor traversal.
-
-    Returns
-    -------
-    object
-        Target ancestor clade or None if not found.
-
-    Assumptions
-    -----------
-    Species counts are computed by ``get_species_set``.
-    """
-    for ancestor in clade.get_ancestors():
-        sp_num = len(get_species_set(ancestor))
-        if sp_num > 2:
-            break
-        if sp_num == 2:
-            return ancestor
-    return None
-
-
-def is_ancestor_sister_same(node: object) -> bool:
-    """
-    Test whether node and its ancestor share the same sister taxon.
-
-    Parameters
-    ----------
-    node : object
-        Node to evaluate.
-
-    Returns
-    -------
-    bool
-        True if the sister taxa match across the node and its ancestor.
-
-    Assumptions
-    -----------
-    Species identifiers can be extracted by ``get_species_list``.
-    """
-    if not node.up or node.up.is_root():
-        return False
-
-    sps = get_species_list(node)
-    if not sps:
-        return False
-
-    sister = node.get_sisters()[0] if node.get_sisters() else None
-    ancestor_sister = node.up.get_sisters()[0] if node.up.get_sisters() else None
-
-    if not sister or not ancestor_sister:
-        return False
-
-    return get_species_list(sister)[0] == get_species_list(ancestor_sister)[0]
-
-
-# ======================================================
-# Section 4: Pruning Core (Insertion-based)
-# ======================================================
-
-
-def remove_insert_gene(
+    parts = leaf_name.split("|")
+    if len(parts) >= 3:
+        return parts[-2]
+    if len(parts) == 2:
+        return parts[0]
+    return leaf_name
+
+
+def build_leaf_annotations(
     Phylo_t: object,
-    inserted_depth: int,
-    outfile,
-    tre_ID: str,
+    taxa_dic: dict,
     new_named_gene2gene_dic: dict,
+) -> tuple:
+    """Annotate leaves with clade labels and voucher codes.
+
+    Args:
+        Phylo_t (object): ETE gene tree to annotate.
+        taxa_dic (dict): Mapping from original gene IDs to clade labels.
+        new_named_gene2gene_dic (dict): Mapping from renamed identifiers to original gene names.
+
+    Returns:
+        tuple: (leaf_to_clade, leaf_to_voucher) dictionaries.
+
+    Assumptions:
+        Leaf naming follows the ``clade|voucher_index`` convention.
+    """
+    leaf_to_clade = {}
+    leaf_to_voucher = {}
+    for leaf in Phylo_t.iter_leaves():
+        leaf_to_clade[leaf.name] = get_leaf_clade(
+            leaf.name,
+            taxa_dic,
+            new_named_gene2gene_dic,
+        )
+        leaf_to_voucher[leaf.name] = get_leaf_voucher(leaf.name)
+    return leaf_to_clade, leaf_to_voucher
+
+
+def compute_gene_tree_depths(Phylo_t: object) -> dict:
+    """Compute topological depths for gene-tree nodes.
+
+    Args:
+        Phylo_t (object): ETE gene tree to traverse.
+
+    Returns:
+        dict: Mapping from node objects to integer depths from the root.
+
+    Assumptions:
+        The tree is connected and acyclic.
+    """
+    depths = {}
+    for node in Phylo_t.traverse("preorder"):
+        if node.is_root():
+            depths[node] = 0
+        else:
+            depths[node] = depths[node.up] + 1
+    return depths
+
+
+def compute_species_tree_depths(species_tree: object) -> dict:
+    """Compute topological depths for species-tree nodes.
+
+    Args:
+        species_tree (object): Rooted species tree.
+
+    Returns:
+        dict: Mapping from species-tree nodes to integer depths.
+
+    Assumptions:
+        The species tree is rooted and connected.
+    """
+    depths = {}
+    for node in species_tree.traverse("preorder"):
+        if node.is_root():
+            depths[node] = 0
+        else:
+            depths[node] = depths[node.up] + 1
+    return depths
+
+
+def get_species_tree_depth_for_set(
+    species_tree: object,
+    depth_map: dict,
+    species_set: set,
+    cache: dict,
+) -> int:
+    """Return species-tree depth for the MRCA of a species set.
+
+    Args:
+        species_tree (object): Rooted species tree.
+        depth_map (dict): Node-to-depth mapping for the species tree.
+        species_set (set): Species identifiers mapped to voucher codes.
+        cache (dict): Cache for previously computed species sets.
+
+    Returns:
+        int: Depth of the MRCA node, or 0 when mapping fails.
+
+    Assumptions:
+        Species identifiers exist as leaf names in the species tree.
+    """
+    if not species_set:
+        return 0
+    key = frozenset(species_set)
+    if key in cache:
+        return cache[key]
+    try:
+        if len(species_set) == 1:
+            mapped_node = species_tree & list(species_set)[0]
+        else:
+            mapped_node = species_tree.get_common_ancestor(list(species_set))
+        depth = depth_map.get(mapped_node, 0)
+    except Exception:
+        depth = 0
+    cache[key] = depth
+    return depth
+
+
+def count_clade_leaves(node: object, leaf_to_clade: dict, target_clade: str) -> tuple:
+    """Count target-clade and total leaves under a node.
+
+    Args:
+        node (object): ETE node to summarize.
+        leaf_to_clade (dict): Mapping from leaf names to clade labels.
+        target_clade (str): Target clade label.
+
+    Returns:
+        tuple: (target_count, total_count).
+
+    Assumptions:
+        Leaf annotations are precomputed and complete.
+    """
+    target_count = 0
+    total_count = 0
+    for leaf in node.iter_leaves():
+        total_count += 1
+        if leaf_to_clade.get(leaf.name) == target_clade:
+            target_count += 1
+    return target_count, total_count
+
+
+def collect_dominant_lineages(
+    Phylo_t: object,
+    leaf_to_clade: dict,
+    target_clade: str,
+    dominant_purity: float,
+) -> list:
+    """Identify maximal dominant lineages for a target clade.
+
+    Args:
+        Phylo_t (object): ETE gene tree to scan.
+        leaf_to_clade (dict): Mapping from leaf names to clade labels.
+        target_clade (str): Target clade label.
+        dominant_purity (float): Minimum purity threshold for dominant lineages.
+
+    Returns:
+        list: List of dominant lineage root nodes.
+
+    Assumptions:
+        A dominant lineage has more target tips than alien tips and purity above
+        the specified cutoff, with at least two target tips.
+    """
+    dominant_roots = []
+    for node in Phylo_t.traverse("preorder"):
+        target_count, total_count = count_clade_leaves(node, leaf_to_clade, target_clade)
+        if target_count <= 1 or total_count == 0:
+            continue
+        alien_count = total_count - target_count
+        purity = target_count / total_count
+        if purity < dominant_purity or target_count <= alien_count:
+            continue
+        if any(ancestor in dominant_roots for ancestor in node.get_ancestors()):
+            continue
+        dominant_roots.append(node)
+    return dominant_roots
+
+
+def collect_alien_lineage_candidates(
+    dominant_root: object,
+    leaf_to_clade: dict,
+    target_clade: str,
+) -> list:
+    """Collect alien lineage candidates within a dominant lineage.
+
+    Args:
+        dominant_root (object): Root node of a dominant lineage.
+        leaf_to_clade (dict): Mapping from leaf names to clade labels.
+        target_clade (str): Target clade label.
+
+    Returns:
+        list: Candidate nodes representing alien lineages.
+
+    Assumptions:
+        Alien families that are monophyletic are summarized by their MRCA;
+        otherwise, individual tips are treated as separate candidates.
+    """
+    clade_to_leaves = {}
+    for leaf in dominant_root.iter_leaves():
+        clade_label = leaf_to_clade.get(leaf.name)
+        if clade_label == target_clade:
+            continue
+        clade_to_leaves.setdefault(clade_label, []).append(leaf)
+
+    candidates = []
+    for clade_label, leaves in clade_to_leaves.items():
+        if len(leaves) == 1:
+            candidates.append(leaves[0])
+            continue
+
+        mrca = dominant_root.get_common_ancestor(leaves)
+        if all(leaf_to_clade.get(name) == clade_label for name in mrca.get_leaf_names()):
+            candidates.append(mrca)
+        else:
+            candidates.extend(leaves)
+
+    return candidates
+
+
+def normalize_values(values: list) -> list:
+    """Normalize numeric values to the [0, 1] range.
+
+    Args:
+        values (list): Numeric values to normalize.
+
+    Returns:
+        list: Normalized values in the [0, 1] interval.
+
+    Assumptions:
+        When all values are identical, the normalized list is all zeros.
+    """
+    if not values:
+        return []
+    min_val = min(values)
+    max_val = max(values)
+    if max_val == min_val:
+        return [0.0 for _ in values]
+    return [(val - min_val) / (max_val - min_val) for val in values]
+
+
+def score_alien_candidates(
+    candidates: list,
+    dominant_root: object,
+    leaf_to_clade: dict,
+    leaf_to_voucher: dict,
+    species_tree: object,
+    species_depths: dict,
+    depth_cache: dict,
+    gene_depths: dict,
+    target_clade: str,
+) -> list:
+    """Score alien lineage candidates within a dominant lineage.
+
+    Args:
+        candidates (list): Alien lineage candidate nodes.
+        dominant_root (object): Root of the dominant lineage.
+        leaf_to_clade (dict): Mapping from leaf names to clade labels.
+        leaf_to_voucher (dict): Mapping from leaf names to voucher codes.
+        species_tree (object): Species tree for distance estimation.
+        species_depths (dict): Precomputed depth map for species-tree nodes.
+        depth_cache (dict): Cache for MRCA depth lookups.
+        gene_depths (dict): Precomputed depth map for gene-tree nodes.
+        target_clade (str): Target clade label (e.g., Brassicaceae).
+
+    Returns:
+        list: List of candidate score dictionaries.
+
+    Assumptions:
+        Candidate lineages contain only alien tips.
+    """
+    dominant_leaves = dominant_root.get_leaf_names()
+    dominant_size = len(dominant_leaves)
+    brass_species_set = {
+        leaf_to_voucher[name]
+        for name in dominant_leaves
+        if leaf_to_clade.get(name) == target_clade
+    }
+    brass_depth = get_species_tree_depth_for_set(
+        species_tree,
+        species_depths,
+        brass_species_set,
+        depth_cache,
+    )
+
+    results = []
+    for node in candidates:
+        leaf_names = node.get_leaf_names() if not node.is_leaf() else [node.name]
+        alien_species_set = {leaf_to_voucher[name] for name in leaf_names}
+        union_depth = get_species_tree_depth_for_set(
+            species_tree,
+            species_depths,
+            brass_species_set | alien_species_set,
+            depth_cache,
+        )
+        phylo_distance = brass_depth - union_depth
+        alien_coverage = len(leaf_names) / dominant_size if dominant_size else 0.0
+        alien_deepvar = gene_depths.get(node, 0) - gene_depths.get(dominant_root, 0)
+
+        results.append(
+            {
+                "node": node,
+                "leaf_names": leaf_names,
+                "phylo_distance": phylo_distance,
+                "alien_coverage": alien_coverage,
+                "alien_deepvar": alien_deepvar,
+            }
+        )
+
+    phylo_values = [item["phylo_distance"] for item in results]
+    deep_values = [item["alien_deepvar"] for item in results]
+    phylo_norm = normalize_values(phylo_values)
+    deep_norm = normalize_values(deep_values)
+
+    for idx, item in enumerate(results):
+        coverage_term = -np.log10(item["alien_coverage"] + 1e-4)
+        item["combined_score"] = phylo_norm[idx] * deep_norm[idx] * coverage_term
+
+    return results
+
+
+def select_alien_tips_for_removal(
+    scores: list,
+    dominant_root: object,
+    leaf_to_clade: dict,
+    target_clade: str,
+    final_purity: float,
+    max_remove_fraction: float,
+) -> set:
+    """Select alien tips for removal based on ranked combined scores.
+
+    Args:
+        scores (list): Scored candidate dictionaries.
+        dominant_root (object): Root of the dominant lineage.
+        leaf_to_clade (dict): Mapping from leaf names to clade labels.
+        target_clade (str): Target clade label.
+        final_purity (float): Target purity for the dominant lineage after pruning.
+        max_remove_fraction (float): Maximum fraction of tips removable from the lineage.
+
+    Returns:
+        set: Leaf names selected for removal.
+
+    Assumptions:
+        Dominant lineage purity is computed using the original lineage size.
+    """
+    target_count, total_count = count_clade_leaves(dominant_root, leaf_to_clade, target_clade)
+    alien_count = total_count - target_count
+    max_remove = max(int(max_remove_fraction * total_count), 1)
+
+    removal_set = set()
+    sorted_scores = sorted(scores, key=lambda x: x["combined_score"], reverse=True)
+
+    for item in sorted_scores:
+        remaining_alien = max(alien_count - len(removal_set), 0)
+        current_total = target_count + remaining_alien
+        current_purity = target_count / current_total if current_total else 0.0
+
+        if current_purity >= final_purity:
+            break
+        if len(removal_set) >= max_remove:
+            break
+
+        candidate_leaves = set(item["leaf_names"])
+        new_leaves = candidate_leaves - removal_set
+        if not new_leaves:
+            continue
+        if len(removal_set) + len(new_leaves) > max_remove:
+            break
+        removal_set.update(new_leaves)
+
+    return removal_set
+
+
+# --------------------------
+# 5. Pruning Core (Dominant-Lineage Based)
+# --------------------------
+
+
+def prune_brassicaceae_lineages(
+    Phylo_t: object,
+    species_tree: object,
+    taxa_dic: dict,
+    new_named_gene2gene_dic: dict,
+    purity_cutoff: float,
+    max_remove_fraction: float,
+    log_handle,
+    tre_ID: str,
 ) -> object:
+    """Prune alien tips from Brassicaceae dominant lineages.
+
+    Args:
+        Phylo_t (object): ETE gene tree to prune.
+        species_tree (object): Rooted species tree with voucher labels.
+        taxa_dic (dict): Mapping from original gene IDs to clade labels.
+        new_named_gene2gene_dic (dict): Mapping from renamed identifiers to original gene names.
+        purity_cutoff (float): Target purity for dominant lineages after pruning.
+        max_remove_fraction (float): Maximum fraction of tips removable per lineage.
+        log_handle (object): File handle for logging candidate scores.
+        tre_ID (str): Tree identifier for logging.
+
+    Returns:
+        object: Pruned gene tree.
+
+    Assumptions:
+        Brassicaceae tips are encoded via clade-prefixed leaf names.
     """
-    Remove insertion artifacts based on insertion metrics.
+    target_clade = "Brassicaceae"
+    dominant_purity = 0.9
 
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE gene tree to be pruned.
-    inserted_depth : int
-        Depth threshold for removal.
-    outfile : object
-        File handle for logging removed nodes.
-    tre_ID : str
-        Tree identifier used in logs.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed identifiers to original gene names.
-
-    Returns
-    -------
-    object
-        Pruned gene tree.
-
-    Assumptions
-    -----------
-    Insertion depth and coverage capture abnormal placements.
-    """
     t = Phylo_t.copy()
-    single_clades = set()
-    get_single_clades(t, single_clades)
+    leaf_to_clade, leaf_to_voucher = build_leaf_annotations(
+        t,
+        taxa_dic,
+        new_named_gene2gene_dic,
+    )
 
-    remove_set = set()
+    species_depths = compute_species_tree_depths(species_tree)
+    depth_cache = {}
+    gene_depths = compute_gene_tree_depths(t)
 
-    for clade in single_clades:
-        if not is_ancestor_sister_same(clade):
+    dominant_roots = collect_dominant_lineages(
+        t,
+        leaf_to_clade,
+        target_clade,
+        dominant_purity,
+    )
+
+    removal_set = set()
+    for dominant_root in dominant_roots:
+        candidates = collect_alien_lineage_candidates(
+            dominant_root,
+            leaf_to_clade,
+            target_clade,
+        )
+        if not candidates:
             continue
 
-        target = get_target_clade(clade)
-        if not target:
-            continue
+        scores = score_alien_candidates(
+            candidates,
+            dominant_root,
+            leaf_to_clade,
+            leaf_to_voucher,
+            species_tree,
+            species_depths,
+            depth_cache,
+            gene_depths,
+            target_clade,
+        )
 
-        depth = calculate_insertion_depth(target, clade)
-        coverage = calculate_insertion_coverage(target, clade)
-        score = calculate_insertion(target, clade)
+        selected = select_alien_tips_for_removal(
+            scores,
+            dominant_root,
+            leaf_to_clade,
+            target_clade,
+            purity_cutoff,
+            max_remove_fraction,
+        )
 
-        gene = _resolve_original_gene_name(clade.name, new_named_gene2gene_dic)
+        for item in scores:
+            candidate_name = item["node"].name if item["node"].name else "NA"
+            remove_flag = 1 if set(item["leaf_names"]).issubset(selected) else 0
+            log_handle.write(
+                f"{tre_ID}\t{dominant_root.name}\t{candidate_name}\t"
+                f"{item['phylo_distance']}\t{item['alien_coverage']}\t"
+                f"{item['alien_deepvar']}\t{item['combined_score']}\t{remove_flag}\n"
+            )
 
-        outfile.write(f"{tre_ID}\t@\t{gene}\t{depth}\t{coverage}\t{score}\n")
+        removal_set.update(selected)
 
-        if depth >= inserted_depth:
-            remove_set.add(clade.name)
+    if removal_set:
+        keep = set(t.get_leaf_names()) - removal_set
+        t.prune(keep, preserve_branch_length=True)
 
-    keep = set(t.get_leaf_names()) - remove_set
-    t.prune(keep, preserve_branch_length=True)
     return t
 
 
-def prune_single(Phylo_t: object) -> None:
-    """
-    Resolve remaining redundant single-taxon clades.
-
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE tree object to be pruned in place.
-
-    Returns
-    -------
-    None
-
-    Assumptions
-    -----------
-    Insertion indices prioritize clades for removal.
-    """
-    rm_list = []
-    single_taxa = get_node_single_taxa_dict(Phylo_t)
-
-    for _, clades in single_taxa.items():
-        if len(clades) <= 1:
-            continue
-
-        scores = [calculate_insertion_index(c) for c in clades]
-        min_score = min(scores)
-
-        for c in clades:
-            if calculate_insertion_index(c) == min_score:
-                rm_list.append(c.name)
-
-    for name in rm_list:
-        clade = Phylo_t & name
-        if clade.is_leaf():
-            clade.delete()
-        else:
-            keep = set(Phylo_t.get_leaf_names()) - set(clade.get_leaf_names())
-            Phylo_t.prune(keep, preserve_branch_length=True)
-
-
-# ======================================================
-# Section 5: Visualization Utilities (Optional)
-# ======================================================
+# --------------------------
+# 6. Visualization Utilities (Optional)
+# --------------------------
 
 
 def get_color_dict(taxa_dic: dict) -> dict:
-    """
-    Assign colors to taxa for visualization.
+    """Assign colors to taxa for visualization.
 
-    Parameters
-    ----------
-    taxa_dic : dict
-        Mapping from gene identifiers to taxa labels.
+    Args:
+        taxa_dic (dict): Mapping from gene identifiers to taxa labels.
 
-    Returns
-    -------
-    dict
-        Mapping from identifiers to ``taxon*color`` strings.
+    Returns:
+        dict: Mapping from identifiers to ``taxon*color`` strings.
 
-    Assumptions
-    -----------
-    A rainbow colormap is used to assign unique taxa colors.
+    Assumptions:
+        A rainbow colormap is used to assign unique taxa colors.
     """
     cmap = plt.get_cmap("gist_rainbow")
     uniq = list(set(taxa_dic.values()))
@@ -534,26 +642,18 @@ def set_style(
     color_dict: dict,
     new_named_gene2gene_dic: dict,
 ) -> object:
-    """
-    Apply consistent node styles and colored labels for visualization.
+    """Apply consistent node styles and colored labels for visualization.
 
-    Parameters
-    ----------
-    Phylo_t : object
-        ETE tree object to be styled.
-    color_dict : dict
-        Mapping from gene identifiers to color strings.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed node identifiers to original gene names.
+    Args:
+        Phylo_t (object): ETE tree object to be styled.
+        color_dict (dict): Mapping from gene identifiers to color strings.
+        new_named_gene2gene_dic (dict): Mapping from renamed node identifiers to original gene names.
 
-    Returns
-    -------
-    object
-        The styled tree object.
+    Returns:
+        object: The styled tree object.
 
-    Assumptions
-    -----------
-    Leaf names follow the ``species_gene`` composite convention.
+    Assumptions:
+        Leaf names follow the ``species_gene`` composite convention.
     """
     for node in Phylo_t.traverse():
         nstyle = NodeStyle()
@@ -562,9 +662,9 @@ def set_style(
         nstyle["fgcolor"] = "black"
         node.set_style(nstyle)
         if node.is_leaf():
-            parts = node.name.split("_")
+            parts = node.name.split("|")
             species_name = parts[0]
-            new_str = "_".join(parts[1:]) if len(parts) > 1 else node.name
+            new_str = parts[1] if len(parts) > 1 else node.name
             gene = new_named_gene2gene_dic.get(new_str, new_str)
             color_info = color_dict.get(gene, None)
             if color_info:
@@ -575,25 +675,18 @@ def set_style(
 
 
 def generate_pdf(tre_ID: str, Phylo_t: object, tag: str) -> None:
-    """
-    Render a tree snapshot as a PDF file.
+    """Render a tree snapshot as a PDF file.
 
-    Parameters
-    ----------
-    tre_ID : str
-        Tree identifier for output naming.
-    Phylo_t : object
-        Tree to render.
-    tag : str
-        Tag appended to the output filename.
+    Args:
+        tre_ID (str): Tree identifier for output naming.
+        Phylo_t (object): Tree to render.
+        tag (str): Tag appended to the output filename.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
 
-    Assumptions
-    -----------
-    ETE rendering is available in the runtime environment.
+    Assumptions:
+        ETE rendering is available in the runtime environment.
     """
     ts = TreeStyle()
     ts.show_leaf_name = False
@@ -602,25 +695,18 @@ def generate_pdf(tre_ID: str, Phylo_t: object, tag: str) -> None:
 
 
 def merge_pdfs_side_by_side(f1: str, f2: str, out: str) -> None:
-    """
-    Merge two single-page PDFs horizontally.
+    """Merge two single-page PDFs horizontally.
 
-    Parameters
-    ----------
-    f1 : str
-        Path to the first PDF.
-    f2 : str
-        Path to the second PDF.
-    out : str
-        Path to the output merged PDF.
+    Args:
+        f1 (str): Path to the first PDF.
+        f2 (str): Path to the second PDF.
+        out (str): Path to the output merged PDF.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
 
-    Assumptions
-    -----------
-    Input PDFs contain at least one page.
+    Assumptions:
+        Input PDFs contain at least one page.
     """
     writer = PdfFileWriter()
     with open(f1, "rb") as a, open(f2, "rb") as b:
@@ -636,44 +722,38 @@ def merge_pdfs_side_by_side(f1: str, f2: str, out: str) -> None:
             writer.write(o)
 
 
-# ======================================================
-# Section 6: Main Pipeline (Orchestration)
-# ======================================================
+# --------------------------
+# 7. Main Pipeline (Orchestration)
+# --------------------------
 
 
 def prune_main_Mono(
     tre_dic: dict,
     taxa_dic: dict,
-    inserted_depth: int,
+    species_tree: object,
+    purity_cutoff: float,
+    max_remove_fraction: float,
     new_named_gene2gene_dic: dict,
     gene2new_named_gene_dic: dict,
     visual: bool = False,
 ) -> None:
-    """
-    Run the insertion-based mono-copy pruning pipeline.
+    """Run the dominant-lineage mono-copy pruning pipeline.
 
-    Parameters
-    ----------
-    tre_dic : dict
-        Mapping from tree IDs to file paths.
-    taxa_dic : dict
-        Mapping from gene identifiers to taxa labels.
-    inserted_depth : int
-        Depth threshold for insertion pruning.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed identifiers to original gene names.
-    gene2new_named_gene_dic : dict
-        Mapping from original gene names to renamed identifiers.
-    visual : bool, optional
-        Whether to generate before/after PDF visualizations.
+    Args:
+        tre_dic (dict): Mapping from tree IDs to file paths.
+        taxa_dic (dict): Mapping from gene identifiers to clade labels.
+        species_tree (object): Rooted species tree with voucher labels.
+        purity_cutoff (float): Target purity for dominant lineages after pruning.
+        max_remove_fraction (float): Maximum fraction of tips removable per lineage.
+        new_named_gene2gene_dic (dict): Mapping from renamed identifiers to original gene names.
+        gene2new_named_gene_dic (dict): Mapping from original gene names to renamed identifiers.
+        visual (bool, optional): Whether to generate before/after PDF visualizations.
 
-    Returns
-    -------
-    None
+    Returns:
+        None
 
-    Assumptions
-    -----------
-    Input trees are valid and compatible with identifier mappings.
+    Assumptions:
+        Input trees are valid and compatible with identifier mappings.
     """
     color_dic = get_color_dict(taxa_dic)
 
@@ -695,24 +775,30 @@ def prune_main_Mono(
         t0.resolve_polytomy(recursive=True)
         t0.sort_descendants("support")
 
-
         t = rename_input_tre(t0, gene2new_named_gene_dic)
         num_tre_node(t)
         rename_input_single_tre(t, taxa_dic, new_named_gene2gene_dic)
         log = open(os.path.join(out_log_dir, f"{tre_ID}_insert_gene.txt"), "w")
-        log.write("tre_ID\tlabel\tgene\tdepth\tcoverage\tinsertion\n")
+        log.write(
+            "tre_ID\tdominant_root\tcandidate\tphylo_distance\t"
+            "alien_coverage\talien_deepvar\tcombined_score\tremoved\n"
+        )
 
         if visual:
             set_style(t, color_dic, new_named_gene2gene_dic)
             generate_pdf(tre_ID, t, "before")
 
+        t1 = t
         if len(get_species_set(t)) > 1:
-            t1 = remove_insert_gene(
+            t1 = prune_brassicaceae_lineages(
                 t,
-                inserted_depth,
+                species_tree,
+                taxa_dic,
+                new_named_gene2gene_dic,
+                purity_cutoff,
+                max_remove_fraction,
                 log,
                 tre_ID,
-                new_named_gene2gene_dic,
             )
 
         if visual:
@@ -724,26 +810,30 @@ def prune_main_Mono(
             )
             os.remove(f"{tre_ID}_before.pdf")
             os.remove(f"{tre_ID}_after.pdf")
-
+       
         t2 = rename_output_tre(t1, new_named_gene2gene_dic)
         tree_str = trans_branch_length(t2)
         write_tree_to_newick(tree_str, tre_ID, out_tree_dir)
-
-        log.close()
         pbar.update(1)
+    
+        log.close()
+    pbar.close()
 
 
-# ======================================================
-# Section 7: CLI Entry Point
-# ======================================================
+# --------------------------
+# 8. CLI Entry Point
+# --------------------------
 
 if __name__ == "__main__":
     taxa_dic = read_and_return_dict("taxa.txt")
     tre_dic = read_and_return_dict("100_nosingle_GF_list.txt")
+    species_tree = PhyloTree("sps_tree.txt")
     prune_main_Mono(
         tre_dic,
         taxa_dic,
-        inserted_depth=5,
+        species_tree=species_tree,
+        purity_cutoff=0.95,
+        max_remove_fraction=0.5,
         new_named_gene2gene_dic={},
         gene2new_named_gene_dic={},
     )

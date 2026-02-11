@@ -112,7 +112,7 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
     sptree.sort_descendants("support")
 
     ts = TreeStyle()
-    ts.scale = 20
+    ts.scale = 10
     ts.legend_position = 1
     ts.show_leaf_name = False
     ts.guiding_lines_type = 0
@@ -145,8 +145,9 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
         "ABAB": "#1f77b4",
         "ABB": "#ff7f0e",
         "AAB": "#2ca02c",
+        'Complex': '#d62728',
     }
-    type_order = ["ABAB", "ABB", "AAB"]
+    type_order = ["ABAB", "ABB", "AAB",'Complex']
 
     ts.title.add_face(TextFace(" GD Events Distribution ", fsize=6, ftype="Arial"), column=0)
     ts.title.add_face(CircleFace(4, type_colors["ABAB"]), column=1)
@@ -155,6 +156,10 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
     ts.title.add_face(TextFace(" ABB", fsize=6), column=4)
     ts.title.add_face(CircleFace(4, type_colors["AAB"]), column=5)
     ts.title.add_face(TextFace(" AAB", fsize=6, ftype="Arial"), column=6)
+    ts.title.add_face(CircleFace(4, type_colors["Complex"]), column=7)
+    ts.title.add_face(TextFace(" Complex", fsize=6, ftype="Arial"), column=8)
+
+
 
     for leaf in sptree:
         if leaf.name in taxa:
@@ -198,9 +203,9 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
                 node.add_face(gd_text_face, column=0, position="branch-top")
             if pie_face:
                 node.add_face(pie_face, column=1, position="branch-top")
-            if re.match(r"^N\d+$", node_name):
-                id_face = TextFace(node_name, fsize=6, fgcolor="blue", ftype="Arial")
-                node.add_face(id_face, column=0, position="branch-bottom")
+
+            id_face = TextFace(node_name, fsize=6, fgcolor="blue", ftype="Arial")
+            node.add_face(id_face, column=0, position="branch-bottom")
 
     realign_branch_length(sptree)
     rejust_root_dist(sptree)
