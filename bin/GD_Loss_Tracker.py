@@ -362,17 +362,6 @@ def get_path_str_with_count_num_lst(
 # ======================================================
 
 
-def num_sptree(sptree):
-    n = 0
-    for i in sptree.traverse("postorder"):
-        if not i.is_leaf():
-            i.name = "S" + str(n)
-            n += 1
-    sptree.sort_descendants()
-    sptree.write(outfile="numed_sptree.nwk", format=1, format_root_node=True)
-    return sptree
-
-
 def split_dict_by_first_last_char(original_dict):
     split_dicts = {}
 

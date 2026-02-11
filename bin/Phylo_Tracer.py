@@ -114,12 +114,14 @@ OrthoFilter_LB_parser.add_argument('--relative_branch_length', metavar='FLOAT', 
 OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
 
 # OrthoFilter_Mono command
-OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='OrthoFilter_Mono help', formatter_class=CustomHelpFormatter)
-OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='TAXA_LIST', required=True, help='Input taxa file')
-OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-OrthoFilter_Mono_parser.add_argument('--inserted_depth', metavar='INT', type=int, default=5, required=True, help='Inserted_depth and default = 5')
-OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
+OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='Remove alien lineages from dominant mono-lineage clades', formatter_class=CustomHelpFormatter)
+OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True,help='File containing paths to gene tree files, one per line')
+OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='TAXA_LIST', required=True, help='Gene to lineage mapping file')
+OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Gene to species mapping file')
+OrthoFilter_Mono_parser.add_argument('--purity_cutoff', metavar='FLOAT', type=float, default=0.95, help='Target purity for dominant lineage (default: 0.95)')
+OrthoFilter_Mono_parser.add_argument('--max_remove_fraction', metavar='FLOAT', type=float, default=0.5, help='Maximum fraction of tips allowed to be removed (default: 0.5)')
+OrthoFilter_Mono_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True,help='Species tree in Newick format')
+OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize trees before and after pruning')
 
 # TreeTopology_Summarizer command
 TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help', formatter_class=CustomHelpFormatter)
@@ -314,20 +316,20 @@ def main():
 
     elif args.command == 'OrthoFilter_Mono':
         # Execute the OrthoFilter_Mono function
-        if args.input_GF_list and args.input_taxa and args.inserted_depth:
+        if args.input_GF_list and args.input_imap and args.input_taxa and args.input_sps_tree and args.purity_cutoff and args.max_remove_fraction:
             start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_taxa = args.input_taxa
-            input_imap = args.input_imap
-            inserted_deep = args.inserted_depth
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
-            tre_dic = read_and_return_dict(input_GF_list)
-            taxa_dic = read_and_return_dict(input_taxa)
-            prune_main_Mono(tre_dic, taxa_dic, inserted_deep, new_named_gene2gene_dic, gene2new_named_gene_dic, visual=args.visual)
+            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(args.input_imap)
+            tre_dic = read_and_return_dict(args.input_GF_list)
+            taxa_dic = read_and_return_dict(args.input_taxa)
+            sptree = PhyloTree(args.input_sps_tree)
+            renamed_sptree = rename_input_tre(sptree, taxa2voucher_dic)
+
+            purity_cutoff=args.purity_cutoff
+            max_remove_fraction=args.max_remove_fraction
+            prune_main_Mono(tre_dic,taxa_dic,renamed_sptree,  purity_cutoff,max_remove_fraction, new_named_gene2gene_dic, gene2new_named_gene_dic, visual=args.visual)
+
             end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
+            print("Program execution time:", format_time(end_time - start_time))
         else:
             print("Required arguments for OrthoFilter_Mono command are missing.")
 
@@ -426,7 +428,7 @@ def main():
         # Execute the GD_Visualizer function
         if args.input_sps_tree and args.gd_result and args.input_imap:
             start_time = time.time()
-            sptree = Tree(args.input_sps_tree, format=1)
+            sptree = read_tree(args.input_sps_tree)
             gd_result = args.gd_result
             taxa = read_and_return_dict(args.input_imap)
             gd_visualizer_main(sptree, gd_result, taxa)

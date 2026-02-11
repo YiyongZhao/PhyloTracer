@@ -81,11 +81,10 @@ def get_average_node_length(subtree: object) -> float:
     -----------
     Branch lengths are defined for all relevant edges.
     """
-    leaves = list(subtree)
     total_distance = sum(
-        subtree.get_distance(leaf) + subtree.dist for leaf in leaves
+        subtree.get_distance(leaf) + subtree.dist for leaf in subtree
     )
-    return total_distance / len(leaves)
+    return total_distance / len(subtree)
 
 
 # ======================================================
@@ -370,6 +369,7 @@ def prune_main_LB(
     pbar = tqdm(tree_dict.items(), desc="Processing trees", unit="tree")
 
     for tree_id, tree_path in pbar:
+        pbar.set_description(f"Processing {tree_id}")
         tree = Tree(tree_path)
         tree.ladderize()
         tree.resolve_polytomy(recursive=True)
@@ -411,7 +411,8 @@ def prune_main_LB(
         restored_tree = rename_input_tre(pruned_tree, renamed2gene)
         tree_str = trans_branch_length(restored_tree)
         write_tree_to_newick(tree_str, tree_id, pruned_dir)
-
+        
+        pbar.update(1)
     pbar.close()
 
 
