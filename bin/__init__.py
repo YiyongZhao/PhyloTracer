@@ -103,6 +103,7 @@ def gene_id_transfer(
         consistent. Voucher assignment is random and therefore non-deterministic
         unless external seeding is applied.
     """
+    random.seed(0)
     gene2taxa = read_and_return_dict(gene2taxa_list)
     gene2taxa_sorted = dict(sorted(gene2taxa.items(), key=lambda x: x[1]))
 
