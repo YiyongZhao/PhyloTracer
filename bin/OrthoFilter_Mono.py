@@ -11,6 +11,7 @@ Long-branch filtering is intentionally excluded and handled in a separate module
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
+from collections import Counter
 from PyPDF4 import PdfFileReader, PdfFileWriter
 
 from __init__ import *
@@ -46,7 +47,7 @@ def rename_input_single_tre(
         gene = new_named_gene2gene_dic.get(node.name, node.name)
         lineage = taxa_dic.get(gene)
         if lineage:
-            node.name = f"{lineage}|{node.name}"
+            node.name = f"{lineage}_{node.name}"
     return Phylo_t
 
 
@@ -67,40 +68,38 @@ def rename_output_tre(
         Leaf names follow the ``species|gene`` composite convention.
     """
     for node in Phylo_t:
-        parts = node.name.split("|")
-        gene = parts[1]
+        parts = node.name.split("_")
+        gene = "_".join(parts[1:])
         node.name = new_named_gene2gene_dic.get(gene, gene)
     return Phylo_t
 
 
 # --------------------------
-# 4. Dominant-Lineage Metrics
+# 2. Dominant-Lineage Metrics
 # --------------------------
 
 
 def parse_leaf_components(leaf_name: str) -> tuple:
-    """Parse clade, voucher, and gene index components from a leaf name.
+    """Parse clade and renamed-gene components from a leaf name.
 
     Args:
-        leaf_name (str): Leaf name encoded as ``clade|voucher_index``.
+        leaf_name (str): Leaf name encoded as ``clade_renamed_gene``.
 
     Returns:
-        tuple: (clade_label, voucher_code, gene_index) with empty strings
-            when components cannot be inferred.
+        tuple: (clade_label, renamed_gene_id). If no clade prefix is detected,
+            returns ("", original_name).
 
     Assumptions:
-        The final two vertical bar-delimited tokens represent the voucher and 
-        gene index, while any preceding tokens belong to the clade label.
+        The first underscore separates clade prefix from renamed gene ID.
     """
-    parts = leaf_name.split("|")
-    if len(parts) >= 3:
-        clade_label = "|".join(parts[:-2])
-        voucher_code = parts[-2]
-        gene_index = parts[-1]
-        return clade_label, voucher_code, gene_index
-    if len(parts) == 2:
-        return parts[0], parts[1], ""
-    return leaf_name, "", ""
+    parts = leaf_name.split("_")
+    if len(parts) < 2:
+        # Fallback path when no clade prefix exists.
+        return "", leaf_name
+
+    gene_id = "_".join(parts[1:])
+    clade = parts[0]
+    return clade, gene_id
 
 
 def get_leaf_clade(
@@ -111,7 +110,7 @@ def get_leaf_clade(
     """Resolve the clade label for a leaf node.
 
     Args:
-        leaf_name (str): Leaf name encoded as ``clade|voucher_index``.
+        leaf_name (str): Leaf name encoded as ``clade_renamed_gene``.
         taxa_dic (dict): Mapping from original gene IDs to clade labels.
         new_named_gene2gene_dic (dict): Mapping from renamed identifiers to original gene names.
 
@@ -121,18 +120,20 @@ def get_leaf_clade(
     Assumptions:
         Leaf names were prefixed with clade labels using ``rename_input_single_tre``.
     """
-    clade_label, _, _ = parse_leaf_components(leaf_name)
-    if clade_label and clade_label != leaf_name:
-        return clade_label
-    gene = leaf_name.split("|")[-1]
-    return taxa_dic.get(gene, clade_label)
+    clade, gene_id = parse_leaf_components(leaf_name)
+    if clade:
+        return clade
+
+    # Fallback path: map renamed ID back to original gene ID.
+    orig = new_named_gene2gene_dic.get(gene_id, gene_id)
+    return taxa_dic.get(orig, "")
 
 
 def get_leaf_voucher(leaf_name: str) -> str:
     """Extract voucher code from a leaf name.
 
     Args:
-        leaf_name (str): Leaf name encoded as ``clade|voucher_index`` or ``voucher_index``.
+        leaf_name (str): Leaf name encoded as ``clade_voucher_index`` or ``voucher_index``.
 
     Returns:
         str: Voucher code parsed from the leaf name.
@@ -141,7 +142,7 @@ def get_leaf_voucher(leaf_name: str) -> str:
         Voucher codes are the second-to-last token when a clade prefix exists,
         or the first token when only ``voucher_index`` is present.
     """
-    parts = leaf_name.split("|")
+    parts = leaf_name.split("_")
     if len(parts) >= 3:
         return parts[-2]
     if len(parts) == 2:
@@ -165,7 +166,7 @@ def build_leaf_annotations(
         tuple: (leaf_to_clade, leaf_to_voucher) dictionaries.
 
     Assumptions:
-        Leaf naming follows the ``clade|voucher_index`` convention.
+        Leaf naming follows the ``clade_voucher_index`` convention.
     """
     leaf_to_clade = {}
     leaf_to_voucher = {}
@@ -433,6 +434,7 @@ def score_alien_candidates(
             brass_species_set | alien_species_set,
             depth_cache,
         )
+
         phylo_distance = brass_depth - union_depth
         alien_coverage = len(leaf_names) / dominant_size if dominant_size else 0.0
         alien_deepvar = gene_depths.get(node, 0) - gene_depths.get(dominant_root, 0)
@@ -512,65 +514,86 @@ def select_alien_tips_for_removal(
 
 
 # --------------------------
-# 5. Pruning Core (Dominant-Lineage Based)
+# 3. Pruning Core (Dominant-Lineage Based)
 # --------------------------
 
 
-def prune_brassicaceae_lineages(
+def prune_all_clades(
     Phylo_t: object,
     species_tree: object,
     taxa_dic: dict,
     new_named_gene2gene_dic: dict,
-    purity_cutoff: float,
+    final_purity: float,
     max_remove_fraction: float,
     log_handle,
     tre_ID: str,
+    dominant_purity: float = 0.9,
+    min_tips_per_clade: int = 1,
 ) -> object:
-    """Prune alien tips from Brassicaceae dominant lineages.
-
-    Args:
-        Phylo_t (object): ETE gene tree to prune.
-        species_tree (object): Rooted species tree with voucher labels.
-        taxa_dic (dict): Mapping from original gene IDs to clade labels.
-        new_named_gene2gene_dic (dict): Mapping from renamed identifiers to original gene names.
-        purity_cutoff (float): Target purity for dominant lineages after pruning.
-        max_remove_fraction (float): Maximum fraction of tips removable per lineage.
-        log_handle (object): File handle for logging candidate scores.
-        tre_ID (str): Tree identifier for logging.
-
-    Returns:
-        object: Pruned gene tree.
-
-    Assumptions:
-        Brassicaceae tips are encoded via clade-prefixed leaf names.
-    """
-    target_clade = "Brassicaceae"
-    dominant_purity = 0.9
-
     t = Phylo_t.copy()
     leaf_to_clade, leaf_to_voucher = build_leaf_annotations(
-        t,
-        taxa_dic,
-        new_named_gene2gene_dic,
+        t, taxa_dic, new_named_gene2gene_dic
     )
+
+    # Process only clades that are present in this tree and meet minimum size.
+    clade_counts = Counter(leaf_to_clade.values())
+    present_clades = [c for c, n in clade_counts.items() if n >= min_tips_per_clade]
 
     species_depths = compute_species_tree_depths(species_tree)
     depth_cache = {}
     gene_depths = compute_gene_tree_depths(t)
 
-    dominant_roots = collect_dominant_lineages(
-        t,
-        leaf_to_clade,
-        target_clade,
-        dominant_purity,
-    )
+    global_remove = set()
 
+    for target_clade in present_clades:
+        remove_set = prune_one_clade_in_tree(
+            t=t,
+            species_tree=species_tree,
+            leaf_to_clade=leaf_to_clade,
+            leaf_to_voucher=leaf_to_voucher,
+            new_named_gene2gene_dic=new_named_gene2gene_dic,
+            species_depths=species_depths,
+            depth_cache=depth_cache,
+            gene_depths=gene_depths,
+            target_clade=target_clade,
+            dominant_purity=dominant_purity,
+            final_purity=final_purity,
+            max_remove_fraction=max_remove_fraction,
+            log_handle=log_handle,
+            tre_ID=tre_ID,
+        )
+        global_remove.update(remove_set)
+
+    if global_remove:
+        keep = set(t.get_leaf_names()) - global_remove
+        t.prune(keep, preserve_branch_length=True)
+
+    return t
+
+def prune_one_clade_in_tree(
+    t: object,
+    species_tree: object,
+    leaf_to_clade: dict,
+    leaf_to_voucher: dict,
+    new_named_gene2gene_dic: dict,
+    species_depths: dict,
+    depth_cache: dict,
+    gene_depths: dict,
+    target_clade: str,
+    dominant_purity: float,
+    final_purity: float,
+    max_remove_fraction: float,
+    log_handle,
+    tre_ID: str,
+) -> set:
+    dominant_roots = collect_dominant_lineages(
+        t, leaf_to_clade, target_clade, dominant_purity
+    )
+    
     removal_set = set()
     for dominant_root in dominant_roots:
         candidates = collect_alien_lineage_candidates(
-            dominant_root,
-            leaf_to_clade,
-            target_clade,
+            dominant_root, leaf_to_clade, target_clade
         )
         if not candidates:
             continue
@@ -592,30 +615,28 @@ def prune_brassicaceae_lineages(
             dominant_root,
             leaf_to_clade,
             target_clade,
-            purity_cutoff,
+            final_purity,
             max_remove_fraction,
         )
 
+        # Record target clade in logs for traceable pruning decisions.
         for item in scores:
             candidate_name = item["node"].name if item["node"].name else "NA"
+            gene_name = "_".join(candidate_name.split("_")[1:])
+            old_gene_name = new_named_gene2gene_dic.get(gene_name, gene_name)
             remove_flag = 1 if set(item["leaf_names"]).issubset(selected) else 0
             log_handle.write(
-                f"{tre_ID}\t{dominant_root.name}\t{candidate_name}\t"
+                f"{tre_ID}\t{target_clade}\t{dominant_root.name}\t{old_gene_name}\t"
                 f"{item['phylo_distance']}\t{item['alien_coverage']}\t"
                 f"{item['alien_deepvar']}\t{item['combined_score']}\t{remove_flag}\n"
             )
 
         removal_set.update(selected)
 
-    if removal_set:
-        keep = set(t.get_leaf_names()) - removal_set
-        t.prune(keep, preserve_branch_length=True)
-
-    return t
-
+    return removal_set
 
 # --------------------------
-# 6. Visualization Utilities (Optional)
+# 4. Visualization Utilities (Optional)
 # --------------------------
 
 
@@ -662,9 +683,9 @@ def set_style(
         nstyle["fgcolor"] = "black"
         node.set_style(nstyle)
         if node.is_leaf():
-            parts = node.name.split("|")
+            parts = node.name.split("_")
             species_name = parts[0]
-            new_str = parts[1] if len(parts) > 1 else node.name
+            new_str = '_'.join(parts[1:]) if len(parts) > 1 else node.name
             gene = new_named_gene2gene_dic.get(new_str, new_str)
             color_info = color_dict.get(gene, None)
             if color_info:
@@ -723,7 +744,7 @@ def merge_pdfs_side_by_side(f1: str, f2: str, out: str) -> None:
 
 
 # --------------------------
-# 7. Main Pipeline (Orchestration)
+# 5. Main Pipeline (Orchestration)
 # --------------------------
 
 
@@ -780,7 +801,7 @@ def prune_main_Mono(
         rename_input_single_tre(t, taxa_dic, new_named_gene2gene_dic)
         log = open(os.path.join(out_log_dir, f"{tre_ID}_insert_gene.txt"), "w")
         log.write(
-            "tre_ID\tdominant_root\tcandidate\tphylo_distance\t"
+            "tre_ID\ttarget_clade\tdominant_root\tcandidate\tphylo_distance\t"
             "alien_coverage\talien_deepvar\tcombined_score\tremoved\n"
         )
 
@@ -788,18 +809,18 @@ def prune_main_Mono(
             set_style(t, color_dic, new_named_gene2gene_dic)
             generate_pdf(tre_ID, t, "before")
 
-        t1 = t
-        if len(get_species_set(t)) > 1:
-            t1 = prune_brassicaceae_lineages(
-                t,
-                species_tree,
-                taxa_dic,
-                new_named_gene2gene_dic,
-                purity_cutoff,
-                max_remove_fraction,
-                log,
-                tre_ID,
-            )
+        t1 = prune_all_clades(
+            Phylo_t=t,
+            species_tree=species_tree,
+            taxa_dic=taxa_dic,
+            new_named_gene2gene_dic=new_named_gene2gene_dic,
+            final_purity=purity_cutoff,
+            max_remove_fraction=max_remove_fraction,
+            log_handle=log,
+            tre_ID=tre_ID,
+            dominant_purity=0.9,
+            min_tips_per_clade=2,
+        )
 
         if visual:
             generate_pdf(tre_ID, t1, "after")
@@ -810,18 +831,18 @@ def prune_main_Mono(
             )
             os.remove(f"{tre_ID}_before.pdf")
             os.remove(f"{tre_ID}_after.pdf")
-       
+
         t2 = rename_output_tre(t1, new_named_gene2gene_dic)
         tree_str = trans_branch_length(t2)
         write_tree_to_newick(tree_str, tre_ID, out_tree_dir)
         pbar.update(1)
-    
+
         log.close()
     pbar.close()
 
 
 # --------------------------
-# 8. CLI Entry Point
+# 6. CLI Entry Point
 # --------------------------
 
 if __name__ == "__main__":
