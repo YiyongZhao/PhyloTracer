@@ -250,7 +250,7 @@ def read_gd_pairs(gd_lst):
     return dict_gd
 
 
-def plot_dot(root, data, loc1, loc2, gl, dict_gd, size=0.001):
+def plot_dot(root, loc1, loc2, dict_gd, size=0.001):
     """
     Plot GD pairs as colored dots in a dotplot.
 
@@ -258,14 +258,10 @@ def plot_dot(root, data, loc1, loc2, gl, dict_gd, size=0.001):
     ----------
     root : object
         Matplotlib axes for plotting.
-    data : object
-        Unused placeholder parameter (kept for compatibility).
     loc1 : dict
         Gene locations for species 1.
     loc2 : dict
         Gene locations for species 2.
-    gl : float
-        Plot length parameter.
     dict_gd : dict
         Mapping from gene pair keys to color labels.
     size : float, optional
@@ -420,7 +416,13 @@ def generate_dotplot(
     gene_loc_1 = gene_location(gff_1, lens_1, step_1)
     gene_loc_2 = gene_location(gff_2, lens_2, step_2)
 
-    gene_conversion_list = find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2, file_name)
+    gene_conversion_list = find_gene_conversion(
+        dict_gd,
+        dict_gff1,
+        dict_gff2,
+        lens_1,
+        lens_2,
+    )
 
     result_conversion = find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2, file_name)
     find_conversion_zones_with_ids_to_file(result_conversion, dict_gff1, dict_gff2)
@@ -429,9 +431,9 @@ def generate_dotplot(
     gc.collect()
 
     if size:
-        plot_dot(root, dict_gd, gene_loc_1, gene_loc_2, gl1, dict_gd, size)
+        plot_dot(root, gene_loc_1, gene_loc_2, dict_gd, size)
     else:
-        plot_dot(root, dict_gd, gene_loc_1, gene_loc_2, gl1, dict_gd)
+        plot_dot(root, gene_loc_1, gene_loc_2, dict_gd)
     t6 = time.time()
     print("Ploting dot took " + str(t6 - t5) + " second")
     root.set_xlim(0, 1)
@@ -546,80 +548,6 @@ def judge_support(support, support_value):
 # ======================================================
 
 
-def find_dup_node(
-    Phylo_t: object,
-    sp1,
-    sp2,
-    new_named_gene2gene_dic,
-    processed_lines,
-    written_results,
-    support_value=50,
-    pair_support=50,
-) -> list:
-    """
-    Identify duplication nodes and collect orthology-based pairs.
-
-    Parameters
-    ----------
-    Phylo_t : object
-        Gene tree object.
-    sp1 : object
-        Species 1 identifier.
-    sp2 : object
-        Species 2 identifier.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed identifiers to original gene identifiers.
-    processed_lines : list
-        Output list for writing results.
-    written_results : set
-        Set used to deduplicate output entries.
-    support_value : float, optional
-        Support threshold for duplication nodes.
-    pair_support : float, optional
-        Support threshold for ortholog pairs.
-
-    Returns
-    -------
-    list
-        List of duplication nodes.
-
-    Assumptions
-    -----------
-    Duplication events are defined by ETE event annotations.
-    """
-    events = Phylo_t.get_descendant_evol_events()
-    dup_node_list = []
-    for event in events:
-        if event.etype == "D":
-            event_nodes = set(event.in_seqs) | set(event.out_seqs)
-            dup_node = Phylo_t.get_common_ancestor(list(event_nodes))
-            if judge_support(dup_node.support, support_value):
-                child1, child2 = dup_node.get_children()
-
-                if judge_support(child1.support, support_value) and judge_support(child2.support, support_value):
-                    sp_set = get_species_set(dup_node)
-                    if sp1 in sp_set and sp2 in sp_set:
-                        dup_node_list.append(dup_node)
-        elif event.etype == "S":
-            event_nodes = set(event.in_seqs) | set(event.out_seqs)
-            dup_node = Phylo_t.get_common_ancestor(list(event_nodes))
-            sp_set = get_species_set(dup_node)
-            if len(sp_set) == 2 and sp1 in sp_set and sp2 in sp_set:
-                orthology = get_gene_pairs(dup_node, sp1, sp2)
-                for i in orthology:
-                    gene1, gene2 = i
-                    dup_node1 = Phylo_t.get_common_ancestor([gene1, gene2])
-                    if judge_support(dup_node1.support, pair_support):
-                        gene_a = new_named_gene2gene_dic[gene1]
-                        gene_b = new_named_gene2gene_dic[gene2]
-                        result = f"{gene_a}\t{gene_b}\tred\n"
-                        s = f"{gene2}-r"
-                        if s not in written_results:
-                            processed_lines.append(result)
-                            written_results.add(s)
-    return dup_node_list
-
-
 def generate_combinations(list1, list2):
     gene_pairs = []
     for elem1 in list1:
@@ -649,7 +577,43 @@ def get_gene_pairs(t, sp1, sp2):
     return gene_pairs
 
 
-def find_independent_dup_nodes(dup_node_list, Phylo_t: object) -> list:
+def collect_speciation_pairs(
+    Phylo_t: object,
+    sp1,
+    sp2,
+    new_named_gene2gene_dic,
+    processed_lines,
+    written_results,
+    pair_support=50,
+) -> None:
+    """Collect orthology-support pairs from speciation events.
+
+    This preserves the legacy HaploFinder behavior for red labels while
+    duplication-node detection itself is delegated to ``__init__.find_dup_node``.
+    """
+    events = Phylo_t.get_descendant_evol_events()
+    for event in events:
+        if event.etype != "S":
+            continue
+        event_nodes = set(event.in_seqs) | set(event.out_seqs)
+        spec_node = Phylo_t.get_common_ancestor(list(event_nodes))
+        sp_set = get_species_set(spec_node)
+        if len(sp_set) != 2 or sp1 not in sp_set or sp2 not in sp_set:
+            continue
+        orthology = get_gene_pairs(spec_node, sp1, sp2)
+        for gene1, gene2 in orthology:
+            pair_node = Phylo_t.get_common_ancestor([gene1, gene2])
+            if judge_support(pair_node.support, pair_support):
+                gene_a = new_named_gene2gene_dic[gene1]
+                gene_b = new_named_gene2gene_dic[gene2]
+                result = f"{gene_a}\t{gene_b}\tred\n"
+                token = f"{gene2}-r"
+                if token not in written_results:
+                    processed_lines.append(result)
+                    written_results.add(token)
+
+
+def find_independent_dup_nodes(dup_node_list) -> list:
     dup_node_list.sort(key=lambda x: len(x.get_leaf_names()))
     node_dic = {}
 
@@ -675,7 +639,7 @@ def find_independent_dup_nodes(dup_node_list, Phylo_t: object) -> list:
 # ======================================================
 
 
-def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2, gd_pairs):
+def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2):
     chrs_combinations = [(chr_a, chr_b) for chr_a in [i[0] for i in lens_1]
                          for chr_b in [i[0] for i in lens_2]]
 
@@ -819,11 +783,12 @@ def find_conversion_zones_with_ids_to_file(data, dict_gff1, dict_gff2, output_fi
 # ======================================================
 
 
-def process_gd_result(gf, imap, sp1, sp2, support, pair_support):
+def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support):
     tre_dic = read_and_return_dict(gf)
     gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(imap)
     rename_sp1 = taxa2voucher_dic[sp1]
     rename_sp2 = taxa2voucher_dic[sp2]
+    renamed_sptree = rename_input_tre(read_phylo_tree(input_sps_tree), taxa2voucher_dic)
     processed_lines = []
     written_results = set()
     for tre_ID, tre_path in tre_dic.items():
@@ -839,14 +804,27 @@ def process_gd_result(gf, imap, sp1, sp2, support, pair_support):
         if len(sps_tol) == 2 and {sp1, sp2} not in sps_tol:
             continue
 
-        dup_node_list = find_dup_node(
+        annotate_gene_tree(Phylo_t1, renamed_sptree)
+        dup_node_list_all = find_dup_node(
+            Phylo_t1,
+            renamed_sptree,
+            gd_support=support,
+            clade_support=support,
+            dup_species_num=1,
+            dup_species_percent=0,
+            max_topology_distance=10**9,
+        )
+        dup_node_list = [
+            node for node in dup_node_list_all
+            if rename_sp1 in get_species_set(node) and rename_sp2 in get_species_set(node)
+        ]
+        collect_speciation_pairs(
             Phylo_t1,
             rename_sp1,
             rename_sp2,
             new_named_gene2gene_dic,
             processed_lines,
             written_results,
-            support,
             pair_support,
         )
 
@@ -1056,7 +1034,7 @@ def assign_hybrid_subgenome(tree, hybrid_prefix, diploid_tags):
     return result
 
 
-def split_sequences(sequences_dic, input_GF_list, input_imap, cluster_file, hyb_sps, parental_sps, gff):
+def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff):
     tre_dic = read_and_return_dict(input_GF_list)
     gff_1, dict_gff1 = read_gff(gff)
     gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
@@ -1145,7 +1123,8 @@ if __name__ == "__main__":
     process_blastp_pairs = process_blastp_result(blastp_pairs, num)
     alignments, alignment_scores = parse_synteny_file(synteny_pairs)
     process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
-    process_gd_pairs = process_gd_result(gf, imap, spe1, spe2)
+    input_sps_tree = sys.argv[15]
+    process_gd_pairs = process_gd_result(gf, imap, input_sps_tree, spe1, spe2, 50, 50)
     generate_dotplot(gff1, gff2, lens1, lens2, process_blastp_pairs, spe1, spe2, "blastp_pairs", target_chr1, target_chr2, size)
     print("-" * 30)
     generate_dotplot(gff1, gff2, lens1, lens2, process_synteny_pairs, spe1, spe2, "synteny_pairs", target_chr1, target_chr2, size)

@@ -987,7 +987,6 @@ def mark_gene_to_sptree(
     gene_categories: list,
     sorted_dict: dict,
     gene2sps: dict,
-    voucher2taxa_dic: dict,
 ) -> None:
     """
     Mark gene categories on a species tree using colored faces.
@@ -1004,9 +1003,6 @@ def mark_gene_to_sptree(
         Mapping from family labels to color and suffix strings.
     gene2sps : dict
         Mapping from gene identifiers to species names.
-    voucher2taxa_dic : dict
-        Mapping from voucher identifiers to taxa names.
-
     Returns
     -------
     None
@@ -1258,7 +1254,6 @@ def mark_gene_to_sptree_main(
         gene_categories,
         sorted_dict,
         gene2sps,
-        voucher2taxa_dic,
     )
 
     rename_sptree(sp2)

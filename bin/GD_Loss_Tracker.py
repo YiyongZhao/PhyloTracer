@@ -223,7 +223,6 @@ def get_path_str_with_count_num_lst(
     gd_id_start,
     genetree,
     renamed_sptree,
-    gene2new_named_gene_dic,
     new_named_gene2gene_dic,
     voucher2taxa_dic,
 ):
@@ -240,8 +239,6 @@ def get_path_str_with_count_num_lst(
         Gene tree containing duplication nodes.
     renamed_sptree : object
         Renamed species tree used for mapping.
-    gene2new_named_gene_dic : dict
-        Mapping from gene identifiers to renamed identifiers.
     new_named_gene2gene_dic : dict
         Mapping from renamed identifiers to original gene identifiers.
     voucher2taxa_dic : dict
@@ -446,7 +443,6 @@ def get_path_str_num_dic(
             global_gd_id,
             t1,
             renamed_sptree,
-            gene2new_named_gene_dic,
             new_named_gene2gene_dic,
             voucher2taxa_dic,
         )
