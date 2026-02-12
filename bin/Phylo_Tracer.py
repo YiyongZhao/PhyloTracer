@@ -225,7 +225,7 @@ Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', r
 Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='ALIGNMENT_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>alignment_path), aligned with --input_GF_list IDs')
 Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 Hybrid_Tracer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
-Hybrid_Tracer_parser.add_argument('--target_node', metavar='NODE', required=False, help='Optional species-tree node name to restrict analysis scope; if omitted, all eligible GD nodes are processed')
+Hybrid_Tracer_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used.')
 Hybrid_Tracer_parser.add_argument('--split_groups', type=bounded_int(1), required=False, default=1, help='Number of partitions for HYDE batch processing (default: 1)')
 
 # Hybrid_Visualizer
@@ -559,12 +559,26 @@ def handle_hybrid_tracer(cli_args):
         start_time = time.time()
         sptree = read_phylo_tree(cli_args.input_sps_tree)
         num_sptree(sptree)
-        target_node_name = process_start_node(cli_args.target_node, sptree) if cli_args.target_node else None
+        target_node_name = None
+        if cli_args.mrca_node:
+            for pair_str in cli_args.mrca_node:
+                if ',' not in pair_str:
+                    print(f"Warning: Invalid mrca_node format '{pair_str}'. Skipping.")
+                    continue
+                sp1, sp2 = [x.strip() for x in pair_str.split(',', 1)]
+                try:
+                    mrca_clade = sptree.get_common_ancestor(sp1, sp2)
+                    target_node_name = mrca_clade.name
+                    print(f"Hybrid_Tracer target MRCA selected: {sp1},{sp2} -> {target_node_name}")
+                    break
+                except Exception as exc:
+                    print(f"ERROR: Cannot find MRCA for {sp1},{sp2}: {exc}")
+                    print("Available species:", sorted([leaf.name for leaf in sptree.get_leaves()]))
 
         if target_node_name:
             print(f"Target node determined: {target_node_name}")
         else:
-            print("No target_species_file provided, processing all gd.")
+            print("No valid --mrca_node provided, processing all gd.")
 
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
         seq_path_dic = read_and_return_dict(cli_args.input_Seq_GF_list)
