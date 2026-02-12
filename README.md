@@ -367,30 +367,39 @@ Usage:
 
 **Scoring logic (current implementation concept):**
 
-1. Identify dominant lineage candidates under the user taxa labels, with purity threshold:
-   $$
-   purity=\frac{N_{target}}{N_{all}}
-   $$
-2. For each alien lineage/tip set, compute three scores:
-   $$
-   phylo\_distance = depth(target\_lineage)-depth(MRCA(target+alien))
-   $$
-   $$
-   alien\_coverage = \frac{N_{alien}}{N_{all\_tips\_in\_dominant\_lineage}}
-   $$
-   $$
-   alien\_deepVar = depth(alien)-depth(MRCA(dominant\_lineage))
-   $$
+1. Identify dominant-lineage candidates under user taxa labels with purity threshold:
+
+$$
+\text{purity}=\frac{N_{\text{target}}}{N_{\text{all}}}
+$$
+
+2. For each alien lineage (or alien tip set), compute three scores:
+
+$$
+\text{phylo\_distance}=\text{depth}(\text{target\_lineage})-\text{depth}\!\left(\text{MRCA}(\text{target}+\text{alien})\right)
+$$
+
+$$
+\text{alien\_coverage}=\frac{N_{\text{alien}}}{N_{\text{all\_tips\_in\_dominant\_lineage}}}
+$$
+
+$$
+\text{alien\_deepVar}=\text{depth}(\text{alien})-\text{depth}\!\left(\text{MRCA}(\text{dominant\_lineage})\right)
+$$
+
 3. Rank candidates by combined score:
-   $$
-   combined = Norm(phylo\_distance)\times Norm(alien\_deepVar)\times -\log_{10}(alien\_coverage+10^{-4})
-   $$
-4. Remove from highest score downward with two stopping constraints:
-   - stop when final purity \(\ge\) `purity_cutoff`
-   - hard cap of removed tips:
-     $$
-     max\_remove = \max(max\_remove\_fraction \times N_{dominant\_tips}, 1)
-     $$
+
+$$
+\text{combined}=\text{Norm}(\text{phylo\_distance})\times \text{Norm}(\text{alien\_deepVar})\times -\log_{10}(\text{alien\_coverage}+10^{-4})
+$$
+
+4. Remove candidates from highest score downward with two stop constraints:
+- Stop when final purity $\ge$ `purity_cutoff`.
+- Enforce removal cap:
+
+$$
+\text{max\_remove}=\max\!\left(\text{max\_remove\_fraction}\times N_{\text{dominant\_tips}},1\right)
+$$
 
 ```
 Description:
