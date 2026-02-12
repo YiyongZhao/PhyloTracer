@@ -45,7 +45,7 @@ def build_synteny_index(dir_path: str) -> dict:
     return idx
 
 
-def choose_file(candidates: list, sp_a: str, sp_b: str) -> str:
+def choose_file(candidates: list) -> str:
     if not candidates:
         return None
     prefer = [p for p in candidates if re.search(r"syn|anchor|pair", os.path.basename(p), re.I)]
@@ -87,7 +87,7 @@ def synteny_rate_for_tree(t: Tree, syn_idx: dict) -> float:
             sp_a = species[i]
             sp_b = species[j]
             key = frozenset({sp_a.lower(), sp_b.lower()})
-            fps = choose_file(syn_idx.get(key, []), sp_a, sp_b)
+            fps = choose_file(syn_idx.get(key, []))
             syn_pairs = load_synteny_pairs(fps)
             a_list = by_sp[sp_a]
             b_list = by_sp[sp_b]

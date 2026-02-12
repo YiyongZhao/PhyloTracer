@@ -683,7 +683,7 @@ def find_dup_node(
     species_tree: PhyloTree,
     gd_support: int = 50,
     clade_support: int = 0,
-    dup_species_num: int = 2,
+    dup_species_num: int = 1,
     dup_species_percent: float = 0,
     max_topology_distance: int = 1,
 ) -> List:

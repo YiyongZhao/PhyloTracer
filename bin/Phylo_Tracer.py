@@ -1,3 +1,11 @@
+"""
+Command-line entry point for the PhyloTracer toolkit.
+
+This module defines subcommands, CLI arguments, and command dispatch for
+phylogenetic tree processing, orthology filtering, duplication detection,
+hybridization analyses, and visualization workflows.
+"""
+
 import argparse
 import sys
 import textwrap
@@ -54,7 +62,12 @@ if sys.version_info.major == 2:
 # Custom help formatter for better formatting of subcommands and section titles
 
 
-class CustomHelpFormatter(argparse.HelpFormatter):
+class CustomHelpFormatter(argparse.RawTextHelpFormatter):
+    """Unified CLI help formatter with stable alignment across subcommands."""
+
+    def __init__(self, prog):
+        super().__init__(prog, max_help_position=34, width=120)
+
     def _format_action(self, action):
         if action.dest == 'command' and action.choices:
             # Format the list of available subcommands
@@ -75,144 +88,174 @@ class CustomHelpFormatter(argparse.HelpFormatter):
         super().start_section(heading)
 
 
+def bounded_int(min_value: int = None, max_value: int = None):
+    """Create an argparse int type with inclusive bounds."""
+    def _validator(value: str) -> int:
+        parsed = int(value)
+        if min_value is not None and parsed < min_value:
+            raise argparse.ArgumentTypeError(f"must be >= {min_value}")
+        if max_value is not None and parsed > max_value:
+            raise argparse.ArgumentTypeError(f"must be <= {max_value}")
+        return parsed
+    return _validator
+
+
+def bounded_float(min_value: float = None, max_value: float = None):
+    """Create an argparse float type with inclusive bounds."""
+    def _validator(value: str) -> float:
+        parsed = float(value)
+        if min_value is not None and parsed < min_value:
+            raise argparse.ArgumentTypeError(f"must be >= {min_value}")
+        if max_value is not None and parsed > max_value:
+            raise argparse.ArgumentTypeError(f"must be <= {max_value}")
+        return parsed
+    return _validator
+
+
 # Create the main parser
-parser = argparse.ArgumentParser(prog='PhyloTracer', description='A comprehensive toolkit for phylogenetic tree analysis, gene family evolution inference, and visualization, supporting tree transformation, rooting, topology summarization, duplication–loss analysis, and hybridization detection.', formatter_class=argparse.RawTextHelpFormatter, add_help=False)
+parser = argparse.ArgumentParser(
+    prog='PhyloTracer',
+    description='A comprehensive toolkit for phylogenetic tree analysis, gene family evolution inference, and visualization, supporting tree transformation, rooting, topology summarization, duplication-loss analysis, and hybridization detection.',
+    formatter_class=CustomHelpFormatter,
+    add_help=False,
+)
 
 # Add subparsers for commands
-subparsers = parser.add_subparsers(dest='command', help='Available programs for phylogenetic tree processing')
+subparsers = parser.add_subparsers(dest='command', help='Available subcommands')
 
 
 # PhyloTree_CollapseExpand command
-PhyloTree_CollapseExpand_parser = subparsers.add_parser('PhyloTree_CollapseExpand', help='Transform a phylogenetic tree into a "comb" structure based on a support value or revert it to a binary tree', formatter_class=CustomHelpFormatter)
-PhyloTree_CollapseExpand_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-PhyloTree_CollapseExpand_parser.add_argument('--support_value', metavar='INT', type=int, required=True, help='Support threshold for collapsing nodes')
-PhyloTree_CollapseExpand_parser.add_argument('--revert', action='store_true', help='Revert the "comb" structure back to a fully resolved binary tree')
+PhyloTree_CollapseExpand_parser = subparsers.add_parser('PhyloTree_CollapseExpand', help='Collapse low-support branches or restore resolved binary trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer PhyloTree_CollapseExpand --input_GF_list gf.imap --support_value 50')
+PhyloTree_CollapseExpand_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+PhyloTree_CollapseExpand_parser.add_argument('--support_value', metavar='INT', type=bounded_int(0, 100), required=True, help='Node support cutoff used for collapsing internal branches')
+PhyloTree_CollapseExpand_parser.add_argument('--revert', action='store_true', help='If set, expand previously collapsed comb structures back to binary form')
 
 # PhyloSupport_Scaler command
-PhyloSupport_Scaler_parser = subparsers.add_parser('PhyloSupport_Scaler', help='Scale support values of gene trees', formatter_class=CustomHelpFormatter)
-PhyloSupport_Scaler_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-PhyloSupport_Scaler_parser.add_argument('--scale_to', metavar='1|100', choices=['1', '100'], required=True, help='Scale support values to 0-1 ("1") or 1-100 ("100")')
+PhyloSupport_Scaler_parser = subparsers.add_parser('PhyloSupport_Scaler', help='Rescale branch support values for all gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer PhyloSupport_Scaler --input_GF_list gf.imap --scale_to 100')
+PhyloSupport_Scaler_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+PhyloSupport_Scaler_parser.add_argument('--scale_to', metavar='1|100', choices=['1', '100'], required=True, help='Target support scale: "1" for [0,1], "100" for [0,100]')
 
 # BranchLength_NumericConverter command
-BranchLength_NumericConverter_parser = subparsers.add_parser('BranchLength_NumericConverter', help='Convert branch length values to a specified number of decimal places', formatter_class=CustomHelpFormatter)
-BranchLength_NumericConverter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-BranchLength_NumericConverter_parser.add_argument('--decimal_place', metavar='INT', type=int, default=10, help='Number of decimal places for branch lengths')
+BranchLength_NumericConverter_parser = subparsers.add_parser('BranchLength_NumericConverter', help='Standardize branch-length precision for all gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer BranchLength_NumericConverter --input_GF_list gf.imap --decimal_place 8')
+BranchLength_NumericConverter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+BranchLength_NumericConverter_parser.add_argument('--decimal_place', metavar='INT', type=bounded_int(0), default=10, help='Number of decimal places to keep for branch lengths')
 
 # Phylo_Rooter command
-Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Phylo_Rooter help', formatter_class=CustomHelpFormatter)
-Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-Phylo_Rooter_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Gene length information file')
-Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree in Newick format')
+Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Root gene trees using species-tree guidance and gene length', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Phylo_Rooter --input_GF_list gf.imap --input_imap map.txt --input_gene_length len.txt --input_sps_tree sptree.nwk')
+Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+Phylo_Rooter_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
+Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 
 # OrthoFilter_LB command
-OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='OrthoFilter_LB help', formatter_class=CustomHelpFormatter)
-OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-OrthoFilter_LB_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-OrthoFilter_LB_parser.add_argument('--absolute_branch_length', metavar='INT', type=int, default=5, required=True, help='Absolute branch length multiplier and default = 5')
-OrthoFilter_LB_parser.add_argument('--relative_branch_length', metavar='FLOAT', type=float, default=2.5, required=True, help='Relative branch length multiplier and default = 2.5')
-OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='Visualize the results of gene family trees before and after removing long branches')
+OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list gf.imap --input_imap map.txt --absolute_branch_length 5 --relative_branch_length 2.5')
+OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+OrthoFilter_LB_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+OrthoFilter_LB_parser.add_argument('--absolute_branch_length', metavar='INT', type=bounded_int(1), default=5, required=True, help='Absolute branch-length multiplier threshold (integer)')
+OrthoFilter_LB_parser.add_argument('--relative_branch_length', metavar='FLOAT', type=bounded_float(0.0), default=2.5, required=True, help='Relative branch-length multiplier threshold (float)')
+OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='If set, export before/after tree visualization PDFs')
 
 # OrthoFilter_Mono command
-OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='Remove alien lineages from dominant mono-lineage clades', formatter_class=CustomHelpFormatter)
-OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True,help='File containing paths to gene tree files, one per line')
-OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='TAXA_LIST', required=True, help='Gene to lineage mapping file')
-OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Gene to species mapping file')
-OrthoFilter_Mono_parser.add_argument('--purity_cutoff', metavar='FLOAT', type=float, default=0.95, help='Target purity for dominant lineage (default: 0.95)')
-OrthoFilter_Mono_parser.add_argument('--max_remove_fraction', metavar='FLOAT', type=float, default=0.5, help='Maximum fraction of tips allowed to be removed (default: 0.5)')
-OrthoFilter_Mono_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True,help='Species tree in Newick format')
-OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='Visualize trees before and after pruning')
+OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='Prune alien lineages inside dominant clades', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_Mono --input_GF_list gf.imap --input_taxa gene2clade.txt --input_imap map.txt --input_sps_tree sptree.nwk --purity_cutoff 0.95 --max_remove_fraction 0.5')
+OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='TAXA_LIST', required=True, help='Two-column mapping file (gene_id<TAB>clade_or_lineage_label)')
+OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+OrthoFilter_Mono_parser.add_argument('--purity_cutoff', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0.95, help='Target purity for dominant lineage (default: 0.95)')
+OrthoFilter_Mono_parser.add_argument('--max_remove_fraction', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0.5, help='Maximum fraction of tips allowed to be removed (default: 0.5)')
+OrthoFilter_Mono_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
+OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='If set, export before/after pruning visualization PDFs')
 
 # TreeTopology_Summarizer command
-TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='TreeTopology_Summarizer help', formatter_class=CustomHelpFormatter)
-TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-TreeTopology_Summarizer_parser.add_argument('--visual_top', metavar='INT', type=int, required=False, default=10, help='Visualize the result of provide number,default=10')
+TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='Summarize and rank gene-tree topologies', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer TreeTopology_Summarizer --input_GF_list gf.imap --input_imap map.txt --visual_top 10')
+TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+TreeTopology_Summarizer_parser.add_argument('--visual_top', metavar='INT', type=bounded_int(1), required=False, default=10, help='Number of top-ranked topologies to visualize (default: 10)')
 
 # Tree_Visualizer command
-Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Tree_Visualizer help', formatter_class=CustomHelpFormatter)
-Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-Tree_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-Tree_Visualizer_parser.add_argument('--gene_categories', metavar='TAXA_LIST', nargs='+', help='File with taxonomic information for species')
-Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Preserve branch lengths (1) or not (0)')
-Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree style: rectangular (r) or circular (c)')
-Tree_Visualizer_parser.add_argument('--gene_family', metavar='GENE_FAMILY', help='File to mark gene families')
-Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', help='Species tree in Newick format')
-Tree_Visualizer_parser.add_argument('--gene_expression', metavar='EXPRESSION_FILE', help='Gene expression data (Excel/CSV)')
-Tree_Visualizer_parser.add_argument('--visual_gd', action='store_true', help='Visualize the gd node of gene family trees')
+Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Render gene-tree figures with optional metadata overlays', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Tree_Visualizer --input_GF_list gf.imap --input_imap map.txt --tree_style r')
+Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+Tree_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+Tree_Visualizer_parser.add_argument('--gene_categories', metavar='TAXA_LIST', nargs='+', help='One or more two-column files (gene_id<TAB>category_label) for color annotations')
+Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Whether to preserve branch lengths in plotting: 1=yes, 0=no')
+Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree layout style: r=rectangular, c=circular')
+Tree_Visualizer_parser.add_argument('--gene_family', metavar='GENE_FAMILY', help='Two-column mapping file (gene_id<TAB>family_label)')
+Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', help='Species tree file in Newick format (required with --gene_family)')
+Tree_Visualizer_parser.add_argument('--gene_expression', metavar='EXPRESSION_FILE', help='Gene expression matrix file (.csv/.xls/.xlsx), genes as row index')
+Tree_Visualizer_parser.add_argument('--visual_gd', action='store_true', help='If set, overlay predicted GD nodes on gene-tree figures')
 
 # GD_Detector command
-GD_Detector_parser = subparsers.add_parser('GD_Detector', help='GD_Detector help', formatter_class=CustomHelpFormatter)
-GD_Detector_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-GD_Detector_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-GD_Detector_parser.add_argument('--gd_support', metavar='INT', type=int, required=True, help='GD node support [50-100]')
-GD_Detector_parser.add_argument('--subclade_support', metavar='INT', type=int, required=True, help='The subclade support of GD node [0-100]')
-GD_Detector_parser.add_argument('--dup_species_proportion', metavar='FLOAT', type=float, required=True, help='The proportion of overlappped species from two subclade for a GD event with range [0-1] and default = 0')
-GD_Detector_parser.add_argument('--dup_species_num', metavar='INT', type=int, required=True, help='The number of species with species duplications under the GD node')
-GD_Detector_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='A species tree file with Newick format')
-GD_Detector_parser.add_argument('--deepvar', metavar='INT', type=int, required=True, help='Maximum variance of deepth and default = 1')
+GD_Detector_parser = subparsers.add_parser('GD_Detector', help='Detect gene-duplication events and classify GD types', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Detector --input_GF_list gf.imap --input_imap map.txt --input_sps_tree sptree.nwk --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --deepvar 1')
+GD_Detector_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+GD_Detector_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+GD_Detector_parser.add_argument('--gd_support', metavar='INT', type=bounded_int(0, 100), required=True, help='Minimum support of a GD candidate node (accepted range: 0-100; typical: 50-100)')
+GD_Detector_parser.add_argument('--subclade_support', metavar='INT', type=bounded_int(0, 100), required=True, help='Minimum support required in GD child subclades (accepted range: 0-100)')
+GD_Detector_parser.add_argument('--dup_species_proportion', metavar='FLOAT', type=bounded_float(0.0, 1.0), required=True, help='Minimum overlap ratio of duplicated species between the two GD child clades (range: 0-1)')
+GD_Detector_parser.add_argument('--dup_species_num', metavar='INT', type=bounded_int(1), required=True, help='Minimum number of overlapping duplicated species under a GD node (>=1)')
+GD_Detector_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
+GD_Detector_parser.add_argument('--deepvar', metavar='INT', type=bounded_int(0), required=True, help='Maximum tolerated depth-variance score for GD screening (default recommended: 1)')
 
 # GD_Visualizer command
-GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='GD_Visualizer help', formatter_class=CustomHelpFormatter)
-GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='A numbered species tree file with Newick format')
-GD_Visualizer_parser.add_argument('--gd_result', metavar='GD_RESULT', required=True, help='Result file of GD_Detector')
-GD_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
+GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='Visualize GD counts or GD-type summaries on a species tree', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result.txt --input_imap map.txt')
+GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format')
+GD_Visualizer_parser.add_argument('--gd_result', metavar='GD_RESULT', required=True, help='GD result table produced by GD_Detector')
+GD_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 
 # GD_Loss_Tracker command
-GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='GD_Loss_Tracker help', formatter_class=CustomHelpFormatter)
-GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='A species tree file with Newick format')
-GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
+GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='Track inferred post-GD loss paths across species tree branches', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Tracker --input_GF_list gf.imap --input_sps_tree sptree.nwk --input_imap map.txt')
+GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
+GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 GD_Loss_Tracker_parser.add_argument('--target_species', metavar='SP', action='append', default=None, help='Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.')
 GD_Loss_Tracker_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.')
 
 # GD_Loss_Visualizer command
-GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='GD_Loss_Visualizer help', formatter_class=CustomHelpFormatter)
-GD_Loss_Visualizer_parser.add_argument('--gd_loss_result', metavar='GD_LOSS_RESULT', required=True, help='Result file of gd loss count summary of GD_Loss_Tracker')
-GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='A numbered species tree file with Newick format')
+GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='Visualize GD-loss summary results on species tree topology', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Visualizer --gd_loss_result gd_loss_count_summary.txt --input_sps_tree numed_sptree.nwk')
+GD_Loss_Visualizer_parser.add_argument('--gd_loss_result', metavar='GD_LOSS_RESULT', required=True, help='Summary table generated by GD_Loss_Tracker')
+GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='Numbered species tree file in Newick format')
 
 # Ortho_Retriever command
-Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Ortho_Retriever help', formatter_class=CustomHelpFormatter)
-Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-Ortho_Retriever_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='File with information corresponding to gene length')
+Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Retrieve ortholog sets from rooted gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Ortho_Retriever --input_GF_list gf.imap --input_imap map.txt --input_gene_length len.txt')
+Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+Ortho_Retriever_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
 
 # Hybrid_Tracer
-Hybrid_Tracer_parser = subparsers.add_parser('Hybrid_Tracer', help='Hybrid_Tracer help', formatter_class=CustomHelpFormatter)
-Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='File containing paths to gene tree files, one per line')
-Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='ALIGNMENT_LIST', required=True, help='File containing paths to sequence alignment files corresponding to the gene trees')
-Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='A species tree file with Newick format')
-Hybrid_Tracer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='File with classification information of species corresponding to genes')
-Hybrid_Tracer_parser.add_argument('--target_node', metavar='NODE', required=False, help='Specific node to process. Use "all" to process all gd_names.')
-Hybrid_Tracer_parser.add_argument('--split_groups', type=int, required=False, default=1, help='Split the GD data into a target number of groups for Hyde processing, and default = 1')
+Hybrid_Tracer_parser = subparsers.add_parser('Hybrid_Tracer', help='Prepare HYDE input from GD-supported candidate triplets', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Hybrid_Tracer --input_GF_list gf.imap --input_Seq_GF_list aln.imap --input_sps_tree sptree.nwk --input_imap map.txt')
+Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='ALIGNMENT_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>alignment_path), aligned with --input_GF_list IDs')
+Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
+Hybrid_Tracer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+Hybrid_Tracer_parser.add_argument('--target_node', metavar='NODE', required=False, help='Optional species-tree node name to restrict analysis scope; if omitted, all eligible GD nodes are processed')
+Hybrid_Tracer_parser.add_argument('--split_groups', type=bounded_int(1), required=False, default=1, help='Number of partitions for HYDE batch processing (default: 1)')
 
 # Hybrid_Visualizer
-Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Hybrid_Visualizer help', formatter_class=CustomHelpFormatter)
-Hybrid_Visualizer_parser.add_argument('--hyde_out', metavar='HYDE_OUT', required=True, help='File containing result of hyde')
-Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='A species tree file with Newick format')
-Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Node model, stack up all the heatmaps for each monophyletic clade respectively, only the squares in all heatmaps were light, the square after superimposition will be light")
+Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Visualize HYDE hybridization signals', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk')
+Hybrid_Visualizer_parser.add_argument('--hyde_out', metavar='HYDE_OUT', required=True, help='HYDE output table file')
+Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
+Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Use node-mode heatmaps (monophyletic clade stacking) instead of leaf-mode output")
 
 # HaploFinder
-HaploFinder = subparsers.add_parser('HaploFinder', help='HaploFinder: Gene duplication detection and visualization between haplotypes, includes split utility for FASTA file separation', formatter_class=CustomHelpFormatter)
-HaploFinder.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=False, help='File containing paths to gene tree files, one per line file (required for haplofinder mode)')
-HaploFinder.add_argument('--input_imap', metavar='IMAP', required=False, help='File with classification information of species corresponding to genes (required for haplofinder mode)')
-HaploFinder.add_argument('--species_a', metavar='SPECIES_A', type=str, required=False, help='Name of species A (required for haplofinder mode)')
-HaploFinder.add_argument('--species_b', metavar='SPECIES_B', type=str, required=False, help='Name of species B (required for haplofinder mode)')
-HaploFinder.add_argument('--species_a_gff', metavar='GFF', required=False, help='GFF file of species A (required for haplofinder mode)')
-HaploFinder.add_argument('--species_b_gff', metavar='GFF', required=False, help='GFF file of species B (required for haplofinder mode)')
-HaploFinder.add_argument('--species_a_lens', metavar='LENS', required=False, help='Lens file of species A (required for haplofinder mode)')
-HaploFinder.add_argument('--species_b_lens', metavar='LENS', required=False, help='Lens file of species B (required for haplofinder mode)')
-HaploFinder.add_argument('--visual_chr_a', metavar='CHR_LIST', required=False, help='A file containing the chromosome numbers of species a')
-HaploFinder.add_argument('--visual_chr_b', metavar='CHR_LIST', required=False, help='A file containing the chromosome numbers of species b')
-HaploFinder.add_argument('--gd_support', metavar='INT[50-100]', type=int, required=False, default=50, help='GD node support [50-100] (required for haplofinder mode)')
-HaploFinder.add_argument('--pair_support', metavar='INT[50-100]', type=int, required=False, default=50, help='gene pair support [50-100] (required for haplofinder mode)')
-HaploFinder.add_argument('--size', type=float, required=False, default=0.0005, help='The size of each point in the dopolot graph and default = 0.0005')
-HaploFinder.add_argument('--mode', metavar='MODE', type=str, choices=['haplofinder', 'split'], default='haplofinder', help='Choose mode: "haplofinder" for gene duplication detection and visualization, "split" for FASTA file separation based on colorlabel')
+haplofinder_parser = subparsers.add_parser('HaploFinder', help='Detect and visualize haplotype-level GD signals; also supports FASTA split mode', formatter_class=CustomHelpFormatter, epilog='Examples:\n  PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.imap --input_imap map.txt --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens\n  PhyloTracer HaploFinder --mode split --input_GF_list gf.imap --input_imap map.txt --input_fasta prot.fa --cluster_file cluster.txt --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff')
+haplofinder_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=False, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); required in haplofinder mode')
+haplofinder_parser.add_argument('--input_imap', metavar='IMAP', required=False, help='Two-column mapping file (gene_id<TAB>species_name); required in both haplofinder and split modes')
+haplofinder_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='Species tree file in Newick format; required in haplofinder mode')
+haplofinder_parser.add_argument('--species_a', metavar='SPECIES_A', type=str, required=False, help='Name of species A (required for haplofinder mode)')
+haplofinder_parser.add_argument('--species_b', metavar='SPECIES_B', type=str, required=False, help='Name of species B (required for haplofinder mode)')
+haplofinder_parser.add_argument('--species_a_gff', metavar='GFF', required=False, help='Genome annotation file for species A in GFF/GTF-compatible format')
+haplofinder_parser.add_argument('--species_b_gff', metavar='GFF', required=False, help='Genome annotation file for species B in GFF/GTF-compatible format')
+haplofinder_parser.add_argument('--species_a_lens', metavar='LENS', required=False, help='Chromosome-length file for species A (chr<TAB>length)')
+haplofinder_parser.add_argument('--species_b_lens', metavar='LENS', required=False, help='Chromosome-length file for species B (chr<TAB>length)')
+haplofinder_parser.add_argument('--visual_chr_a', metavar='CHR_LIST', required=False, help='Optional chromosome list file for species A visualization subset')
+haplofinder_parser.add_argument('--visual_chr_b', metavar='CHR_LIST', required=False, help='Optional chromosome list file for species B visualization subset')
+haplofinder_parser.add_argument('--gd_support', metavar='INT', type=bounded_int(0, 100), required=False, default=50, help='Minimum support of GD nodes used for pair extraction (accepted range: 0-100; default: 50)')
+haplofinder_parser.add_argument('--pair_support', metavar='INT', type=bounded_int(0, 100), required=False, default=50, help='Minimum support of ortholog/speciation pair nodes (accepted range: 0-100; default: 50)')
+haplofinder_parser.add_argument('--size', metavar='FLOAT', type=bounded_float(0.0), required=False, default=0.0005, help='Point size in dotplot rendering (positive float; default: 0.0005)')
+haplofinder_parser.add_argument('--mode', metavar='MODE', type=str, choices=['haplofinder', 'split'], default='haplofinder', help='Run mode: "haplofinder" for GD analysis, "split" for FASTA partitioning by color labels')
 # Split mode specific arguments
-HaploFinder.add_argument('--hyb_sps', metavar='HYBRID_SPECIES', type=str, required=False, help='Name of the hybrid species (required in split mode)')
-HaploFinder.add_argument('--parental_sps', metavar='PARENTAL_SPECIES', type=str, required=False, help='Name of the parental species (required in split mode; use space-separated if multiple)')
-HaploFinder.add_argument('--input_fasta', metavar='FASTA_FILE', required=False, help='Input protein FASTA file (required in split mode)')
-HaploFinder.add_argument('--cluster_file', metavar='CLUSTER_FILE', required=False, help='Input cluster file (required in split mode)')
+haplofinder_parser.add_argument('--hyb_sps', metavar='HYBRID_SPECIES', type=str, required=False, help='Hybrid species name used for subgenome assignment (required in split mode)')
+haplofinder_parser.add_argument('--parental_sps', metavar='PARENTAL_SPECIES', type=str, required=False, help='Parental species names used for split-mode assignment; provide as a single quoted, space-separated string')
+haplofinder_parser.add_argument('--input_fasta', metavar='FASTA_FILE', required=False, help='Input FASTA file (.fa/.fasta), required in split mode')
+haplofinder_parser.add_argument('--cluster_file', metavar='CLUSTER_FILE', required=False, help='Split-mode cluster metadata file (legacy compatibility field; currently required by CLI checks)')
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
 
@@ -227,413 +270,435 @@ def format_time(seconds):
     return f"{int(days)} d, {int(hours)} h, {int(minutes)} m, {seconds:.2f} s"
 
 
-def main():
-    if args.command == 'PhyloTree_CollapseExpand':
-        # Execute the PhyloTree_CollapseExpand function
-        if args.input_GF_list and args.support_value:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            support_value = args.support_value
-            tre_dic = read_and_return_dict(input_GF_list)
-            collapse_expand_main(tre_dic, support_value, revert=args.revert)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for PhyloTree_CollapseExpand command are missing.")
+def report_execution_time(start_time: float) -> None:
+    """Print formatted runtime based on a given start timestamp."""
+    print("Program execution time:", format_time(time.time() - start_time))
 
-    elif args.command == 'PhyloSupport_Scaler':
-        # Execute the PhyloSupport_Scaler function
-        if args.input_GF_list and args.scale_to:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            scale = args.scale_to
-            tre_dic = read_and_return_dict(input_GF_list)
-            support_scaler_main(tre_dic, scale)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for PhyloSupport_Scaler command are missing.")
 
-    elif args.command == 'BranchLength_NumericConverter':
-        # Execute the BranchLength_NumericConverter function
-        if args.input_GF_list:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            decimal_place = args.decimal_place
-            tre_dic = read_and_return_dict(input_GF_list)
-            branch_length_numeric_converter_main(tre_dic, decimal_place)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for BranchLength_NumericConverter command are missing.")
+def handle_phylo_tree_collapse_expand(cli_args):
+    if cli_args.input_GF_list and cli_args.support_value is not None:
+        start_time = time.time()
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        collapse_expand_main(tre_dic, cli_args.support_value, revert=cli_args.revert)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for PhyloTree_CollapseExpand command are missing.")
 
-    elif args.command == 'Phylo_Rooter':
-        # Execute the Phylo_Rooter function
-        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.input_gene_length:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            input_sps_tree = args.input_sps_tree
-            input_gene_length = args.input_gene_length
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
-            len_dic = read_and_return_dict(input_gene_length)
-            renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
-            sptree = PhyloTree(input_sps_tree)
-            renamed_sptree = rename_input_tre(sptree, taxa2voucher_dic)
-            tre_dic = read_and_return_dict(input_GF_list)
-            root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, renamed_sptree)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Phylo_Rooter command are missing.")
 
-    elif args.command == 'OrthoFilter_LB':
-        # Execute the OrthoFilter_LB function
-        if args.input_GF_list and args.input_imap and args.absolute_branch_length and args.relative_branch_length:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            absolute_branch_length = args.absolute_branch_length - 1
-            relative_branch_length = args.relative_branch_length - 1
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
+def handle_phylo_support_scaler(cli_args):
+    if cli_args.input_GF_list and cli_args.scale_to:
+        start_time = time.time()
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        support_scaler_main(tre_dic, cli_args.scale_to)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for PhyloSupport_Scaler command are missing.")
 
-            tre_dic = read_and_return_dict(input_GF_list)
-            prune_main_LB(tre_dic, voucher2taxa_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, absolute_branch_length, relative_branch_length, visual=args.visual)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for OrthoFilter_LB command are missing.")
 
-    elif args.command == 'OrthoFilter_Mono':
-        # Execute the OrthoFilter_Mono function
-        if args.input_GF_list and args.input_imap and args.input_taxa and args.input_sps_tree and args.purity_cutoff and args.max_remove_fraction:
-            start_time = time.time()
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(args.input_imap)
-            tre_dic = read_and_return_dict(args.input_GF_list)
-            taxa_dic = read_and_return_dict(args.input_taxa)
-            sptree = PhyloTree(args.input_sps_tree)
-            renamed_sptree = rename_input_tre(sptree, taxa2voucher_dic)
+def handle_branch_length_numeric_converter(cli_args):
+    if cli_args.input_GF_list:
+        start_time = time.time()
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        branch_length_numeric_converter_main(tre_dic, cli_args.decimal_place)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for BranchLength_NumericConverter command are missing.")
 
-            purity_cutoff=args.purity_cutoff
-            max_remove_fraction=args.max_remove_fraction
-            prune_main_Mono(tre_dic,taxa_dic,renamed_sptree,  purity_cutoff,max_remove_fraction, new_named_gene2gene_dic, gene2new_named_gene_dic, visual=args.visual)
 
-            end_time = time.time()
-            print("Program execution time:", format_time(end_time - start_time))
-        else:
-            print("Required arguments for OrthoFilter_Mono command are missing.")
+def handle_phylo_rooter(cli_args):
+    if cli_args.input_GF_list and cli_args.input_imap and cli_args.input_sps_tree and cli_args.input_gene_length:
+        start_time = time.time()
+        gene2new_named_gene_dic, new_named_gene2gene_dic, _, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        len_dic = read_and_return_dict(cli_args.input_gene_length)
+        renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
+        sptree = PhyloTree(cli_args.input_sps_tree)
+        renamed_sptree = rename_input_tre(sptree, taxa2voucher_dic)
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, renamed_sptree)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for Phylo_Rooter command are missing.")
 
-    elif args.command == 'TreeTopology_Summarizer':
-        # Execute the TreeTopology_Summarizer function
-        if args.input_GF_list and args.input_imap:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            top_n = args.visual_top if args.visual_top else None
-            outfile = 'topology'
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
-            tre_dic = read_and_return_dict(input_GF_list)
-            statistical_main(tre_dic, outfile, gene2new_named_gene_dic, voucher2taxa_dic, top_n)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for TreeTopology_Summarizer command are missing.")
 
-    # Perform the corresponding functions according to the parameters
-    elif args.command == 'Tree_Visualizer':
-        # Execute the Tree_Visualizer function
-        if args.input_GF_list and args.input_imap:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            tree_style = args.tree_style
-            gene_categories = args.gene_categories
-            keep_branch = args.keep_branch
-            species_category_list = []
-            if gene_categories is not None:
-                species_category_list = [read_and_return_dict(i) for i in gene_categories]
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
+def handle_ortho_filter_lb(cli_args):
+    if (
+        cli_args.input_GF_list
+        and cli_args.input_imap
+        and cli_args.absolute_branch_length is not None
+        and cli_args.relative_branch_length is not None
+    ):
+        start_time = time.time()
+        absolute_branch_length = cli_args.absolute_branch_length - 1
+        relative_branch_length = cli_args.relative_branch_length - 1
+        gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, _ = gene_id_transfer(cli_args.input_imap)
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        prune_main_LB(
+            tre_dic,
+            voucher2taxa_dic,
+            gene2new_named_gene_dic,
+            new_named_gene2gene_dic,
+            absolute_branch_length,
+            relative_branch_length,
+            visual=cli_args.visual,
+        )
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for OrthoFilter_LB command are missing.")
 
-            tre_dic = read_and_return_dict(input_GF_list)
-            gene2fam = None
-            df = None
 
-            if args.gene_family and args.input_sps_tree:
-                gene2fam = read_and_return_dict(args.gene_family)
-                gene2sps = read_and_return_dict(input_imap)
-                sptree = Tree(args.input_sps_tree)
-                sptree1 = rename_input_tre(sptree, taxa2voucher_dic)
-                mark_gene_to_sptree_main(tre_dic, species_category_list, sptree1, gene2fam, gene2sps, gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic)
+def handle_ortho_filter_mono(cli_args):
+    if (
+        cli_args.input_GF_list
+        and cli_args.input_imap
+        and cli_args.input_taxa
+        and cli_args.input_sps_tree
+        and cli_args.purity_cutoff is not None
+        and cli_args.max_remove_fraction is not None
+    ):
+        start_time = time.time()
+        gene2new_named_gene_dic, new_named_gene2gene_dic, _, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        taxa_dic = read_and_return_dict(cli_args.input_taxa)
+        sptree = PhyloTree(cli_args.input_sps_tree)
+        renamed_sptree = rename_input_tre(sptree, taxa2voucher_dic)
+        prune_main_Mono(
+            tre_dic,
+            taxa_dic,
+            renamed_sptree,
+            cli_args.purity_cutoff,
+            cli_args.max_remove_fraction,
+            new_named_gene2gene_dic,
+            gene2new_named_gene_dic,
+            visual=cli_args.visual,
+        )
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for OrthoFilter_Mono command are missing.")
 
-            if args.gene_expression:
-                file_extension = os.path.splitext(args.gene_expression)[1]  # 获取文件扩展名
 
-                if file_extension == '.xlsx' or file_extension == '.xls':
-                    df = pd.read_excel(args.gene_expression, index_col=0)
-                elif file_extension == '.csv':
-                    df = pd.read_csv(args.gene_expression, index_col=0)
-                else:
-                    raise ValueError("Unsupported file format. Please provide an Excel or CSV file.")
+def handle_tree_topology_summarizer(cli_args):
+    if cli_args.input_GF_list and cli_args.input_imap:
+        start_time = time.time()
+        gene2new_named_gene_dic, _, voucher2taxa_dic, _ = gene_id_transfer(cli_args.input_imap)
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        statistical_main(tre_dic, 'topology', gene2new_named_gene_dic, voucher2taxa_dic, cli_args.visual_top)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for TreeTopology_Summarizer command are missing.")
 
-            view_main(tre_dic, sptree1, gene2new_named_gene_dic, voucher2taxa_dic, species_category_list, tree_style, keep_branch, new_named_gene2gene_dic, gene2fam, df, visual=args.visual_gd)
 
-            # 计算并格式化程序执行时间
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Tree_Visualizer command are missing.")
+def handle_tree_visualizer(cli_args):
+    if cli_args.input_GF_list and cli_args.input_imap:
+        start_time = time.time()
+        species_category_list = []
+        if cli_args.gene_categories is not None:
+            species_category_list = [read_and_return_dict(i) for i in cli_args.gene_categories]
 
-    elif args.command == 'GD_Detector':
-        # Execute the GD_Detector function
-        if args.input_GF_list and args.input_imap and args.input_sps_tree and args.gd_support is not None and args.subclade_support is not None and args.dup_species_proportion is not None and args.dup_species_num is not None and args.deepvar is not None:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            input_sps_tree = args.input_sps_tree
-            gd_support = args.gd_support
-            subclade_support = args.subclade_support
-            dup_species_percent = args.dup_species_proportion
-            dup_species_num = args.dup_species_num
-            deep_var = args.deepvar
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
-            sptree = PhyloTree(args.input_sps_tree)
-            num_sptree(sptree)
-            sptree.write(outfile='numed_sptree.nwk', format=1, format_root_node=True)
-            renamed_sptree = rename_input_tre(sptree, taxa2voucher_dic)
-            tre_dic = read_and_return_dict(input_GF_list)
-            filename = 'gd_result.txt'
-            write_gene_duplication_results(filename, tre_dic, gd_support, subclade_support, dup_species_percent, dup_species_num, renamed_sptree, gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, deep_var)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for GD_Detector command are missing.")
+        gene2new_named_gene_dic, _, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        gene2fam = None
+        df = None
+        sptree1 = None
 
-    elif args.command == 'GD_Visualizer':
-        # Execute the GD_Visualizer function
-        if args.input_sps_tree and args.gd_result and args.input_imap:
-            start_time = time.time()
-            sptree = read_tree(args.input_sps_tree)
-            gd_result = args.gd_result
-            taxa = read_and_return_dict(args.input_imap)
-            gd_visualizer_main(sptree, gd_result, taxa)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for GD_Visualizer command are missing.")
-
-    elif args.command == 'GD_Loss_Tracker':
-        if args.input_GF_list and args.input_sps_tree and args.input_imap:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            input_sps_tree = args.input_sps_tree
-
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
-            sptree = PhyloTree(input_sps_tree)
-            num_sptree(sptree)
-
-            tre_dic = read_and_return_dict(input_GF_list)
-
-            allowed_gd_species_sets = set()
-            if args.mrca_node:
-                for pair_str in args.mrca_node:
-                    if ',' not in pair_str:
-                        print(f"Warning: Invalid mrca_node format '{pair_str}'. Skipping.")
-                        continue
-                    sp1, sp2 = [x.strip() for x in pair_str.split(',', 1)]
-                    try:
-                        # 用原始 sptree 找到 MRCA
-                        mrca_clade = sptree.get_common_ancestor(sp1, sp2)
-                        species_under_mrca = frozenset(mrca_clade.get_leaf_names())
-                        allowed_gd_species_sets.add(species_under_mrca)
-                        print(f"GD event restricted to EXACT MRCA of {sp1} and {sp2}")
-                        print(f"   -> Covers species: {sorted(species_under_mrca)}")
-                    except Exception as e:
-                        print(f"ERROR: Cannot find MRCA for {sp1},{sp2}: {e}")
-                        print("Available species:", sorted([leaf.name for leaf in sptree.get_leaves()]))
-
-            # 调用函数，传这个集合
-            get_path_str_num_dic(
-                tre_dic, sptree,
-                gene2new_named_gene_dic, new_named_gene2gene_dic,
-                voucher2taxa_dic, taxa2voucher_dic,
-                target_species_list=args.target_species,
-                allowed_gd_species_sets=allowed_gd_species_sets  # 新参数
+        if cli_args.gene_family and cli_args.input_sps_tree:
+            gene2fam = read_and_return_dict(cli_args.gene_family)
+            gene2sps = read_and_return_dict(cli_args.input_imap)
+            sptree = Tree(cli_args.input_sps_tree)
+            sptree1 = rename_input_tre(sptree, taxa2voucher_dic)
+            mark_gene_to_sptree_main(
+                tre_dic,
+                species_category_list,
+                sptree1,
+                gene2fam,
+                gene2sps,
+                gene2new_named_gene_dic,
+                new_named_gene2gene_dic,
+                voucher2taxa_dic,
             )
 
-            parse_text_to_excel('gd_loss_count_summary.txt')
-
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for GD_Loss_Tracker command are missing.")
-
-    elif args.command == 'GD_Loss_Visualizer':
-        # Execute the GD_Loss_Visualizer function
-        if args.input_sps_tree and args.gd_loss_result:
-            # if args.input_folder and  args.output_folder :
-            start_time = time.time()
-
-            input_sps_tree = args.input_sps_tree
-            sptree = Tree(input_sps_tree, format=1)
-
-            visualizer_sptree(args.gd_loss_result, sptree)
-
-            # generate_plt(input_dir,out_dir)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for GD_Loss_Visualizer command are missing.")
-
-    elif args.command == 'Ortho_Retriever':
-        # Execute the Ortho_Retriever function
-        if args.input_GF_list and args.input_imap and args.input_gene_length:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_imap = args.input_imap
-            input_gene_length = args.input_gene_length
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
-            tre_dic = read_and_return_dict(input_GF_list)
-            len_dic = read_and_return_dict(input_gene_length)
-            renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
-            split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, renamed_len_dic)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Ortho_Retriever command are missing.")
-
-    elif args.command == 'Hybrid_Tracer':
-        # Execute the Hybrid_Tracer function
-        if args.input_GF_list and args.input_Seq_GF_list and args.input_sps_tree and args.input_imap:
-            start_time = time.time()
-            input_GF_list = args.input_GF_list
-            input_Seq_GF_list = args.input_Seq_GF_list
-            input_sps_tree = args.input_sps_tree
-            input_imap = args.input_imap
-            sptree = read_phylo_tree(input_sps_tree)
-            num_tre_node(sptree)
-
-            target_node_name = process_start_node(args.target_node, sptree) if args.target_node else None
-
-            if target_node_name:
-                print(f"Target node determined: {target_node_name}")
+        if cli_args.gene_expression:
+            file_extension = os.path.splitext(cli_args.gene_expression)[1]
+            if file_extension in ('.xlsx', '.xls'):
+                df = pd.read_excel(cli_args.gene_expression, index_col=0)
+            elif file_extension == '.csv':
+                df = pd.read_csv(cli_args.gene_expression, index_col=0)
             else:
-                print("No target_species_file provided, processing all gd.")
+                raise ValueError("Unsupported file format. Please provide an Excel or CSV file.")
 
-            tre_dic = read_and_return_dict(input_GF_list)
-            seq_path_dic = read_and_return_dict(input_Seq_GF_list)
-            gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
-
-            rename_sptree = rename_input_tre(sptree, taxa2voucher_dic)
-            sptree.write(outfile='numed_sptree.nwk', format=1)
-
-            hyde_main(tre_dic, seq_path_dic, rename_sptree, gene2new_named_gene_dic, voucher2taxa_dic, taxa2voucher_dic, new_named_gene2gene_dic, target_node=target_node_name, gd_group=args.split_groups)
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Hybrid_Tracer command are missing.")
-
-    elif args.command == 'Hybrid_Visualizer':
-        # Execute the Hybrid_Visualizer function
-        if args.hyde_out and args.input_sps_tree:
-            start_time = time.time()
-            hyde_out = args.hyde_out
-            input_sps_tree = args.input_sps_tree
-            sptree = read_tree(input_sps_tree)
-            if args.node:
-                hyde_visual_node_main(hyde_out, sptree)
-            else:
-                hyde_visual_leaf_main(hyde_out, sptree)
-
-            end_time = time.time()
-            execution_time = end_time - start_time
-            formatted_time = format_time(execution_time)
-            print("Program execution time:", formatted_time)
-        else:
-            print("Required arguments for Hybrid_Visualizer command are missing.")
-
-    elif args.command == 'HaploFinder':
-        if args.mode == 'split':
-            # Split mode
-            if args.input_GF_list and args.input_fasta and args.input_imap and args.cluster_file and args.hyb_sps and args.parental_sps and args.species_b_gff:
-                start_time = time.time()
-
-                input_GF_list = args.input_GF_list
-                input_imap = args.input_imap
-                sequences = read_fasta(args.input_fasta)
-                hyb_sps = args.hyb_sps
-                cluster_file = args.cluster_file
-                parental_sps = args.parental_sps.split() if args.parental_sps else []
-                split_sequences(sequences, input_GF_list, input_imap, cluster_file, hyb_sps, parental_sps, args.species_b_gff)
-
-                end_time = time.time()
-                execution_time = end_time - start_time
-                formatted_time = format_time(execution_time)
-                print("Program execution time:", formatted_time)
-            else:
-                print("Required arguments for split mode are missing: --input_fasta, --input_imap, --input_GF_list")
-        else:
-            # Original HaploFinder mode
-            required_args = [args.input_GF_list, args.input_imap, args.species_a, args.species_b,
-                             args.species_a_gff, args.species_b_gff, args.species_a_lens, args.species_b_lens, args.gd_support, args.pair_support]
-
-            if all(required_args):
-                start_time = time.time()
-
-                process_gd_pairs = process_gd_result(args.input_GF_list, args.input_imap, args.species_a, args.species_b, args.gd_support, args.pair_support)
-
-                # GFF and lens variables
-                gff1, gff2 = args.species_a_gff, args.species_b_gff
-                lens1, lens2 = args.species_a_lens, args.species_b_lens
-                spe1, spe2 = args.species_a, args.species_b
-
-                target_chr1 = args.visual_chr_a
-                target_chr2 = args.visual_chr_b
-                size = args.size if args.size else 0.001
-
-                generate_dotplot(gff1, gff2, lens1, lens2, process_gd_pairs, spe1, spe2, 'gd_pairs', target_chr1, target_chr2, size)
-
-                end_time = time.time()
-                execution_time = end_time - start_time
-                formatted_time = format_time(execution_time)
-                print("Program execution time:", formatted_time)
-            else:
-                print("Required arguments for HaploFinder command are missing.")
-
+        view_main(
+            tre_dic,
+            sptree1,
+            gene2new_named_gene_dic,
+            voucher2taxa_dic,
+            species_category_list,
+            cli_args.tree_style,
+            cli_args.keep_branch,
+            new_named_gene2gene_dic,
+            gene2fam,
+            df,
+            visual=cli_args.visual_gd,
+        )
+        report_execution_time(start_time)
     else:
-        print("Usage: python PhyloTracer.py  [-h]  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}")
-        print()
-        print("Optional arguments:")
-        print('  -h, --help            show this help message and exit')
-        print()
-        print('Available programs:')
-        print('  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}')
+        print("Required arguments for Tree_Visualizer command are missing.")
+
+
+def handle_gd_detector(cli_args):
+    if (
+        cli_args.input_GF_list
+        and cli_args.input_imap
+        and cli_args.input_sps_tree
+        and cli_args.gd_support is not None
+        and cli_args.subclade_support is not None
+        and cli_args.dup_species_proportion is not None
+        and cli_args.dup_species_num is not None
+        and cli_args.deepvar is not None
+    ):
+        start_time = time.time()
+        gene2new_named_gene_dic, _, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        sptree = PhyloTree(cli_args.input_sps_tree)
+        num_sptree(sptree)
+        sptree.write(outfile='numed_sptree.nwk', format=1, format_root_node=True)
+        renamed_sptree = rename_input_tre(sptree, taxa2voucher_dic)
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        write_gene_duplication_results(
+            'gd_result.txt',
+            tre_dic,
+            cli_args.gd_support,
+            cli_args.subclade_support,
+            cli_args.dup_species_proportion,
+            cli_args.dup_species_num,
+            renamed_sptree,
+            gene2new_named_gene_dic,
+            new_named_gene2gene_dic,
+            voucher2taxa_dic,
+            cli_args.deepvar,
+        )
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for GD_Detector command are missing.")
+
+
+def handle_gd_visualizer(cli_args):
+    if cli_args.input_sps_tree and cli_args.gd_result and cli_args.input_imap:
+        start_time = time.time()
+        sptree = read_tree(cli_args.input_sps_tree)
+        taxa = read_and_return_dict(cli_args.input_imap)
+        gd_visualizer_main(sptree, cli_args.gd_result, taxa)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for GD_Visualizer command are missing.")
+
+
+def handle_gd_loss_tracker(cli_args):
+    if cli_args.input_GF_list and cli_args.input_sps_tree and cli_args.input_imap:
+        start_time = time.time()
+        gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        sptree = PhyloTree(cli_args.input_sps_tree)
+        num_sptree(sptree)
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+
+        allowed_gd_species_sets = set()
+        if cli_args.mrca_node:
+            for pair_str in cli_args.mrca_node:
+                if ',' not in pair_str:
+                    print(f"Warning: Invalid mrca_node format '{pair_str}'. Skipping.")
+                    continue
+                sp1, sp2 = [x.strip() for x in pair_str.split(',', 1)]
+                try:
+                    mrca_clade = sptree.get_common_ancestor(sp1, sp2)
+                    species_under_mrca = frozenset(mrca_clade.get_leaf_names())
+                    allowed_gd_species_sets.add(species_under_mrca)
+                    print(f"GD event restricted to EXACT MRCA of {sp1} and {sp2}")
+                    print(f"   -> Covers species: {sorted(species_under_mrca)}")
+                except Exception as exc:
+                    print(f"ERROR: Cannot find MRCA for {sp1},{sp2}: {exc}")
+                    print("Available species:", sorted([leaf.name for leaf in sptree.get_leaves()]))
+
+        get_path_str_num_dic(
+            tre_dic,
+            sptree,
+            gene2new_named_gene_dic,
+            new_named_gene2gene_dic,
+            voucher2taxa_dic,
+            taxa2voucher_dic,
+            target_species_list=cli_args.target_species,
+            allowed_gd_species_sets=allowed_gd_species_sets,
+        )
+        parse_text_to_excel('gd_loss_count_summary.txt')
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for GD_Loss_Tracker command are missing.")
+
+
+def handle_gd_loss_visualizer(cli_args):
+    if cli_args.input_sps_tree and cli_args.gd_loss_result:
+        start_time = time.time()
+        sptree = Tree(cli_args.input_sps_tree, format=1)
+        visualizer_sptree(cli_args.gd_loss_result, sptree)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for GD_Loss_Visualizer command are missing.")
+
+
+def handle_ortho_retriever(cli_args):
+    if cli_args.input_GF_list and cli_args.input_imap and cli_args.input_gene_length:
+        start_time = time.time()
+        gene2new_named_gene_dic, new_named_gene2gene_dic, _, _ = gene_id_transfer(cli_args.input_imap)
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        len_dic = read_and_return_dict(cli_args.input_gene_length)
+        renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
+        split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, renamed_len_dic)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for Ortho_Retriever command are missing.")
+
+
+def handle_hybrid_tracer(cli_args):
+    if cli_args.input_GF_list and cli_args.input_Seq_GF_list and cli_args.input_sps_tree and cli_args.input_imap:
+        start_time = time.time()
+        sptree = read_phylo_tree(cli_args.input_sps_tree)
+        num_sptree(sptree)
+        target_node_name = process_start_node(cli_args.target_node, sptree) if cli_args.target_node else None
+
+        if target_node_name:
+            print(f"Target node determined: {target_node_name}")
+        else:
+            print("No target_species_file provided, processing all gd.")
+
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        seq_path_dic = read_and_return_dict(cli_args.input_Seq_GF_list)
+        gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        rename_sptree = rename_input_tre(sptree, taxa2voucher_dic)
+
+        sptree.write(outfile='numed_sptree.nwk', format=1)
+
+        hyde_main(
+            tre_dic,
+            seq_path_dic,
+            rename_sptree,
+            gene2new_named_gene_dic,
+            voucher2taxa_dic,
+            target_node=target_node_name,
+            gd_group=cli_args.split_groups,
+        )
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for Hybrid_Tracer command are missing.")
+
+
+def handle_hybrid_visualizer(cli_args):
+    if cli_args.hyde_out and cli_args.input_sps_tree:
+        start_time = time.time()
+        sptree = read_tree(cli_args.input_sps_tree)
+        if cli_args.node:
+            hyde_visual_node_main(cli_args.hyde_out, sptree)
+        else:
+            hyde_visual_leaf_main(cli_args.hyde_out, sptree)
+        report_execution_time(start_time)
+    else:
+        print("Required arguments for Hybrid_Visualizer command are missing.")
+
+
+def handle_haplofinder(cli_args):
+    if cli_args.mode == 'split':
+        if (
+            cli_args.input_GF_list and cli_args.input_fasta and cli_args.input_imap
+            and cli_args.cluster_file and cli_args.hyb_sps and cli_args.parental_sps
+            and cli_args.species_b_gff
+        ):
+            start_time = time.time()
+            parental_sps = cli_args.parental_sps.split() if cli_args.parental_sps else []
+            split_sequences(
+                cli_args.input_GF_list,
+                cli_args.input_imap,
+                cli_args.hyb_sps,
+                parental_sps,
+                cli_args.species_b_gff,
+            )
+            report_execution_time(start_time)
+        else:
+            print("Required arguments for split mode are missing: --input_GF_list, --input_imap, --input_fasta, --cluster_file, --hyb_sps, --parental_sps, --species_b_gff")
+    else:
+        required_args = [
+            cli_args.input_GF_list,
+            cli_args.input_imap,
+            cli_args.input_sps_tree,
+            cli_args.species_a,
+            cli_args.species_b,
+            cli_args.species_a_gff,
+            cli_args.species_b_gff,
+            cli_args.species_a_lens,
+            cli_args.species_b_lens,
+            cli_args.gd_support,
+            cli_args.pair_support,
+        ]
+        if all(required_args):
+            start_time = time.time()
+            process_gd_pairs = process_gd_result(
+                cli_args.input_GF_list,
+                cli_args.input_imap,
+                cli_args.input_sps_tree,
+                cli_args.species_a,
+                cli_args.species_b,
+                cli_args.gd_support,
+                cli_args.pair_support,
+            )
+            size = cli_args.size if cli_args.size else 0.001
+            generate_dotplot(
+                cli_args.species_a_gff,
+                cli_args.species_b_gff,
+                cli_args.species_a_lens,
+                cli_args.species_b_lens,
+                process_gd_pairs,
+                cli_args.species_a,
+                cli_args.species_b,
+                'gd_pairs',
+                cli_args.visual_chr_a,
+                cli_args.visual_chr_b,
+                size,
+            )
+            report_execution_time(start_time)
+        else:
+            print("Required arguments for HaploFinder command are missing.")
+
+
+def print_cli_usage():
+    print("Usage: python PhyloTracer.py  [-h]  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}")
+    print()
+    print("Optional arguments:")
+    print('  -h, --help            show this help message and exit')
+    print()
+    print('Available programs:')
+    print('  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}')
+
+
+COMMAND_HANDLERS = {
+    'PhyloTree_CollapseExpand': handle_phylo_tree_collapse_expand,
+    'PhyloSupport_Scaler': handle_phylo_support_scaler,
+    'BranchLength_NumericConverter': handle_branch_length_numeric_converter,
+    'Phylo_Rooter': handle_phylo_rooter,
+    'OrthoFilter_LB': handle_ortho_filter_lb,
+    'OrthoFilter_Mono': handle_ortho_filter_mono,
+    'TreeTopology_Summarizer': handle_tree_topology_summarizer,
+    'Tree_Visualizer': handle_tree_visualizer,
+    'GD_Detector': handle_gd_detector,
+    'GD_Visualizer': handle_gd_visualizer,
+    'GD_Loss_Tracker': handle_gd_loss_tracker,
+    'GD_Loss_Visualizer': handle_gd_loss_visualizer,
+    'Ortho_Retriever': handle_ortho_retriever,
+    'Hybrid_Tracer': handle_hybrid_tracer,
+    'Hybrid_Visualizer': handle_hybrid_visualizer,
+    'HaploFinder': handle_haplofinder,
+}
+
+
+def main():
+    handler = COMMAND_HANDLERS.get(args.command)
+    if handler is None:
+        print_cli_usage()
+        return
+    handler(args)
 
 
 if __name__ == "__main__":

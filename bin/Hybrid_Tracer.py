@@ -13,6 +13,7 @@ from signal import SIGUSR2
 import phyde as hd
 from __init__ import *
 from Bio import SeqIO
+from GD_Detector import get_model as detector_get_model, normalize_model
 
 # ======================================================
 # Section 1: Species Tree and Sequence Utilities
@@ -118,6 +119,48 @@ def get_outsps_sort_lst(map_t, sptree):
     return [sps for sps, _ in sorted_out]
 
 
+def get_dynamic_basal_set_for_gd(gene_tree_species_set: set, species_tree_root: object) -> set:
+    """
+    Compute a dynamic outgroup-candidate species set using Phylo_Rooter logic.
+
+    Parameters
+    ----------
+    gene_tree_species_set : set
+        Species covered by the current gene tree.
+    species_tree_root : object
+        Root of the species tree.
+
+    Returns
+    -------
+    set
+        Candidate outgroup species set for the current gene tree.
+
+    Assumptions
+    -----------
+    Species tree is rooted and generally bifurcating.
+    """
+    if species_tree_root.is_leaf():
+        return {species_tree_root.name}
+
+    children = species_tree_root.get_children()
+    clade_sets = [set(child.get_leaf_names()) for child in children]
+    present_flags = [not gene_tree_species_set.isdisjoint(c_set) for c_set in clade_sets]
+
+    if sum(present_flags) >= 2:
+        valid_children = [
+            (children[i], len(clade_sets[i])) for i, has_gene in enumerate(present_flags) if has_gene
+        ]
+        valid_children.sort(key=lambda x: x[1])
+        return set(valid_children[0][0].get_leaf_names())
+
+    if sum(present_flags) == 1:
+        for i, has_gene in enumerate(present_flags):
+            if has_gene:
+                return get_dynamic_basal_set_for_gd(gene_tree_species_set, children[i])
+
+    return set()
+
+
 def get_outsps_min_distance_gene(node, sps):
     """
     Identify the closest gene in a node matching a species prefix.
@@ -198,35 +241,83 @@ def get_target_gene(sisters, sps):
     return None
 
 
-def get_outgroup_gene(gd_clade, sptree):
+def get_outgroup_species_for_gd_node(gd_node_name, sptree):
     """
-    Identify an outgroup gene for a duplication clade.
+    Select a fixed outgroup species from the sister branch of a GD-mapped node.
+
+    Parameters
+    ----------
+    gd_node_name : str
+        Species-tree node name to which the GD group is mapped.
+    sptree : object
+        Species tree used for reconciliation.
+
+    Returns
+    -------
+    str or None
+        Selected outgroup species name, or None if unavailable.
+
+    Assumptions
+    -----------
+    The sister branch of the mapped GD node defines the only valid outgroup
+    species pool for this GD group.
+    """
+    map_t = sptree & gd_node_name
+    sister_nodes = map_t.get_sisters()
+    if not sister_nodes:
+        return None
+
+    sister_branch = sister_nodes[0]
+    sister_species = sister_branch.get_leaf_names()
+    if not sister_species:
+        return None
+
+    species_distances = []
+    for species in sister_species:
+        species_node = sptree & species
+        distance = map_t.get_distance(species_node, topology_only=True)
+        species_distances.append((distance, species))
+
+    species_distances.sort(key=lambda x: (x[0], x[1]))
+    return species_distances[0][1]
+
+
+def get_outgroup_gene(gd_clade, outgroup_species):
+    """
+    Identify the closest outgroup gene of a fixed outgroup species.
 
     Parameters
     ----------
     gd_clade : object
         Duplication clade in the gene tree.
-    sptree : object
-        Species tree used for mapping.
+    outgroup_species : str
+        Fixed outgroup species for the current GD node.
 
     Returns
     -------
-    object
-        Outgroup gene name, or None if not found.
+    str or None
+        Closest outgroup gene name, or None if absent.
 
     Assumptions
     -----------
-    Outgroup selection prioritizes closest species outside the clade.
+    Candidate outgroup genes are searched only in sister lineages of the GD
+    clade along the path to the root.
     """
-    map_t = sptree.get_common_ancestor(get_species_set(gd_clade))
     sisters = get_sister_nodes(gd_clade)
-    sps_lst = get_outsps_sort_lst(map_t, sptree)
+    best_gene = None
+    best_distance = None
 
-    for sps in sps_lst:
-        target = get_target_gene(sisters, sps)
-        if target:
-            return target
-    return None
+    for sister_node in sisters:
+        for leaf in sister_node.get_leaves():
+            species = leaf.name.split("_")[0]
+            if species != outgroup_species:
+                continue
+            distance = gd_clade.get_distance(leaf)
+            if best_distance is None or distance < best_distance:
+                best_distance = distance
+                best_gene = leaf.name
+
+    return best_gene
 
 
 # ======================================================
@@ -236,111 +327,21 @@ def get_outgroup_gene(gd_clade, sptree):
 
 def get_model(clade, sptree):
     """
-    Assign a duplication model label for a gene clade.
+    Assign GD type using the project-standard detector definitions.
 
     Parameters
     ----------
     clade : object
-        Gene clade with labeled leaves.
+        Gene clade with mapped species-tree label.
     sptree : object
-        Species tree used to label taxa groups.
+        Species tree used for reconciliation.
 
     Returns
     -------
     str
-        Model string describing clade composition.
-
-    Assumptions
-    -----------
-    Species names in leaf labels are separated by underscores.
+        Canonical GD type (AABB/AXBB/AABX/Complex).
     """
-    sps = get_species_list(clade)
-    sps_clade = sptree.get_common_ancestor(set(sps))
-
-    sps_clade_a = sps_clade.get_children()[0] if sps_clade.get_children() else None
-    sps_clade_b = (
-        sps_clade.get_children()[1]
-        if sps_clade.get_children() and len(sps_clade.get_children()) > 1
-        else None
-    )
-
-    if sps_clade_a.is_leaf():
-        sps_clade_a.add_feature("label", "Aa")
-    else:
-        sps_clade_a_1 = sps_clade_a.get_children()[0] if sps_clade_a.get_children() else None
-        sps_clade_a_2 = (
-            sps_clade_a.get_children()[1]
-            if sps_clade_a.get_children() and len(sps_clade_a.get_children()) > 1
-            else None
-        )
-
-        for leaf in sps_clade_a_1:
-            leaf.add_feature("label", "A")
-        for leaf in sps_clade_a_2:
-            leaf.add_feature("label", "a")
-
-    if sps_clade_b.is_leaf():
-        sps_clade_b.add_feature("label", "Bb")
-    else:
-        sps_clade_b_1 = sps_clade_b.get_children()[0] if sps_clade_b.get_children() else None
-        sps_clade_b_2 = (
-            sps_clade_b.get_children()[1]
-            if sps_clade_b.get_children() and len(sps_clade_b.get_children()) > 1
-            else None
-        )
-
-        for leaf in sps_clade_b_1:
-            leaf.add_feature("label", "B")
-        for leaf in sps_clade_b_2:
-            leaf.add_feature("label", "b")
-
-    for j in clade:
-        species = j.name.split("_")[0]
-        clade1 = sps_clade & species
-        if clade1:
-            j.add_feature("label", clade1.label)
-
-    up_clade = ""
-    for j in clade.get_children()[0]:
-        up_clade += j.label
-    up_clade = up_clade + "<=>"
-    for j in clade.get_children()[1]:
-        up_clade += j.label
-    clade_up = set(up_clade.split("<=>")[0])
-    clade_down = set(up_clade.split("<=>")[1])
-    clade_up_1 = "".join(clade_up)
-    clade_up_1_1 = "".join(sorted(clade_up_1, key=lambda x: (x.lower(), x.isupper())))
-
-    clade_down_1 = "".join(clade_down)
-    clade_down_1_1 = "".join(sorted(clade_down_1, key=lambda x: (x.lower(), x.isupper())))
-    clade_model = clade_up_1_1 + "<=>" + clade_down_1_1
-
-    def process_string(s):
-        result = []
-        i = 0
-        while i < len(s):
-            if i < len(s) - 1 and (
-                (s[i] == "A" and s[i + 1] == "a")
-                or (s[i] == "a" and s[i + 1] == "A")
-            ):
-                result.append("A")
-                i += 2
-            elif i < len(s) - 1 and (
-                (s[i] == "B" and s[i + 1] == "b")
-                or (s[i] == "b" and s[i + 1] == "B")
-            ):
-                result.append("B")
-                i += 2
-            else:
-                if s[i] in ["A", "B", "a", "b"]:
-                    result.append("X")
-                else:
-                    result.append(s[i])
-                i += 1
-
-        return "".join(result)
-
-    return process_string(clade_model)
+    return normalize_model(detector_get_model(clade, sptree))
 
 
 # ======================================================
@@ -350,7 +351,7 @@ def get_model(clade, sptree):
 
 def count_elements_in_lists(data):
     """
-    Count and merge GD model labels across clades.
+    Count GD model labels across clades using canonical detector types.
 
     Parameters
     ----------
@@ -360,40 +361,20 @@ def count_elements_in_lists(data):
     Returns
     -------
     dict
-        Mapping from node to merged Counter of model types.
+        Mapping from node to Counter of canonical model types.
 
     Assumptions
     -----------
-    Model strings are encoded with AB-style symbols.
+    Input values are canonical GD types from ``GD_Detector.normalize_model``.
     """
-
-    def merge_and_filter_types(data, merge_map):
-        merged_data = {}
-        for key, counter in data.items():
-            new_counter = Counter()
-            for t, count in counter.items():
-                merged = False
-                for new_type, types_to_merge in merge_map.items():
-                    if t in types_to_merge:
-                        new_counter[new_type] += count
-                        merged = True
-                        break
-                if not merged and t == "AB<=>AB":
-                    new_counter["ABAB"] += count
-            merged_data[key] = new_counter
-        return merged_data
-
-    counted_data = {key: Counter(value) for key, value in data.items()}
-    merge_map = {
-        "ABB": ["AB<=>B", "B<=>AB", "XB<=>AB", "AB<=>XB"],
-        "AAB": ["AB<=>A", "A<=>AB", "AX<=>AB", "AB<=>AX"],
-    }
-
-    result = merge_and_filter_types(counted_data, merge_map)
-    return result
+    return {key: Counter(value) for key, value in data.items()}
 
 
-def get_gd_count_dic_and_gd_type_dic(tre_dic, gene2new_named_gene_dic, rename_sptree):
+def get_gd_count_dic_and_gd_type_dic(
+    tre_dic,
+    gene2new_named_gene_dic,
+    rename_sptree,
+):
     """
     Collect duplication counts and model types across gene trees.
 
@@ -415,24 +396,26 @@ def get_gd_count_dic_and_gd_type_dic(tre_dic, gene2new_named_gene_dic, rename_sp
     -----------
     Duplication nodes are detected by ``find_dup_node`` with default support.
     """
+
     gd_num = 0
     gd_count_dic = {}
     gd_type_dic = {}
     for tre_id, tre_path in tre_dic.items():
         t = read_phylo_tree(tre_path)
         t1 = rename_input_tre(t, gene2new_named_gene_dic)
-
+        annotate_gene_tree(t1, rename_sptree)
         gds = find_dup_node(t1, rename_sptree, 50)
 
         for gd in gds:
-            type_str = get_model(gd, rename_sptree)
-            if gd.map in gd_count_dic:
-                gd_count_dic[gd.map].append((tre_id + "-" + str(gd_num), gd))
-                gd_type_dic[gd.map].append(type_str)
-            else:
-                gd_count_dic[gd.map] = [(tre_id + "-" + str(gd_num), gd)]
-                gd_type_dic[gd.map] = [type_str]
-            gd_num += 1
+            if len(get_species_set(rename_sptree&gd.map))>=2:
+                type_str = get_model(gd, rename_sptree)
+                if gd.map in gd_count_dic:
+                    gd_count_dic[gd.map].append((tre_id + "-" + str(gd_num), gd))
+                    gd_type_dic[gd.map].append(type_str)
+                else:
+                    gd_count_dic[gd.map] = [(tre_id + "-" + str(gd_num), gd)]
+                    gd_type_dic[gd.map] = [type_str]
+                gd_num += 1
     return gd_count_dic, gd_type_dic
 
 
@@ -458,9 +441,11 @@ def get_process_gd_clade(gd_type_dic, gd_count_dic):
     """
     gd_clade = []
     for k, v in gd_type_dic.items():
-        if (v["ABB"] + v["AAB"] + v["ABAB"]) != 0:
-            type_ratio = (v["ABB"] + v["AAB"]) / (v["ABB"] + v["AAB"] + v["ABAB"])
-            if (v["ABB"] + v["AAB"] + v["ABAB"]) >= 10 and type_ratio >= 0.1:
+        asymmetric_num = v["AXBB"] + v["AABX"]
+        total_num = v["AXBB"] + v["AABX"] + v["AABB"]
+        if total_num != 0:
+            type_ratio = asymmetric_num / total_num
+            if total_num >= 10 and type_ratio >= 0.1:
                 gd_clade.append((k, gd_count_dic[k]))
     return gd_clade
 
@@ -523,8 +508,6 @@ def hyde_main(
     rename_sptree,
     gene2new_named_gene_dic,
     voucher2taxa_dic,
-    taxa2voucher_dic,
-    new_named_gene2gene_dic,
     target_node=None,
     gd_group: int = 1,
 ):
@@ -543,15 +526,10 @@ def hyde_main(
         Mapping from gene identifiers to renamed identifiers.
     voucher2taxa_dic : dict
         Mapping from voucher identifiers to taxa labels.
-    taxa2voucher_dic : dict
-        Mapping from taxa labels to voucher identifiers.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed identifiers to original gene identifiers.
     target_node : object, optional
         Specific species-tree node to focus on.
     gd_group : int, optional
         Number of parallel processing groups.
-
     Returns
     -------
     None
@@ -568,14 +546,13 @@ def hyde_main(
     )
     data = count_elements_in_lists(gd_type_dic)
     gd_clades = get_process_gd_clade(data, gd_count_dic)
+    printed_gd_outgroup = set()
 
-    sps_dic = {}
     for gd in gd_clades:
         gd_name, gds = gd
         if target_node and gd_name != target_node:
             continue
 
-        start_time = time.time()
         print(f"{gd_name} is processing")
         print(f"Total gene duplication events in dataset: {len(gds)}")
         print(f"Number of parallel processing groups: {gd_group}")
@@ -592,10 +569,9 @@ def hyde_main(
                 gd_name,
                 seq_path_dic,
                 gene2new_named_gene_dic,
-                new_named_gene2gene_dic,
                 voucher2taxa_dic,
-                sps_dic,
                 target_node,
+                printed_gd_outgroup,
             )
             hyde_tuple_lst.extend(hyde_result_lst)
     header = (
@@ -620,10 +596,9 @@ def process_gd_group(
     gd_name,
     seq_path_dic,
     gene2new_named_gene_dic,
-    new_named_gene2gene_dic,
     voucher2taxa_dic,
-    sps_dic,
     target_node,
+    printed_gd_outgroup,
 ):
     """
     Process a subset of GD events for HyDe analysis.
@@ -640,15 +615,12 @@ def process_gd_group(
         Mapping from tree IDs to FASTA file paths.
     gene2new_named_gene_dic : dict
         Mapping from gene identifiers to renamed identifiers.
-    new_named_gene2gene_dic : dict
-        Mapping from renamed identifiers to original gene identifiers.
     voucher2taxa_dic : dict
         Mapping from voucher identifiers to taxa labels.
-    sps_dic : dict
-        Species dictionary for intermediate storage.
     target_node : object
         Target species-tree node used for filtering.
-
+    printed_gd_outgroup : set
+        GD node names for which outgroup species have already been reported.
     Returns
     -------
     list
@@ -658,10 +630,32 @@ def process_gd_group(
     -----------
     Outgroup selection uses ``get_outgroup_gene`` heuristics.
     """
-    target_clade = rename_sptree & target_node
+    target_node_name = target_node if target_node else gd_name
+    target_clade = rename_sptree & target_node_name
     all_matrices = []
     col_counter = 1
     seq_dic_all = {}
+    skipped_no_outgroup = 0
+    outgroup_species = get_outgroup_species_for_gd_node(gd_name, rename_sptree)
+
+    if outgroup_species is None:
+        print(
+            f"[Hybrid_Tracer][Skip] GD node {gd_name} has no sister-branch outgroup species. "
+            "All GD events in this node are skipped."
+        )
+        return []
+
+    if gd_name not in printed_gd_outgroup:
+        outgroup_species_original = voucher2taxa_dic.get(
+            outgroup_species,
+            outgroup_species,
+        )
+        print(
+            f"[Hybrid_Tracer] GD node {gd_name} uses outgroup species: "
+            f"{outgroup_species_original}"
+        )
+        printed_gd_outgroup.add(gd_name)
+
     for gd_clade_set in gds:
         gdid = gd_clade_set[0]
         gd_clade = gd_clade_set[1]
@@ -676,18 +670,33 @@ def process_gd_group(
             print(f"KeyError encountered for GD {gdid}: {e}. Skipping this GD.")
             continue
 
-        outgroup_gene = get_outgroup_gene(gd_clade, rename_sptree)
+        outgroup_gene = get_outgroup_gene(gd_clade, outgroup_species)
         if outgroup_gene is None:
+            skipped_no_outgroup += 1
+            gd_map = rename_sptree.get_common_ancestor(get_species_set(gd_clade))
+            expected_outgroup_species = voucher2taxa_dic.get(
+                outgroup_species,
+                outgroup_species,
+            )
+            print(
+                f"[Hybrid_Tracer][Skip] GD event {gdid} (map={gd_map.name}) has no valid outgroup gene "
+                f"from sister-branch outgroup species {expected_outgroup_species}."
+            )
             continue
-        if voucher2taxa_dic[outgroup_gene.split("_")[0]] == "MED":
-            one_gd_matrix = process_one_gd(gd_clade, outgroup_gene)
-            num_cols = one_gd_matrix.shape[1]
-            new_col_names = [f"col{col_counter + i}" for i in range(num_cols)]
-            one_gd_matrix.columns = new_col_names
+        one_gd_matrix = process_one_gd(gd_clade, outgroup_gene)
+        num_cols = one_gd_matrix.shape[1]
+        new_col_names = [f"col{col_counter + i}" for i in range(num_cols)]
+        one_gd_matrix.columns = new_col_names
 
-            col_counter += num_cols
+        col_counter += num_cols
 
-            all_matrices.append(one_gd_matrix)
+        all_matrices.append(one_gd_matrix)
+
+    if skipped_no_outgroup > 0:
+        print(
+            f"[Hybrid_Tracer][Summary] GD node {gd_name}: skipped {skipped_no_outgroup} events "
+            "due to missing valid outgroup genes."
+        )
 
     if not all_matrices:
         print(f"Warning: No valid matrices found for GD group {gd_name}. Returning empty result.")
