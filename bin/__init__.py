@@ -724,47 +724,48 @@ def find_dup_node(
         if any(c.support < clade_support for c in children):
             continue
 
-        species_set = get_species_set(node)
+        species_set = get_species_set(species_tree&node.map)
         if not species_set:
             continue
         
 
-        if len(species_set) == 1:
-            dup_nodes.append(node)
+        # if len(species_set) == 1:
+        #     dup_nodes.append(node)
+        #     continue
+
+        # if len(species_set) == 2:
+        #     sps_tree_lca = species_tree.get_common_ancestor(list(species_set))
+        #     s_tree_leaves = set(sps_tree_lca.get_leaf_names())
+            
+        #     if species_set == s_tree_leaves:
+        #         dup_nodes.append(node)
+        #         continue
+
+        # else:
+        sps_a = get_species_set(children[0])
+        sps_b = get_species_set(children[1])
+        overlap_sps = sps_a & sps_b
+        overlap_num = len(overlap_sps)
+        
+        # Exclude small-scale duplications by enforcing a minimum overlap.
+        if overlap_num < dup_species_num:
             continue
 
-        elif len(species_set) == 2:
-            sps_tree_lca = species_tree.get_common_ancestor(list(species_set))
-            s_tree_leaves = set(sps_tree_lca.get_leaf_names())
-            
-            if species_set == s_tree_leaves:
-                dup_nodes.append(node)
-                continue
+        if overlap_num / len(species_set) < dup_species_percent:
+            continue
 
-        else:
-            sps_a = get_species_set(children[0])
-            sps_b = get_species_set(children[1])
-            overlap_sps = sps_a & sps_b
-            overlap_num = len(overlap_sps)
-            # Exclude small-scale duplications by enforcing a minimum overlap.
-            if overlap_num < dup_species_num:
-                continue
+        # Map overlap species to the species-tree LCA for topology validation.
+        dup_map = map_species_set_to_node(species_tree, overlap_sps)
 
-            if overlap_num / len(species_set) < dup_species_percent:
-                continue
+        clade_map = species_tree & node.map
 
-            # Map overlap species to the species-tree LCA for topology validation.
-            dup_map = map_species_set_to_node(species_tree, overlap_sps)
+        # if abs(children[0].depth-children[1].depth)  >max_topology_distance:
+        #     continue
 
-            clade_map = species_tree & node.map
+        if abs(clade_map.depth - dup_map.depth) > max_topology_distance:
+            continue
 
-            # if abs(children[0].depth-children[1].depth)  >max_topology_distance:
-            #     continue
-
-            if abs(clade_map.depth - dup_map.depth) > max_topology_distance:
-                continue
-
-            dup_nodes.append(node)
+        dup_nodes.append(node)
 
     return dup_nodes
 

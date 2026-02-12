@@ -126,7 +126,7 @@ def write_gene_duplication_results(
                 gd_clade_count.setdefault(level, set()).add(node)
             vis_num=1
             for clade in dup_node_list:
-                species_set = get_species_set(clade)
+                species_set = get_species_set(species_tree&clade.map)
                 child_a, child_b = clade.get_children()
                 dup_species_count = len(get_species_set(child_a) & get_species_set(child_b))
                 dup_ratio = dup_species_count / len(species_set) if species_set else 0
@@ -136,11 +136,10 @@ def write_gene_duplication_results(
                 ).add(clade)
 
                 
-                if len(get_species_set(clade)) == 1:
-                    raw_model = "Complex"
-                else:
-                    raw_model = get_model(clade, species_tree)
-
+                if dup_species_count >=duplicated_species_count_threshold:
+                    raw_model =get_model(clade, species_tree)
+                if raw_model == 'Complex':
+                    print(f"[Skip] {tree_id} {clade.map} is a complex model")
                 mapped_parent = species_tree & clade.map
                 
                 if mapped_parent.is_leaf():
@@ -152,7 +151,7 @@ def write_gene_duplication_results(
 
 
 
-                # if clade.map=='S45':                    
+                # if clade.map=='S0':                    
                 #     vis_clade=rename_input_tre(clade,new_name_to_gene)
                 #     vis_clade.add_face(TextFace(clade.map, fsize=6, ftype="Arial",fgcolor='red'),column=0)
                 #     vis_clade.add_face(TextFace(f"{clade.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
@@ -213,7 +212,7 @@ def write_gene_duplication_results(
                         f"{new_name_to_gene.get(gene_a, 'NA')}\t"
                         f"{new_name_to_gene.get(gene_b, 'NA')}\t"
                         f"{level}\t{species}\t"
-                        f"{dup_species_count}\t{round(dup_ratio, 4)}\t"
+                        f"{dup_species_count}\t{dup_ratio * 100:.2f}%\t"
                         f"{gd_type_for_output}\t-\n"
                     )
 
@@ -226,7 +225,8 @@ def write_gene_duplication_results(
     for node_name in gd_clade_count:
         gd_num = len(gd_num_dict.get(node_name, set()))
         clade_count = len(gd_clade_count[node_name])
-        ratio = round(gd_num / clade_count, 2)
+        ratio = gd_num / clade_count if clade_count else 0
+        ratio_str = f"{ratio * 100:.2f}%" if ratio else "0.00%"
 
         type_counter = Counter(gd_type_dict.get(node_name, []))
 
@@ -235,7 +235,7 @@ def write_gene_duplication_results(
                 "Newick_label": node_name,
                 "GD": gd_num,
                 "NUM": clade_count,
-                "GD_ratio": ratio,
+                "GD_ratio": ratio_str,
                 "AABB": type_counter.get("AABB", 0),
                 "AXBB": type_counter.get("AXBB", 0),
                 "AABX": type_counter.get("AABX", 0),
@@ -275,8 +275,10 @@ def normalize_model(raw_model: str) -> str:
         return "AXBB"
     if raw_model in ("AABX", "AAXB"):
         return "AABX"
+    if raw_model in ("AABB"):
+        return "AABB"
     else:
-        return raw_model
+        return 'Complex'
 
 def order_children_by_name(n):
     c1, c2 = n.get_children()
