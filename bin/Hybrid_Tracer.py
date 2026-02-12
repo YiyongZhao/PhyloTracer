@@ -243,7 +243,7 @@ def get_target_gene(sisters, sps):
 
 def get_outgroup_species_for_gd_node(gd_node_name, sptree):
     """
-    Select a fixed outgroup species from the sister branch of a GD-mapped node.
+    Select the nearest sister-branch species as fixed outgroup for a GD node.
 
     Parameters
     ----------
@@ -256,19 +256,13 @@ def get_outgroup_species_for_gd_node(gd_node_name, sptree):
     -------
     str or None
         Selected outgroup species name, or None if unavailable.
-
-    Assumptions
-    -----------
-    The sister branch of the mapped GD node defines the only valid outgroup
-    species pool for this GD group.
     """
     map_t = sptree & gd_node_name
     sister_nodes = map_t.get_sisters()
     if not sister_nodes:
         return None
 
-    sister_branch = sister_nodes[0]
-    sister_species = sister_branch.get_leaf_names()
+    sister_species = sister_nodes[0].get_leaf_names()
     if not sister_species:
         return None
 
@@ -386,7 +380,6 @@ def get_gd_count_dic_and_gd_type_dic(
         Mapping from gene identifiers to renamed identifiers.
     rename_sptree : object
         Renamed species tree used for mapping.
-
     Returns
     -------
     tuple
@@ -407,15 +400,22 @@ def get_gd_count_dic_and_gd_type_dic(
         gds = find_dup_node(t1, rename_sptree, 50)
 
         for gd in gds:
-            if len(get_species_set(rename_sptree&gd.map))>=2:
+            mapped_node = rename_sptree & gd.map
+            if len(get_species_set(mapped_node)) < 2:
+                continue
+            if len(mapped_node.get_children()) < 2:
+                continue
+            try:
                 type_str = get_model(gd, rename_sptree)
-                if gd.map in gd_count_dic:
-                    gd_count_dic[gd.map].append((tre_id + "-" + str(gd_num), gd))
-                    gd_type_dic[gd.map].append(type_str)
-                else:
-                    gd_count_dic[gd.map] = [(tre_id + "-" + str(gd_num), gd)]
-                    gd_type_dic[gd.map] = [type_str]
-                gd_num += 1
+            except Exception:
+                continue
+            if gd.map in gd_count_dic:
+                gd_count_dic[gd.map].append((tre_id + "-" + str(gd_num), gd))
+                gd_type_dic[gd.map].append(type_str)
+            else:
+                gd_count_dic[gd.map] = [(tre_id + "-" + str(gd_num), gd)]
+                gd_type_dic[gd.map] = [type_str]
+            gd_num += 1
     return gd_count_dic, gd_type_dic
 
 
@@ -546,7 +546,6 @@ def hyde_main(
     )
     data = count_elements_in_lists(gd_type_dic)
     gd_clades = get_process_gd_clade(data, gd_count_dic)
-    printed_gd_outgroup = set()
 
     for gd in gd_clades:
         gd_name, gds = gd
@@ -558,6 +557,21 @@ def hyde_main(
         print(f"Number of parallel processing groups: {gd_group}")
 
         split_gds = np.array_split(gds, gd_group)
+        fixed_outgroup_species = get_outgroup_species_for_gd_node(gd_name, rename_sptree)
+        if fixed_outgroup_species is None:
+            print(
+                f"[Hybrid_Tracer][Skip] GD node {gd_name} has no sister-branch "
+                "outgroup candidates. All events are skipped."
+            )
+            continue
+        fixed_outgroup_original = voucher2taxa_dic.get(
+            fixed_outgroup_species,
+            fixed_outgroup_species,
+        )
+        print(
+            f"[Hybrid_Tracer] GD node {gd_name} uses fixed outgroup species: "
+            f"{fixed_outgroup_original}"
+        )
 
         print(f"Gene duplication events partitioned into {len(split_gds)} processing batches")
         for i, sub_group in enumerate(split_gds):
@@ -571,7 +585,7 @@ def hyde_main(
                 gene2new_named_gene_dic,
                 voucher2taxa_dic,
                 target_node,
-                printed_gd_outgroup,
+                fixed_outgroup_species,
             )
             hyde_tuple_lst.extend(hyde_result_lst)
     header = (
@@ -598,7 +612,7 @@ def process_gd_group(
     gene2new_named_gene_dic,
     voucher2taxa_dic,
     target_node,
-    printed_gd_outgroup,
+    fixed_outgroup_species=None,
 ):
     """
     Process a subset of GD events for HyDe analysis.
@@ -619,8 +633,8 @@ def process_gd_group(
         Mapping from voucher identifiers to taxa labels.
     target_node : object
         Target species-tree node used for filtering.
-    printed_gd_outgroup : set
-        GD node names for which outgroup species have already been reported.
+    fixed_outgroup_species : str, optional
+        Fixed outgroup species used in strict mode.
     Returns
     -------
     list
@@ -636,25 +650,6 @@ def process_gd_group(
     col_counter = 1
     seq_dic_all = {}
     skipped_no_outgroup = 0
-    outgroup_species = get_outgroup_species_for_gd_node(gd_name, rename_sptree)
-
-    if outgroup_species is None:
-        print(
-            f"[Hybrid_Tracer][Skip] GD node {gd_name} has no sister-branch outgroup species. "
-            "All GD events in this node are skipped."
-        )
-        return []
-
-    if gd_name not in printed_gd_outgroup:
-        outgroup_species_original = voucher2taxa_dic.get(
-            outgroup_species,
-            outgroup_species,
-        )
-        print(
-            f"[Hybrid_Tracer] GD node {gd_name} uses outgroup species: "
-            f"{outgroup_species_original}"
-        )
-        printed_gd_outgroup.add(gd_name)
 
     for gd_clade_set in gds:
         gdid = gd_clade_set[0]
@@ -670,17 +665,21 @@ def process_gd_group(
             print(f"KeyError encountered for GD {gdid}: {e}. Skipping this GD.")
             continue
 
+        outgroup_species = fixed_outgroup_species
         outgroup_gene = get_outgroup_gene(gd_clade, outgroup_species)
         if outgroup_gene is None:
             skipped_no_outgroup += 1
             gd_map = rename_sptree.get_common_ancestor(get_species_set(gd_clade))
-            expected_outgroup_species = voucher2taxa_dic.get(
-                outgroup_species,
-                outgroup_species,
-            )
+            if outgroup_species is None:
+                expected_outgroup_species = "None"
+            else:
+                expected_outgroup_species = voucher2taxa_dic.get(
+                    outgroup_species,
+                    outgroup_species,
+                )
             print(
                 f"[Hybrid_Tracer][Skip] GD event {gdid} (map={gd_map.name}) has no valid outgroup gene "
-                f"from sister-branch outgroup species {expected_outgroup_species}."
+                f"from expected outgroup species {expected_outgroup_species}."
             )
             continue
         one_gd_matrix = process_one_gd(gd_clade, outgroup_gene)
