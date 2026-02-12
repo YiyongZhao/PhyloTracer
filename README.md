@@ -367,38 +367,63 @@ Usage:
 
 **Scoring logic (current implementation concept):**
 
-1. Identify dominant-lineage candidates under user taxa labels with purity threshold:
+**1. Dominant Lineage Purity**
+
+**Concept:** Measures how strongly a lineage is dominated by target taxa labels.
+
+* **Formula:**
 
 $$
-\text{purity}=\frac{N_{\text{target}}}{N_{\text{all}}}
+purity = \frac{N_{target}}{N_{all}}
 $$
 
-2. For each alien lineage (or alien tip set), compute three scores:
+**2. Phylogenetic Distance Score**
+
+**Concept:** Alien lineages mapped deeper and farther from the target lineage in the species tree are more likely to be removed.
+
+* **Formula:**
 
 $$
-\text{phylo\_distance}=\text{depth}(\text{target\_lineage})-\text{depth}\!\left(\text{MRCA}(\text{target}+\text{alien})\right)
+phylo\_distance = depth(target\_lineage) - depth(MRCA(target + alien))
 $$
 
-$$
-\text{alien\_coverage}=\frac{N_{\text{alien}}}{N_{\text{all\_tips\_in\_dominant\_lineage}}}
-$$
+**3. Alien Coverage Score**
+
+**Concept:** Alien lineages occupying fewer tips within a dominant lineage are more likely to be noise.
+
+* **Formula:**
 
 $$
-\text{alien\_deepVar}=\text{depth}(\text{alien})-\text{depth}\!\left(\text{MRCA}(\text{dominant\_lineage})\right)
+alien\_coverage = \frac{N_{alien}}{N_{all\_tips\_in\_dominant\_lineage}}
 $$
 
-3. Rank candidates by combined score:
+**4. Alien Depth-Variation Score**
+
+**Concept:** Alien lineages inserted more deeply relative to the dominant lineage root are more likely to be removed.
+
+* **Formula:**
 
 $$
-\text{combined}=\text{Norm}(\text{phylo\_distance})\times \text{Norm}(\text{alien\_deepVar})\times -\log_{10}(\text{alien\_coverage}+10^{-4})
+alien\_deepVar = depth(alien) - depth(MRCA(dominant\_lineage))
 $$
 
-4. Remove candidates from highest score downward with two stop constraints:
-- Stop when final purity $\ge$ `purity_cutoff`.
-- Enforce removal cap:
+**5. Combined Ranking Score**
+
+**Concept:** Candidates are ranked by a multiplicative score using normalized components.
+
+* **Formula:**
 
 $$
-\text{max\_remove}=\max\!\left(\text{max\_remove\_fraction}\times N_{\text{dominant\_tips}},1\right)
+combined = Norm(phylo\_distance) \times Norm(alien\_deepVar) \times -\log_{10}(alien\_coverage + 10^{-4})
+$$
+
+**6. Removal Stopping Rules**
+
+* Stop when final purity reaches `purity_cutoff`.
+* Stop if removal count reaches the cap:
+
+$$
+max\_remove = \max(max\_remove\_fraction \times N_{dominant\_tips}, 1)
 $$
 
 ```
