@@ -259,7 +259,7 @@ if __name__ == "__main__":
     gd_result_file = sys.argv[2]
     taxa_file = sys.argv[3]
 
-    sptree = load_species_tree(species_tree_file)
-    taxa_data = load_taxa(taxa_file)
+    sptree = read_phylo_tree(species_tree_file)
+    taxa_data = read_and_return_dict(taxa_file)
 
     gd_visualizer_main(sptree, gd_result_file, taxa_data)

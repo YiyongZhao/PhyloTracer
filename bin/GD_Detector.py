@@ -386,7 +386,7 @@ if __name__ == "__main__":
     max_topology_distance = 0
     gene_to_new_name, new_name_to_gene, voucher_to_taxa = gene_id_transfer("imap.txt")
     species_tree = PhyloTree("30sptree.nwk")
-    species_tree = rename_species_tree(species_tree, voucher_to_taxa)
+    species_tree = rename_input_tre(species_tree, voucher_to_taxa)
     num_tre_node(species_tree)
     tree_paths = read_and_return_dict("GF.txt")
     output_file = "result.txt"
