@@ -455,7 +455,7 @@ def handle_gd_detector(cli_args):
         and cli_args.deepvar is not None
     ):
         start_time = time.time()
-        gene2new_named_gene_dic, _, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
         sptree = PhyloTree(cli_args.input_sps_tree)
         num_sptree(sptree)
         sptree.write(outfile='numed_sptree.nwk', format=1, format_root_node=True)
@@ -493,7 +493,7 @@ def handle_gd_visualizer(cli_args):
 def handle_gd_loss_tracker(cli_args):
     if cli_args.input_GF_list and cli_args.input_sps_tree and cli_args.input_imap:
         start_time = time.time()
-        gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        gene2new_named_gene_dic, _, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
         sptree = PhyloTree(cli_args.input_sps_tree)
         num_sptree(sptree)
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
