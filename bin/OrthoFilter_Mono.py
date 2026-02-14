@@ -778,15 +778,19 @@ def prune_main_Mono(
     """
     color_dic = get_color_dict(taxa_dic)
 
-    out_tree_dir = "orthofilter_mono/pruned_tree"
-    out_log_dir = "orthofilter_mono/insert_gene"
-    out_visual_dir = "orthofilter_mono/visual"
-    shutil.rmtree(out_tree_dir, ignore_errors=True)
-    shutil.rmtree(out_log_dir, ignore_errors=True)
-    shutil.rmtree(out_visual_dir, ignore_errors=True)
-    os.makedirs(out_tree_dir, exist_ok=True)
-    os.makedirs(out_log_dir, exist_ok=True)
-    os.makedirs(out_visual_dir, exist_ok=True)
+    base_dir = os.getcwd()
+    out_tree_dir = os.path.join(base_dir, "orthofilter_mono/pruned_tree")
+    out_log_dir = os.path.join(base_dir, "orthofilter_mono/insert_gene")
+    out_visual_dir = os.path.join(base_dir, "orthofilter_mono/visual")
+    if visual:
+        os.makedirs(out_visual_dir, exist_ok=True)
+    else:
+        out_visual_dir = None
+
+    for d in (out_tree_dir, out_log_dir, out_visual_dir):
+        shutil.rmtree(d, ignore_errors=True)
+        os.makedirs(d, exist_ok=True)
+
 
     pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
     for tre_ID, tre_path in tre_dic.items():
