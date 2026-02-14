@@ -556,7 +556,7 @@ def generate_combinations(list1, list2):
     return gene_pairs
 
 
-def get_gene_pairs(t, sp1, sp2):
+def get_ortholog_pairs_by_species(t, sp1, sp2):
     def get_sps_info(t):
         sp_count = defaultdict(list)
         for i in t.get_leaf_names():
@@ -600,7 +600,7 @@ def collect_speciation_pairs(
         sp_set = get_species_set(spec_node)
         if len(sp_set) != 2 or sp1 not in sp_set or sp2 not in sp_set:
             continue
-        orthology = get_gene_pairs(spec_node, sp1, sp2)
+        orthology = get_ortholog_pairs_by_species(spec_node, sp1, sp2)
         for gene1, gene2 in orthology:
             pair_node = Phylo_t.get_common_ancestor([gene1, gene2])
             if judge_support(pair_node.support, pair_support):
@@ -830,7 +830,7 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support)
 
         for i in dup_node_list:
             if len(i) == 3:
-                gene_pairs = get_gene_pairs(i, rename_sp1, rename_sp2)
+                gene_pairs = get_ortholog_pairs_by_species(i, rename_sp1, rename_sp2)
                 gd_clade1, gd_clade2 = i.get_children()
                 gd_tips1 = set(gd_clade1.get_leaf_names())
                 gd_tips2 = set(gd_clade2.get_leaf_names())
@@ -858,7 +858,7 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support)
                 tips1 = set(get_species_set(gd_clade1))
                 tips2 = set(get_species_set(gd_clade2))
                 if len(tips1) == len(tips2) == 2:
-                    gene_pairs = get_gene_pairs(i, rename_sp1, rename_sp2)
+                    gene_pairs = get_ortholog_pairs_by_species(i, rename_sp1, rename_sp2)
                     gd_tips1 = set(gd_clade1.get_leaf_names())
                     gd_tips2 = set(gd_clade2.get_leaf_names())
                     for item in gene_pairs:

@@ -360,7 +360,11 @@ def prune_main_LB(
     base_dir = os.getcwd()
     pruned_dir = os.path.join(base_dir, "orthofilter_lb/pruned_tree")
     log_dir = os.path.join(base_dir, "orthofilter_lb/long_branch_gene")
-    pdf_dir = os.path.join(base_dir, "orthofilter_lb/pruned_tree_pdf")
+    if visual:
+        pdf_dir = os.path.join(base_dir, "orthofilter_lb/pruned_tree_pdf")
+    else:
+        pdf_dir = None
+
 
     for d in (pruned_dir, log_dir, pdf_dir):
         shutil.rmtree(d, ignore_errors=True)

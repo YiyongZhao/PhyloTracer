@@ -1156,7 +1156,7 @@ def view_main(
     dir_path = os.path.join(os.getcwd(), "tree_visualizer/")
     if os.path.exists(dir_path):
         shutil.rmtree(dir_path)
-    os.makedirs(dir_path)
+    os.makedirs(dir_path, exist_ok=True)
     color_dicts = generate_color_dict(gene_categories)
     sps_color_dict = get_color_dict(voucher2taxa_dic)
     gene_color_dict = None
@@ -1271,7 +1271,7 @@ def mark_gene_to_sptree_main(
 # ======================================================
 
 if __name__ == "__main__":
-    os.makedirs(os.path.join(os.getcwd(), "pdf_result"))
+    os.makedirs(os.path.join(os.getcwd(), "pdf_result"), exist_ok=True)
     gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = (
         gene_id_transfer("imap")
     )

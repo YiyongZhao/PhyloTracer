@@ -275,7 +275,10 @@ def num_tre_node(tree: Tree) -> Tree:
         Leaf names are preserved; only internal node names are overwritten.
     """
     idx = 0
+    num=1
     for node in tree.traverse("postorder"):
+        node.add_feature("num", num)
+        num+=1
         if not node.is_leaf():
             node.name = f"N{idx}"
             idx += 1
@@ -607,6 +610,46 @@ def sps_dup_num(sps_list: List[str], unique_sps: Set[str]) -> int:
 
     return len(duplicated)
 
+
+
+def get_gene_pairs(gd_node) -> List[Tuple[str, str, str]]:
+    """Extract cross-child gene pairs grouped by species for a GD node.
+
+    Args:
+        gd_node: Duplication node with exactly two child clades.
+
+    Returns:
+        List[Tuple[str, str, str]]: ``(species, gene_left, gene_right)`` tuples.
+        Missing genes on one side are represented by ``None``.
+
+    Assumptions:
+        Leaf names follow the ``Species_Gene`` convention and each child clade
+        corresponds to one duplicated lineage.
+    """
+    children = gd_node.get_children()
+    if len(children) != 2:
+        return []
+
+    def collect_genes_by_species(clade):
+        species_to_genes = {}
+        for leaf in clade.get_leaves():
+            species = leaf.name.split("_", 1)[0]
+            species_to_genes.setdefault(species, []).append(leaf.name)
+        return species_to_genes
+
+    left_map = collect_genes_by_species(children[0])
+    right_map = collect_genes_by_species(children[1])
+    all_species = set(left_map.keys()) | set(right_map.keys())
+
+    pairs: List[Tuple[str, str, str]] = []
+    for species in all_species:
+        left_genes = left_map.get(species, [None])
+        right_genes = right_map.get(species, [None])
+        for gene_left in left_genes:
+            for gene_right in right_genes:
+                pairs.append((species, gene_left, gene_right))
+
+    return pairs
 
 
 def find_tre_dup(tree: PhyloTree) -> Tuple[List[str], Set[str]]:

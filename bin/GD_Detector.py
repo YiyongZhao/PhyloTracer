@@ -28,6 +28,7 @@ def write_gene_duplication_results(
     new_name_to_gene: dict,
     voucher_to_taxa: dict,
     max_topology_distance: int,
+    gdtype_mode: str = "relaxed",
 ) -> None:
     """
     Detect gene duplications and write detailed and summary outputs.
@@ -74,6 +75,7 @@ def write_gene_duplication_results(
         f"{duplicated_species_percentage_threshold}"
     )
     print(f"Maximum variance of deepth: {max_topology_distance}")
+    print(f"GD type assignment mode: {gdtype_mode}")
     print("===============================================")
 
     gd_type_dict: dict[str, list[str]] = {}
@@ -135,12 +137,17 @@ def write_gene_duplication_results(
                     set(),
                 ).add(clade)
 
-                
-                if dup_species_count >=duplicated_species_count_threshold:
-                    raw_model =get_model(clade, species_tree)
-                if raw_model == 'Complex':
-                    print(f"[Skip] {tree_id} {clade.map} is a complex model")
                 mapped_parent = species_tree & clade.map
+                
+                if gdtype_mode == "strict":
+                    raw_model = get_model_strict(
+                        clade,
+                        species_tree,
+                        max_topology_distance,
+                    )
+                else:
+                    raw_model = get_model(clade, species_tree)
+                gd_type_for_output = normalize_model(raw_model)
                 
                 if mapped_parent.is_leaf():
                     continue
@@ -151,7 +158,7 @@ def write_gene_duplication_results(
 
 
 
-                # if clade.map=='S0':                    
+                # if clade.map=='S5':                    
                 #     vis_clade=rename_input_tre(clade,new_name_to_gene)
                 #     vis_clade.add_face(TextFace(clade.map, fsize=6, ftype="Arial",fgcolor='red'),column=0)
                 #     vis_clade.add_face(TextFace(f"{clade.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
@@ -181,19 +188,19 @@ def write_gene_duplication_results(
                 #     ts.draw_guiding_lines = True
                 #     ts.extra_branch_line_type = 0
                 #     ts.extra_branch_line_color = "black"
-                #     ts.legend.add_face(TextFace(f'Clade gd type is {raw_model}', fsize=6, ftype="Arial",fgcolor='red'), column=0)
+                #     ts.legend.add_face(TextFace(f'Clade gd type is {gd_type_for_output}', fsize=6, ftype="Arial",fgcolor='red'), column=0)
                 #     ts.legend.add_face(TextFace(f"Clade name is {clade.map} Overlap name is {overlap_sps_mapped.name}", fsize=6, ftype="Arial",fgcolor='red'), column=0)
                 #     ts.legend.add_face(TextFace(f"Clade depth is {clade.depth} Overlap depth is {overlap_sps_mapped.depth}", fsize=6, ftype="Arial",fgcolor='red'), column=0)
                 #     ts.legend.add_face(TextFace(f"Deepvar is ({abs(clade.depth-overlap_sps_mapped.depth)})", fsize=6, ftype="Arial",fgcolor='red'), column=0)
 
-                #     vis_clade.render(f"{tree_id}_{vis_num}_{clade.map}.pdf", tree_style=ts)
+                #     vis_clade.render(f"{tree_id}_{vis_num}_{clade.map}_{gd_type_for_output}.pdf", tree_style=ts)
                 #     vis_num+=1
 
                 
 
 
 
-                gd_type_for_output = normalize_model(raw_model)
+                
                 
                 gd_type_dict.setdefault(
                     voucher_to_taxa.get(clade.map, clade.map),
@@ -245,7 +252,7 @@ def write_gene_duplication_results(
 
     df = pd.DataFrame(rows)
     df = df.sort_values("Newick_label", key=lambda x: x.str[1:].astype(int))
-    df.to_csv("gd_type.tsv", sep="\t", index=False)
+    df.to_csv(f"gd_type_{gdtype_mode}.tsv", sep="\t", index=False)
 
 
 # ======================================================
@@ -321,61 +328,66 @@ def get_model(clade: object, species_tree: object) -> str:
 
     return gdtype
 
-# ======================================================
-# Section 3: Gene Pair Extraction
-# ======================================================
 
-
-def get_gene_pairs(gd_node):
+def get_model_strict(clade: object, species_tree: object, deepvar: int) -> str:
     """
-    Extract gene pairs from a duplication node by species matching.
+    Assign a strict raw GD model using branch-depth constrained matching.
 
     Parameters
     ----------
-    gd_node : object
-        Duplication node whose child clades define gene pairs.
+    clade : object
+        Duplication node in the gene tree.
+    species_tree : object
+        Numbered species tree used for mapping.
+    deepvar : int
+        Maximum allowed absolute depth difference for A/B assignment.
 
     Returns
     -------
-    list
-        List of (species, gene_left, gene_right) tuples.
+    str
+        Raw four-character model string in ``A A B B`` slot order.
 
     Assumptions
     -----------
-    Leaf names are formatted as ``species_gene`` strings.
+    The duplication node is binary and both child clades are binary.
     """
-    children = gd_node.get_children()
-    if len(children) != 2:
-        return []
+    map_node = species_tree & clade.map
+    map_node_a, map_node_b = order_children_by_name(map_node)
 
-    def collect_genes_by_species(clade):
-        sp2genes = {}
-        for leaf in clade.get_leaves():
-            sp = leaf.name.split("_", 1)[0]
-            if sp not in sp2genes:
-                sp2genes[sp] = []
-            sp2genes[sp].append(leaf.name)
-        return sp2genes
 
-    left_map = collect_genes_by_species(children[0])
-    right_map = collect_genes_by_species(children[1])
+    left_child, right_child = order_children_by_name(clade)
+    if len(left_child.get_children()) != 2 or len(right_child.get_children()) != 2:
+        return "XXXX"
 
-    all_species = set(left_map.keys()) | set(right_map.keys())
-
-    pairs = []
-    for sp in all_species:
-        left_genes = left_map.get(sp, [None])
-        right_genes = right_map.get(sp, [None])
-
-        for g1 in left_genes:
-            for g2 in right_genes:
-                pairs.append((sp, g1, g2))
-
-    return pairs
+    left_a, left_b = order_children_by_name(left_child)
+    right_a, right_b = order_children_by_name(right_child)
+    
+    if abs(left_a.depth - map_node_a.depth) <= deepvar:
+        type1='A'
+    else:
+        type1='X'
+    
+    if abs(right_a.depth - map_node_a.depth) <= deepvar:
+        type2='A'
+    else:
+        type2='X'
+    if abs(left_b.depth - map_node_b.depth) <= deepvar:
+        type3='B'
+    else:
+        type3='X'
+    
+    if abs(right_b.depth - map_node_b.depth) <= deepvar:
+        type4='B'
+    else:
+        type4='X'
+    
+    gdtype=type1+type2+type3+type4
+    
+    return gdtype
 
 
 # ======================================================
-# Section 4: CLI Entry Point
+# Section 3: CLI Entry Point
 # ======================================================
 
 if __name__ == "__main__":
@@ -402,4 +414,5 @@ if __name__ == "__main__":
         new_name_to_gene,
         voucher_to_taxa,
         max_topology_distance,
+        gdtype_mode="relaxed",
     )

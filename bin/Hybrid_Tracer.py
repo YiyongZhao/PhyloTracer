@@ -397,7 +397,7 @@ def get_gd_count_dic_and_gd_type_dic(
         t = read_phylo_tree(tre_path)
         t1 = rename_input_tre(t, gene2new_named_gene_dic)
         annotate_gene_tree(t1, rename_sptree)
-        gds = find_dup_node(t1, rename_sptree, 50)
+        gds = find_dup_node(t1, rename_sptree,50,0,2,0,1)
 
         for gd in gds:
             mapped_node = rename_sptree & gd.map

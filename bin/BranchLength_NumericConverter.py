@@ -61,8 +61,7 @@ def write_tree_to_newick(tree_str: str, tree_id: str, dir_path: str) -> None:
     """
     if not isinstance(tree_str, str):
         raise ValueError("tree_str must be a string.")
-    if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
+    os.makedirs(dir_path, exist_ok=True)
     try:
         with open(os.path.join(dir_path, tree_id + ".nwk"), "w") as f:
             f.write(tree_str + "\n")
@@ -103,7 +102,7 @@ def branch_length_numeric_converter_main(
     try:
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)
-        os.makedirs(dir_path)
+        os.makedirs(dir_path, exist_ok=True)
     except Exception as exc:
         raise OSError(f"Failed to prepare output directory: {exc}")
 
