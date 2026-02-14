@@ -784,9 +784,9 @@ def prune_main_Mono(
     shutil.rmtree(out_tree_dir, ignore_errors=True)
     shutil.rmtree(out_log_dir, ignore_errors=True)
     shutil.rmtree(out_visual_dir, ignore_errors=True)
-    os.makedirs(out_tree_dir)
-    os.makedirs(out_log_dir)
-    os.makedirs(out_visual_dir)
+    os.makedirs(out_tree_dir, exist_ok=True)
+    os.makedirs(out_log_dir, exist_ok=True)
+    os.makedirs(out_visual_dir, exist_ok=True)
 
     pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
     for tre_ID, tre_path in tre_dic.items():

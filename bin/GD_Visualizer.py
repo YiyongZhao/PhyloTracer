@@ -45,7 +45,14 @@ def process_gd_result(gd_file: str) -> list:
 
             gd_id = parts[1]
             level = parts[5]
-            gd_type = parts[9]
+            gd_type_raw = parts[9]
+            # Backward compatibility for historical labels.
+            legacy_to_current = {
+                "ABAB": "AABB",
+                "ABB": "AXBB",
+                "AAB": "AABX",
+            }
+            gd_type = legacy_to_current.get(gd_type_raw, gd_type_raw)
 
             records.append((gd_id, level, gd_type))
 
@@ -142,20 +149,20 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
     )
 
     type_colors = {
-        "ABAB": "#1f77b4",
-        "ABB": "#ff7f0e",
-        "AAB": "#2ca02c",
-        'Complex': '#d62728',
+        "AABB": "#1f77b4",
+        "AXBB": "#ff7f0e",
+        "AABX": "#2ca02c",
+        "Complex": "#d62728",
     }
-    type_order = ["ABAB", "ABB", "AAB",'Complex']
+    type_order = ["AABB", "AXBB", "AABX", "Complex"]
 
     ts.title.add_face(TextFace(" GD Events Distribution ", fsize=6, ftype="Arial"), column=0)
-    ts.title.add_face(CircleFace(4, type_colors["ABAB"]), column=1)
-    ts.title.add_face(TextFace(" ABAB", fsize=6, ftype="Arial"), column=2)
-    ts.title.add_face(CircleFace(4, type_colors["ABB"]), column=3)
-    ts.title.add_face(TextFace(" ABB", fsize=6), column=4)
-    ts.title.add_face(CircleFace(4, type_colors["AAB"]), column=5)
-    ts.title.add_face(TextFace(" AAB", fsize=6, ftype="Arial"), column=6)
+    ts.title.add_face(CircleFace(4, type_colors["AABB"]), column=1)
+    ts.title.add_face(TextFace(" AABB", fsize=6, ftype="Arial"), column=2)
+    ts.title.add_face(CircleFace(4, type_colors["AXBB"]), column=3)
+    ts.title.add_face(TextFace(" AXBB", fsize=6), column=4)
+    ts.title.add_face(CircleFace(4, type_colors["AABX"]), column=5)
+    ts.title.add_face(TextFace(" AABX", fsize=6, ftype="Arial"), column=6)
     ts.title.add_face(CircleFace(4, type_colors["Complex"]), column=7)
     ts.title.add_face(TextFace(" Complex", fsize=6, ftype="Arial"), column=8)
 

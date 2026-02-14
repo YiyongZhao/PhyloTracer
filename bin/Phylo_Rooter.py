@@ -588,7 +588,7 @@ def root_main(
     dir_path = os.path.join(os.getcwd(), "rooted_trees/")
     if os.path.exists(dir_path):
         shutil.rmtree(dir_path)
-    os.makedirs(dir_path)
+    os.makedirs(dir_path, exist_ok=True)
 
     # Pre-processing: Get basal taxa
     basal_species_set = get_species_tree_basal_set(renamed_species_tree)

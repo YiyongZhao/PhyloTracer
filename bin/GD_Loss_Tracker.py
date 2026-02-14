@@ -14,9 +14,9 @@ from __init__ import *
 # ======================================================
 
 
-def is_valid_duplication_loss(species_voucher, dup_node, renamed_sptree):
+def legacy_is_valid_duplication_loss(species_voucher, dup_node, renamed_sptree):
     """
-    Determine whether a species exhibits a true loss after duplication.
+    Deprecated legacy validator for duplication loss.
 
     Parameters
     ----------
@@ -30,11 +30,13 @@ def is_valid_duplication_loss(species_voucher, dup_node, renamed_sptree):
     Returns
     -------
     bool
-        True if duplication loss criteria are satisfied.
+        Legacy boolean flag; retained only for backward compatibility.
 
     Assumptions
     -----------
-    Gene tree leaves are labeled with voucher prefixes before an underscore.
+    Deprecated: this function uses a strict AND criterion (left and right
+    both present before calling loss), which is inconsistent with event-level
+    2-2/2-1/2-0 classification and should not be used in new code.
     """
     gd_species_set = get_species_set(dup_node)
 
@@ -69,6 +71,109 @@ def is_valid_duplication_loss(species_voucher, dup_node, renamed_sptree):
             observed_copy_num += 1
 
     return observed_copy_num < 2
+
+
+def classify_species_copy_state(
+    species_voucher: str,
+    dup_node: object,
+    mapped_node: object,
+    family_species_set: set | None = None,
+    include_unobserved_species: bool = False,
+) -> tuple:
+    """Classify post-GD copy state for one species at one duplication node.
+
+    Parameters
+    ----------
+    species_voucher : str
+        Species voucher to classify.
+    dup_node : object
+        Duplication node with two child lineages.
+    mapped_node : object
+        Species-tree node mapped from the duplication event.
+    family_species_set : set, optional
+        Species vouchers observed in the current gene family.
+
+    Returns
+    -------
+    tuple
+        ``(loss_type, left_has, right_has, confidence)`` where ``loss_type`` is
+        one of ``2-2``, ``2-1``, ``2-0``, or ``NA``.
+    """
+    children = dup_node.get_children()
+    if mapped_node is None or len(children) != 2:
+        return "NA", False, False, "invalid_node"
+
+    if species_voucher not in set(mapped_node.get_leaf_names()):
+        return "NA", False, False, "out_of_mapped_node"
+
+    left_child, right_child = children
+    left_species = get_species_set(left_child)
+    right_species = get_species_set(right_child)
+
+    left_has = species_voucher in left_species
+    right_has = species_voucher in right_species
+
+    if family_species_set is not None and species_voucher not in family_species_set:
+        if not include_unobserved_species:
+            return "NA", left_has, right_has, "unobserved_in_family"
+        confidence = "unobserved_in_family_included"
+    else:
+        confidence = "observable"
+
+    if left_has and right_has:
+        loss_type = "2-2"
+    elif left_has or right_has:
+        loss_type = "2-1"
+    else:
+        loss_type = "2-0"
+
+    return loss_type, left_has, right_has, confidence
+
+
+def summarize_small_loss_types_from_path(path_str: str) -> tuple:
+    """Extract small loss-type transitions from a path string.
+
+    Parameters
+    ----------
+    path_str : str
+        Path string formatted as ``node(count)->node(count)``.
+
+    Returns
+    -------
+    tuple
+        ``(path_count_types, c20, c21, c10)`` where counts are path-count
+        transitions (not biological copy-number states).
+    """
+    if not path_str or path_str == "NA":
+        return "NA", 0, 0, 0
+
+    parsed = []
+    for step in path_str.split("->"):
+        m = re.search(r"(.+?)\((\d+)\)$", step.strip())
+        if m:
+            parsed.append((m.group(1).strip(), int(m.group(2))))
+
+    if len(parsed) < 2:
+        return "NA", 0, 0, 0
+
+    c20 = c21 = c10 = 0
+    ordered_types = []
+    for i in range(1, len(parsed)):
+        prev_copy = parsed[i - 1][1]
+        curr_copy = parsed[i][1]
+        if curr_copy >= prev_copy:
+            continue
+        if prev_copy == 2 and curr_copy == 0:
+            c20 += 1
+            ordered_types.append("2-0")
+        elif prev_copy == 2 and curr_copy == 1:
+            c21 += 1
+            ordered_types.append("2-1")
+        elif prev_copy == 1 and curr_copy == 0:
+            c10 += 1
+            ordered_types.append("1-0")
+
+    return (",".join(ordered_types) if ordered_types else "NA"), c20, c21, c10
 
 
 # ======================================================
@@ -178,46 +283,6 @@ def get_maptree_node_count_dic(sp_list, map_clade):
 # ======================================================
 
 
-def gene_pair(clade: object) -> set:
-    """
-    Generate gene pairs based on species matches between child clades.
-
-    Parameters
-    ----------
-    clade : object
-        Duplication clade with two children.
-
-    Returns
-    -------
-    set
-        Set of gene pair strings formatted as ``geneA-geneB``.
-
-    Assumptions
-    -----------
-    Leaf names are formatted as ``species_gene`` strings.
-    """
-    result_pairs = set()
-
-    children = clade.get_children()
-    child1, child2 = children
-    leaves1, leaves2 = child1.get_leaf_names(), child2.get_leaf_names()
-
-    for tip1 in leaves1:
-        matching_tips = [
-            tip2 for tip2 in leaves2 if tip1.split("_")[0] == tip2.split("_")[0]
-        ]
-        if matching_tips:
-            result_pairs.update(f"{tip1}-{tip2}" for tip2 in matching_tips)
-        else:
-            result_pairs.add(f"{tip1}-null")
-
-    for tip2 in leaves2:
-        if all(tip2.split("_")[0] != tip1.split("_")[0] for tip1 in leaves1):
-            result_pairs.add(f"null-{tip2}")
-
-    return result_pairs
-
-
 def get_path_str_with_count_num_lst(
     tre_id,
     gd_id_start,
@@ -225,6 +290,7 @@ def get_path_str_with_count_num_lst(
     renamed_sptree,
     new_named_gene2gene_dic,
     voucher2taxa_dic,
+    include_unobserved_species=False,
 ):
     """
     Process duplication nodes and record gene pairs and loss paths.
@@ -255,7 +321,7 @@ def get_path_str_with_count_num_lst(
     """
     records = []
     path_info_list = []
-    dup_nodes = find_dup_node(genetree, renamed_sptree)
+    dup_nodes = find_dup_node(genetree, renamed_sptree,50,0,2,0,1)
 
     gd_id = gd_id_start
 
@@ -292,25 +358,72 @@ def get_path_str_with_count_num_lst(
                 voucher_to_pretty_path[voucher] = "->".join(parts)
 
         gd_level_name = voucher2taxa_dic.get(max_clade2sp.name, max_clade2sp.name)
+        family_species_set = get_species_set(genetree)
+        children = dup_node.get_children()
+        if len(children) != 2:
+            gd_id += 1
+            continue
 
-        appeared_species = set()
+        left_child, right_child = children
+        left_map = {}
+        right_map = {}
 
-        gene_pairs = gene_pair(dup_node)
-        for pair_str in gene_pairs:
-            g_a, g_b = pair_str.split("-")
-            orig_a = new_named_gene2gene_dic.get(g_a, "null")
-            orig_b = new_named_gene2gene_dic.get(g_b, "null")
+        for gene_name in left_child.get_leaf_names():
+            species = gene_name.split("_", 1)[0]
+            left_map.setdefault(species, []).append(gene_name)
+        for gene_name in right_child.get_leaf_names():
+            species = gene_name.split("_", 1)[0]
+            right_map.setdefault(species, []).append(gene_name)
 
-            if g_a != "null":
-                species_voucher = g_a.split("_")[0]
-            elif g_b != "null":
-                species_voucher = g_b.split("_")[0]
-            else:
+        clade_species = set(max_clade2sp.get_leaf_names())
+        seen_species = set()
+        seen_keys = set()
+        gd_counter = {"2-2": 0, "2-1": 0, "2-0": 0, "missing_data": 0}
+        for species_voucher in sorted(clade_species):
+            if species_voucher in seen_species:
                 continue
+            seen_species.add(species_voucher)
+            rec_key = (tre_id, gd_id, species_voucher)
+            if rec_key in seen_keys:
+                continue
+            seen_keys.add(rec_key)
 
-            appeared_species.add(species_voucher)
+            loss_type, left_has, right_has, confidence = classify_species_copy_state(
+                species_voucher,
+                dup_node,
+                max_clade2sp,
+                family_species_set,
+                include_unobserved_species=include_unobserved_species,
+            )
 
+            left_genes = sorted(left_map.get(species_voucher, []))
+            right_genes = sorted(right_map.get(species_voucher, []))
+            g_a = left_genes[0] if left_genes else "NA"
+            g_b = right_genes[0] if right_genes else "NA"
+
+            orig_a = new_named_gene2gene_dic.get(g_a, g_a)
+            orig_b = new_named_gene2gene_dic.get(g_b, g_b)
             pretty_path = voucher_to_pretty_path.get(species_voucher, "NA")
+            path_count_types, path_count_2_0, path_count_2_1, path_count_1_0 = (
+                summarize_small_loss_types_from_path(
+                pretty_path
+                )
+            )
+            if confidence == "unobserved_in_family" and not include_unobserved_species:
+                major_loss_class = "missing_data"
+            elif loss_type == "2-0":
+                major_loss_class = "loss_two_copies"
+            elif loss_type == "2-1":
+                major_loss_class = "loss_one_copy"
+            elif loss_type == "2-2":
+                major_loss_class = "no_loss"
+            else:
+                major_loss_class = "NA"
+
+            if loss_type in gd_counter:
+                gd_counter[loss_type] += 1
+            elif major_loss_class == "missing_data":
+                gd_counter["missing_data"] += 1
 
             records.append(
                 {
@@ -325,29 +438,43 @@ def get_path_str_with_count_num_lst(
                     "species_voucher": species_voucher,
                     "gene1": orig_a,
                     "gene2": orig_b,
+                    "left_gene_n": len(left_genes),
+                    "right_gene_n": len(right_genes),
                     "loss_path": pretty_path,
                     "gd_node_name": gd_node_name,
+                    "loss_type": loss_type,
+                    "left_has": int(left_has),
+                    "right_has": int(right_has),
+                    "loss_confidence": confidence,
+                    "major_loss_class": major_loss_class,
+                    "path_count_types": path_count_types,
+                    "path_count_2_0": path_count_2_0,
+                    "path_count_2_1": path_count_2_1,
+                    "path_count_1_0": path_count_1_0,
                 }
             )
 
-        clade_species = set(get_species_list(max_clade2sp))
-        for s in clade_species - appeared_species:
-            if is_valid_duplication_loss(s, dup_node, renamed_sptree):
-                pretty_path = voucher_to_pretty_path.get(s, "NA")
-                records.append(
-                    {
-                        "tre_id": tre_id,
-                        "gd_id": gd_id,
-                        "support": dup_node.support,
-                        "gd_level_name": gd_level_name,
-                        "species_display": voucher2taxa_dic.get(s, s),
-                        "species_voucher": s,
-                        "gene1": "NA",
-                        "gene2": "NA",
-                        "loss_path": pretty_path,
-                        "gd_node_name": gd_node_name,
-                    }
-                )
+        clade_species_count = len(clade_species)
+        observed_species_in_clade = len(clade_species & family_species_set)
+        n22 = gd_counter["2-2"]
+        n21 = gd_counter["2-1"]
+        n20 = gd_counter["2-0"]
+        n_missing = gd_counter["missing_data"]
+        if (n22 + n21 + n20 + n_missing) != clade_species_count:
+            print(
+                f"Warning: species accounting mismatch: tre={tre_id}, gd={gd_id}, "
+                f"n22={n22}, n21={n21}, n20={n20}, n_missing={n_missing}, "
+                f"clade_species_count={clade_species_count}"
+            )
+        if (
+            not include_unobserved_species
+            and (n22 + n21 + n20) != observed_species_in_clade
+        ):
+            print(
+                f"Warning: observed-species accounting mismatch: tre={tre_id}, gd={gd_id}, "
+                f"n22={n22}, n21={n21}, n20={n20}, "
+                f"observed_species_in_clade={observed_species_in_clade}"
+            )
 
         gd_id += 1
 
@@ -390,6 +517,7 @@ def get_path_str_num_dic(
     taxa2voucher_dic,
     target_species_list=None,
     allowed_gd_species_sets=None,
+    include_unobserved_species=False,
 ):
     """
     Aggregate loss-path statistics with optional filtering constraints.
@@ -445,6 +573,7 @@ def get_path_str_num_dic(
             renamed_sptree,
             new_named_gene2gene_dic,
             voucher2taxa_dic,
+            include_unobserved_species=include_unobserved_species,
         )
         global_gd_id = new_gd_id
 
@@ -471,7 +600,12 @@ def get_path_str_num_dic(
         print("[Filter] No restriction on GD node location.")
 
     out = open("gd_loss_summary.txt", "w")
-    out.write("tree_ID\tgd_ID\tgd_support\tlevel\tspecies\tgene1\tgene2\tloss_path\n")
+    out.write(
+        "tree_ID\tgd_ID\tgd_support\tlevel\tspecies\tgene1\tgene2\tloss_path\t"
+        "left_gene_n\tright_gene_n\tloss_type\tleft_has\tright_has\t"
+        "loss_confidence\tmajor_loss_class\t"
+        "path_count_types\tpath_count_2_0\tpath_count_2_1\tpath_count_1_0\n"
+    )
 
     for rec in all_records:
         if target_species_list:
@@ -491,7 +625,14 @@ def get_path_str_num_dic(
             f"{rec['tre_id']}\t{rec['gd_id']}\t{rec['support']}\t"
             f"{rec['gd_level_name']}\t"
             f"{rec['species_display']}\t"
-            f"{rec['gene1']}\t{rec['gene2']}\t{rec['loss_path']}\n"
+            f"{rec['gene1']}\t{rec['gene2']}\t{rec['loss_path']}\t"
+            f"{rec.get('left_gene_n', 0)}\t{rec.get('right_gene_n', 0)}\t"
+            f"{rec.get('loss_type', 'NA')}\t{rec.get('left_has', 0)}\t"
+            f"{rec.get('right_has', 0)}\t{rec.get('loss_confidence', 'NA')}\t"
+            f"{rec.get('major_loss_class', 'NA')}\t"
+            f"{rec.get('path_count_types', 'NA')}\t"
+            f"{rec.get('path_count_2_0', 0)}\t{rec.get('path_count_2_1', 0)}\t"
+            f"{rec.get('path_count_1_0', 0)}\n"
         )
     out.close()
 
