@@ -407,7 +407,7 @@ Usage:
 * **Formula:**
 
 $$
-purity = \frac{N_{target}}{N_{all}}
+\text{Purity} = \frac{\text{N}_{\text{target}}}{\text{N}_{\text{all}}}
 $$
 
 **2. Phylogenetic Distance Score**
@@ -427,7 +427,7 @@ $$
 * **Formula:**
 
 $$
-alien\_coverage = \frac{N_{alien}}{N_{all\_tips\_in\_dominant\_lineage}}
+\text{AlienCov} = \frac{\text{N}_{\text{alien}}}{\text{N}_{\text{dom}} + \varepsilon}
 $$
 
 **4. Alien Depth-Variation Score**
@@ -437,7 +437,7 @@ $$
 * **Formula:**
 
 $$
-alien\_deepVar = depth(alien) - depth(MRCA(dominant\_lineage))
+\text{AlienDepth} = \text{Depth}(\text{alien}) - \text{Depth}(\text{MRCA}(\text{dom}))
 $$
 
 **5. Combined Ranking Score**
@@ -447,7 +447,7 @@ $$
 * **Formula:**
 
 $$
-combined = Norm(phylo\_distance) \times Norm(alien\_deepVar) \times -\log_{10}(alien\_coverage + 10^{-4})
+\text{Combined} = \text{Norm}(\text{PhyloDist}) \times \text{Norm}(\text{AlienDeepVar}) \times \left(-\log_{10}(\text{AlienCov} + 10^{-4})\right)
 $$
 
 **6. Removal Stopping Rules**
@@ -456,7 +456,7 @@ $$
 * Stop if removal count reaches the cap:
 
 $$
-max\_remove = \max(max\_remove\_fraction \times N_{dominant\_tips}, 1)
+\text{max\_remove} = \max\!\left(\text{max\_remove\_fraction} \times N_{\text{dominant\_tips}},\; 1\right)
 $$
 
 ```
