@@ -413,7 +413,9 @@ $$
 
 * **Formula:**
 
-$\text{Combined} = \text{Norm}(\text{PhyloDist}) \times \text{Norm}(\text{AlienDeepVar}) \times \left(-\log_{10}(\text{AlienCov} + 10^{-4})\right)$
+$$
+\text{Combined} = \text{Norm}(\text{PhyloDist}) \times \text{Norm}(\text{AlienDeepVar}) \times \left(-\log_{10}(\text{AlienCov} + 10^{-4})\right)
+$$
 
 **6. Removal Stopping Rules**
 
