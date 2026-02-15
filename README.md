@@ -432,7 +432,7 @@ $$
 * **Formula:**
 
 $$
-\text{AlienCov}=\frac{\text{N}_{\text{alien}}}{\text{N}_{\text{dominant\_tips}}}
+\text{AlienCov}=\frac{\text{N}_{\text{alien}}}{\text{N}_{\text{dominant tips}}}
 $$
 
 **4. Alien Depth-Variation Score**
@@ -442,7 +442,7 @@ $$
 * **Formula:**
 
 $$
-\text{AlienDepth}=\text{Depth}(\text{alien})-\text{Depth}\!\left(\text{MRCA}(\text{dom})\right)
+\text{AlienDepth}=\text{Depth}(\text{alien})-\text{Depth}\left(\text{MRCA}(\text{dom})\right)
 $$
 
 **5. Combined Ranking Score**
@@ -461,7 +461,7 @@ $$
 * Stop if removal count reaches the cap:
 
 $$
-\text{max\_remove}=\max\!\left(\text{max\_remove\_fraction}\timesN_{\text{dominant\_tips}},\;1\right)
+\text{max remove}=\max\left(\text{max remove fraction}\timesN_{\text{dominant}_{tips}},\;1\right)
 $$
 
 ```
