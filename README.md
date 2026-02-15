@@ -384,7 +384,7 @@ $$
 * **Formula:**
 
 $$
-phylo\_distance = depth(target\_lineage) - depth(MRCA(target + alien))
+phylo\_{distance} = depth(target\_{lineage}) - depth(MRCA{(target + alien)})
 $$
 
 **3. Alien Coverage Score**
