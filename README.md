@@ -384,7 +384,7 @@ $$
 * **Formula:**
 
 $$
-\text{PhyloDist} = \frac{\text{Depth}\!\left(\text{MRCA}(\text{target},\text{alien})\right) - \text{Depth}(\text{target})} {\text{Depth}(\text{target}) + \varepsilon}
+\text{Phylo distance} = \frac{\text{Depth} \left(\text{MRCA}(\text{target},\text{alien})\right) - \text{Depth}(\text{target})}}
 $$
 
 **3. Alien Coverage Score**
@@ -394,7 +394,7 @@ $$
 * **Formula:**
 
 $$
-\text{AlienCov} = \frac{\text{N}_{\text{alien}}}{\text{N}_{\text{dom}} + \varepsilon}
+\text{Alien Coverage} = \frac{\text{N}_{\text{alien}}}{\text{N}_{\text{All tips in dominant lineage}}}
 $$
 
 **4. Alien Depth-Variation Score**
@@ -404,7 +404,7 @@ $$
 * **Formula:**
 
 $$
-\text{AlienDeepVar}=\text{Depth}(\text{alien})- \text{Depth}\!\left(\text{MRCA}(\text{dom})\right)
+\text{Alien Depth}=\text{Depth}(\text{alien})- \text{Depth}\left(\text{MRCA}(\text{dom})\right)
 $$
 
 **5. Combined Ranking Score**
@@ -414,7 +414,7 @@ $$
 * **Formula:**
 
 $$
-\text{Combined} = \text{Norm}(\text{PhyloDist}) \times \text{Norm}(\text{AlienDeepVar}) \times \left(-\log_{10}(\text{AlienCov} + 10^{-4})\right)
+\text{Combined score} = \text{Norm}(\text{Phylo distance}) \times \text{Norm}(\text{Alien Depth}) \times \left(-\log_{10}(\text{Alien Coverage} + 10^{-4})\right)
 $$
 
 **6. Removal Stopping Rules**
@@ -423,7 +423,7 @@ $$
 * Stop if removal count reaches the cap:
 
 $$
-max\_remove = \max(max\_remove\_fraction \times N_{dominant\_tips}, 1)
+\text{max\_remove} = \max\left(\text{max\_remove\_fraction} \times N_{\text{dominant\_tips}},\; 1\right)
 $$
 
 ```
