@@ -413,7 +413,7 @@ $$
 **Where:**
 
 - $N_{\text{target}}$ = number of target taxa tips  
-- $N_{\text{dominant\_tips}}$ = total tips in dominant lineage 
+- $N_{\text{dominant}\_{tips}}$ = total tips in dominant lineage 
 
 **2. Phylogenetic Distance Score**
 
