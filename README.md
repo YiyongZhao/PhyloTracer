@@ -422,7 +422,7 @@ $$
 * **Formula:**
 
 $$
-\text{PhyloDist}=\text{Depth}\left(\text{MRCA}(\text{target}, \text{alien})\right)-\text{Depth}(\text{target})
+\text{PhyloDist}=\text{Depth}(\text{MRCA}(\text{target}))-\text{Depth}(\text{MRCA}(\text{target}\cup\text{alien}))
 $$
 
 **3. Alien Coverage Score**
@@ -457,9 +457,8 @@ $$
 
 **6. Removal Stopping Rules**
 
-* Stop when final purity reaches `purity_cutoff`.
-* Stop if removal count reaches the cap:
-  
+**Concept:** The iterative pruning stops as soon as the dominant-lineage purity reaches `purity_cutoff`, or when the removal cap `max_remove` is reached (including cases where removing the next candidate would exceed the cap).
+ 
 * **Formula:**
   
 $$
