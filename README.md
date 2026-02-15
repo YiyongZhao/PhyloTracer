@@ -396,69 +396,142 @@ Usage:
 ```
 ### OrthoFilter_Mono
 
-**Required parameters (CLI):** `--input_GF_list`, `--input_taxa`, `--input_imap`, `--input_sps_tree`
+Monophyletic lineage-based noise filtering module for gene trees.
 
-**Scoring logic (current implementation concept):**
+---
 
-**1. Dominant Lineage Purity**
+### Required Parameters (CLI)
 
-**Concept:** Measures how strongly a lineage is dominated by target taxa labels.
+`--input_GF_list`  
+`--input_taxa`  
+`--input_imap`  
+`--input_sps_tree`
 
-* **Formula:**
+---
 
-$$
-\text{Purity} = \frac{\text{N}_{\text{target}}}{\text{N}_{\text{all tips in dominant lineage}}}
-$$
+### Scoring Framework
 
-**2. Phylogenetic Distance Score**
+Each candidate alien lineage is evaluated using the following metrics:
 
-**Concept:** Alien lineages mapped deeper and farther from the target lineage in the species tree are more likely to be removed.
+---
 
-* **Formula:**
+#### 1. Dominant Lineage Purity
 
-$$
-\text{PhyloDistance} = \frac{\text{Depth}(\text{MRCA}(\text{target},\text{alien})) - \text{Depth}(\text{target})}{\text{Depth}(\text{target}) + \varepsilon}
-$$
-
-**3. Alien Coverage Score**
-
-**Concept:** Alien lineages occupying fewer tips within a dominant lineage are more likely to be noise.
-
-* **Formula:**
+**Concept:**  
+Measures how strongly the dominant lineage is composed of target taxa.
 
 $$
-\text{AlienCov} = \frac{\text{N}_{\text{alien}}}{\text{N}_{\text{dom}} + \varepsilon}
+\text{Purity}
+=
+\frac{\text{N}_{\text{target}}}
+{\text{N}_{\text{dominant\_tips}}}
 $$
 
-**4. Alien Depth-Variation Score**
+Where:
 
-**Concept:** Alien lineages inserted more deeply relative to the dominant lineage root are more likely to be removed.
+- $N_{\text{target}}$ = number of target taxa tips  
+- $N_{\text{dominant\_tips}}$ = total tips in dominant lineage  
 
-* **Formula:**
+Higher purity indicates stronger dominance of the target lineage.
 
-$$
-\text{AlienDepth} = \text{Depth}(\text{alien}) - \text{Depth}(\text{MRCA}(\text{dom}))
-$$
+---
 
-**5. Combined Ranking Score**
+#### 2. Phylogenetic Distance Score
 
-**Concept:** Candidates are ranked by a multiplicative score using normalized components.
-
-* **Formula:**
+**Concept:**  
+Alien lineages mapped deeper and farther from the target lineage in the species tree are more likely to be removed.
 
 $$
-\text{Combined} = \text{Norm}(\text{PhyloDist}) \times \text{Norm}(\text{AlienDeepVar}) \times \left(-\log_{10}(\text{AlienCov} + 10^{-4})\right)
+\text{PhyloDist}
+=
+\text{Depth}\!\left(
+\text{MRCA}(\text{target}, \text{alien})
+\right)
+-
+\text{Depth}(\text{target})
 $$
 
-**6. Removal Stopping Rules**
+Higher values indicate greater phylogenetic separation.
 
-* Stop when final purity reaches `purity_cutoff`.
-* Stop if removal count reaches the cap:
+---
+
+#### 3. Alien Coverage Score
+
+**Concept:**  
+Alien lineages occupying fewer tips within the dominant lineage are more likely to represent noise.
 
 $$
-\text{max\_remove} = \max\!\left(\text{max remove fraction} \times N_{\text{dominant tips}},\; 1\right)
+\text{AlienCov}
+=
+\frac{\text{N}_{\text{alien}}}
+{\text{N}_{\text{dominant\_tips}}}
 $$
 
+Lower coverage increases removal likelihood.
+
+---
+
+#### 4. Alien Depth-Variation Score
+
+**Concept:**  
+Alien lineages inserted more deeply relative to the dominant lineage root are more likely to be removed.
+
+$$
+\text{AlienDepth}
+=
+\text{Depth}(\text{alien})
+-
+\text{Depth}\!\left(
+\text{MRCA}(\text{dom})
+\right)
+$$
+
+Higher values suggest deeper insertion relative to dominant lineage root.
+
+---
+
+#### 5. Combined Ranking Score
+
+**Concept:**  
+Candidates are ranked using a multiplicative score with normalized components.
+
+$$
+\text{Combined}
+=
+\text{Norm}(\text{PhyloDist})
+\times
+\text{Norm}(\text{AlienDepth})
+\times
+\left(
+-\log_{10}
+\left(
+\text{AlienCov} + 10^{-4}
+\right)
+\right)
+$$
+
+Higher combined scores indicate stronger evidence for removal.
+
+---
+
+### 6. Removal Stopping Rules
+
+Filtering stops when either condition is met:
+
+1. Final purity reaches `purity_cutoff`
+2. Removal count reaches the cap:
+
+$$
+\text{max\_remove}
+=
+\max\!\left(
+\text{max\_remove\_fraction}
+\times
+N_{\text{dominant\_tips}},
+\;
+1
+\right)
+$$
 ```
 Description:
     To prune phylogenomic noise from both single-copy and multi-copy gene family trees. It removes outliers and paralogs based on predefined taxonomic constraints (e.g., ensuring members from taxa such as families or orders form monophyletic groups). Caution: Groupings should be selected with care, prioritizing well-established relationships unless otherwise required for specific objectives
