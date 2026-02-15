@@ -407,13 +407,13 @@ Usage:
 * **Formula:**
 
 $$
-\text{Purity}=\frac{\text{N}_{\text{target}}}{\text{N}_{\text{dominant\_tips}}}
+\text{Purity}=\frac{\text{N}_{\text{target}}}{\text{N}_{\text{dominant}\_{tips}}}
 $$
 
 **Where:**
 
 - $N_{\text{target}}$ = number of target taxa tips  
-- $N_{\text{dominant}\_{tips}}$ = total tips in dominant lineage 
+- $N_{\text{dominant tips}}$ = total tips in dominant lineage 
 
 **2. Phylogenetic Distance Score**
 
