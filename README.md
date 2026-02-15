@@ -422,7 +422,7 @@ $$
 * **Formula:**
 
 $$
-\text{PhyloDist}=\text{Depth}(\text{MRCA}(\text{target}))-\text{Depth}(\text{MRCA}(\text{target}\cup\text{alien}))
+\text{PhyloDist}=\text{Depth}(\text{MRCA}(\text{alien}))-\text{Depth}(\text{MRCA}(\text{target}\cup\text{alien}))
 $$
 
 **3. Alien Coverage Score**
