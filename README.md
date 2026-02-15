@@ -407,7 +407,7 @@ Usage:
 * **Formula:**
 
 $$
-\text{Purity}=\frac{\text{N}_{\text{target}}}{\text{N}_{\text{dominant}\_{tips}}}
+\text{Purity}=\frac{\text{N}_{\text{target}}}{\text{N}_{\text{dominant tips}}}
 $$
 
 **Where:**
@@ -422,7 +422,7 @@ $$
 * **Formula:**
 
 $$
-\text{PhyloDist}=\text{Depth}\!\left(\text{MRCA}(\text{target}, \text{alien})\right)-\text{Depth}(\text{target})
+\text{PhyloDist}=\text{Depth}\left(\text{MRCA}(\text{target}, \text{alien})\right)-\text{Depth}(\text{target})
 $$
 
 **3. Alien Coverage Score**
