@@ -374,7 +374,7 @@ Usage:
 * **Formula:**
 
 $$
-purity = \frac{N_{target}}{N_{all}}
+\text{Purity} = \frac{\text{N}_{\text{target}}}{\text{N}_{\text{all}}}
 $$
 
 **2. Phylogenetic Distance Score**
@@ -384,7 +384,7 @@ $$
 * **Formula:**
 
 $$
-phylo\_{distance} = depth(target\_{lineage}) - depth(MRCA{(target + alien)})
+\text{PhyloDist} = \frac{\text{Depth}\!\left(\text{MRCA}(\text{target},\text{alien})\right) - \text{Depth}(\text{target})} {\text{Depth}(\text{target}) + \varepsilon}
 $$
 
 **3. Alien Coverage Score**
@@ -394,7 +394,7 @@ $$
 * **Formula:**
 
 $$
-alien\_coverage = \frac{N_{alien}}{N_{all\_tips\_in\_dominant\_lineage}}
+\text{AlienCov} = \frac{\text{N}_{\text{alien}}}{\text{N}_{\text{dom}} + \varepsilon}
 $$
 
 **4. Alien Depth-Variation Score**
@@ -404,7 +404,7 @@ $$
 * **Formula:**
 
 $$
-alien\_deepVar = depth(alien) - depth(MRCA(dominant\_lineage))
+\text{AlienDeepVar}=\text{Depth}(\text{alien})- \text{Depth}\!\left(\text{MRCA}(\text{dom})\right)
 $$
 
 **5. Combined Ranking Score**
@@ -413,9 +413,7 @@ $$
 
 * **Formula:**
 
-$$
-combined = Norm(phylo\_distance) \times Norm(alien\_deepVar) \times -\log_{10}(alien\_coverage + 10^{-4})
-$$
+$\text{Combined} = \text{Norm}(\text{PhyloDist}) \times \text{Norm}(\text{AlienDeepVar}) \times \left(-\log_{10}(\text{AlienCov} + 10^{-4})\right)$
 
 **6. Removal Stopping Rules**
 
