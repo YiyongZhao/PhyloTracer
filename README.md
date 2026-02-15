@@ -407,7 +407,7 @@ Usage:
 * **Formula:**
 
 $$
-\text{Purity} = \frac{\text{N}_{\text{target}}}{\text{N}_{\text{all}}}
+\text{Purity} = \frac{\text{N}_{\text{target}}}{\text{N}_{\text{all tips in dominant lineage}}}
 $$
 
 **2. Phylogenetic Distance Score**
@@ -417,7 +417,7 @@ $$
 * **Formula:**
 
 $$
-phylo\_distance = depth(target\_lineage) - depth(MRCA(target + alien))
+\text{PhyloDistance} = \frac{\text{Depth}(\text{MRCA}(\text{target},\text{alien})) - \text{Depth}(\text{target})}{\text{Depth}(\text{target}) + \varepsilon}
 $$
 
 **3. Alien Coverage Score**
@@ -456,7 +456,7 @@ $$
 * Stop if removal count reaches the cap:
 
 $$
-\text{max\_remove} = \max\!\left(\text{max\_remove\_fraction} \times N_{\text{dominant\_tips}},\; 1\right)
+\text{max\_remove} = \max\!\left(\text{max remove fraction} \times N_{\text{dominant tips}},\; 1\right)
 $$
 
 ```
