@@ -300,264 +300,201 @@ Most modules generate task-specific outputs in either the current working direct
 ---
 ## Command line options
 
-This section follows an OrthoFinder-like CLI reference style with compact layout and explicit parameter meanings.
+Compact reference format: each module uses one parameter table (`Parameter | Required | Description`) plus Input/Output/Usage.
 
 ### 1) PhyloTree_CollapseExpand
-- Description: Collapse low-support internal nodes into comb-like structures, or revert to binary topology.
-- Required parameters:
-  - `--input_GF_list`: TSV file (`GF_ID<TAB>gene_tree_path`), one gene-family tree path per line.
-  - `--support_value`: Support threshold (`0-100`); nodes with support <= this value are collapsed.
-- Optional parameters:
-  - `--revert`: If set, re-expand collapsed comb nodes to a resolved binary form.
-- Input: Newick gene trees from `--input_GF_list`.
-- Output: `collapse_expand_tree/*.nwk`.
-- Usage:
-```bash
-phylotracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path` (one tree per line). |
+| `--support_value` | Yes | Support cutoff (`0-100`); nodes with support <= cutoff are collapsed. |
+| `--revert` | No | Re-expand collapsed comb-like structures to binary form. |
+Input: Gene trees from `--input_GF_list`.  
+Output: `collapse_expand_tree/*.nwk`.  
+Usage: `phylotracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]`
 
 ### 2) PhyloSupport_Scaler
-- Description: Convert support values between probability-like and percentage-like scales.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--scale_to`: Target scale; `1` = [0,1], `100` = [0,100].
-- Optional parameters: None.
-- Input: Gene trees with numeric support values.
-- Output: `support_scaler_tree/*.nwk`.
-- Usage:
-```bash
-phylotracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 100
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--scale_to` | Yes | Target support scale: `1` => `[0,1]`, `100` => `[0,100]`. |
+Input: Gene trees with support values.  
+Output: `support_scaler_tree/*.nwk`.  
+Usage: `phylotracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 100`
 
 ### 3) BranchLength_NumericConverter
-- Description: Reformat branch lengths to fixed decimal precision.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-- Optional parameters:
-  - `--decimal_place`: Decimal digits to keep (default `10`).
-- Input: Gene trees.
-- Output: `converter_tree/*.nwk`.
-- Usage:
-```bash
-phylotracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--decimal_place` | No | Branch-length decimal precision (default `10`). |
+Input: Gene trees.  
+Output: `converter_tree/*.nwk`.  
+Usage: `phylotracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]`
 
 ### 4) Phylo_Rooter
-- Description: Root gene trees using species-tree mapping and gene-length-aware candidate scoring.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`) used to map leaves to species.
-  - `--input_gene_length`: TSV (`gene_id<TAB>gene_length`) for offcut and rooting tie-break logic.
-  - `--input_sps_tree`: Species tree in Newick format.
-- Optional parameters: None.
-- Input: Gene trees + species map + gene lengths + species tree.
-- Output: `rooted_trees/*.nwk`, `stat_matrix.csv`.
-- Usage:
-```bash
-phylotracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+| `--input_gene_length` | Yes | TSV `gene_id<TAB>gene_length`. |
+| `--input_sps_tree` | Yes | Species tree in Newick format. |
+Input: Gene trees + species map + gene length map + species tree.  
+Output: `rooted_trees/*.nwk`, `stat_matrix.csv`.  
+Usage: `phylotracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk`
 
 ### 5) OrthoFilter_LB
-- Description: Remove long-branch tips likely to introduce phylogenetic noise.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`).
-  - `--absolute_branch_length`: Global long-branch multiplier threshold (integer).
-  - `--relative_branch_length`: Sister-relative branch multiplier threshold (float).
-- Optional parameters:
-  - `--visual`: Export before/after per-tree PDF comparisons.
-- Input: Gene trees + species map.
-- Output: `orthofilter_lb/pruned_tree/*.nwk`, `orthofilter_lb/long_branch_gene/*_delete_gene.txt`, optional `orthofilter_lb/pruned_tree_pdf/*.pdf`.
-- Usage:
-```bash
-phylotracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+| `--absolute_branch_length` | Yes | Global long-branch multiplier threshold (integer). |
+| `--relative_branch_length` | Yes | Sister-relative branch multiplier threshold (float). |
+| `--visual` | No | Export before/after PDFs for each tree. |
+Input: Gene trees + species map.  
+Output: `orthofilter_lb/pruned_tree/*.nwk`, `orthofilter_lb/long_branch_gene/*_delete_gene.txt`, optional `orthofilter_lb/pruned_tree_pdf/*.pdf`.  
+Usage: `phylotracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]`
 
 ### 6) OrthoFilter_Mono
-- Description: Remove alien tips from dominant lineages to enforce taxon-aware monophyly.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_taxa`: TSV (`gene_id<TAB>clade_label`) defining target lineage/group labels.
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`).
-  - `--input_sps_tree`: Species tree Newick for depth-based ranking.
-- Optional parameters:
-  - `--purity_cutoff`: Stop pruning when dominant-lineage purity reaches this value (default `0.95`).
-  - `--max_remove_fraction`: Upper bound on removable tips per dominant lineage (default `0.5`).
-  - `--visual`: Export before/after visual PDFs.
-- Input: Gene trees + taxa labels + species map + species tree.
-- Output: `orthofilter_mono/pruned_tree/*.nwk`, `orthofilter_mono/insert_gene/*_insert_gene.txt`, optional `orthofilter_mono/visual/*.pdf`.
-- Usage:
-```bash
-phylotracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_taxa` | Yes | TSV `gene_id<TAB>clade_label` for monophyly-guided pruning. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+| `--input_sps_tree` | Yes | Species tree in Newick format. |
+| `--purity_cutoff` | No | Target dominant-lineage purity (default `0.95`). |
+| `--max_remove_fraction` | No | Maximum removable-tip fraction per dominant lineage (default `0.5`). |
+| `--visual` | No | Export before/after visualization PDFs. |
+Input: Gene trees + taxa labels + species map + species tree.  
+Output: `orthofilter_mono/pruned_tree/*.nwk`, `orthofilter_mono/insert_gene/*_insert_gene.txt`, optional `orthofilter_mono/visual/*.pdf`.  
+Usage: `phylotracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]`
 
 ### 7) TreeTopology_Summarizer
-- Description: Count, rank, and visualize absolute/relative topology classes.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`) for leaf-name normalization.
-- Optional parameters:
-  - `--visual_top`: Number of top topologies to render (default `10`).
-- Input: Gene trees + species map.
-- Output: `absolute_*.txt`, `relative_*.txt`, `merge_absolutely_top*.png`, `merge_relative_top*.png`.
-- Usage:
-```bash
-phylotracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name` for label normalization. |
+| `--visual_top` | No | Number of top topologies to visualize (default `10`). |
+Input: Gene trees + species map.  
+Output: `absolute_*.txt`, `relative_*.txt`, `merge_absolutely_top*.png`, `merge_relative_top*.png`.  
+Usage: `phylotracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10]`
 
 ### 8) Tree_Visualizer
-- Description: Render gene trees with metadata overlays and optional GD highlighting.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`).
-- Optional parameters:
-  - `--gene_categories`: One or more TSV files (`gene_id<TAB>category`) for colored side labels.
-  - `--keep_branch {0,1}`: Keep original branch lengths (`1`) or normalize for display (`0`).
-  - `--tree_style {r,c}`: Rectangular (`r`) or circular (`c`) layout.
-  - `--gene_family`: TSV (`gene_id<TAB>family_label`) used for species-tree family mapping.
-  - `--input_sps_tree`: Species tree Newick (required when `--gene_family` is provided).
-  - `--gene_expression`: Expression matrix (`.csv/.xls/.xlsx`, gene IDs as row index).
-  - `--visual_gd`: Draw GD annotations on gene trees.
-- Input: Gene trees + species map + optional category/family/expression files.
-- Output: `tree_visualizer/*.pdf`, optionally `genefamily_map2_sptree.pdf`.
-- Usage:
-```bash
-phylotracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2order.imap gene2taxa.imap] [--tree_style r] [--visual_gd]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+| `--gene_categories` | No | One or more TSV files `gene_id<TAB>category`. |
+| `--keep_branch` | No | `1` keep branch lengths, `0` normalize for display. |
+| `--tree_style` | No | Tree style: `r` rectangular, `c` circular (default `r`). |
+| `--gene_family` | No | TSV `gene_id<TAB>family_label` for family overlays. |
+| `--input_sps_tree` | Cond. | Required when `--gene_family` is provided. |
+| `--gene_expression` | No | Expression matrix (`.csv/.xls/.xlsx`), genes as row index. |
+| `--visual_gd` | No | Overlay GD nodes on tree figures. |
+Input: Gene trees + species map + optional metadata files.  
+Output: `tree_visualizer/*.pdf`, optional `genefamily_map2_sptree.pdf`.  
+Usage: `phylotracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--tree_style r] [--visual_gd]`
 
 ### 9) GD_Detector
-- Description: Detect duplication nodes and assign GD types with relaxed or strict mode.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`).
-  - `--gd_support`: Minimum support for GD candidate nodes (`0-100`).
-  - `--subclade_support`: Minimum support in both child clades (`0-100`).
-  - `--dup_species_proportion`: Minimum overlap ratio of duplicated species (`0-1`).
-  - `--dup_species_num`: Minimum count of overlapping duplicated species (`>=1`).
-  - `--input_sps_tree`: Species tree Newick.
-  - `--deepvar`: Maximum species-depth variance allowed in GD filtering (`>=0`).
-- Optional parameters:
-  - `--gdtype_mode {relaxed,strict}`: GD typing strategy; default `relaxed`.
-- Input: Gene trees + species map + species tree.
-- Output: `gd_result_relaxed.txt`/`gd_result_strict.txt`, `gd_type_relaxed.tsv`/`gd_type_strict.tsv`.
-- Usage:
-```bash
-phylotracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+| `--gd_support` | Yes | Minimum support for GD candidate nodes (`0-100`). |
+| `--subclade_support` | Yes | Minimum support in both GD child clades (`0-100`). |
+| `--dup_species_proportion` | Yes | Minimum duplicated-species overlap ratio (`0-1`). |
+| `--dup_species_num` | Yes | Minimum duplicated-species overlap count (`>=1`). |
+| `--input_sps_tree` | Yes | Species tree Newick file. |
+| `--deepvar` | Yes | Maximum tolerated species-depth variance (`>=0`). |
+| `--gdtype_mode` | No | GD typing mode: `relaxed` (default) or `strict`. |
+Input: Gene trees + species map + species tree.  
+Output: `gd_result_relaxed.txt`/`gd_result_strict.txt`, `gd_type_relaxed.tsv`/`gd_type_strict.tsv`.  
+Usage: `phylotracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]`
 
 ### 10) GD_Visualizer
-- Description: Map GD counts/types to species-tree branches.
-- Required parameters:
-  - `--input_sps_tree`: Numbered species tree Newick.
-  - `--gd_result`: GD detector result table (`gd_result_*.txt`).
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`).
-- Optional parameters: None.
-- Input: Species tree + GD table + species map.
-- Output: `phylotracer_gd_visualizer.pdf`.
-- Usage:
-```bash
-phylotracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_sps_tree` | Yes | Numbered species tree in Newick format. |
+| `--gd_result` | Yes | GD result table from `GD_Detector`. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+Input: Numbered species tree + GD table + species map.  
+Output: `phylotracer_gd_visualizer.pdf`.  
+Usage: `phylotracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap`
 
 ### 11) GD_Loss_Tracker
-- Description: Build event-level and path-level GD-loss summaries.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_sps_tree`: Species tree Newick.
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`).
-- Optional parameters:
-  - `--target_species`: Restrict endpoint species for loss-path counting (repeatable).
-  - `--mrca_node`: Restrict GD nodes by MRCA pair (`SP1,SP2`, repeatable).
-  - `--include_unobserved_species`: Include species absent from a family in classification output.
-- Input: Gene trees + species tree + species map.
-- Output: `gd_loss_summary.txt`, `gd_loss_count_summary.txt`, `gd_loss.xlsx`.
-- Usage:
-```bash
-phylotracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_sps_tree` | Yes | Species tree in Newick format. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+| `--target_species` | No | Restrict loss-path endpoints; repeatable argument. |
+| `--mrca_node` | No | Restrict GD nodes by MRCA pair (`SP1,SP2`); repeatable. |
+| `--include_unobserved_species` | No | Include family-unobserved species in classification output. |
+Input: Gene trees + species tree + species map.  
+Output: `gd_loss_summary.txt`, `gd_loss_count_summary.txt`, `gd_loss.xlsx`.  
+Usage: `phylotracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap`
 
 ### 12) GD_Loss_Visualizer
-- Description: Visualize GD-loss summaries on species-tree nodes/tips.
-- Required parameters:
-  - `--gd_loss_result`: Detailed GD-loss table (recommended `gd_loss_summary.txt`).
-- Optional parameters:
-  - `--input_sps_tree`: Numbered species tree Newick.
-- Input: GD-loss table (+ species tree).
-- Output: `gd_loss_pie_visualizer.PDF`.
-- Usage:
-```bash
-phylotracer GD_Loss_Visualizer --gd_loss_result gd_loss_summary.txt --input_sps_tree numed_sptree.nwk
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--gd_loss_result` | Yes | GD-loss summary table (recommended `gd_loss_summary.txt`). |
+| `--input_sps_tree` | No | Numbered species tree in Newick format. |
+Input: GD-loss table (+ species tree).  
+Output: `gd_loss_pie_visualizer.PDF`.  
+Usage: `phylotracer GD_Loss_Visualizer --gd_loss_result gd_loss_summary.txt --input_sps_tree numed_sptree.nwk`
 
 ### 13) Ortho_Retriever
-- Description: Split paralog-rich trees and retrieve ortholog groups.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`).
-  - `--input_gene_length`: TSV (`gene_id<TAB>gene_length`).
-- Optional parameters: None.
-- Input: Rooted gene trees + species map + gene lengths.
-- Output: `ortho_retriever_summary.txt`, `ortholog_trees.tsv`.
-- Usage:
-```bash
-phylotracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+| `--input_gene_length` | Yes | TSV `gene_id<TAB>gene_length`. |
+Input: Rooted gene trees + species map + gene lengths.  
+Output: `ortho_retriever_summary.txt`, `ortholog_trees.tsv`.  
+Usage: `phylotracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap`
 
 ### 14) Hybrid_Tracer
-- Description: Build GD-based sequence matrices and run HyDe tests.
-- Required parameters:
-  - `--input_GF_list`: TSV (`GF_ID<TAB>gene_tree_path`).
-  - `--input_Seq_GF_list`: TSV (`GF_ID<TAB>alignment_path`) aligned to gene-family IDs.
-  - `--input_sps_tree`: Species tree Newick.
-  - `--input_imap`: TSV (`gene_id<TAB>species_name`).
-- Optional parameters:
-  - `--mrca_node`: Restrict analysis to a target MRCA (`SpeciesA,SpeciesB`).
-  - `--split_groups`: Split GD events into N batches for processing (default `1`).
-- Input: Gene trees + alignments + species tree + species map.
-- Output: `hyde_out.txt`, `hyde_filtered_out.txt`.
-- Usage:
-```bash
-phylotracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 2]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--input_GF_list` | Yes | TSV file `GF_ID<TAB>gene_tree_path`. |
+| `--input_Seq_GF_list` | Yes | TSV file `GF_ID<TAB>alignment_path` aligned to GF IDs. |
+| `--input_sps_tree` | Yes | Species tree Newick file. |
+| `--input_imap` | Yes | TSV `gene_id<TAB>species_name`. |
+| `--mrca_node` | No | Restrict analysis to MRCA of `SpeciesA,SpeciesB`. |
+| `--split_groups` | No | Number of GD groups for batched processing (default `1`). |
+Input: Gene trees + alignments + species tree + species map.  
+Output: `hyde_out.txt`, `hyde_filtered_out.txt`.  
+Usage: `phylotracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 2]`
 
 ### 15) Hybrid_Visualizer
-- Description: Plot HyDe support and gamma heatmaps in leaf or node mode.
-- Required parameters:
-  - `--hyde_out`: HyDe output table.
-  - `--input_sps_tree`: Species tree Newick.
-- Optional parameters:
-  - `--node`: Node-mode stacked heatmap rendering.
-- Input: HyDe output + species tree.
-- Output: files matching `*_img_faces.png` and `*_hotmap.png`.
-- Usage:
-```bash
-phylotracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk [--node]
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--hyde_out` | Yes | HyDe result table from `Hybrid_Tracer`. |
+| `--input_sps_tree` | Yes | Species tree in Newick format. |
+| `--node` | No | Node-mode heatmap stacking; default is leaf-mode view. |
+Input: HyDe output + species tree.  
+Output: files matching `*_img_faces.png` and `*_hotmap.png`.  
+Usage: `phylotracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk [--node]`
 
 ### 16) HaploFinder
-- Description: Detect haplotype-level GD signals (`haplofinder`) or split FASTA by assignment (`split`).
-- Required parameters:
-  - `--mode {haplofinder,split}`: Select run mode.
-- Required in `haplofinder` mode:
-  - `--input_GF_list`, `--input_imap`, `--input_sps_tree`
-  - `--species_a`, `--species_b`
-  - `--species_a_gff`, `--species_b_gff`
-  - `--species_a_lens`, `--species_b_lens`
-- Optional in `haplofinder` mode:
-  - `--gd_support`: GD support cutoff (`0-100`, default `50`).
-  - `--pair_support`: pair support cutoff (`0-100`, default `50`).
-  - `--visual_chr_a`, `--visual_chr_b`: chromosome subset files for plotting.
-  - `--size`: plotting dot size (default `0.0005`).
-- Required in `split` mode (current CLI checks):
-  - `--input_GF_list`, `--input_imap`, `--input_fasta`
-  - `--cluster_file`, `--hyb_sps`, `--parental_sps`, `--species_b_gff`
-- Input: mode-specific trees/mappings/GFF/lens/FASTA files.
-- Output: `*_dotplot.pdf`, `*_dotplot.png`, `gene_conversion_*.txt`, `color_label.txt`, plus split FASTA outputs.
-- Usage:
-```bash
-phylotracer HaploFinder --mode haplofinder --input_GF_list GF.list --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --gd_support 50 --pair_support 50
-phylotracer HaploFinder --mode split --input_GF_list GF.list --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.txt --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff
-```
+| Parameter | Required | Description |
+|---|---|---|
+| `--mode` | Yes | Run mode: `haplofinder` or `split`. |
+| `--input_GF_list` | Cond. | Required in both modes; TSV `GF_ID<TAB>gene_tree_path`. |
+| `--input_imap` | Cond. | Required in both modes; TSV `gene_id<TAB>species_name`. |
+| `--input_sps_tree` | Cond. | Required in `haplofinder` mode. |
+| `--species_a`, `--species_b` | Cond. | Required in `haplofinder` mode. |
+| `--species_a_gff`, `--species_b_gff` | Cond. | Required in `haplofinder` mode (`species_b_gff` also required in `split` checks). |
+| `--species_a_lens`, `--species_b_lens` | Cond. | Required in `haplofinder` mode. |
+| `--gd_support` | No | GD support cutoff (`0-100`, default `50`). |
+| `--pair_support` | No | Pair-support cutoff (`0-100`, default `50`). |
+| `--visual_chr_a`, `--visual_chr_b` | No | Chromosome subset files for plotting. |
+| `--size` | No | Dotplot point size (default `0.0005`). |
+| `--input_fasta` | Cond. | Required in `split` mode. |
+| `--cluster_file` | Cond. | Required in current `split` CLI checks. |
+| `--hyb_sps` | Cond. | Required in `split` mode. |
+| `--parental_sps` | Cond. | Required in `split` mode; quoted space-separated list. |
+Input: Mode-specific trees/mappings/GFF/lens/FASTA files.  
+Output: `*_dotplot.pdf`, `*_dotplot.png`, `gene_conversion_*.txt`, `color_label.txt`, and split FASTA outputs.  
+Usage: `phylotracer HaploFinder --mode haplofinder ...` or `phylotracer HaploFinder --mode split ...`
 
 ---
 ## Bug Reports
