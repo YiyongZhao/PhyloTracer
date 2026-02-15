@@ -461,7 +461,14 @@ $$
 * Stop if removal count reaches the cap:
 
 $$
-\text{max\_remove}=\max\!\left(\text{max\_remove\_fraction}\cdot N_{\text{dominant\_tips}},\; 1\right)
+\text{max\_remove}
+=
+\max\!\left(
+\text{max\_remove\_fraction}
+\cdot
+N_{\text{dominant\_tips}},
+\; 1
+\right)
 $$
 
 ```
