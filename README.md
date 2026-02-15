@@ -462,7 +462,7 @@ $$
 * **Formula:**
   
 $$
-\text{max\_remove}=\max\!\left(\text{max\_remove\_fraction}\cdot\text{N}_{\text{dominant\_tips}},1\right)
+\text{max remove}=\max\!\left(\text{max remove}\_{fraction}\cdot\text{N}\_{\text{dominant tips}},1\right)
 $$
 
 ```
