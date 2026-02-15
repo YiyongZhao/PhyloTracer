@@ -384,7 +384,7 @@ $$
 * **Formula:**
 
 $$
-\text{Phylo distance} = \frac{\text{Depth} \left(\text{MRCA}(\text{target},\text{alien})\right) - \text{Depth}(\text{target})}}
+\text{Phylo distance}=\text{Depth}\left(\text{MRCA}(\text{target},\text{alien})\right)-\text{Depth}(\text{target})
 $$
 
 **3. Alien Coverage Score**
@@ -423,7 +423,7 @@ $$
 * Stop if removal count reaches the cap:
 
 $$
-\text{max\_remove} = \max\left(\text{max\_remove\_fraction} \times N_{\text{dominant\_tips}},\; 1\right)
+\text{max\_remove} = \max\!\left(\text{max\_remove\_fraction} \times N_{\text{dominant\_tips}},\; 1\right)
 $$
 
 ```
