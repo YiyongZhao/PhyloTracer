@@ -450,7 +450,7 @@ $$
 **Concept:** Candidates are ranked by a multiplicative score using normalized components.
 
 * **Formula:**
-* 
+  
 $$
 \text{Combined}=\text{Norm}(\text{PhyloDist})\times\text{Norm}(\text{AlienDepth})\times\left(-\log_{10}\left(\text{AlienCov} + 10^{-4}\right)\right)
 $$
@@ -460,7 +460,9 @@ $$
 * Stop when final purity reaches `purity_cutoff`.
 * Stop if removal count reaches the cap:
 
-$max\_remove = \max(max\_remove\_fraction \cdot N_{dominant\_tips}, 1)$
+$$
+\text{max\_remove}=\max\!\left(\text{max\_remove\_fraction}\cdot\text{N}_{\text{dominant\_tips}},1\right)
+$$
 
 ```
 Description:
