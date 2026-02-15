@@ -459,7 +459,9 @@ $$
 
 * Stop when final purity reaches `purity_cutoff`.
 * Stop if removal count reaches the cap:
-
+  
+* **Formula:**
+  
 $$
 \text{max\_remove}=\max\!\left(\text{max\_remove\_fraction}\cdot\text{N}_{\text{dominant\_tips}},1\right)
 $$
