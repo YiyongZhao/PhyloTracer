@@ -282,6 +282,49 @@ def count_clade_leaves(node: object, leaf_to_clade: dict, target_clade: str) -> 
     return target_count, total_count
 
 
+def get_sister_species_for_target_clade(
+    species_tree: object,
+    leaf_to_clade: dict,
+    leaf_to_voucher: dict,
+    target_clade: str,
+) -> set:
+    """Get voucher species located on the immediate sister branch of a target clade.
+
+    Args:
+        species_tree (object): Rooted species tree.
+        leaf_to_clade (dict): Mapping from gene-tree leaf names to clade labels.
+        leaf_to_voucher (dict): Mapping from gene-tree leaf names to voucher species.
+        target_clade (str): Target clade label currently being pruned.
+
+    Returns:
+        set: Voucher species set from the sister branch of the mapped target MRCA.
+
+    Assumptions:
+        The target clade is represented by at least one voucher in the current tree.
+        If mapping fails or the target MRCA is the root, an empty set is returned.
+    """
+    target_species = {
+        leaf_to_voucher[leaf_name]
+        for leaf_name, clade_label in leaf_to_clade.items()
+        if clade_label == target_clade and leaf_name in leaf_to_voucher
+    }
+    if not target_species:
+        return set()
+
+    try:
+        if len(target_species) == 1:
+            mapped_node = species_tree & list(target_species)[0]
+        else:
+            mapped_node = species_tree.get_common_ancestor(list(target_species))
+    except Exception:
+        return set()
+
+    sister_species = set()
+    for sister in mapped_node.get_sisters():
+        sister_species.update(sister.get_leaf_names())
+    return sister_species
+
+
 def collect_dominant_lineages(
     Phylo_t: object,
     leaf_to_clade: dict,
@@ -390,6 +433,7 @@ def score_alien_candidates(
     depth_cache: dict,
     gene_depths: dict,
     target_clade: str,
+    sister_species_set: set,
 ) -> list:
     """Score alien lineage candidates within a dominant lineage.
 
@@ -403,6 +447,8 @@ def score_alien_candidates(
         depth_cache (dict): Cache for MRCA depth lookups.
         gene_depths (dict): Precomputed depth map for gene-tree nodes.
         target_clade (str): Target clade label (e.g., Brassicaceae).
+        sister_species_set (set): Voucher species on the immediate sister branch
+            of the target clade in the species tree.
 
     Returns:
         list: List of candidate score dictionaries.
@@ -438,6 +484,9 @@ def score_alien_candidates(
         phylo_distance = brass_depth - union_depth
         alien_coverage = len(leaf_names) / dominant_size if dominant_size else 0.0
         alien_deepvar = gene_depths.get(node, 0) - gene_depths.get(dominant_root, 0)
+        is_protected_sister = bool(
+            alien_species_set and sister_species_set and alien_species_set.issubset(sister_species_set)
+        )
 
         results.append(
             {
@@ -446,6 +495,7 @@ def score_alien_candidates(
                 "phylo_distance": phylo_distance,
                 "alien_coverage": alien_coverage,
                 "alien_deepvar": alien_deepvar,
+                "is_protected_sister": is_protected_sister,
             }
         )
 
@@ -493,6 +543,9 @@ def select_alien_tips_for_removal(
     sorted_scores = sorted(scores, key=lambda x: x["combined_score"], reverse=True)
 
     for item in sorted_scores:
+        if item.get("is_protected_sister", False):
+            continue
+
         remaining_alien = max(alien_count - len(removal_set), 0)
         current_total = target_count + remaining_alien
         current_purity = target_count / current_total if current_total else 0.0
@@ -589,6 +642,12 @@ def prune_one_clade_in_tree(
     dominant_roots = collect_dominant_lineages(
         t, leaf_to_clade, target_clade, dominant_purity
     )
+    sister_species_set = get_sister_species_for_target_clade(
+        species_tree=species_tree,
+        leaf_to_clade=leaf_to_clade,
+        leaf_to_voucher=leaf_to_voucher,
+        target_clade=target_clade,
+    )
     
     removal_set = set()
     for dominant_root in dominant_roots:
@@ -608,6 +667,7 @@ def prune_one_clade_in_tree(
             depth_cache,
             gene_depths,
             target_clade,
+            sister_species_set,
         )
 
         selected = select_alien_tips_for_removal(

@@ -741,7 +741,7 @@ def tips_mark(
         add_color_bar(ts)
 
     return Phylo_t1.render(
-        dir_path + tre_ID + ".pdf",
+        f'{dir_path}{tre_ID}.pdf',
         w=210,
         units="mm",
         tree_style=ts,
