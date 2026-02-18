@@ -396,7 +396,7 @@ def handle_tree_visualizer(cli_args):
         if cli_args.gene_categories is not None:
             species_category_list = [read_and_return_dict(i) for i in cli_args.gene_categories]
 
-        gene2new_named_gene_dic, _, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
         gene2fam = None
         df = None
@@ -587,7 +587,7 @@ def handle_hybrid_tracer(cli_args):
 
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
         seq_path_dic = read_and_return_dict(cli_args.input_Seq_GF_list)
-        gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
+        gene2new_named_gene_dic, _, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
         rename_sptree = rename_input_tre(sptree, taxa2voucher_dic)
 
         sptree.write(outfile='numed_sptree.nwk', format=1)
