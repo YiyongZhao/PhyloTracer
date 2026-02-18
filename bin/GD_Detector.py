@@ -126,7 +126,6 @@ def write_gene_duplication_results(
                     continue
 
                 gd_clade_count.setdefault(level, set()).add(node)
-            vis_num=1
             for clade in dup_node_list:
                 species_set = get_species_set(species_tree&clade.map)
                 child_a, child_b = clade.get_children()
@@ -153,55 +152,6 @@ def write_gene_duplication_results(
                     continue
                 
 
-                # overlap_sps = get_species_set(child_a) & get_species_set(child_b)
-                # overlap_sps_mapped = map_species_set_to_node(species_tree, overlap_sps)
-
-
-
-                # if clade.map=='S5':                    
-                #     vis_clade=rename_input_tre(clade,new_name_to_gene)
-                #     vis_clade.add_face(TextFace(clade.map, fsize=6, ftype="Arial",fgcolor='red'),column=0)
-                #     vis_clade.add_face(TextFace(f"{clade.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
-                #     a,b=vis_clade.get_children()
-                #     a.add_face(TextFace(a.map, fsize=6, ftype="Arial",fgcolor='red'),column=0)
-                #     a.add_face(TextFace(f"{a.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
-                #     b.add_face(TextFace(b.map, fsize=6, ftype="Arial",fgcolor='red'),column=0)
-                #     b.add_face(TextFace(f"{b.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
-                #     a_a,a_b=a.get_children()
-                #     b_a,b_b=b.get_children()
-
-                #     a_a.add_face(TextFace(voucher_to_taxa.get(a_a.map, a_a.map), fsize=6, ftype="Arial",fgcolor='red'),column=0)
-                #     a_a.add_face(TextFace(f"{a_a.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
-                #     a_b.add_face(TextFace(f"{a_b.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
-                #     a_b.add_face(TextFace(voucher_to_taxa.get(a_b.map, a_b.map), fsize=6, ftype="Arial",fgcolor='red'),column=0)
-                #     b_a.add_face(TextFace(f"{b_a.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
-                #     b_b.add_face(TextFace(f"{b_b.depth}", fsize=6, ftype="Arial",fgcolor='blue'),column=1,position="branch-bottom")
-                #     b_a.add_face(TextFace(voucher_to_taxa.get(b_a.map, b_a.map), fsize=6, ftype="Arial",fgcolor='red'),column=0)
-                #     b_b.add_face(TextFace(voucher_to_taxa.get(b_b.map, b_b.map), fsize=6, ftype="Arial",fgcolor='red'),column=0)
-                    
-                #     ts = TreeStyle()
-                #     ts.scale = 10
-                #     ts.legend_position = 1
-                #     ts.show_leaf_name = False
-                #     ts.guiding_lines_type = 0
-                #     ts.guiding_lines_color = "black"
-                #     ts.draw_guiding_lines = True
-                #     ts.extra_branch_line_type = 0
-                #     ts.extra_branch_line_color = "black"
-                #     ts.legend.add_face(TextFace(f'Clade gd type is {gd_type_for_output}', fsize=6, ftype="Arial",fgcolor='red'), column=0)
-                #     ts.legend.add_face(TextFace(f"Clade name is {clade.map} Overlap name is {overlap_sps_mapped.name}", fsize=6, ftype="Arial",fgcolor='red'), column=0)
-                #     ts.legend.add_face(TextFace(f"Clade depth is {clade.depth} Overlap depth is {overlap_sps_mapped.depth}", fsize=6, ftype="Arial",fgcolor='red'), column=0)
-                #     ts.legend.add_face(TextFace(f"Deepvar is ({abs(clade.depth-overlap_sps_mapped.depth)})", fsize=6, ftype="Arial",fgcolor='red'), column=0)
-
-                #     vis_clade.render(f"{tree_id}_{vis_num}_{clade.map}_{gd_type_for_output}.pdf", tree_style=ts)
-                #     vis_num+=1
-
-                
-
-
-
-                
-                
                 gd_type_dict.setdefault(
                     voucher_to_taxa.get(clade.map, clade.map),
                     [],
