@@ -34,10 +34,25 @@
 A user-friendly toolkit for gene tree rooting, topology summarization, species hybridization signal screening, gene-duplication (GD) and loss profiling, and subgenome-aware ortholog splitting, with practical utilities for tree format manipulation and visualization.
 
 ---
-## Introduction
+## What does PhyloTracer do?
 
 `PhyloTracer` provides a reproducible workflow centered on accurate gene tree rooting and topology statistics. It further offers utilities for screening hybridization-like signals (via topology patterns such as ABAB/ABBA variants), summarizing GD and loss patterns, and subgenome-informed splitting of multi-copy families.
 All modules are designed to be used independently or combined in larger phylogenomic pipelines. Where applicable, methods are documented with input assumptions and recommended validation steps to ensure rigorous interpretation.
+
+---
+## Table of Contents
+
+- [What does PhyloTracer do?](#what-does-phylotracer-do)
+- [Module Features](#module-features)
+- [Getting started with PhyloTracer](#getting-started-with-phylotracer)
+- [Advanced installation notes](#advanced-installation-notes)
+- [Example input files](#example-input-files)
+- [PhyloTracer Results Files](#phylotracer-results-files)
+- [Command line options](#command-line-options)
+- [Bug Reports](#bug-reports)
+- [Contributing](#contributing)
+- [Version History](#version-history)
+- [License](#license)
 
 ---
 ## Module Features
@@ -64,7 +79,9 @@ PhyloTracer integrates 16 modular tools covering phylogenetic preprocessing, roo
 *Together, these modules provide a comprehensive workflow for constructing, refining, and interpreting large-scale phylogenomic data.*
 
 ---
-### Clone and install environment:
+## Getting started with PhyloTracer
+
+### Clone and install environment
 
 ```bash
 #A convenient one-click installation by using conda (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) with the following commands:
@@ -81,14 +98,13 @@ bash install_packages.sh
 #Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
 export QT_QPA_PLATFORM=offscreen
 ```
----
-### Install from PyPI with pip:
+### Install from PyPI with pip
 
 ```bash
 pip install PhyloTracer
 ```
 
-### Quick start from GitHub ZIP (download + extract):
+### Quick start from GitHub ZIP (download + extract)
 
 ```bash
 # 1) Download and unzip PhyloTracer-main.zip from GitHub
@@ -268,7 +284,24 @@ Glyma.07G273800.2     0.0
 #Note: You can add any number of imap files. They will sequentially provide annotations to the right of the gene tips according to the order of input.
 ```
 ---
-## Usage
+## PhyloTracer Results Files
+
+Most modules generate task-specific outputs in either the current working directory or module-specific subdirectories. Common outputs include:
+
+- Rooted tree outputs: `rooted_trees/`
+- Long-branch filter outputs: `orthofilter_lb/`
+- Monophyly filter outputs: `orthofilter_mono/`
+- GD detection tables: `gd_result_*.txt`, `gd_type_*.tsv`
+- GD-loss tables: `gd_loss_summary.txt`, `gd_loss_count_summary.txt`, `gd_loss.xlsx`
+- Hybridization outputs: `hyde_out.txt`, `hyde_filtered_out.txt`
+- Ortholog retrieval outputs: `ortho_retriever_summary.txt`, `ortholog_trees.tsv`
+- Topology summaries: `absolute_*.txt`, `relative_*.txt`, merged PNG summaries
+
+---
+## Command line options
+
+This section follows an OrthoFinder-like CLI reference style with compact layout and explicit parameter meanings.
+
 ### PhyloTree_CollapseExpand
 ```
 Description:
@@ -374,8 +407,13 @@ Usage:
 * **Formula:**
 
 $$
-purity = \frac{N_{target}}{N_{all}}
+\text{Purity}=\frac{\text{N}_{\text{target}}}{\text{N}_{\text{dominant tips}}}
 $$
+
+**Where:**
+
+- $N_{\text{target}}$ = number of target taxa tips  
+- $N_{\text{dominant tips}}$ = total tips in dominant lineage 
 
 **2. Phylogenetic Distance Score**
 
@@ -384,7 +422,7 @@ $$
 * **Formula:**
 
 $$
-phylo\_distance = depth(target\_lineage) - depth(MRCA(target + alien))
+\text{PhyloDist}=\text{Depth}(\text{MRCA}(\text{alien}))-\text{Depth}(\text{MRCA}(\text{target}\cup\text{alien}))
 $$
 
 **3. Alien Coverage Score**
@@ -394,7 +432,7 @@ $$
 * **Formula:**
 
 $$
-alien\_coverage = \frac{N_{alien}}{N_{all\_tips\_in\_dominant\_lineage}}
+\text{AlienCov}=\frac{\text{N}_{\text{alien}}}{\text{N}_{\text{dominant tips}}}
 $$
 
 **4. Alien Depth-Variation Score**
@@ -404,7 +442,7 @@ $$
 * **Formula:**
 
 $$
-alien\_deepVar = depth(alien) - depth(MRCA(dominant\_lineage))
+\text{AlienDepth}=\text{Depth}(\text{alien})-\text{Depth}\left(\text{MRCA}(\text{dom})\right)
 $$
 
 **5. Combined Ranking Score**
@@ -412,18 +450,19 @@ $$
 **Concept:** Candidates are ranked by a multiplicative score using normalized components.
 
 * **Formula:**
-
+  
 $$
-combined = Norm(phylo\_distance) \times Norm(alien\_deepVar) \times -\log_{10}(alien\_coverage + 10^{-4})
+\text{Combined}=\text{Norm}(\text{PhyloDist})\times\text{Norm}(\text{AlienDepth})\times\left(-\log_{10}\left(\text{AlienCov} + 10^{-4}\right)\right)
 $$
 
 **6. Removal Stopping Rules**
 
-* Stop when final purity reaches `purity_cutoff`.
-* Stop if removal count reaches the cap:
-
+**Concept:** The iterative pruning stops as soon as the dominant-lineage purity reaches `purity_cutoff`, or when the removal cap `max_remove` is reached (including cases where removing the next candidate would exceed the cap).
+ 
+* **Formula:**
+  
 $$
-max\_remove = \max(max\_remove\_fraction \times N_{dominant\_tips}, 1)
+\text{max remove}=\max\left(\text{max remove fraction}\times\text{N}\_{\text{dominant tips}},1\right)
 $$
 
 ```
@@ -590,6 +629,7 @@ Usage:
     phylotracer HaploFinder --mode split --input_GF_list GF.list --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.txt --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff
 ```
 
+---
 ## Bug Reports
 
 You can report bugs or request features through our [GitHub Issues page](https://github.com/YiyongZhao/PhyloTracer/issues). If you have any questions, suggestions, or issues, please do not hesitate to contact us.
@@ -605,3 +645,4 @@ Check the [Changelog](https://github.com/YiyongZhao/PhyloTracer/commits/PhyloTra
 ## License
 
 PhyloTracer is licensed under the [MIT LICENSE](LICENSE).
+
