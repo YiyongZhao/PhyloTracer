@@ -7,11 +7,36 @@ duplication statistics, and selects optimal roots with RF-based refinement.
 """
 
 import math
+import os
+import shutil
 from itertools import combinations
 
-from __init__ import *
-from BranchLength_NumericConverter import write_tree_to_newick
-from Ortho_Retriever import *
+import numpy as np
+import pandas as pd
+from ete3 import PhyloTree
+from tqdm import tqdm
+
+from phylotracer import (
+    annotate_gene_tree,
+    calculate_species_num,
+    compute_tip_to_root_branch_length_variance,
+    find_dup_node,
+    gene_id_transfer,
+    get_species_list,
+    get_species_set,
+    is_rooted,
+    read_and_return_dict,
+    read_phylo_tree,
+    rename_input_tre,
+    root_tre_with_midpoint_outgroup,
+)
+from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
+from phylotracer.Ortho_Retriever import (
+    extract_tree,
+    iterator,
+    offcut_tre,
+    rename_OGs_tre_name,
+)
 
 # --------------------------
 # 1. Helper Functions
@@ -377,6 +402,8 @@ def calculate_tree_statistics(tree: object, species_tree: object) -> tuple:
     Assumptions:
         The tree is bifurcating at the root.
     """
+    if len(tree.children) < 2:
+        return 0, 0, 0, 0
     up_clade = tree.children[1]
     down_clade = tree.children[0]
 
@@ -535,7 +562,7 @@ def normalize_and_score(df: pd.DataFrame, weights: dict, include_rf=True):
         """
         if values.max() != values.min():
             return (values - values.min()) / (values.max() - values.min())
-        return 0
+        return pd.Series(0.0, index=values.index)
 
     # deep/var/GD: smaller is better; overlap: larger is better
     norm_deep = norm(df["deep"])

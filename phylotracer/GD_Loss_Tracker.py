@@ -6,8 +6,24 @@ loss paths, and generates tabular reports for downstream analyses.
 """
 
 import re
+from typing import Optional
 
-from __init__ import *
+import os
+
+import pandas as pd
+from ete3 import PhyloTree
+
+from phylotracer import (
+    rename_input_tre,
+    get_species_set,
+    num_sptree,
+    read_and_return_dict,
+    find_dup_node,
+    num_tre_node,
+    annotate_gene_tree,
+    gene_id_transfer,
+    map_species_set_to_node,
+)
 
 # ======================================================
 # Section 1: Duplication Loss Validation
@@ -77,7 +93,7 @@ def classify_species_copy_state(
     species_voucher: str,
     dup_node: object,
     mapped_node: object,
-    family_species_set: set | None = None,
+    family_species_set: Optional[set] = None,
     include_unobserved_species: bool = False,
 ) -> tuple:
     """Classify post-GD copy state for one species at one duplication node.
@@ -354,7 +370,7 @@ def get_path_str_with_count_num_lst(
                 last_part = parts[-1]
                 count_part = last_part.partition("(")[2]
                 taxa_name = voucher2taxa_dic.get(voucher, voucher)
-                parts[-1] = taxa_name + "(" + count_part if count_part else ""
+                parts[-1] = (taxa_name + "(" + count_part) if count_part else taxa_name
                 voucher_to_pretty_path[voucher] = "->".join(parts)
 
         gd_level_name = voucher2taxa_dic.get(max_clade2sp.name, max_clade2sp.name)
@@ -599,42 +615,41 @@ def get_path_str_num_dic(
     else:
         print("[Filter] No restriction on GD node location.")
 
-    out = open("gd_loss_summary.txt", "w")
-    out.write(
-        "tree_ID\tgd_ID\tgd_support\tlevel\tspecies\tgene1\tgene2\tloss_path\t"
-        "left_gene_n\tright_gene_n\tloss_type\tleft_has\tright_has\t"
-        "loss_confidence\tmajor_loss_class\t"
-        "path_count_types\tpath_count_2_0\tpath_count_2_1\tpath_count_1_0\n"
-    )
-
-    for rec in all_records:
-        if target_species_list:
-            if rec["species_voucher"] not in target_voucher_set:
-                continue
-
-        if allowed_gd_species_sets:
-            gd_node = renamed_sptree & rec["gd_node_name"]
-            gd_leaves_voucher = gd_node.get_leaf_names()
-            gd_leaves_taxa = frozenset(
-                voucher2taxa_dic.get(leaf, leaf) for leaf in gd_leaves_voucher
-            )
-            if gd_leaves_taxa not in allowed_gd_species_sets:
-                continue
-
+    with open("gd_loss_summary.txt", "w") as out:
         out.write(
-            f"{rec['tre_id']}\t{rec['gd_id']}\t{rec['support']}\t"
-            f"{rec['gd_level_name']}\t"
-            f"{rec['species_display']}\t"
-            f"{rec['gene1']}\t{rec['gene2']}\t{rec['loss_path']}\t"
-            f"{rec.get('left_gene_n', 0)}\t{rec.get('right_gene_n', 0)}\t"
-            f"{rec.get('loss_type', 'NA')}\t{rec.get('left_has', 0)}\t"
-            f"{rec.get('right_has', 0)}\t{rec.get('loss_confidence', 'NA')}\t"
-            f"{rec.get('major_loss_class', 'NA')}\t"
-            f"{rec.get('path_count_types', 'NA')}\t"
-            f"{rec.get('path_count_2_0', 0)}\t{rec.get('path_count_2_1', 0)}\t"
-            f"{rec.get('path_count_1_0', 0)}\n"
+            "tree_ID\tgd_ID\tgd_support\tlevel\tspecies\tgene1\tgene2\tloss_path\t"
+            "left_gene_n\tright_gene_n\tloss_type\tleft_has\tright_has\t"
+            "loss_confidence\tmajor_loss_class\t"
+            "path_count_types\tpath_count_2_0\tpath_count_2_1\tpath_count_1_0\n"
         )
-    out.close()
+
+        for rec in all_records:
+            if target_species_list:
+                if rec["species_voucher"] not in target_voucher_set:
+                    continue
+
+            if allowed_gd_species_sets:
+                gd_node = renamed_sptree & rec["gd_node_name"]
+                gd_leaves_voucher = gd_node.get_leaf_names()
+                gd_leaves_taxa = frozenset(
+                    voucher2taxa_dic.get(leaf, leaf) for leaf in gd_leaves_voucher
+                )
+                if gd_leaves_taxa not in allowed_gd_species_sets:
+                    continue
+
+            out.write(
+                f"{rec['tre_id']}\t{rec['gd_id']}\t{rec['support']}\t"
+                f"{rec['gd_level_name']}\t"
+                f"{rec['species_display']}\t"
+                f"{rec['gene1']}\t{rec['gene2']}\t{rec['loss_path']}\t"
+                f"{rec.get('left_gene_n', 0)}\t{rec.get('right_gene_n', 0)}\t"
+                f"{rec.get('loss_type', 'NA')}\t{rec.get('left_has', 0)}\t"
+                f"{rec.get('right_has', 0)}\t{rec.get('loss_confidence', 'NA')}\t"
+                f"{rec.get('major_loss_class', 'NA')}\t"
+                f"{rec.get('path_count_types', 'NA')}\t"
+                f"{rec.get('path_count_2_0', 0)}\t{rec.get('path_count_2_1', 0)}\t"
+                f"{rec.get('path_count_1_0', 0)}\n"
+            )
 
     for path_str, gd_id, gd_node_name, tre_id in all_path_info_list:
         last_node = path_str.split("->")[-1].split("(")[0].strip()
@@ -819,10 +834,15 @@ def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
 # ======================================================
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="GD Loss Tracker")
+    parser.add_argument("--sptree", required=True, help="Species tree path")
+    parser.add_argument("--gf", required=True, help="Gene family list path")
+    args = parser.parse_args()
     out = "outfile"
-    sptree = PhyloTree(sptree_path)
+    sptree = PhyloTree(args.sptree)
     num_sptree(sptree)
-    tre_dic = read_and_return_dict(gf)
+    tre_dic = read_and_return_dict(args.gf)
 
     os.makedirs(out, exist_ok=True)
     sp_dic, path2_treeid_dic = get_path_str_num_dic(tre_dic)

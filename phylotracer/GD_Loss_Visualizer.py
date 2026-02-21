@@ -8,8 +8,9 @@ annotated species trees with loss statistics and legends.
 import re
 from collections import defaultdict
 
-from __init__ import *
-from ete3 import CircleFace, PieChartFace
+from ete3 import CircleFace, NodeStyle, PieChartFace, TextFace, TreeStyle
+
+from phylotracer import realign_branch_length, rejust_root_dist
 
 # ======================================================
 # Section 1: Loss Parsing and Statistics
@@ -390,4 +391,27 @@ def visualizer_sptree(
 # ======================================================
 
 if __name__ == "__main__":
-    pass
+    import argparse
+
+    from ete3 import Tree
+
+    parser = argparse.ArgumentParser(
+        description="Visualize gene duplication losses on a species tree.",
+    )
+    parser.add_argument(
+        "loss_summary_file",
+        help="Path to the loss summary file (tabular format).",
+    )
+    parser.add_argument(
+        "species_tree_file",
+        help="Path to the species tree file (Newick format).",
+    )
+    parser.add_argument(
+        "-o", "--output",
+        default="gd_loss_pie_visualizer.PDF",
+        help="Output PDF file path (default: gd_loss_pie_visualizer.PDF).",
+    )
+    args = parser.parse_args()
+
+    sptree = Tree(args.species_tree_file)
+    visualizer_sptree(args.loss_summary_file, sptree, output_file=args.output)

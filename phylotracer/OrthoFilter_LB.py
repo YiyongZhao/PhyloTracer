@@ -6,14 +6,28 @@ produces before/after visualizations, and writes pruned trees for downstream
 orthology-aware analyses.
 """
 
+import os
+import shutil
+from typing import Dict
+
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
-from __init__ import *
-from BranchLength_NumericConverter import (
+import numpy as np
+from ete3 import NodeStyle, TextFace, Tree, TreeStyle
+from PyPDF4 import PdfFileReader, PdfFileWriter
+from tqdm import tqdm
+
+from phylotracer import (
+    gene_id_transfer,
+    get_species_set,
+    num_tre_node,
+    read_and_return_dict,
+    rename_input_tre,
+)
+from phylotracer.BranchLength_NumericConverter import (
     trans_branch_length,
     write_tree_to_newick,
 )
-from PyPDF4 import PdfFileReader, PdfFileWriter
 
 # ======================================================
 # Section 1: Tree Property Utilities
@@ -285,7 +299,11 @@ def remove_long_branches(
 
         root_ratio = (leaf_dist - avg_tip_length) / avg_tip_length
 
-        sister = leaf.get_sisters()[0]
+        sisters = leaf.get_sisters()
+        if not sisters:
+            log_handle.write(f"{tree_id}\t\t{gene_name}\t0\t0\n")
+            continue
+        sister = sisters[0]
         if sister.is_leaf():
             sister_avg = sister.dist or 1e-6
         else:
@@ -367,8 +385,9 @@ def prune_main_LB(
 
 
     for d in (pruned_dir, log_dir, pdf_dir):
-        shutil.rmtree(d, ignore_errors=True)
-        os.makedirs(d, exist_ok=True)
+        if d is not None:
+            shutil.rmtree(d, ignore_errors=True)
+            os.makedirs(d, exist_ok=True)
 
     pbar = tqdm(tree_dict.items(), desc="Processing trees", unit="tree")
 
@@ -415,8 +434,6 @@ def prune_main_LB(
         restored_tree = rename_input_tre(pruned_tree, renamed2gene)
         tree_str = trans_branch_length(restored_tree)
         write_tree_to_newick(tree_str, tree_id, pruned_dir)
-        
-        pbar.update(1)
     pbar.close()
 
 
@@ -425,20 +442,30 @@ def prune_main_LB(
 # ======================================================
 
 if __name__ == "__main__":
-    tree_dict = read_and_return_dict("gf")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Long-branch pruning filter")
+    parser.add_argument("--input_GF_list", required=True, help="Gene family list file")
+    parser.add_argument("--input_imap", required=True, help="Imap file")
+    parser.add_argument("--absolute_branch_length", type=float, default=5, help="Absolute branch length cutoff")
+    parser.add_argument("--relative_branch_length", type=float, default=5, help="Relative branch length cutoff")
+    parser.add_argument("--visual", action="store_true", help="Enable visual output")
+    args = parser.parse_args()
+
+    tree_dict = read_and_return_dict(args.input_GF_list)
     (
         gene2renamed,
         renamed2gene,
         voucher2taxa,
         taxa2voucher,
-    ) = gene_id_transfer("imap.txt")
+    ) = gene_id_transfer(args.input_imap)
 
     prune_main_LB(
         tree_dict,
         voucher2taxa,
         gene2renamed,
         renamed2gene,
-        absolute_branch_length=4,
-        relative_branch_length=1.5,
-        visual=True,
+        absolute_branch_length=args.absolute_branch_length,
+        relative_branch_length=args.relative_branch_length,
+        visual=args.visual,
     )

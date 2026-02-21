@@ -6,10 +6,23 @@ framework, classifies duplication patterns, and writes detailed summaries for
 phylogenomic interpretation.
 """
 
-from calendar import c
 from collections import Counter
 
-from __init__ import *
+import pandas as pd
+from ete3 import PhyloTree
+from tqdm import tqdm
+
+from phylotracer import (
+    read_phylo_tree,
+    rename_input_tre,
+    num_tre_node,
+    annotate_gene_tree,
+    find_dup_node,
+    get_species_set,
+    get_gene_pairs,
+    gene_id_transfer,
+    read_and_return_dict,
+)
 
 # ======================================================
 # Section 1: Duplication Detection and Reporting
@@ -341,28 +354,37 @@ def get_model_strict(clade: object, species_tree: object, deepvar: int) -> str:
 # ======================================================
 
 if __name__ == "__main__":
-    duplication_support_threshold = 50
-    subclade_support_threshold = 50
-    duplicated_species_percentage_threshold = 0.5
-    duplicated_species_count_threshold = 2
-    max_topology_distance = 0
-    gene_to_new_name, new_name_to_gene, voucher_to_taxa = gene_id_transfer("imap.txt")
-    species_tree = PhyloTree("30sptree.nwk")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Gene duplication detection")
+    parser.add_argument("--input_GF_list", required=True, help="Gene family list file")
+    parser.add_argument("--input_imap", required=True, help="Imap file")
+    parser.add_argument("--input_sps_tree", required=True, help="Species tree file")
+    parser.add_argument("--gd_support", type=int, default=50, help="Duplication support threshold")
+    parser.add_argument("--clade_support", type=int, default=50, help="Subclade support threshold")
+    parser.add_argument("--dup_species_percent", type=float, default=0.5, help="Duplicated species percentage threshold")
+    parser.add_argument("--dup_species_num", type=int, default=2, help="Duplicated species count threshold")
+    parser.add_argument("--max_topology_distance", type=int, default=0, help="Maximum topology distance")
+    parser.add_argument("--output", default="result.txt", help="Output file path")
+    parser.add_argument("--gdtype_mode", default="relaxed", help="GD type mode (relaxed or strict)")
+    args = parser.parse_args()
+
+    gene_to_new_name, new_name_to_gene, voucher_to_taxa, _ = gene_id_transfer(args.input_imap)
+    species_tree = PhyloTree(args.input_sps_tree)
     species_tree = rename_input_tre(species_tree, voucher_to_taxa)
     num_tre_node(species_tree)
-    tree_paths = read_and_return_dict("GF.txt")
-    output_file = "result.txt"
+    tree_paths = read_and_return_dict(args.input_GF_list)
     write_gene_duplication_results(
-        output_file,
+        args.output,
         tree_paths,
-        duplication_support_threshold,
-        subclade_support_threshold,
-        duplicated_species_percentage_threshold,
-        duplicated_species_count_threshold,
+        args.gd_support,
+        args.clade_support,
+        args.dup_species_percent,
+        args.dup_species_num,
         species_tree,
         gene_to_new_name,
         new_name_to_gene,
         voucher_to_taxa,
-        max_topology_distance,
-        gdtype_mode="relaxed",
+        args.max_topology_distance,
+        gdtype_mode=args.gdtype_mode,
     )

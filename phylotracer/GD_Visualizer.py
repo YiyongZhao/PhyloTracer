@@ -8,8 +8,14 @@ nodes, and renders annotated species trees with duplication summaries.
 import re
 from collections import defaultdict
 
-from __init__ import *
-from ete3 import CircleFace, PieChartFace
+from ete3 import CircleFace, NodeStyle, PieChartFace, TextFace, TreeStyle
+
+from phylotracer import (
+    read_phylo_tree,
+    read_and_return_dict,
+    realign_branch_length,
+    rejust_root_dist,
+)
 
 # ======================================================
 # Section 1: GD Result Parsing and Aggregation
@@ -168,6 +174,7 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
 
 
 
+    sptree = sptree.copy()
     for leaf in sptree:
         if leaf.name in taxa:
             leaf.name = taxa[leaf.name]
@@ -256,17 +263,26 @@ def gd_visualizer_main(sptree, gd_result, taxa):
 # ======================================================
 
 if __name__ == "__main__":
-    import sys
+    import argparse
 
-    if len(sys.argv) != 4:
-        print("Usage: python GD_Visualizer.py <species_tree_file> <gd_result_file> <taxa_file>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Visualize gene duplication events on a species tree.",
+    )
+    parser.add_argument(
+        "species_tree_file",
+        help="Path to the species tree file (Newick format).",
+    )
+    parser.add_argument(
+        "gd_result_file",
+        help="Path to the gene duplication result file.",
+    )
+    parser.add_argument(
+        "taxa_file",
+        help="Path to the taxa mapping file.",
+    )
+    args = parser.parse_args()
 
-    species_tree_file = sys.argv[1]
-    gd_result_file = sys.argv[2]
-    taxa_file = sys.argv[3]
+    sptree = read_phylo_tree(args.species_tree_file)
+    taxa_data = read_and_return_dict(args.taxa_file)
 
-    sptree = read_phylo_tree(species_tree_file)
-    taxa_data = read_and_return_dict(taxa_file)
-
-    gd_visualizer_main(sptree, gd_result_file, taxa_data)
+    gd_visualizer_main(sptree, args.gd_result_file, taxa_data)

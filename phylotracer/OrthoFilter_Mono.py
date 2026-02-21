@@ -9,13 +9,23 @@ orthology inference.
 Long-branch filtering is intentionally excluded and handled in a separate module.
 """
 
+import os
+import shutil
+from collections import Counter
+
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-from collections import Counter
+import numpy as np
+from ete3 import NodeStyle, PhyloTree, TextFace, Tree, TreeStyle
 from PyPDF4 import PdfFileReader, PdfFileWriter
+from tqdm import tqdm
 
-from __init__ import *
-from BranchLength_NumericConverter import (
+from phylotracer import (
+    num_tre_node,
+    read_and_return_dict,
+    rename_input_tre,
+)
+from phylotracer.BranchLength_NumericConverter import (
     trans_branch_length,
     write_tree_to_newick,
 )
@@ -848,8 +858,9 @@ def prune_main_Mono(
         out_visual_dir = None
 
     for d in (out_tree_dir, out_log_dir, out_visual_dir):
-        shutil.rmtree(d, ignore_errors=True)
-        os.makedirs(d, exist_ok=True)
+        if d is not None:
+            shutil.rmtree(d, ignore_errors=True)
+            os.makedirs(d, exist_ok=True)
 
 
     pbar = tqdm(total=len(tre_dic), desc="Processing trees", unit="tree")
@@ -863,45 +874,43 @@ def prune_main_Mono(
         t = rename_input_tre(t0, gene2new_named_gene_dic)
         num_tre_node(t)
         rename_input_single_tre(t, taxa_dic, new_named_gene2gene_dic)
-        log = open(os.path.join(out_log_dir, f"{tre_ID}_insert_gene.txt"), "w")
-        log.write(
-            "tre_ID\ttarget_clade\tdominant_root\tcandidate\tphylo_distance\t"
-            "alien_coverage\talien_deepvar\tcombined_score\tremoved\n"
-        )
-
-        if visual:
-            set_style(t, color_dic, new_named_gene2gene_dic)
-            generate_pdf(tre_ID, t, "before")
-
-        t1 = prune_all_clades(
-            Phylo_t=t,
-            species_tree=species_tree,
-            taxa_dic=taxa_dic,
-            new_named_gene2gene_dic=new_named_gene2gene_dic,
-            final_purity=purity_cutoff,
-            max_remove_fraction=max_remove_fraction,
-            log_handle=log,
-            tre_ID=tre_ID,
-            dominant_purity=0.9,
-            min_tips_per_clade=2,
-        )
-
-        if visual:
-            generate_pdf(tre_ID, t1, "after")
-            merge_pdfs_side_by_side(
-                f"{tre_ID}_before.pdf",
-                f"{tre_ID}_after.pdf",
-                os.path.join(out_visual_dir, f"{tre_ID}.pdf"),
+        with open(os.path.join(out_log_dir, f"{tre_ID}_insert_gene.txt"), "w") as log:
+            log.write(
+                "tre_ID\ttarget_clade\tdominant_root\tcandidate\tphylo_distance\t"
+                "alien_coverage\talien_deepvar\tcombined_score\tremoved\n"
             )
-            os.remove(f"{tre_ID}_before.pdf")
-            os.remove(f"{tre_ID}_after.pdf")
 
-        t2 = rename_output_tre(t1, new_named_gene2gene_dic)
-        tree_str = trans_branch_length(t2)
-        write_tree_to_newick(tree_str, tre_ID, out_tree_dir)
+            if visual:
+                set_style(t, color_dic, new_named_gene2gene_dic)
+                generate_pdf(tre_ID, t, "before")
+
+            t1 = prune_all_clades(
+                Phylo_t=t,
+                species_tree=species_tree,
+                taxa_dic=taxa_dic,
+                new_named_gene2gene_dic=new_named_gene2gene_dic,
+                final_purity=purity_cutoff,
+                max_remove_fraction=max_remove_fraction,
+                log_handle=log,
+                tre_ID=tre_ID,
+                dominant_purity=0.9,
+                min_tips_per_clade=2,
+            )
+
+            if visual:
+                generate_pdf(tre_ID, t1, "after")
+                merge_pdfs_side_by_side(
+                    f"{tre_ID}_before.pdf",
+                    f"{tre_ID}_after.pdf",
+                    os.path.join(out_visual_dir, f"{tre_ID}.pdf"),
+                )
+                os.remove(f"{tre_ID}_before.pdf")
+                os.remove(f"{tre_ID}_after.pdf")
+
+            t2 = rename_output_tre(t1, new_named_gene2gene_dic)
+            tree_str = trans_branch_length(t2)
+            write_tree_to_newick(tree_str, tre_ID, out_tree_dir)
         pbar.update(1)
-
-        log.close()
     pbar.close()
 
 
@@ -910,15 +919,35 @@ def prune_main_Mono(
 # --------------------------
 
 if __name__ == "__main__":
-    taxa_dic = read_and_return_dict("taxa.txt")
-    tre_dic = read_and_return_dict("100_nosingle_GF_list.txt")
-    species_tree = PhyloTree("sps_tree.txt")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Mono-copy ortholog pruning filter")
+    parser.add_argument("--input_GF_list", required=True, help="Gene family list file")
+    parser.add_argument("--input_taxa", required=True, help="Taxa mapping file")
+    parser.add_argument("--input_sps_tree", required=True, help="Species tree file")
+    parser.add_argument("--input_imap", default=None, help="Imap file for gene ID transfer (optional)")
+    parser.add_argument("--purity_cutoff", type=float, default=0.95, help="Purity cutoff for clade assignment")
+    parser.add_argument("--max_remove_fraction", type=float, default=0.5, help="Maximum fraction of tips to remove")
+    parser.add_argument("--visual", action="store_true", help="Enable visual output")
+    args = parser.parse_args()
+
+    taxa_dic = read_and_return_dict(args.input_taxa)
+    tre_dic = read_and_return_dict(args.input_GF_list)
+    species_tree = PhyloTree(args.input_sps_tree)
+
+    if args.input_imap:
+        gene2new_named_gene_dic, new_named_gene2gene_dic, _, _ = gene_id_transfer(args.input_imap)
+    else:
+        gene2new_named_gene_dic = {}
+        new_named_gene2gene_dic = {}
+
     prune_main_Mono(
         tre_dic,
         taxa_dic,
         species_tree=species_tree,
-        purity_cutoff=0.95,
-        max_remove_fraction=0.5,
-        new_named_gene2gene_dic={},
-        gene2new_named_gene_dic={},
+        purity_cutoff=args.purity_cutoff,
+        max_remove_fraction=args.max_remove_fraction,
+        new_named_gene2gene_dic=new_named_gene2gene_dic,
+        gene2new_named_gene_dic=gene2new_named_gene_dic,
+        visual=args.visual,
     )

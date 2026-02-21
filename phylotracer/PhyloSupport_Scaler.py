@@ -5,8 +5,14 @@ This module rescales node support values to a consistent numeric range and
 writes standardized Newick outputs for downstream analyses.
 """
 
-from __init__ import *
-from BranchLength_NumericConverter import write_tree_to_newick
+import os
+import shutil
+
+from ete3 import Tree
+from tqdm import tqdm
+
+from phylotracer import read_and_return_dict, read_tree
+from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
 
 # =========================
 # Low-Level Tree Utilities
@@ -109,14 +115,22 @@ def support_scaler_main(tree_dict: dict, scale: str = "100") -> None:
 
 
 if __name__ == "__main__":
-    """
-    Main entry for scaling support values of trees in batch mode.
-    Reads a tree dictionary from a file and writes scaled Newick trees to disk.
-    """
-    try:
-        scale = 100  # You can modify it as needed or pass it via command-line parameters.
-        input_file = "100_nosingle_GF_list.txt"
-        tre_dic = read_and_return_dict(input_file)
-        support_scaler_main(tre_dic, scale)
-    except Exception as e:
-        print(f"Error in main execution: {e}")
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Scale support values of trees in batch mode.",
+    )
+    parser.add_argument(
+        "input_file",
+        help="Path to the tree list file.",
+    )
+    parser.add_argument(
+        "-s", "--scale",
+        type=int,
+        default=100,
+        help="Scale factor for support values (default: 100).",
+    )
+    args = parser.parse_args()
+
+    tre_dic = read_and_return_dict(args.input_file)
+    support_scaler_main(tre_dic, args.scale)
