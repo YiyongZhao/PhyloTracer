@@ -5,8 +5,13 @@ This module provides utilities to simplify phylogenetic trees by collapsing
 low-support internal nodes and to optionally resolve polytomies after collapsing.
 """
 
-from __init__ import *
-from BranchLength_NumericConverter import write_tree_to_newick
+import os
+import shutil
+
+from tqdm import tqdm
+
+from phylotracer import read_and_return_dict, read_tree
+from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
 
 # =========================
 # Low-Level Tree Utilities
@@ -40,7 +45,7 @@ def collapse_nodes(phylo_tree: object, node_support_value: int) -> object:
         raise AttributeError("phylo_tree must have 'copy' and 'traverse' methods.")
     phylo_tree_copy = phylo_tree.copy()
     for node in phylo_tree_copy.traverse():
-        if not node.is_leaf():
+        if not node.is_leaf() and not node.is_root():
             if getattr(node, "support", 0) < node_support_value:
                 node.delete(preserve_branch_length=True)
     return phylo_tree_copy
@@ -104,16 +109,28 @@ def collapse_expand_main(
 
 
 if __name__ == "__main__":
-    """
-    Main entry for collapsing nodes in trees in batch mode.
+    import argparse
 
-    This execution path reads a tree dictionary from a file and writes the
-    collapsed Newick trees to disk.
-    """
-    try:
-        tre_dic = read_and_return_dict("GF.txt")
-        support_value = 50
-        revert = False  # Modify as needed.
-        collapse_expand_main(tre_dic, support_value, revert)
-    except Exception as e:
-        print(f"Error in main execution: {e}")
+    parser = argparse.ArgumentParser(
+        description="Collapse or expand low-support nodes in trees.",
+    )
+    parser.add_argument(
+        "input_file",
+        help="Path to the tree list file.",
+    )
+    parser.add_argument(
+        "-s", "--support-value",
+        type=int,
+        default=50,
+        help="Minimum support threshold for retaining internal nodes (default: 50).",
+    )
+    parser.add_argument(
+        "--revert",
+        action="store_true",
+        default=False,
+        help="If set, resolve polytomies instead of collapsing nodes.",
+    )
+    args = parser.parse_args()
+
+    tre_dic = read_and_return_dict(args.input_file)
+    collapse_expand_main(tre_dic, args.support_value, args.revert)

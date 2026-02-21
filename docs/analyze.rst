@@ -24,7 +24,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
+        phylotracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
 
 
 2. PhyloSupport_Scaler
@@ -40,7 +40,7 @@ Required Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1
+        phylotracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1
 
 
 3. BranchLength_NumericConverter
@@ -58,7 +58,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
+        phylotracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
 
 
 4. Phylo_Rooter
@@ -76,7 +76,7 @@ Required Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
+        phylotracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
 
 
 5. OrthoFilter_LB
@@ -97,7 +97,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
+        phylotracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
 
 
 6. OrthoFilter_Mono
@@ -110,32 +110,36 @@ Required Parameters:
     - ``--input_GF_list``           File containing paths to gene tree files, one per line.
     - ``--input_taxa``              File with taxonomic information for species.
     - ``--input_imap``              File with species classification information corresponding to genes.
-    - ``--branch_length_multiples`` Tips whose branch length is greater than or equal to this multiple will be removed (default is 10).
-    - ``--insert_branch_index``     Nodes with insertion coverage ratio and depth exceeding this index will be removed (default is 10).
+    - ``--input_sps_tree``          Species tree file in Newick format.
 
 Optional Parameters:
+    - ``--purity_cutoff``           Target purity for dominant lineage (default is 0.95).
+    - ``--max_remove_fraction``     Maximum fraction of tips allowed to be removed (default is 0.5).
     - ``--visual``                  Visualize results before and after filtering.
 
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --branch_length_multiples 10 --insert_branch_index 10 [--visual]
+        phylotracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
 
 
 7. TreeTopology_Summarizer
 ---------------------------
 
 Description:
-    To enumerate and visualiz the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
+    To enumerate and visualize the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades.
 
 Required Parameters:
     - ``--input_GF_list``   File containing paths to gene tree files, one per line.
     - ``--input_imap``      File with species classification information corresponding to genes.
 
+Optional Parameters:
+    - ``--visual_top``      Number of top-ranked topologies to visualize (default is 10).
+
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap
+        phylotracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10]
 
 
 8. Tree_Visualizer
@@ -160,7 +164,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2order.imap --keep_branch 1 --tree_style r --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression gene2expression.imap --visual_gd]
+        phylotracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2order.imap --keep_branch 1 --tree_style r --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression gene2expression.imap --visual_gd]
 
 
 9. GD_Detector
@@ -179,10 +183,13 @@ Required Parameters:
     - ``--input_sps_tree``          Species tree file in Newick format.
     - ``--deepvar``                 Maximum variance of depth (default is 1).
 
+Optional Parameters:
+    - ``--gdtype_mode``             GD type assignment mode: ``relaxed`` (default) or ``strict``.
+
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk --deepvar 1
+        phylotracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]
 
 
 10. GD_Visualizer
@@ -194,11 +201,12 @@ Description:
 Required Parameters:
     - ``--input_sps_tree``  A numbered species tree file in Newick format.
     - ``--gd_result``       Result file from GD_Detector.
+    - ``--input_imap``      File with species classification information corresponding to genes.
 
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt
+        phylotracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap
 
 
 11. GD_Loss_Tracker
@@ -213,14 +221,14 @@ Required Parameters:
     - ``--input_imap``      File with species classification information corresponding to genes.
 
 Optional Parameters:
-    - ``--all``             If specified, detects gene duplications (GD) and loss events across all nodes.
-    - ``--start_node``      File containing species of node for detecting gene duplications (GD) and losses. This limits the detection to the subtree rooted at the specified node.
-    - ``--end_species``     The species where detection ends. Only events affecting species up to and including the specified species will be detected.
+    - ``--target_species``            Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.
+    - ``--mrca_node``                 Only count loss paths passing through the MRCA of two species. Format: ``SpeciesA,SpeciesB`` (comma-separated, no space). Can be used multiple times.
+    - ``--include_unobserved_species`` If set, species unobserved in a gene family are still classified by left/right presence instead of labeled as missing_data.
 
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--all --start_node --end_species]
+        phylotracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_species Arabidopsis_thaliana --mrca_node SpeciesA,SpeciesB --include_unobserved_species]
 
 
 12. GD_Loss_Visualizer
@@ -230,12 +238,13 @@ Description:
     To visualize the summary of gene duplication loss events on the context of species tree.
 
 Required Parameters:
+    - ``--gd_loss_result``  Detailed table generated by GD_Loss_Tracker (gd_loss_summary.txt).
     - ``--input_sps_tree``  A numbered species tree file in Newick format.
 
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py GD_Loss_Visualizer --input_sps_tree numbered_species_tree.nwk
+        phylotracer GD_Loss_Visualizer --gd_loss_result gd_loss_summary.txt --input_sps_tree numbered_species_tree.nwk
 
 
 13. Ortho_Retriever
@@ -252,7 +261,7 @@ Required Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
+        phylotracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
 
 
 14. Hybrid_Tracer
@@ -268,12 +277,13 @@ Required Parameters:
     - ``--input_sps_tree``      A species tree file in Newick format.
 
 Optional Parameters:
-    - ``--target_node``         File with species names mapped to specific GD nodes, one per line.
+    - ``--mrca_node``           Restrict Hybrid_Tracer to the MRCA of two species. Format: ``SpeciesA,SpeciesB`` (comma-separated, no space).
+    - ``--split_groups``        Number of partitions for HYDE batch processing (default is 1).
 
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_node N1.txt]
+        phylotracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 1]
 
 
 15. Hybrid_Visualizer
@@ -292,7 +302,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node]
+        phylotracer Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node]
 
 
 16. HaploFinder
@@ -313,6 +323,8 @@ Required Parameters:
     - ``--gd_support``      GD node support (default is 50).
 
 Optional Parameters:
+    - ``--mode``            Run mode: ``haplofinder`` (default) for GD analysis, ``split`` for FASTA partitioning by color labels.
+    - ``--pair_support``    Minimum support of ortholog/speciation pair nodes (default is 50).
     - ``--visual_chr_a``    File containing chromosome numbers of species A for visualization.
     - ``--visual_chr_b``    File containing chromosome numbers of species B for visualization.
     - ``--size``            Size of points in the dotplot graph (default is 0.0005).
@@ -320,7 +332,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        Phylo_Tracer.py HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --gd_support 50 [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001]
+        phylotracer HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --gd_support 50 [--mode haplofinder --pair_support 50 --visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001]
 
 
 For additional modules and detailed usage examples, refer to the relevant sections in this documentation.

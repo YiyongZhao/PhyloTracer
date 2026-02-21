@@ -9,6 +9,7 @@ conversion zone detection, and hybrid subgenome assignment.
 
 import gc
 import importlib
+import os
 import re
 import sys
 import time
@@ -16,8 +17,25 @@ from collections import Counter, defaultdict
 
 import matplotlib
 import matplotlib.patches as mpatches
-from __init__ import *
-from Ortho_Retriever import *
+from ete3 import PhyloTree
+from tqdm import tqdm
+
+from phylotracer import (
+    annotate_gene_tree,
+    find_dup_node,
+    gene_id_transfer,
+    get_species_set,
+    read_and_return_dict,
+    read_phylo_tree,
+    rename_input_tre,
+    root_tre_with_midpoint_outgroup,
+)
+from phylotracer.Ortho_Retriever import (
+    extract_tree,
+    iterator,
+    offcut_tre,
+    rename_OGs_tre_name,
+)
 
 matplotlib.use("Agg")
 plt = importlib.import_module("matplotlib.pyplot")
@@ -46,13 +64,13 @@ def read_gff(fn):
     -----------
     Input rows are tab-delimited with fields including gene identifiers.
     """
-    f = open(fn)
-    data, dict = [], {}
-    for line in f.readlines():
-        a = line.strip().split("\t")
-        dict[a[1]] = [a[0], a[2], a[3], a[4], a[5]]
-        data.append(a)
-    return data, dict
+    with open(fn) as f:
+        data, data_dict = [], {}
+        for line in f.readlines():
+            a = line.strip().split("\t")
+            data_dict[a[1]] = [a[0], a[2], a[3], a[4], a[5]]
+            data.append(a)
+    return data, data_dict
 
 
 def read_lens(fn, chrs=None):
@@ -646,8 +664,12 @@ def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2):
     block_list = []
 
     for chr_a, chr_b in chrs_combinations:
-        chr1 = int("".join(filter(str.isdigit, chr_a)))
-        chr2 = int("".join(filter(str.isdigit, chr_b)))
+        digits_a = "".join(filter(str.isdigit, chr_a))
+        digits_b = "".join(filter(str.isdigit, chr_b))
+        if not digits_a or not digits_b:
+            continue
+        chr1 = int(digits_a)
+        chr2 = int(digits_b)
 
         if chr1 * 2 == chr2:
             red_count = 0
@@ -801,7 +823,7 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support)
             continue
         sps_tol = get_species_set(Phylo_t1)
 
-        if len(sps_tol) == 2 and {sp1, sp2} not in sps_tol:
+        if len(sps_tol) == 2 and not {sp1, sp2}.issubset(sps_tol):
             continue
 
         annotate_gene_tree(Phylo_t1, renamed_sptree)
@@ -1118,8 +1140,9 @@ if __name__ == "__main__":
     imap = sys.argv[11]
     target_chr1 = sys.argv[12]
     target_chr2 = sys.argv[13]
-    size = sys.argv[14]
+    size = float(sys.argv[14])
 
+    # TODO: user will supplement process_blastp_result and parse_synteny_file
     process_blastp_pairs = process_blastp_result(blastp_pairs, num)
     alignments, alignment_scores = parse_synteny_file(synteny_pairs)
     process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
@@ -1131,5 +1154,6 @@ if __name__ == "__main__":
     print("-" * 30)
     generate_dotplot(gff1, gff2, lens1, lens2, process_gd_pairs, spe1, spe2, "gd_pairs", target_chr1, target_chr2, size)
     total_pairs = [process_blastp_pairs, process_synteny_pairs, process_gd_pairs]
+    # TODO: user will supplement process_total_color_list
     total_lst = process_total_color_list(total_pairs)
     generate_dotplot(gff1, gff2, lens1, lens2, total_lst, spe1, spe2, "total_pairs", target_chr1, target_chr2, size)

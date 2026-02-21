@@ -5,7 +5,7 @@
 Installation
 ============
 
-PhyloTracer requires Python v3.0+, ete3, HyDe, pandas, numpy, tqdm, time, pypdf4, matplotlib, pyqt5 Python modules (listed below).
+PhyloTracer requires Python v3.8+, ete3, HyDe, pandas, numpy, tqdm, pypdf4, matplotlib, pyqt5 Python modules (listed below).
 
 Miniconda
 ---------
@@ -17,20 +17,20 @@ to manage modules and environments.
 
   # Get Miniconda for your operating system (Mac or Linux)
   # Answer yes to the questions the Installer asks
-  # These commands will download Python 3.6 for Mac OSX
-  curl -O https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+  # These commands will download Python 3.8+ for Mac OSX
+  curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
   bash Miniconda3-latest-MacOSX-x86_64.sh
 
 Required Python Packages
 ------------------------
 
 With Miniconda installed, we can use ``pip`` (or ``conda``) to install all of the Python
-modules that PhyloTracer requires (ete3, HyDe, pandas, numpy, tqdm, time, pypdf4, matplotlib, pyqt5).
+modules that PhyloTracer requires (ete3, HyDe, pandas, numpy, tqdm, pypdf4, matplotlib, pyqt5).
 
 .. code:: bash
 
-  # Install packages with pip
-  conda install ete3, HyDe, pandas, numpy, tqdm, time, pypdf4, matplotlib, pyqt5
+  # Install packages with conda
+  conda install ete3 HyDe pandas numpy tqdm pypdf4 matplotlib pyqt5
 
 Installing PhyloTracer
 ----------------------
@@ -43,7 +43,7 @@ To install from PyPI, all we need to do is type the following command:
 .. code:: bash
 
   #installing from PyPI
-  pip install pPhyloTracer
+  pip install PhyloTracer
 
 Next, we'll take a look at how to install PhyloTracer by cloning it from GitHub.
 The commands below take you through every step to accomplish this:
@@ -58,8 +58,8 @@ The commands below take you through every step to accomplish this:
 
     #Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:
     chmod +x install_packages.sh
-    bash install_package.sh
+    bash install_packages.sh
 
     #Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
     #Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
-    export QT_QPA_PLATFORM=linuxfb
+    export QT_QPA_PLATFORM=offscreen

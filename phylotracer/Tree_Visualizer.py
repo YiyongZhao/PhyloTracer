@@ -6,12 +6,28 @@ including branch-length realignment, duplication annotation, and
 multi-category tip labeling for publication-quality figures.
 """
 
+import os
 import re
+import shutil
 import string
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
-from __init__ import *
+import numpy as np
+import pandas as pd
+from ete3 import NodeStyle, PhyloTree, RectFace, TextFace, Tree, TreeStyle
+from tqdm import tqdm
+
+from phylotracer import (
+    find_dup_node,
+    gene_id_transfer,
+    num_tre_node,
+    read_and_return_dict,
+    read_phylo_tree,
+    realign_branch_length,
+    rejust_root_dist,
+    rename_input_tre,
+)
 
 
 # ======================================================
@@ -1177,7 +1193,7 @@ def view_main(
         Phylo_t1.ladderize()
         Phylo_t1.resolve_polytomy(recursive=True)
         Phylo_t1.sort_descendants("support")
-        if keep_branch != "1":
+        if str(keep_branch) != "1":
             realign_branch_length(Phylo_t1)
             rejust_root_dist(Phylo_t1)
 
@@ -1271,25 +1287,36 @@ def mark_gene_to_sptree_main(
 # ======================================================
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Tree visualization")
+    parser.add_argument("--input_GF_list", required=True, help="Gene family list file")
+    parser.add_argument("--input_imap", required=True, help="Imap file")
+    parser.add_argument("--input_sps_tree", default=None, help="Species tree file (optional)")
+    parser.add_argument("--gene_categories", nargs="*", default=[], help="Category mapping files (e.g. genus order)")
+    parser.add_argument("--tree_style", default="r", help="Tree style (r=rectangular, c=circular)")
+    parser.add_argument("--keep_branch", type=int, default=1, help="Whether to keep branch lengths (1=yes, 0=no)")
+    parser.add_argument("--gene2fam", default=None, help="Gene to family mapping file (optional)")
+    parser.add_argument("--visual", action="store_true", help="Enable visual output")
+    args = parser.parse_args()
+
     os.makedirs(os.path.join(os.getcwd(), "pdf_result"), exist_ok=True)
-    gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = (
-        gene_id_transfer("imap")
+    gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, _ = (
+        gene_id_transfer(args.input_imap)
     )
-    # gene2fam=read_and_return_dict('gene2fam')
-    sp2order = read_and_return_dict("order")
-    sp2family = read_and_return_dict("genus")
-    tre_dic = read_and_return_dict("GF.txt")
-    gene_categories = []
-    gene_categories.append(sp2family)
-    gene_categories.append(sp2order)
-    tree_style = "r"
-    keep_branch = 1
+    gene2fam = read_and_return_dict(args.gene2fam) if args.gene2fam else None
+    gene_categories = [read_and_return_dict(f) for f in args.gene_categories]
+    tre_dic = read_and_return_dict(args.input_GF_list)
+    sptree = PhyloTree(args.input_sps_tree) if args.input_sps_tree else None
     view_main(
         tre_dic,
+        sptree,
         gene2new_named_gene_dic,
         voucher2taxa_dic,
         gene_categories,
-        tree_style,
-        keep_branch,
+        args.tree_style,
+        args.keep_branch,
         new_named_gene2gene_dic,
+        gene2fam=gene2fam,
+        visual=args.visual,
     )

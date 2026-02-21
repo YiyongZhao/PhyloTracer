@@ -4,7 +4,7 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - python=3.12
+  - python>=3.8
   - pip
   - numpy
   - scipy
@@ -21,13 +21,13 @@ dependencies:
   - jinja2
   - biopython
   - ete3
-  - pyqt=5      
+  - pyqt=5
   - pip:
       - treeswift==1.1.45
-      - phyde==1.0.2
+      - phyde>=1.0.2
       - fastroot==1.5
       - gprofiler-official==1.0.0
       - mygene==3.2.2
       - biothings-client==0.4.1
-      - pypdf4==1.27.0
+      - pypdf4>=1.27.0
       - bio==1.7.1

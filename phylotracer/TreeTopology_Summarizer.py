@@ -5,7 +5,20 @@ This module groups gene trees by topology, writes absolute and relative
 summaries, and optionally renders representative topologies for reporting.
 """
 
-from __init__ import *
+import math
+import os
+
+from ete3 import NodeStyle, TextFace, Tree, TreeStyle
+from PIL import Image
+
+from phylotracer import (
+    gene_id_transfer,
+    read_and_return_dict,
+    read_tree,
+    realign_branch_length,
+    rejust_root_dist,
+    rename_input_tre,
+)
 
 # ======================================================
 # Section 1: Tree Simplification and Grouping Utilities
@@ -416,9 +429,17 @@ def statistical_main(
 # ======================================================
 
 if __name__ == "__main__":
-    tre_dic = read_and_return_dict("GF_list.txt")
-    gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = (
-        gene_id_transfer("imap")
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Tree topology summarization")
+    parser.add_argument("--input_GF_list", required=True, help="Gene family list file")
+    parser.add_argument("--input_imap", required=True, help="Imap file")
+    parser.add_argument("--output", default="result", help="Output file prefix")
+    parser.add_argument("--top_n", type=int, default=10, help="Number of top topologies to report")
+    args = parser.parse_args()
+
+    tre_dic = read_and_return_dict(args.input_GF_list)
+    gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, _ = (
+        gene_id_transfer(args.input_imap)
     )
-    outfile = "result"
-    statistical_main(tre_dic, outfile, gene2new_named_gene_dic, new_named_gene2gene_dic)
+    statistical_main(tre_dic, args.output, gene2new_named_gene_dic, voucher2taxa_dic, top_n=args.top_n)

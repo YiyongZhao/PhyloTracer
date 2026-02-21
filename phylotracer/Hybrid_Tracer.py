@@ -5,15 +5,32 @@ This module identifies candidate duplication clades, builds gene matrices,
 runs HyDe analyses, and writes filtered hybridization results.
 """
 
+import os
 import subprocess
 import time
 from collections import Counter, defaultdict
 from signal import SIGUSR2
 
+import numpy as np
+import pandas as pd
 import phyde as hd
-from __init__ import *
 from Bio import SeqIO
-from GD_Detector import get_model as detector_get_model, normalize_model
+from ete3 import PhyloTree
+from tqdm import tqdm
+
+from phylotracer import (
+    annotate_gene_tree,
+    find_dup_node,
+    gene_id_transfer,
+    get_species_list,
+    get_species_set,
+    num_sptree,
+    num_tre_node,
+    read_and_return_dict,
+    read_phylo_tree,
+    rename_input_tre,
+)
+from phylotracer.GD_Detector import get_model as detector_get_model, normalize_model
 
 # ======================================================
 # Section 1: Species Tree and Sequence Utilities
@@ -748,10 +765,19 @@ def run_hyde_from_matrix_integrated(
     """
     target_sps = clade.get_leaf_names()
 
-    matrix_to_phy(clean_matrix, seq_dic, voucher2taxa_dic, "temp.phy", trim=trim)
+    import tempfile
+
+    tmp_phy = tempfile.NamedTemporaryFile(mode='w', suffix='.phy', delete=False)
+    tmp_imap = tempfile.NamedTemporaryFile(mode='w', suffix='.imap', delete=False)
+    tmp_phy_path = tmp_phy.name
+    tmp_imap_path = tmp_imap.name
+    tmp_phy.close()
+    tmp_imap.close()
+
+    matrix_to_phy(clean_matrix, seq_dic, voucher2taxa_dic, tmp_phy_path, trim=trim)
 
     imap = {}
-    with open("temp.imap", "w") as imap_file:
+    with open(tmp_imap_path, "w") as imap_file:
         for species in clean_matrix.index:
             sp_0 = voucher2taxa_dic[species]
             if species not in target_sps:
@@ -761,7 +787,7 @@ def run_hyde_from_matrix_integrated(
                 imap[sp_0] = sp_0
                 imap_file.write(f"{sp_0}\t{sp_0}\n")
 
-    with open("temp.phy", "r") as f:
+    with open(tmp_phy_path, "r") as f:
         first_line = f.readline().strip()
         num_species, max_length = map(int, first_line.split())
 
@@ -769,17 +795,18 @@ def run_hyde_from_matrix_integrated(
     sps_num = len(imap.keys())
     taxa_num = len(set(imap.values()))
 
-    dat = hd.HydeData("temp.phy", "temp.imap", "out", sps_num, taxa_num, max_length, quiet=True)
-    res = dat.list_triples()
+    try:
+        dat = hd.HydeData(tmp_phy_path, tmp_imap_path, "out", sps_num, taxa_num, max_length, quiet=True)
+        res = dat.list_triples()
 
-    for t in res:
-        p1, hyb, p2 = t
-        result = dat.test_triple(p1, hyb, p2)
-        combined_element = (t, result, len(res))
-        hyde_result_lst.append(combined_element)
-
-    os.remove("temp.phy")
-    os.remove("temp.imap")
+        for t in res:
+            p1, hyb, p2 = t
+            result = dat.test_triple(p1, hyb, p2)
+            combined_element = (t, result, len(res))
+            hyde_result_lst.append(combined_element)
+    finally:
+        os.remove(tmp_phy_path)
+        os.remove(tmp_imap_path)
 
     return hyde_result_lst
 

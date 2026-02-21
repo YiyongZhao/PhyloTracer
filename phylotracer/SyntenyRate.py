@@ -2,7 +2,7 @@ import argparse
 import os
 import re
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 
 from ete3 import Tree
@@ -110,7 +110,7 @@ def compute_all_rates(trees_path: str, syn_dir: str, threads: int) -> tuple:
         return synteny_rate_for_tree(t, syn_idx)
     with ThreadPoolExecutor(max_workers=threads) as ex:
         futs = [ex.submit(worker, line) for line in lines]
-        for fut in as_completed(futs):
+        for fut in futs:
             rates.append(fut.result())
     avg = sum(rates) / len(rates) if rates else 0.0
     return rates, avg

@@ -9,13 +9,43 @@ import logging
 import os
 import random
 import shutil
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 import re
 import numpy as np
 import pandas as pd
 from ete3 import NodeStyle, PhyloTree, TextFace, Tree, TreeStyle
 from tqdm import tqdm
+
+__all__ = [
+    "read_and_return_dict",
+    "generate_sps_voucher",
+    "gene_id_transfer",
+    "rename_input_tre",
+    "read_tree",
+    "read_phylo_tree",
+    "is_rooted",
+    "root_tre_with_midpoint_outgroup",
+    "num_sptree",
+    "num_tre_node",
+    "get_max_deepth",
+    "calculate_depth",
+    "calculate_deepvar",
+    "get_species_list",
+    "get_species_set",
+    "calculate_species_num",
+    "annotate_gene_tree",
+    "compute_tip_to_root_branch_length_variance",
+    "realign_branch_length",
+    "rejust_root_dist",
+    "judge_support",
+    "sps_dup_num",
+    "get_gene_pairs",
+    "find_tre_dup",
+    "map_species_set_to_node",
+    "find_dup_node",
+    "calculate_gd_num",
+]
 
 # =========================
 # I/O & Mapping Utilities
@@ -258,7 +288,6 @@ def num_sptree(sptree):
             i.name = f"S{idx}"
             idx += 1
 
-    sptree.write(outfile="numed_sptree.nwk", format=1, format_root_node=True)
     return sptree
 
 
@@ -579,9 +608,9 @@ def judge_support(support: float, threshold: float) -> bool:
     Assumptions:
         Values <= 1 are interpreted as fractions and converted to percent.
     """
-    if support <= 1:
+    if 0 < support < 1:
         support = support * 100
-    if threshold <= 1:
+    if 0 < threshold < 1:
         threshold = threshold * 100
     return support >= threshold
 
@@ -764,7 +793,10 @@ def find_dup_node(
         if len(children) != 2:
             continue
 
-        if any(c.support < clade_support for c in children):
+        if any(not judge_support(c.support, clade_support) for c in children):
+            continue
+
+        if not hasattr(node, 'map') or node.map == "unknown":
             continue
 
         species_set = get_species_set(species_tree&node.map)
@@ -800,6 +832,9 @@ def find_dup_node(
         # Map overlap species to the species-tree LCA for topology validation.
         dup_map = map_species_set_to_node(species_tree, overlap_sps)
 
+        if dup_map is None:
+            continue
+
         clade_map = species_tree & node.map
 
         # if abs(children[0].depth-children[1].depth)  >max_topology_distance:
@@ -814,11 +849,12 @@ def find_dup_node(
 
 
 
-def calculate_gd_num(tree: PhyloTree) -> int:
+def calculate_gd_num(tree: PhyloTree, species_tree: PhyloTree) -> int:
     """Count gene duplication events using default detection criteria.
 
     Args:
         tree (PhyloTree): Annotated gene tree.
+        species_tree (PhyloTree): Species tree for reconciliation.
 
     Returns:
         int: Number of duplication nodes.
@@ -826,5 +862,5 @@ def calculate_gd_num(tree: PhyloTree) -> int:
     Assumptions:
         The tree has been annotated with ``map`` and ``is_gd`` features.
     """
-    gd_nodes = find_dup_node(tree)
+    gd_nodes = find_dup_node(tree, species_tree)
     return len(gd_nodes)

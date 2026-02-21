@@ -5,7 +5,19 @@ This module identifies offcut paralogous clades, separates ortholog groups,
 extracts single-copy subtrees, and writes summary tables for downstream use.
 """
 
-from __init__ import *
+import os
+
+from ete3 import PhyloTree
+
+from phylotracer import (
+    find_tre_dup,
+    gene_id_transfer,
+    is_rooted,
+    read_and_return_dict,
+    read_phylo_tree,
+    rename_input_tre,
+    root_tre_with_midpoint_outgroup,
+)
 
 # ======================================================
 # Section 1: Identifier and Tree Preparation Utilities
@@ -198,10 +210,10 @@ def rm_dup(paralogs_L):
     for ev_seqs1 in paralogs_L:
         for ev_seqs2 in paralogs_L:
             if ev_seqs1.issubset(ev_seqs2):
-                if ev_seqs1 not in paralogs_L:
+                if ev_seqs1 in paralogs_L:
                     paralogs_L.remove(ev_seqs1)
             elif ev_seqs2.issubset(ev_seqs1):
-                if ev_seqs2 not in paralogs_L:
+                if ev_seqs2 in paralogs_L:
                     paralogs_L.remove(ev_seqs2)
     return paralogs_L
 
@@ -443,47 +455,46 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, rename
     """
     import csv
 
-    o = open("ortho_retriever_summary.txt", "w")
-    o.write("tre_name" + "\t" + "single_copy_tree" + "\n")
+    with open("ortho_retriever_summary.txt", "w") as o:
+        o.write("tre_name" + "\t" + "single_copy_tree" + "\n")
 
-    processed_lines = []
-    tsv_data = {}
+        processed_lines = []
+        tsv_data = {}
 
-    for tre_ID, tre_path in tre_dic.items():
-        Phylo_t0 = read_phylo_tree(tre_path)
-        if len(Phylo_t0) == 0 or len(Phylo_t0.children) == 0:
-            continue
-        if is_rooted(Phylo_t0):
-            Phylo_t1 = Phylo_t0
-        else:
-            Phylo_t1 = root_tre_with_midpoint_outgroup(Phylo_t0)
+        for tre_ID, tre_path in tre_dic.items():
+            Phylo_t0 = read_phylo_tree(tre_path)
+            if len(Phylo_t0) == 0 or len(Phylo_t0.children) == 0:
+                continue
+            if is_rooted(Phylo_t0):
+                Phylo_t1 = Phylo_t0
+            else:
+                Phylo_t1 = root_tre_with_midpoint_outgroup(Phylo_t0)
 
-        Phylo_t2 = rename_input_tre(Phylo_t1, gene2new_named_gene_dic)
-        trees = get_single_copy_trees(
-            Phylo_t2,
-            renamed_len_dic,
-            gene2new_named_gene_dic,
-            new_named_gene2gene_dic,
-            tre_path,
-            tre_ID,
-        )
+            Phylo_t2 = rename_input_tre(Phylo_t1, gene2new_named_gene_dic)
+            trees = get_single_copy_trees(
+                Phylo_t2,
+                renamed_len_dic,
+                gene2new_named_gene_dic,
+                new_named_gene2gene_dic,
+                tre_path,
+                tre_ID,
+            )
 
-        tree_ortholog_trees = []
-        for clade in trees:
-            tre_name = clade[0]
-            Phylo_t_OG_L = clade[1]
-            processed_lines.append(tre_name + "\t" + Phylo_t_OG_L.write() + "\n")
+            tree_ortholog_trees = []
+            for clade in trees:
+                tre_name = clade[0]
+                Phylo_t_OG_L = clade[1]
+                processed_lines.append(tre_name + "\t" + Phylo_t_OG_L.write() + "\n")
 
-            leaf_names = [leaf.name for leaf in Phylo_t_OG_L]
-            tree_ortholog_trees.append(",".join(leaf_names))
+                leaf_names = [leaf.name for leaf in Phylo_t_OG_L]
+                tree_ortholog_trees.append(",".join(leaf_names))
 
-        if tree_ortholog_trees:
-            tsv_data[tre_ID] = tree_ortholog_trees
+            if tree_ortholog_trees:
+                tsv_data[tre_ID] = tree_ortholog_trees
 
-    sorted_lines = sorted(processed_lines, key=lambda x: len(x.split("\t")[1]), reverse=True)
-    for line in sorted_lines:
-        o.write(line)
-    o.close()
+        sorted_lines = sorted(processed_lines, key=lambda x: len(x.split("\t")[1]), reverse=True)
+        for line in sorted_lines:
+            o.write(line)
 
     if tsv_data:
         max_cols = max(len(trees) for trees in tsv_data.values())
@@ -504,8 +515,27 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, rename
 # ======================================================
 
 if __name__ == "__main__":
-    gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic = gene_id_transfer("imap")
-    len_dic = read_and_return_dict("length")
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Retrieve single-copy orthologs from gene family trees.",
+    )
+    parser.add_argument(
+        "imap_file",
+        help="Path to the imap file for gene ID transfer.",
+    )
+    parser.add_argument(
+        "length_file",
+        help="Path to the sequence length file.",
+    )
+    parser.add_argument(
+        "gene_family_file",
+        help="Path to the gene family list file.",
+    )
+    args = parser.parse_args()
+
+    gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, _ = gene_id_transfer(args.imap_file)
+    len_dic = read_and_return_dict(args.length_file)
     renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
-    tre_dic = read_and_return_dict("GF_list.txt")
+    tre_dic = read_and_return_dict(args.gene_family_file)
     split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, renamed_len_dic)

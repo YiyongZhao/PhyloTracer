@@ -7,30 +7,43 @@ hybridization analyses, and visualization workflows.
 """
 
 import argparse
+import os
 import sys
 import textwrap
 import time
 
-from __init__ import *
-from BranchLength_NumericConverter import *
-from GD_Detector import *
-from GD_Loss_Tracker import *
-from GD_Loss_Visualizer import *
-from GD_Visualizer import *
-from HaploFinder import *
-from Hybrid_Tracer import *
-from Hybrid_Visualizer import *
-from Ortho_Retriever import *
-from OrthoFilter_LB import *
-from OrthoFilter_Mono import *
-from Phylo_Rooter import *
-from PhyloSupport_Scaler import *
-from PhyloTree_CollapseExpand import *
-from Tree_Visualizer import *
-from TreeTopology_Summarizer import *
+import pandas as pd
+from ete3 import PhyloTree, Tree
+from tqdm import tqdm
+
+from phylotracer import (
+    gene_id_transfer,
+    num_sptree,
+    read_and_return_dict,
+    read_phylo_tree,
+    read_tree,
+    rename_input_tre,
+)
+from phylotracer.BranchLength_NumericConverter import *
+from phylotracer.GD_Detector import *
+from phylotracer.GD_Loss_Tracker import *
+from phylotracer.GD_Loss_Visualizer import *
+from phylotracer.GD_Visualizer import *
+from phylotracer.HaploFinder import *
+from phylotracer.Hybrid_Tracer import *
+from phylotracer.Hybrid_Visualizer import *
+from phylotracer.Ortho_Retriever import *
+from phylotracer.OrthoFilter_LB import *
+from phylotracer.OrthoFilter_Mono import *
+from phylotracer.Phylo_Rooter import *
+from phylotracer.PhyloSupport_Scaler import *
+from phylotracer.PhyloTree_CollapseExpand import *
+from phylotracer.Tree_Visualizer import *
+from phylotracer.TreeTopology_Summarizer import *
 
 ##################################################################
-print(textwrap.dedent("""
+
+BANNER = textwrap.dedent("""
 ###############################################################################################
 #                                                                                             #
 # ██████╗ ██╗  ██╗██╗   ██╗██╗      ██████╗ ████████╗██████╗  █████╗  ██████╗███████╗██████╗  #
@@ -38,7 +51,7 @@ print(textwrap.dedent("""
 # ██████╔╝███████║ ╚████╔╝ ██║     ██║   ██║   ██║   ██████╔╝███████║██║     █████╗  ██████╔╝ #
 # ██╔═══╝ ██╔══██║  ╚██╔╝  ██║     ██║   ██║   ██║   ██╔══██╗██╔══██║██║     ██╔══╝  ██╔══██╗ #
 # ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║ #
-# ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝ # 
+# ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝ #
 #                                                                                             #
 #    PhyloTracer: A User-Friendly Toolkit for Gene Tree Rooting, Gene Duplication             #
 #    Identification, Ortholog Retrieval, Phylogenetic Noise Elimination, Species              #
@@ -52,12 +65,7 @@ print(textwrap.dedent("""
 #    Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                     #
 #                                                                                             #
 ###############################################################################################
-"""))
-
-# Check Python version
-if sys.version_info.major == 2:
-    print('You are using Python 2. Please upgrade to Python 3. PhyloTracer quit now...')
-    sys.exit()
+""")
 
 # Custom help formatter for better formatting of subcommands and section titles
 
@@ -261,7 +269,7 @@ haplofinder_parser.add_argument('--cluster_file', metavar='CLUSTER_FILE', requir
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
 
-args = parser.parse_args()
+_parser = parser
 
 
 def format_time(seconds):
@@ -330,8 +338,8 @@ def handle_ortho_filter_lb(cli_args):
         and cli_args.relative_branch_length is not None
     ):
         start_time = time.time()
-        absolute_branch_length = cli_args.absolute_branch_length - 1
-        relative_branch_length = cli_args.relative_branch_length - 1
+        absolute_branch_length = cli_args.absolute_branch_length
+        relative_branch_length = cli_args.relative_branch_length
         gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, _ = gene_id_transfer(cli_args.input_imap)
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
         prune_main_LB(
@@ -652,7 +660,7 @@ def handle_haplofinder(cli_args):
             cli_args.gd_support,
             cli_args.pair_support,
         ]
-        if all(required_args):
+        if all(arg is not None for arg in required_args):
             start_time = time.time()
             process_gd_pairs = process_gd_result(
                 cli_args.input_GF_list,
@@ -663,7 +671,7 @@ def handle_haplofinder(cli_args):
                 cli_args.gd_support,
                 cli_args.pair_support,
             )
-            size = cli_args.size if cli_args.size else 0.001
+            size = cli_args.size if cli_args.size is not None else 0.001
             generate_dotplot(
                 cli_args.species_a_gff,
                 cli_args.species_b_gff,
@@ -713,6 +721,11 @@ COMMAND_HANDLERS = {
 
 
 def main():
+    if sys.version_info.major == 2:
+        print('You are using Python 2. Please upgrade to Python 3. PhyloTracer quit now...')
+        sys.exit()
+    print(BANNER)
+    args = _parser.parse_args()
     handler = COMMAND_HANDLERS.get(args.command)
     if handler is None:
         print_cli_usage()
