@@ -5,13 +5,11 @@
 PhyloTracer Data Files
 ======================
 
-The main data files for running PhyloTracer. Examples of these files can be found in the  ``examples/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/examples/>`__.
+The main data files for running PhyloTracer. Examples of these files can be found in the  ``example_data/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/tree/main/example_data/>`__.
 
 Path Map
 --------
-The main data files for running PhyloTracer are (1) the DNA sequences and (2) the
-map of sampled individuals to their respective taxa/populations. Examples of these files
-can be found in the  ``examples/`` directories within the main PhyloTracer
+A tab-delimited file mapping gene family identifiers to their corresponding gene tree file paths. Each line contains a gene family ID followed by the path to its tree file.
 **Example:** ``GF_ID2path.imap``
 
 .. code::
@@ -26,7 +24,7 @@ can be found in the  ``examples/`` directories within the main PhyloTracer
 Gene To Species Map
 -------------------
 
-The main data files for running PhyloTracer. Examples of these files can be found in the  ``examples/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/examples/>`__.
+A two-column tab-delimited file mapping each gene identifier to its corresponding species name. This file is required by most PhyloTracer modules.
 
 **Example:** ``gene2sps.imap``
 
@@ -42,7 +40,7 @@ The main data files for running PhyloTracer. Examples of these files can be foun
 GeneLength Map
 --------------
 
-The main data files for running PhyloTracer. Examples of these files can be found in the  ``examples/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/examples/>`__.
+A two-column tab-delimited file mapping each gene identifier to its sequence length (in base pairs or amino acids). Used by Phylo_Rooter and Ortho_Retriever.
 
 .. code::
 
@@ -56,7 +54,7 @@ The main data files for running PhyloTracer. Examples of these files can be foun
 Gene To Family Map
 ------------------
 
-The main data files for running PhyloTracer. Examples of these files can be found in the  ``examples/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/examples/>`__.
+A two-column tab-delimited file mapping each gene identifier to its taxonomic family. Used by Tree_Visualizer for family-level annotations.
 
 **Example:** ``gene2family.imap``
 
@@ -72,7 +70,7 @@ The main data files for running PhyloTracer. Examples of these files can be foun
 Gene To Order Map
 -----------------
 
-The main data files for running PhyloTracer. Examples of these files can be found in the  ``examples/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/examples/>`__.
+A two-column tab-delimited file mapping each gene identifier to its taxonomic order. Used by Tree_Visualizer for order-level category annotations.
 
 **Example:** ``gene2order.imap``
 
@@ -88,7 +86,7 @@ The main data files for running PhyloTracer. Examples of these files can be foun
 Gene To Taxa Map
 ----------------
 
-The main data files for running PhyloTracer. Examples of these files can be found in the  ``examples/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/examples/>`__.
+A two-column tab-delimited file mapping each gene identifier to a higher-level taxonomic group (e.g., Angiosperm, Malvids). Used for taxonomic category annotations in visualization.
 
 **Example:** ``gene2taxa.imap``
 
@@ -104,7 +102,7 @@ The main data files for running PhyloTracer. Examples of these files can be foun
 Gene To Clade Map
 -----------------
 
-The main data files for running PhyloTracer. Examples of these files can be found in the  ``examples/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/examples/>`__.
+A two-column tab-delimited file mapping each gene identifier to a predefined clade or lineage label (e.g., Nitrogen-fixing). Used by OrthoFilter_Mono for monophyletic constraint filtering.
 
 **Example:** ``gene2clade.imap``
 
@@ -120,7 +118,7 @@ The main data files for running PhyloTracer. Examples of these files can be foun
 Gene To Expression Map
 ----------------------
 
-The main data files for running PhyloTracer. Examples of these files can be found in the  ``examples/`` directories within the main PhyloTracer folder. Below we describe each file in more detail. If you installed PhyloTracer from PyPI and do not have a clone of the GitHub repository, these files can be viewed `here <https://github.com/YiyongZhao/PhyloTracer/examples/>`__.
+A two-column tab-delimited file mapping each gene identifier to its expression level. Used by Tree_Visualizer for overlaying expression data on gene tree figures.
 
 **Example:** ``gene2expression.imap``
 

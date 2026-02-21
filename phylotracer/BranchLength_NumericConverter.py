@@ -5,7 +5,12 @@ This module converts branch lengths to fixed decimal precision and writes
 standardized Newick outputs for downstream analyses and visualization.
 """
 
-from __init__ import *
+import os
+import shutil
+
+from tqdm import tqdm
+
+from phylotracer import read_tree, read_and_return_dict
 
 # =========================
 # Low-Level Tree Utilities
@@ -123,14 +128,22 @@ def branch_length_numeric_converter_main(
 
 
 if __name__ == "__main__":
-    """
-    Main entry for converting branch lengths of trees in batch mode.
-    Reads a tree dictionary from a file and writes formatted Newick trees to disk.
-    """
-    try:
-        input_file = "test.txt"
-        decimal_places = 10  # You can modify it as needed or pass it via command-line parameters.
-        tre_dic = read_and_return_dict(input_file)
-        branch_length_numeric_converter_main(tre_dic, decimal_places)
-    except Exception as e:
-        print(f"Error in main execution: {e}")
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Convert branch lengths of trees to fixed decimal precision.",
+    )
+    parser.add_argument(
+        "input_file",
+        help="Path to the tree list file.",
+    )
+    parser.add_argument(
+        "-d", "--decimal-places",
+        type=int,
+        default=10,
+        help="Number of decimal places for branch lengths (default: 10).",
+    )
+    args = parser.parse_args()
+
+    tre_dic = read_and_return_dict(args.input_file)
+    branch_length_numeric_converter_main(tre_dic, args.decimal_places)

@@ -5,15 +5,24 @@ This module parses HyDe outputs, computes summary statistics, and produces
 annotated tree and heatmap figures for hybridization inference.
 """
 
+import os
 from collections import defaultdict
 
 import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
-from __init__ import *
+from ete3 import NodeStyle, TextFace, Tree, TreeStyle
 from matplotlib import colors
-from matplotlib import pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 from PIL import Image, ImageDraw, ImageFont
+
+from phylotracer import (
+    num_tre_node,
+    realign_branch_length,
+    rejust_root_dist,
+)
 
 # ======================================================
 # Section 1: HyDe Output Parsing
@@ -124,6 +133,7 @@ def calculate_gamma(lst):
     Gamma is stored at index 4 and is numeric when valid.
     """
     gamma = 0
+    valid_count = 0
     for i in lst:
         if i[4] == "nan":
             continue
@@ -132,7 +142,8 @@ def calculate_gamma(lst):
         else:
             num = float(i[4])
             gamma += num
-    return gamma / len(lst)
+            valid_count += 1
+    return gamma / valid_count if valid_count else 0.0
 
 
 def calculate_pvalue(lst):
@@ -154,6 +165,7 @@ def calculate_pvalue(lst):
     P-values are stored at index 3 and are numeric when valid.
     """
     pvalue = 0
+    valid_count = 0
     for i in lst:
         if i[3] == "nan":
             continue
@@ -162,7 +174,8 @@ def calculate_pvalue(lst):
         else:
             num = float(i[3])
             pvalue += num
-    return pvalue / len(lst)
+            valid_count += 1
+    return pvalue / valid_count if valid_count else 0.0
 
 
 # ======================================================
@@ -384,7 +397,7 @@ def hyde_visual_cmap():
         lucency = lucency + (1 / 5000)
     color = 0
     lucency = 1
-    for each in range(5001, 9999):
+    for each in range(5000, 10000):
         cmap.insert(each, np.array([color, 0, 0, lucency]))
         color = color + (1 / 5000)
         lucency = lucency - (1 / 5000)
@@ -572,7 +585,7 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
         square=True,
     )
 
-    m = ax.imshow(gamma_df, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)
+    m = ax.imshow(gamma_result_df, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)
     position = fig.add_axes([0.9, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
     cbar.ax.tick_params(labelsize=40)
@@ -896,6 +909,29 @@ def hyde_visual_node_main(out_file_name, sptree):
 # ======================================================
 
 if __name__ == "__main__":
-    sptree = Tree("sptree.nwk")
-    hyde_visual_leaf_main(sptree)
-    # hyde_visual_node_main(sptree)
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Visualize hybridization (HyDe) results on a species tree.",
+    )
+    parser.add_argument(
+        "species_tree_file",
+        help="Path to the species tree file (Newick format).",
+    )
+    parser.add_argument(
+        "hyde_output_file",
+        help="Path to the HyDe output file.",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["leaf", "node"],
+        default="leaf",
+        help="Visualization mode: 'leaf' for leaf-centered, 'node' for node-centered (default: leaf).",
+    )
+    args = parser.parse_args()
+
+    sptree = Tree(args.species_tree_file)
+    if args.mode == "leaf":
+        hyde_visual_leaf_main(args.hyde_output_file, sptree)
+    else:
+        hyde_visual_node_main(args.hyde_output_file, sptree)

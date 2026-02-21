@@ -16,16 +16,15 @@
                                                                                              
     Pypi: https://pypi.org/project/PhyloTracer                                               
     Github: https://github.com/YiyongZhao/PhyloTracer                                        
-    Licence: MIT license                                                                     
+    License: MIT license                                                                     
     Release Date: 2023-7                                                                     
     Contacts: Taoli(l948777439@163.com); Yiyong Zhao(yiyongzhao1991@gmail.com)
                                                                          
 ###############################################################################################
 ```
 ![Version](https://img.shields.io/badge/Version-1.0.0-blue)
-[![Documentation Status](http://readthedocs.org/projects/hybridization-detection/badge/?version=latest)](http://hybridization-detection.readthedocs.io)
+[![Documentation Status](https://readthedocs.org/projects/phylotracer/badge/?version=latest)](https://phylotracer.readthedocs.io)
 [![PhyloTracer Issues](https://img.shields.io/badge/PhyloTracer-Issues-blue.svg)](https://github.com/YiyongZhao/PhyloTracer/issues)
-![Build Status](https://travis-ci.org/YiyongZhao/PhyloTracer.svg?branch=master)
 [![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
 
 ---
@@ -204,7 +203,7 @@ phylotracer GD_Detector \
 
 ### Required dependencies:
 
-* Python 3.0+ 
+* Python 3.8+
 * Python modules:
   * ete3==3.1.3
   * HyDe (https://github.com/pblischak/HyDe)
