@@ -56,7 +56,7 @@ class TestCLIHelp:
             [sys.executable, "-m", "phylotracer.Phylo_Tracer", "-h"],
             capture_output=True,
             text=True,
-            cwd="/tmp/PhyloTracer",
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         )
         # argparse -h exits with code 0
         assert result.returncode == 0
@@ -66,7 +66,7 @@ class TestCLIHelp:
             [sys.executable, "-m", "phylotracer.Phylo_Tracer", "-h"],
             capture_output=True,
             text=True,
-            cwd="/tmp/PhyloTracer",
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         )
         assert "PhyloTracer" in result.stdout or "phylotracer" in result.stdout.lower()
 
@@ -75,7 +75,7 @@ class TestCLIHelp:
             [sys.executable, "-m", "phylotracer.Phylo_Tracer", "-h"],
             capture_output=True,
             text=True,
-            cwd="/tmp/PhyloTracer",
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         )
         assert "GD_Detector" in result.stdout
         assert "Phylo_Rooter" in result.stdout
@@ -100,7 +100,7 @@ class TestInvalidCommand:
             [sys.executable, "-m", "phylotracer.Phylo_Tracer", "NonExistentCommand"],
             capture_output=True,
             text=True,
-            cwd="/tmp/PhyloTracer",
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         )
         # argparse should exit non-zero for invalid subcommand
         assert result.returncode != 0
