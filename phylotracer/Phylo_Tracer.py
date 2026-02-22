@@ -7,10 +7,13 @@ hybridization analyses, and visualization workflows.
 """
 
 import argparse
+import logging
 import os
 import sys
 import textwrap
 import time
+
+logger = logging.getLogger(__name__)
 
 import pandas as pd
 from ete3 import PhyloTree, Tree
@@ -281,8 +284,8 @@ def format_time(seconds):
 
 
 def report_execution_time(start_time: float) -> None:
-    """Print formatted runtime based on a given start timestamp."""
-    print("Program execution time:", format_time(time.time() - start_time))
+    """Log formatted runtime based on a given start timestamp."""
+    logger.info("Program execution time: %s", format_time(time.time() - start_time))
 
 
 def handle_phylo_tree_collapse_expand(cli_args):
@@ -292,7 +295,7 @@ def handle_phylo_tree_collapse_expand(cli_args):
         collapse_expand_main(tre_dic, cli_args.support_value, revert=cli_args.revert)
         report_execution_time(start_time)
     else:
-        print("Required arguments for PhyloTree_CollapseExpand command are missing.")
+        logger.error("Required arguments for PhyloTree_CollapseExpand command are missing.")
 
 
 def handle_phylo_support_scaler(cli_args):
@@ -302,7 +305,7 @@ def handle_phylo_support_scaler(cli_args):
         support_scaler_main(tre_dic, cli_args.scale_to)
         report_execution_time(start_time)
     else:
-        print("Required arguments for PhyloSupport_Scaler command are missing.")
+        logger.error("Required arguments for PhyloSupport_Scaler command are missing.")
 
 
 def handle_branch_length_numeric_converter(cli_args):
@@ -312,7 +315,7 @@ def handle_branch_length_numeric_converter(cli_args):
         branch_length_numeric_converter_main(tre_dic, cli_args.decimal_place)
         report_execution_time(start_time)
     else:
-        print("Required arguments for BranchLength_NumericConverter command are missing.")
+        logger.error("Required arguments for BranchLength_NumericConverter command are missing.")
 
 
 def handle_phylo_rooter(cli_args):
@@ -327,7 +330,7 @@ def handle_phylo_rooter(cli_args):
         root_main(tre_dic, gene2new_named_gene_dic, renamed_len_dic, new_named_gene2gene_dic, renamed_sptree)
         report_execution_time(start_time)
     else:
-        print("Required arguments for Phylo_Rooter command are missing.")
+        logger.error("Required arguments for Phylo_Rooter command are missing.")
 
 
 def handle_ortho_filter_lb(cli_args):
@@ -353,7 +356,7 @@ def handle_ortho_filter_lb(cli_args):
         )
         report_execution_time(start_time)
     else:
-        print("Required arguments for OrthoFilter_LB command are missing.")
+        logger.error("Required arguments for OrthoFilter_LB command are missing.")
 
 
 def handle_ortho_filter_mono(cli_args):
@@ -383,7 +386,7 @@ def handle_ortho_filter_mono(cli_args):
         )
         report_execution_time(start_time)
     else:
-        print("Required arguments for OrthoFilter_Mono command are missing.")
+        logger.error("Required arguments for OrthoFilter_Mono command are missing.")
 
 
 def handle_tree_topology_summarizer(cli_args):
@@ -394,7 +397,7 @@ def handle_tree_topology_summarizer(cli_args):
         statistical_main(tre_dic, 'topology', gene2new_named_gene_dic, voucher2taxa_dic, cli_args.visual_top)
         report_execution_time(start_time)
     else:
-        print("Required arguments for TreeTopology_Summarizer command are missing.")
+        logger.error("Required arguments for TreeTopology_Summarizer command are missing.")
 
 
 def handle_tree_visualizer(cli_args):
@@ -450,7 +453,7 @@ def handle_tree_visualizer(cli_args):
         )
         report_execution_time(start_time)
     else:
-        print("Required arguments for Tree_Visualizer command are missing.")
+        logger.error("Required arguments for Tree_Visualizer command are missing.")
 
 
 def handle_gd_detector(cli_args):
@@ -488,7 +491,7 @@ def handle_gd_detector(cli_args):
         )
         report_execution_time(start_time)
     else:
-        print("Required arguments for GD_Detector command are missing.")
+        logger.error("Required arguments for GD_Detector command are missing.")
 
 
 def handle_gd_visualizer(cli_args):
@@ -499,7 +502,7 @@ def handle_gd_visualizer(cli_args):
         gd_visualizer_main(sptree, cli_args.gd_result, taxa)
         report_execution_time(start_time)
     else:
-        print("Required arguments for GD_Visualizer command are missing.")
+        logger.error("Required arguments for GD_Visualizer command are missing.")
 
 
 def handle_gd_loss_tracker(cli_args):
@@ -514,18 +517,18 @@ def handle_gd_loss_tracker(cli_args):
         if cli_args.mrca_node:
             for pair_str in cli_args.mrca_node:
                 if ',' not in pair_str:
-                    print(f"Warning: Invalid mrca_node format '{pair_str}'. Skipping.")
+                    logger.warning("Invalid mrca_node format '%s'. Skipping.", pair_str)
                     continue
                 sp1, sp2 = [x.strip() for x in pair_str.split(',', 1)]
                 try:
                     mrca_clade = sptree.get_common_ancestor(sp1, sp2)
                     species_under_mrca = frozenset(mrca_clade.get_leaf_names())
                     allowed_gd_species_sets.add(species_under_mrca)
-                    print(f"GD event restricted to EXACT MRCA of {sp1} and {sp2}")
-                    print(f"   -> Covers species: {sorted(species_under_mrca)}")
+                    logger.info("GD event restricted to EXACT MRCA of %s and %s", sp1, sp2)
+                    logger.info("   -> Covers species: %s", sorted(species_under_mrca))
                 except Exception as exc:
-                    print(f"ERROR: Cannot find MRCA for {sp1},{sp2}: {exc}")
-                    print("Available species:", sorted([leaf.name for leaf in sptree.get_leaves()]))
+                    logger.error("Cannot find MRCA for %s,%s: %s", sp1, sp2, exc)
+                    logger.error("Available species: %s", sorted([leaf.name for leaf in sptree.get_leaves()]))
 
         get_path_str_num_dic(
             tre_dic,
@@ -541,7 +544,7 @@ def handle_gd_loss_tracker(cli_args):
         parse_text_to_excel('gd_loss_count_summary.txt')
         report_execution_time(start_time)
     else:
-        print("Required arguments for GD_Loss_Tracker command are missing.")
+        logger.error("Required arguments for GD_Loss_Tracker command are missing.")
 
 
 def handle_gd_loss_visualizer(cli_args):
@@ -551,7 +554,7 @@ def handle_gd_loss_visualizer(cli_args):
         visualizer_sptree(cli_args.gd_loss_result, sptree)
         report_execution_time(start_time)
     else:
-        print("Required arguments for GD_Loss_Visualizer command are missing.")
+        logger.error("Required arguments for GD_Loss_Visualizer command are missing.")
 
 
 def handle_ortho_retriever(cli_args):
@@ -564,7 +567,7 @@ def handle_ortho_retriever(cli_args):
         split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, renamed_len_dic)
         report_execution_time(start_time)
     else:
-        print("Required arguments for Ortho_Retriever command are missing.")
+        logger.error("Required arguments for Ortho_Retriever command are missing.")
 
 
 def handle_hybrid_tracer(cli_args):
@@ -576,22 +579,22 @@ def handle_hybrid_tracer(cli_args):
         if cli_args.mrca_node:
             for pair_str in cli_args.mrca_node:
                 if ',' not in pair_str:
-                    print(f"Warning: Invalid mrca_node format '{pair_str}'. Skipping.")
+                    logger.warning("Invalid mrca_node format '%s'. Skipping.", pair_str)
                     continue
                 sp1, sp2 = [x.strip() for x in pair_str.split(',', 1)]
                 try:
                     mrca_clade = sptree.get_common_ancestor(sp1, sp2)
                     target_node_name = mrca_clade.name
-                    print(f"Hybrid_Tracer target MRCA selected: {sp1},{sp2} -> {target_node_name}")
+                    logger.info("Hybrid_Tracer target MRCA selected: %s,%s -> %s", sp1, sp2, target_node_name)
                     break
                 except Exception as exc:
-                    print(f"ERROR: Cannot find MRCA for {sp1},{sp2}: {exc}")
-                    print("Available species:", sorted([leaf.name for leaf in sptree.get_leaves()]))
+                    logger.error("Cannot find MRCA for %s,%s: %s", sp1, sp2, exc)
+                    logger.error("Available species: %s", sorted([leaf.name for leaf in sptree.get_leaves()]))
 
         if target_node_name:
-            print(f"Target node determined: {target_node_name}")
+            logger.info("Target node determined: %s", target_node_name)
         else:
-            print("No valid --mrca_node provided, processing all gd.")
+            logger.info("No valid --mrca_node provided, processing all gd.")
 
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
         seq_path_dic = read_and_return_dict(cli_args.input_Seq_GF_list)
@@ -611,7 +614,7 @@ def handle_hybrid_tracer(cli_args):
         )
         report_execution_time(start_time)
     else:
-        print("Required arguments for Hybrid_Tracer command are missing.")
+        logger.error("Required arguments for Hybrid_Tracer command are missing.")
 
 
 def handle_hybrid_visualizer(cli_args):
@@ -624,7 +627,7 @@ def handle_hybrid_visualizer(cli_args):
             hyde_visual_leaf_main(cli_args.hyde_out, sptree)
         report_execution_time(start_time)
     else:
-        print("Required arguments for Hybrid_Visualizer command are missing.")
+        logger.error("Required arguments for Hybrid_Visualizer command are missing.")
 
 
 def handle_haplofinder(cli_args):
@@ -645,7 +648,7 @@ def handle_haplofinder(cli_args):
             )
             report_execution_time(start_time)
         else:
-            print("Required arguments for split mode are missing: --input_GF_list, --input_imap, --input_fasta, --cluster_file, --hyb_sps, --parental_sps, --species_b_gff")
+            logger.error("Required arguments for split mode are missing: --input_GF_list, --input_imap, --input_fasta, --cluster_file, --hyb_sps, --parental_sps, --species_b_gff")
     else:
         required_args = [
             cli_args.input_GF_list,
@@ -687,7 +690,7 @@ def handle_haplofinder(cli_args):
             )
             report_execution_time(start_time)
         else:
-            print("Required arguments for HaploFinder command are missing.")
+            logger.error("Required arguments for HaploFinder command are missing.")
 
 
 def print_cli_usage():
@@ -725,6 +728,11 @@ def main():
         print('You are using Python 2. Please upgrade to Python 3. PhyloTracer quit now...')
         sys.exit()
     print(BANNER)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
     args = _parser.parse_args()
     handler = COMMAND_HANDLERS.get(args.command)
     if handler is None:

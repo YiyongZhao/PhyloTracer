@@ -6,7 +6,10 @@ framework, classifies duplication patterns, and writes detailed summaries for
 phylogenomic interpretation.
 """
 
+import logging
 from collections import Counter
+
+logger = logging.getLogger(__name__)
 
 import pandas as pd
 from ete3 import PhyloTree
@@ -79,17 +82,14 @@ def write_gene_duplication_results(
     -----------
     Gene trees are compatible with the species tree and ETE utilities.
     """
-    print("=== Gene Duplication Detection Configuration ===")
-    print(f"GD node support threshold: {duplication_support_threshold}")
-    print(f"Subclade support threshold: {subclade_support_threshold}")
-    print(f"Minimum duplicated species count: {duplicated_species_count_threshold}")
-    print(
-        "Duplicated species percentage threshold: "
-        f"{duplicated_species_percentage_threshold}"
-    )
-    print(f"Maximum variance of deepth: {max_topology_distance}")
-    print(f"GD type assignment mode: {gdtype_mode}")
-    print("===============================================")
+    logger.info("=== Gene Duplication Detection Configuration ===")
+    logger.info("GD node support threshold: %s", duplication_support_threshold)
+    logger.info("Subclade support threshold: %s", subclade_support_threshold)
+    logger.info("Minimum duplicated species count: %s", duplicated_species_count_threshold)
+    logger.info("Duplicated species percentage threshold: %s", duplicated_species_percentage_threshold)
+    logger.info("Maximum variance of deepth: %s", max_topology_distance)
+    logger.info("GD type assignment mode: %s", gdtype_mode)
+    logger.info("===============================================")
 
     gd_type_dict: dict[str, list[str]] = {}
     gd_clade_count: dict[str, set[object]] = {}
@@ -111,7 +111,7 @@ def write_gene_duplication_results(
             gene_tree = rename_input_tre(gene_tree, gene_to_new_name)
             
             if len(gene_tree.children) != 2:
-                print(f"[Skip] {tree_id} is not a binary tree")
+                logger.warning("[Skip] %s is not a binary tree", tree_id)
                 continue
 
             num_tre_node(gene_tree)

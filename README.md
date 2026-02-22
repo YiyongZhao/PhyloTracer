@@ -22,10 +22,12 @@
                                                                          
 ###############################################################################################
 ```
-![Version](https://img.shields.io/badge/Version-0.3.0-blue)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+[![CI](https://github.com/YiyongZhao/PhyloTracer/actions/workflows/ci.yml/badge.svg)](https://github.com/YiyongZhao/PhyloTracer/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/phylotracer/badge/?version=latest)](https://phylotracer.readthedocs.io)
-[![PhyloTracer Issues](https://img.shields.io/badge/PhyloTracer-Issues-blue.svg)](https://github.com/YiyongZhao/PhyloTracer/issues)
 [![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 ---
 # PhyloTracer

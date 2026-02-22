@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PhyloTracer"
-version = "0.3.0"
+version = "1.0.0"
 description = "A toolkit for gene tree rooting, gene duplication identification, ortholog retrieval, phylogenetic noise elimination, species hybridization detection, and visualization."
 readme = "README.md"
 license = "MIT"
@@ -15,7 +15,7 @@ authors = [
 ]
 keywords = ["phylogenetics", "gene duplication", "ortholog", "hybridization", "tree visualization"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -43,6 +43,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pytest-cov",
+    "ruff",
 ]
 
 [project.urls]
@@ -54,3 +56,15 @@ PhyloTracer = "phylotracer.Phylo_Tracer:main"
 
 [tool.setuptools.packages.find]
 include = ["phylotracer*"]
+
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=phylotracer --cov-report=term-missing"

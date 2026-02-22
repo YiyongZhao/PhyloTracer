@@ -7,14 +7,18 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'PhyloTracer'
-copyright = '2025, Tao Li'
-author = 'Tao Li'
+copyright = '2025, Yiyong Zhao and Tao Li'
+author = 'Yiyong Zhao and Tao Li'
 release = '1.0.0'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
+]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']

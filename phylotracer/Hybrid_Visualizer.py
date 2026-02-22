@@ -5,8 +5,11 @@ This module parses HyDe outputs, computes summary statistics, and produces
 annotated tree and heatmap figures for hybridization inference.
 """
 
+import logging
 import os
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -626,7 +629,7 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
         tup = i.split("-")
         p1, hyb, p2 = tup
         if p1 not in sp or p2 not in sp:
-            print(f"Warning: {p1} or {p2} is not in sp.")
+            logger.warning("%s or %s is not in sp.", p1, p2)
             continue
         same_tups = summary_dic[i]
         num = len(same_tups)
@@ -871,7 +874,7 @@ def hyde_visual_leaf_main(out_file_name, sptree):
     result1 = calculate_three_tup(out1)
     hybrid_dic1 = get_hybrid_dic(result1)
     for k, v in hybrid_dic1.items():
-        print(f"{k} is processing")
+        logger.info("%s is processing", k)
         t1 = sptree.copy()
         generate_tree_leaf(t1, k, k)
         create_hot_map_leaf(result1, v, t1, k)
@@ -910,7 +913,7 @@ def hyde_visual_node_main(out_file_name, sptree):
         if node.is_root():
             continue
         else:
-            print(f"{node.name} is processing")
+            logger.info("%s is processing", node.name)
             t1 = sptree.copy()
             generate_tree_node(t1, node, node.name)
             create_hot_map_node(result1, hybrid_dic1, node, t1, node.name)

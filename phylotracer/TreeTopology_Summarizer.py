@@ -5,8 +5,11 @@ This module groups gene trees by topology, writes absolute and relative
 summaries, and optionally renders representative topologies for reporting.
 """
 
+import logging
 import math
 import os
+
+logger = logging.getLogger(__name__)
 
 from ete3 import NodeStyle, TextFace, Tree, TreeStyle
 from PIL import Image
@@ -406,12 +409,12 @@ def statistical_main(
         if len(get_species_set(t2)) == 1:
             continue
         if len(get_species_set(t2)) != len(t2):
-            print(f"Error: Gene tree {k} is not a single-copy gene tree!")
-            print(
-                "Number of species: "
-                f"{len(get_species_set(t2))}, Number of genes: {len(t2)}"
+            logger.error("Gene tree %s is not a single-copy gene tree!", k)
+            logger.error(
+                "Number of species: %d, Number of genes: %d",
+                len(get_species_set(t2)), len(t2)
             )
-            print(
+            logger.error(
                 "This program requires single-copy gene trees as input. "
                 "Program terminated."
             )

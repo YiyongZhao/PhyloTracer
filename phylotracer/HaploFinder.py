@@ -9,10 +9,13 @@ conversion zone detection, and hybrid subgenome assignment.
 
 import gc
 import importlib
+import logging
 import os
 import re
 import sys
 import time
+
+logger = logging.getLogger(__name__)
 from collections import Counter, defaultdict
 
 import matplotlib
@@ -415,11 +418,11 @@ def generate_dotplot(
     root = plt.axes([0, 0, 1, 1])
     align = dict(family="Arial", style="normal", horizontalalignment="center", verticalalignment="center")
     t1 = time.time()
-    print(f"Dotplot of {file_name} are ready to begin")
+    logger.info("Dotplot of %s are ready to begin", file_name)
     gff_1, dict_gff1 = read_gff(gff1)
     gff_2, dict_gff2 = read_gff(gff2)
     t2 = time.time()
-    print("Reading gff took " + str(t2 - t1) + " second")
+    logger.info("Reading gff took %s second", str(t2 - t1))
     if target_chr1 and target_chr2:
         lens_1 = read_lens(lens1, target_chr1)
         lens_2 = read_lens(lens2, target_chr2)
@@ -427,14 +430,14 @@ def generate_dotplot(
         lens_1 = read_lens(lens1)
         lens_2 = read_lens(lens2)
     t3 = time.time()
-    print("Reading lens took " + str(t3 - t2) + " second")
+    logger.info("Reading lens took %s second", str(t3 - t2))
     gl1, gl2 = 0.92, 0.92
     step_1 = plot_chr1(lens_1, gl1, gl2, "", spe1)
     step_2 = plot_chr2(lens_2, gl2, gl1, "", spe2)
 
     dict_gd = read_gd_pairs(gd_pairs)
     t4 = time.time()
-    print("Reading lebel_pairs took " + str(t4 - t3) + " second")
+    logger.info("Reading lebel_pairs took %s second", str(t4 - t3))
     gene_loc_1 = gene_location(gff_1, lens_1, step_1)
     gene_loc_2 = gene_location(gff_2, lens_2, step_2)
 
@@ -449,7 +452,7 @@ def generate_dotplot(
     result_conversion = find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2, file_name)
     find_conversion_zones_with_ids_to_file(result_conversion, dict_gff1, dict_gff2)
     t5 = time.time()
-    print("Dealing lebel_pairs took " + str(t5 - t4) + " second")
+    logger.info("Dealing lebel_pairs took %s second", str(t5 - t4))
     gc.collect()
 
     if size:
@@ -457,14 +460,14 @@ def generate_dotplot(
     else:
         plot_dot(root, gene_loc_1, gene_loc_2, dict_gd)
     t6 = time.time()
-    print("Ploting dot took " + str(t6 - t5) + " second")
+    logger.info("Ploting dot took %s second", str(t6 - t5))
     root.set_xlim(0, 1)
     root.set_ylim(0, 1)
     root.set_axis_off()
     plt.savefig(file_name + "_dotplot.pdf", dpi=500)
     plt.savefig(file_name + "_dotplot.png", dpi=500)
     t7 = time.time()
-    print(f"{file_name} Dotplot totaly took " + str(t7 - t1) + " second")
+    logger.info("%s Dotplot totaly took %s second", file_name, str(t7 - t1))
 
 
 # ======================================================
@@ -1069,7 +1072,7 @@ def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff):
     all_gene_labels = {}
     c = 0
     for tre_ID, tre_path in tre_dic.items():
-        print(tre_ID)
+        logger.info("%s", tre_ID)
         Phylo_t0 = read_phylo_tree(tre_path)
         Phylo_t0.resolve_polytomy(recursive=True)
         Phylo_t0.sort_descendants()
@@ -1088,9 +1091,9 @@ def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff):
                 c = dict_gff1[k1][0]
                 is_correct_assignment = get_chromosome_subgenome(c)
                 d = "unknown" if v1 == "unknown" else (v1 == is_correct_assignment)
-                print(k1, v1, c, is_correct_assignment, d)
+                logger.info("%s %s %s %s %s", k1, v1, c, is_correct_assignment, d)
 
-        print("-" * 30)
+        logger.info("-" * 30)
 
 
 # ======================================================
@@ -1153,9 +1156,9 @@ if __name__ == "__main__":
     input_sps_tree = sys.argv[15]
     process_gd_pairs = process_gd_result(gf, imap, input_sps_tree, spe1, spe2, 50, 50)
     generate_dotplot(gff1, gff2, lens1, lens2, process_blastp_pairs, spe1, spe2, "blastp_pairs", target_chr1, target_chr2, size)
-    print("-" * 30)
+    logger.info("-" * 30)
     generate_dotplot(gff1, gff2, lens1, lens2, process_synteny_pairs, spe1, spe2, "synteny_pairs", target_chr1, target_chr2, size)
-    print("-" * 30)
+    logger.info("-" * 30)
     generate_dotplot(gff1, gff2, lens1, lens2, process_gd_pairs, spe1, spe2, "gd_pairs", target_chr1, target_chr2, size)
     total_pairs = [process_blastp_pairs, process_synteny_pairs, process_gd_pairs]
     # TODO: user will supplement process_total_color_list
