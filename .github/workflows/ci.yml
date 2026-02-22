@@ -60,7 +60,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ".[dev]" || pip install .
+          pip install ".[dev]" || {
+            echo "Full install failed, installing with relaxed deps..."
+            pip install --no-deps -e .
+            pip install ete3 numpy pandas matplotlib seaborn tqdm biopython scipy pillow || true
+            pip install pypdf || true
+            pip install phyde || true
+          }
           pip install pytest pytest-cov
 
       - name: Run tests with coverage

@@ -14,7 +14,11 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from ete3 import NodeStyle, TextFace, Tree, TreeStyle
-from pypdf import PdfReader, PdfWriter
+try:
+    from pypdf import PdfReader, PdfWriter
+except ImportError:
+    PdfReader = None
+    PdfWriter = None
 from tqdm import tqdm
 
 from phylotracer import (

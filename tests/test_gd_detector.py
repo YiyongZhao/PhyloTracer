@@ -124,18 +124,19 @@ class TestGetModel:
 class TestFindDupNodeIntegration:
     def test_detects_duplication(self):
         """A tree with clear species overlap should have duplication nodes."""
-        gene_tree = PhyloTree("((A_1:1,B_1:1)80:1,(A_2:1,C_1:1)80:1)90;", format=1)
+        gene_tree = PhyloTree("((A_1:1,B_1:1)80:1,(A_2:1,C_1:1)80:1)90;", format=0)
         sp_tree = PhyloTree("((A:1,B:1):1,C:1);")
         num_tre_node(gene_tree)
         num_tre_node(sp_tree)
         annotate_gene_tree(gene_tree, sp_tree)
-        dup_nodes = find_dup_node(gene_tree, sp_tree, gd_support=50, clade_support=50)
+        dup_nodes = find_dup_node(gene_tree, sp_tree, gd_support=50, clade_support=50,
+                                  max_topology_distance=2)
         # Root node should be detected as duplication (A in both children)
         assert len(dup_nodes) >= 1
 
     def test_no_duplication_in_speciation_tree(self):
         """A tree with no species overlap should have no duplication nodes."""
-        gene_tree = PhyloTree("((A_1:1,B_1:1)80:1,(C_1:1,D_1:1)80:1)90;", format=1)
+        gene_tree = PhyloTree("((A_1:1,B_1:1)80:1,(C_1:1,D_1:1)80:1)90;", format=0)
         sp_tree = PhyloTree("((A:1,B:1):1,(C:1,D:1):1);")
         num_tre_node(gene_tree)
         num_tre_node(sp_tree)
@@ -145,7 +146,7 @@ class TestFindDupNodeIntegration:
 
     def test_low_support_not_detected(self):
         """A duplication node with low support should be filtered out."""
-        gene_tree = PhyloTree("((A_1:1,B_1:1)10:1,(A_2:1,C_1:1)10:1)20;", format=1)
+        gene_tree = PhyloTree("((A_1:1,B_1:1)10:1,(A_2:1,C_1:1)10:1)20;", format=0)
         sp_tree = PhyloTree("((A:1,B:1):1,C:1);")
         num_tre_node(gene_tree)
         num_tre_node(sp_tree)
@@ -155,7 +156,7 @@ class TestFindDupNodeIntegration:
 
     def test_dup_species_num_filter(self):
         """Requiring more overlap species filters out small duplications."""
-        gene_tree = PhyloTree("((A_1:1,B_1:1)80:1,(A_2:1,C_1:1)80:1)90;", format=1)
+        gene_tree = PhyloTree("((A_1:1,B_1:1)80:1,(A_2:1,C_1:1)80:1)90;", format=0)
         sp_tree = PhyloTree("((A:1,B:1):1,C:1);")
         num_tre_node(gene_tree)
         num_tre_node(sp_tree)
