@@ -54,7 +54,7 @@ The commands below take you through every step to accomplish this:
     git clone https://github.com/YiyongZhao/PhyloTracer.git
     cd PhyloTracer
     conda env create -f environment.yml
-    conda activate phylotracer
+    conda activate PhyloTracer
 
     #Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:
     chmod +x install_packages.sh

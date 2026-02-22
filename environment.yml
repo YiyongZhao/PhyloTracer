@@ -1,4 +1,4 @@
-name: phylotracer
+name: PhyloTracer
 channels:
   - conda-forge
   - bioconda
