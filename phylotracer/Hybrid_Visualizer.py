@@ -774,11 +774,26 @@ def combine_fig(hybrid_species):
     title_font_size = max(18, int(combine_fig_size / 45))
     legend_font_size = max(14, int(combine_fig_size / 55))
 
-    try:
-        font_base = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", base_font_size)
-        font_title = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", title_font_size)
-        font_legend = ImageFont.truetype("/System/Library/Fonts/Arial.ttf", legend_font_size)
-    except Exception:
+    _font_paths = [
+        "/System/Library/Fonts/Arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "C:/Windows/Fonts/arial.ttf",
+    ]
+    _loaded_font = None
+    for _fp in _font_paths:
+        try:
+            _loaded_font = _fp
+            ImageFont.truetype(_fp, base_font_size)
+            break
+        except (IOError, OSError):
+            _loaded_font = None
+
+    if _loaded_font:
+        font_base = ImageFont.truetype(_loaded_font, base_font_size)
+        font_title = ImageFont.truetype(_loaded_font, title_font_size)
+        font_legend = ImageFont.truetype(_loaded_font, legend_font_size)
+    else:
         font_base = ImageFont.load_default()
         font_title = ImageFont.load_default()
         font_legend = ImageFont.load_default()

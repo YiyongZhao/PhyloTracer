@@ -141,6 +141,8 @@ def plot_chr1(lens, gl, gl2, mark, name):
     Matplotlib axes are already initialized.
     """
     total_lens = sum([float(k[1]) for k in lens])
+    if total_lens == 0:
+        return
     step = gl / float(total_lens)
     gl_start, n, start_x = 0.95, 0, 0.05
     mark_y = 0.04
@@ -184,6 +186,8 @@ def plot_chr2(lens, gl, gl2, mark, name):
     Matplotlib axes are already initialized.
     """
     total_lens = sum([float(k[1]) for k in lens])
+    if total_lens == 0:
+        return
     step = gl / float(total_lens)
     gl_start, n, start_x = 0.05, 0, 0.95
     mark_y = 0.96

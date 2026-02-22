@@ -21,12 +21,14 @@ from tqdm import tqdm
 from phylotracer import (
     find_dup_node,
     gene_id_transfer,
+    is_rooted,
     num_tre_node,
     read_and_return_dict,
     read_phylo_tree,
     realign_branch_length,
     rejust_root_dist,
     rename_input_tre,
+    root_tre_with_midpoint_outgroup,
 )
 
 

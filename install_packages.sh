@@ -5,7 +5,7 @@ if ! command -v pip &> /dev/null; then
     exit 1
 fi
 
-packages=("ete3" "pandas" "numpy" "tqdm" "matplotlib" "pypdf4" "pyqt5","phyde")
+packages=("ete3" "pandas" "numpy" "tqdm" "matplotlib" "pypdf" "pyqt5" "phyde")
 failed_packages=()
 for package in "${packages[@]}"; do
     pip install $package || failed_packages+=($package)

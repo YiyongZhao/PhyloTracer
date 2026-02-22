@@ -844,7 +844,15 @@ if __name__ == "__main__":
     num_sptree(sptree)
     tre_dic = read_and_return_dict(args.gf)
 
+    gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(
+        tre_dic
+    )
+
     os.makedirs(out, exist_ok=True)
-    sp_dic, path2_treeid_dic = get_path_str_num_dic(tre_dic)
+    sp_dic, path2_treeid_dic = get_path_str_num_dic(
+        tre_dic, sptree,
+        gene2new_named_gene_dic, new_named_gene2gene_dic,
+        voucher2taxa_dic, taxa2voucher_dic,
+    )
 
     split_dicts = split_dict_by_first_last_char(sp_dic)
