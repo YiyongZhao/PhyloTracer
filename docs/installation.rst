@@ -21,8 +21,14 @@ Quick Install (Recommended)
   conda create -n phylotracer python=3.12 -y
   conda activate phylotracer
 
+  # Install PyQt5 (required by ete3 for tree visualization)
+  conda install -c conda-forge pyqt=5 -y
+
   # Install from PyPI
   pip install PhyloTracer
+
+  # For headless/server environments
+  export QT_QPA_PLATFORM=offscreen
 
   # Verify installation
   PhyloTracer --help
@@ -96,6 +102,16 @@ PhyloTracer is also available as a Docker image for fully reproducible environme
 
 Troubleshooting
 ---------------
+
+**ImportError: cannot import name 'NodeStyle' from 'ete3':**
+
+This happens when PyQt5 is not installed. ``ete3`` requires PyQt5 for tree
+visualization components (``NodeStyle``, ``TreeStyle``, ``TextFace``, etc.).
+Install it via conda:
+
+.. code:: bash
+
+    conda install -c conda-forge pyqt=5 -y
 
 **Qt platform plugin error:**
 

@@ -207,7 +207,9 @@ PhyloTracer GD_Detector \
 > ```bash
 > conda create -n phylotracer python=3.12 -y
 > conda activate phylotracer
+> conda install -c conda-forge pyqt=5 -y
 > pip install PhyloTracer
+> export QT_QPA_PLATFORM=offscreen  # Required for headless/server environments
 > ```
 
 ### Required dependencies:
