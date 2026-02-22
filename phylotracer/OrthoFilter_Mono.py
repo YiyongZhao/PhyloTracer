@@ -17,7 +17,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 from ete3 import NodeStyle, PhyloTree, TextFace, Tree, TreeStyle
-from PyPDF4 import PdfFileReader, PdfFileWriter
+from pypdf import PdfReader, PdfWriter
 from tqdm import tqdm
 
 from phylotracer import (
@@ -799,16 +799,16 @@ def merge_pdfs_side_by_side(f1: str, f2: str, out: str) -> None:
     Assumptions:
         Input PDFs contain at least one page.
     """
-    writer = PdfFileWriter()
+    writer = PdfWriter()
     with open(f1, "rb") as a, open(f2, "rb") as b:
-        p1 = PdfFileReader(a).getPage(0)
-        p2 = PdfFileReader(b).getPage(0)
-        page = writer.addBlankPage(
-            p1.mediaBox.getWidth() + p2.mediaBox.getWidth(),
-            max(p1.mediaBox.getHeight(), p2.mediaBox.getHeight()),
+        p1 = PdfReader(a).pages[0]
+        p2 = PdfReader(b).pages[0]
+        page = writer.add_blank_page(
+            float(p1.mediabox.width) + float(p2.mediabox.width),
+            max(float(p1.mediabox.height), float(p2.mediabox.height)),
         )
-        page.mergeTranslatedPage(p1, 0, 0)
-        page.mergeTranslatedPage(p2, p1.mediaBox.getWidth(), 0)
+        page.merge_translated_page(p1, 0, 0)
+        page.merge_translated_page(p2, float(p1.mediabox.width), 0)
         with open(out, "wb") as o:
             writer.write(o)
 
