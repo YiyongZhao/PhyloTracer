@@ -16,7 +16,13 @@ from collections import Counter
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
-from ete3 import NodeStyle, PhyloTree, TextFace, Tree, TreeStyle
+from ete3 import PhyloTree, Tree
+try:
+    from ete3 import NodeStyle, TextFace, TreeStyle
+except ImportError:
+    NodeStyle = None
+    TextFace = None
+    TreeStyle = None
 try:
     from pypdf import PdfReader, PdfWriter
 except ImportError:

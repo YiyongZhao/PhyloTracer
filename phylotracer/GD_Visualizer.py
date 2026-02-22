@@ -8,7 +8,14 @@ nodes, and renders annotated species trees with duplication summaries.
 import re
 from collections import defaultdict
 
-from ete3 import CircleFace, NodeStyle, PieChartFace, TextFace, TreeStyle
+try:
+    from ete3 import CircleFace, NodeStyle, PieChartFace, TextFace, TreeStyle
+except ImportError:
+    CircleFace = None
+    NodeStyle = None
+    PieChartFace = None
+    TextFace = None
+    TreeStyle = None
 
 from phylotracer import (
     read_phylo_tree,

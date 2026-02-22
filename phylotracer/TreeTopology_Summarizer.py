@@ -11,7 +11,13 @@ import os
 
 logger = logging.getLogger(__name__)
 
-from ete3 import NodeStyle, TextFace, Tree, TreeStyle
+from ete3 import Tree
+try:
+    from ete3 import NodeStyle, TextFace, TreeStyle
+except ImportError:
+    NodeStyle = None
+    TextFace = None
+    TreeStyle = None
 from PIL import Image
 
 from phylotracer import (

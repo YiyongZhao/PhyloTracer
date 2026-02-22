@@ -16,7 +16,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from ete3 import NodeStyle, TextFace, Tree, TreeStyle
+from ete3 import Tree
+try:
+    from ete3 import NodeStyle, TextFace, TreeStyle
+except ImportError:
+    NodeStyle = None
+    TextFace = None
+    TreeStyle = None
 from matplotlib import colors
 from matplotlib.colors import LinearSegmentedColormap, ListedColormap
 from PIL import Image, ImageDraw, ImageFont
