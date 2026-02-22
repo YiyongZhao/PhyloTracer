@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=64", "wheel"]
+requires = ["setuptools>=64,<76", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "PhyloTracer"
 version = "1.0.0"
 description = "A toolkit for gene tree rooting, gene duplication identification, ortholog retrieval, phylogenetic noise elimination, species hybridization detection, and visualization."
 readme = "README.md"
-license = "MIT"
+license = {text = "MIT"}
 requires-python = ">=3.8"
 authors = [
     { name = "Yiyong Zhao", email = "yzhao@bwh.harvard.edu" },
