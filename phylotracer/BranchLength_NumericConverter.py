@@ -5,8 +5,11 @@ This module converts branch lengths to fixed decimal precision and writes
 standardized Newick outputs for downstream analyses and visualization.
 """
 
+import logging
 import os
 import shutil
+
+logger = logging.getLogger(__name__)
 
 from tqdm import tqdm
 
@@ -122,7 +125,7 @@ def branch_length_numeric_converter_main(
                 tree_str = trans_branch_length(tree, decimal_places)
             write_tree_to_newick(tree_str, tree_id, dir_path)
         except Exception as exc:
-            print(f"Error processing {tree_id}: {exc}")
+            logger.error("Error processing %s: %s", tree_id, exc)
         pbar.update(1)
     pbar.close()
 

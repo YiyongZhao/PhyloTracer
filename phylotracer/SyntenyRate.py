@@ -1,6 +1,9 @@
 import argparse
+import logging
 import os
 import re
+
+logger = logging.getLogger(__name__)
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
@@ -124,8 +127,8 @@ def main():
     args = ap.parse_args()
     rates, avg = compute_all_rates(args.trees, args.syn_dir, args.threads)
     for i, r in enumerate(rates, start=1):
-        print(f"tree_{i}\tsynteny_rate\t{r:.6f}")
-    print(f"global_avg\t{avg:.6f}")
+        logger.info("tree_%d\tsynteny_rate\t%.6f", i, r)
+    logger.info("global_avg\t%.6f", avg)
 
 
 if __name__ == '__main__':

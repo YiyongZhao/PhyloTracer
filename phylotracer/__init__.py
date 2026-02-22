@@ -6,6 +6,7 @@ helpers used across the project to improve reproducibility and traceability.
 """
 
 import logging
+logger = logging.getLogger(__name__)
 import os
 import random
 import shutil

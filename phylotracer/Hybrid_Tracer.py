@@ -5,9 +5,12 @@ This module identifies candidate duplication clades, builds gene matrices,
 runs HyDe analyses, and writes filtered hybridization results.
 """
 
+import logging
 import os
 import subprocess
 import time
+
+logger = logging.getLogger(__name__)
 from collections import Counter, defaultdict
 from signal import SIGUSR2
 
@@ -63,21 +66,21 @@ def process_start_node(file_path: str, sptree: object) -> str:
             for line in f:
                 species_list.append(line.strip())
     except FileNotFoundError:
-        print(f"Error: Species list file not found at {file_path}")
+        logger.error("Species list file not found at %s", file_path)
         return None
     except Exception as e:
-        print(f"Error reading species list file: {e}")
+        logger.error("Error reading species list file: %s", e)
         return None
 
     if not species_list:
-        print("Warning: Species list file is empty.")
+        logger.warning("Species list file is empty.")
         return None
 
     try:
         common_ancestor = sptree.get_common_ancestor(species_list)
         return common_ancestor.name
     except Exception as e:
-        print(f"Error finding common ancestor in species tree: {e}")
+        logger.error("Error finding common ancestor in species tree: %s", e)
         return None
 
 
@@ -569,30 +572,30 @@ def hyde_main(
         if target_node and gd_name != target_node:
             continue
 
-        print(f"{gd_name} is processing")
-        print(f"Total gene duplication events in dataset: {len(gds)}")
-        print(f"Number of parallel processing groups: {gd_group}")
+        logger.info("%s is processing", gd_name)
+        logger.info("Total gene duplication events in dataset: %d", len(gds))
+        logger.info("Number of parallel processing groups: %d", gd_group)
 
         split_gds = np.array_split(gds, gd_group)
         fixed_outgroup_species = get_outgroup_species_for_gd_node(gd_name, rename_sptree)
         if fixed_outgroup_species is None:
-            print(
-                f"[Hybrid_Tracer][Skip] GD node {gd_name} has no sister-branch "
-                "outgroup candidates. All events are skipped."
+            logger.warning(
+                "[Hybrid_Tracer][Skip] GD node %s has no sister-branch "
+                "outgroup candidates. All events are skipped.", gd_name
             )
             continue
         fixed_outgroup_original = voucher2taxa_dic.get(
             fixed_outgroup_species,
             fixed_outgroup_species,
         )
-        print(
-            f"[Hybrid_Tracer] GD node {gd_name} uses fixed outgroup species: "
-            f"{fixed_outgroup_original}"
+        logger.info(
+            "[Hybrid_Tracer] GD node %s uses fixed outgroup species: %s",
+            gd_name, fixed_outgroup_original
         )
 
-        print(f"Gene duplication events partitioned into {len(split_gds)} processing batches")
+        logger.info("Gene duplication events partitioned into %d processing batches", len(split_gds))
         for i, sub_group in enumerate(split_gds):
-            print(f"Batch {i+1}: {len(sub_group)} gene duplication events")
+            logger.info("Batch %d: %d gene duplication events", i+1, len(sub_group))
         for sub_group in split_gds:
             hyde_result_lst = process_gd_group(
                 sub_group,
@@ -679,7 +682,7 @@ def process_gd_group(
             seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
             seq_dic_all.update(seq_dic)
         except KeyError as e:
-            print(f"KeyError encountered for GD {gdid}: {e}. Skipping this GD.")
+            logger.warning("KeyError encountered for GD %s: %s. Skipping this GD.", gdid, e)
             continue
 
         outgroup_species = fixed_outgroup_species
@@ -694,9 +697,9 @@ def process_gd_group(
                     outgroup_species,
                     outgroup_species,
                 )
-            print(
-                f"[Hybrid_Tracer][Skip] GD event {gdid} (map={gd_map.name}) has no valid outgroup gene "
-                f"from expected outgroup species {expected_outgroup_species}."
+            logger.warning(
+                "[Hybrid_Tracer][Skip] GD event %s (map=%s) has no valid outgroup gene "
+                "from expected outgroup species %s.", gdid, gd_map.name, expected_outgroup_species
             )
             continue
         one_gd_matrix = process_one_gd(gd_clade, outgroup_gene)
@@ -709,13 +712,13 @@ def process_gd_group(
         all_matrices.append(one_gd_matrix)
 
     if skipped_no_outgroup > 0:
-        print(
-            f"[Hybrid_Tracer][Summary] GD node {gd_name}: skipped {skipped_no_outgroup} events "
-            "due to missing valid outgroup genes."
+        logger.info(
+            "[Hybrid_Tracer][Summary] GD node %s: skipped %d events "
+            "due to missing valid outgroup genes.", gd_name, skipped_no_outgroup
         )
 
     if not all_matrices:
-        print(f"Warning: No valid matrices found for GD group {gd_name}. Returning empty result.")
+        logger.warning("No valid matrices found for GD group %s. Returning empty result.", gd_name)
         return []
 
     merged_matrix = pd.concat(all_matrices, axis=1)

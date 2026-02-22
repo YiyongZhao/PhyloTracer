@@ -6,9 +6,12 @@ This module generates candidate rooted trees, evaluates them using depth and
 duplication statistics, and selects optimal roots with RF-based refinement.
 """
 
+import logging
 import math
 import os
 import shutil
+
+logger = logging.getLogger(__name__)
 from itertools import combinations
 
 import numpy as np
@@ -249,7 +252,7 @@ def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set, newid2
             all_basal_leaves.append(leaf)
 
     if not all_basal_leaves:
-        print("[Info] No basal leaves found. Skipping rooting.")
+        logger.info("No basal leaves found. Skipping rooting.")
         return rerooted_trees
 
     # old_names = [newid2oldid.get(l.name, l.name) for l in all_basal_leaves]
@@ -273,7 +276,7 @@ def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set, newid2
             if mrca_leaves_names == basal_leaves_names:
                 is_monophyletic = True
     except Exception as e:
-        print(f"[Warning] Monophyly check failed: {e}")
+        logger.warning("Monophyly check failed: %s", e)
         is_monophyletic = False
 
     if is_monophyletic:
@@ -301,7 +304,7 @@ def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set, newid2
                     rerooted_trees.append(tree_copy)
 
         except Exception as e:
-            print(f"[Warning] Failed optimized MRCA rooting: {e}")
+            logger.warning("Failed optimized MRCA rooting: %s", e)
 
     else:
         # --- Strategy B: Comprehensive Mode (Outgroup is scattered -> Exhaustive search) ---
@@ -325,7 +328,7 @@ def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set, newid2
                 successful_single += 1
             except Exception as e:
                 old_name = newid2oldid.get(leaf.name, leaf.name)
-                print(f"[Warning] Failed single-leaf rooting with {old_name}: {e}")
+                logger.warning("Failed single-leaf rooting with %s: %s", old_name, e)
 
         # === Part 2: Root by MRCA of pairwise combinations of outgroup genes ===
         if len(all_basal_leaves) >= 2:
@@ -358,7 +361,7 @@ def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set, newid2
                 except Exception as e:
                     old1 = newid2oldid.get(leaf1.name, leaf1.name)
                     old2 = newid2oldid.get(leaf2.name, leaf2.name)
-                    print(f"[Warning] Failed pairwise MRCA rooting for {old1} & {old2}: {e}")
+                    logger.warning("Failed pairwise MRCA rooting for %s & %s: %s", old1, old2, e)
 
         # Optional: Root by the MRCA of all outgroup genes
         try:
@@ -381,7 +384,7 @@ def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set, newid2
                 rerooted_trees.append(tree_copy)
                 added_topologies.add(mrca_leaves_signature)
         except Exception as e:
-            print(f"[Warning] Failed full basal MRCA rooting: {e}")
+            logger.warning("Failed full basal MRCA rooting: %s", e)
 
         # print(f"[Rooting] Generated {successful_single} single-leaf + {successful_pairwise} pairwise MRCA candidates "
         #     f"(total {len(rerooted_trees)} unique candidates).")
@@ -619,7 +622,7 @@ def root_main(
 
     # Pre-processing: Get basal taxa
     basal_species_set = get_species_tree_basal_set(renamed_species_tree)
-    print(f"Basal Filter: {len(basal_species_set)} species")
+    logger.info("Basal Filter: %d species", len(basal_species_set))
 
     pbar = tqdm(total=len(tree_dict), desc="Processing trees", unit="tree")
     stat_matrix = []
@@ -650,7 +653,7 @@ def root_main(
             root_list = get_all_rerooted_trees_filtered(Phylo_t2, dynamic_basal_set, new_name_to_gene)
 
             if not root_list:
-                print("No valid root candidates after basal filter.")
+                logger.warning("No valid root candidates after basal filter.")
                 rename_output_tre(Phylo_t2, new_name_to_gene, tree_id, dir_path)
                 pbar.update(1)
                 continue

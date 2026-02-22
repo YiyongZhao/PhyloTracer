@@ -5,8 +5,11 @@ This module summarizes duplication losses from tabular outputs and renders
 annotated species trees with loss statistics and legends.
 """
 
+import logging
 import re
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 from ete3 import CircleFace, NodeStyle, PieChartFace, TextFace, TreeStyle
 
@@ -100,7 +103,7 @@ def get_stats_deduplicated(filepath):
     # per (level, event_key): 2-0 > 2-1 > 2-2.
     event_type_priority = {"2-2": 0, "2-1": 1, "2-0": 2}
     best_event_type_by_level = defaultdict(dict)
-    print(f"Reading file: {filepath}...")
+    logger.info("Reading file: %s...", filepath)
     with open(filepath, "r") as f:
         header = f.readline().strip()
         if "tree_ID" not in header:
@@ -204,7 +207,7 @@ def print_path_stats(sptree, final_losses, target_species="Arabidopsis_thaliana"
     """
     target_nodes = sptree.search_nodes(name=target_species)
     if not target_nodes:
-        print(f"Error: Species '{target_species}' not found in tree")
+        logger.error("Species '%s' not found in tree", target_species)
         return
 
     leaf = target_nodes[0]
@@ -212,9 +215,9 @@ def print_path_stats(sptree, final_losses, target_species="Arabidopsis_thaliana"
     path_nodes.reverse()
     path_nodes.append(leaf)
 
-    print(f"\n{'='*20} Path: Root -> {target_species} {'='*20}")
-    print(f"{'Node':<20} | {'2->0':<10} | {'2->1':<10} | {'1->0':<10} | {'Total'}")
-    print("-" * 80)
+    logger.info("\n%s Path: Root -> %s %s", '='*20, target_species, '='*20)
+    logger.info("%-20s | %-10s | %-10s | %-10s | %s", 'Node', '2->0', '2->1', '1->0', 'Total')
+    logger.info("-" * 80)
 
     for node in path_nodes:
         node_name = node.name
@@ -225,8 +228,8 @@ def print_path_stats(sptree, final_losses, target_species="Arabidopsis_thaliana"
             n0 = stats["1-0"]
             total = m + n1 + n0
             if total > 0:
-                print(f"{node_name:<20} | {m:<10} | {n1:<10} | {n0:<10} | {total}")
-    print("=" * 75)
+                logger.info("%-20s | %-10d | %-10d | %-10d | %d", node_name, m, n1, n0, total)
+    logger.info("=" * 75)
 
 
 # ======================================================
@@ -271,12 +274,11 @@ def visualizer_sptree(
     }
     color_list = [colors["2-0"], colors["2-1"], colors["1-0"]]
 
-    print(
-        f"\n{'Node':<15} | {'GD Birth':<10} | {'E2-0':<8} | {'E2-1':<8} | "
-        f"{'Path2-0':<8} | {'Path2-1':<8} | {'Path1-0':<8} | "
-        f"{'RawLoss':<8} | {'NormLoss':<8}"
+    logger.info(
+        "\n%-15s | %-10s | %-8s | %-8s | %-8s | %-8s | %-8s | %-8s | %-8s",
+        'Node', 'GD Birth', 'E2-0', 'E2-1', 'Path2-0', 'Path2-1', 'Path1-0', 'RawLoss', 'NormLoss'
     )
-    print("-" * 80)
+    logger.info("-" * 80)
 
     for node in sptree.traverse():
         nstyle = NodeStyle()
@@ -324,12 +326,13 @@ def visualizer_sptree(
                     position="branch-bottom",
                 )
             if total_loss > 0:
-                print(
-                    f"{node_name:<15} | {gd_births.get(node_name,0):<10} | "
-                    f"{event_stats.get('2-0', 0):<8} | {event_stats.get('2-1', 0):<8} | "
-                    f"{c_2_0:<8} | {c_2_1:<8} | {c_1_0:<8} | "
-                    f"{raw_loss_score:<8.2f} | "
-                    f"{(norm_loss_score if norm_loss_score is not None else float('nan')):<8.2f}"
+                logger.info(
+                    "%-15s | %-10d | %-8d | %-8d | %-8d | %-8d | %-8d | %-8.2f | %-8.2f",
+                    node_name, gd_births.get(node_name, 0),
+                    event_stats.get('2-0', 0), event_stats.get('2-1', 0),
+                    c_2_0, c_2_1, c_1_0,
+                    raw_loss_score,
+                    norm_loss_score if norm_loss_score is not None else float('nan')
                 )
 
             # percents = [
@@ -383,7 +386,7 @@ def visualizer_sptree(
             column=0)
 
     sptree.render(output_file, w=260, units="mm", tree_style=ts)
-    print(f"\nVisualization saved to {output_file}")
+    logger.info("Visualization saved to %s", output_file)
 
 
 # ======================================================

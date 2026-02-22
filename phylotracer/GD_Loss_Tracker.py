@@ -5,10 +5,13 @@ This module evaluates loss events following duplication nodes, summarizes
 loss paths, and generates tabular reports for downstream analyses.
 """
 
+import logging
 import re
 from typing import Optional
 
 import os
+
+logger = logging.getLogger(__name__)
 
 import pandas as pd
 from ete3 import PhyloTree
@@ -477,19 +480,21 @@ def get_path_str_with_count_num_lst(
         n20 = gd_counter["2-0"]
         n_missing = gd_counter["missing_data"]
         if (n22 + n21 + n20 + n_missing) != clade_species_count:
-            print(
-                f"Warning: species accounting mismatch: tre={tre_id}, gd={gd_id}, "
-                f"n22={n22}, n21={n21}, n20={n20}, n_missing={n_missing}, "
-                f"clade_species_count={clade_species_count}"
+            logger.warning(
+                "Species accounting mismatch: tre=%s, gd=%s, "
+                "n22=%d, n21=%d, n20=%d, n_missing=%d, "
+                "clade_species_count=%d",
+                tre_id, gd_id, n22, n21, n20, n_missing, clade_species_count
             )
         if (
             not include_unobserved_species
             and (n22 + n21 + n20) != observed_species_in_clade
         ):
-            print(
-                f"Warning: observed-species accounting mismatch: tre={tre_id}, gd={gd_id}, "
-                f"n22={n22}, n21={n21}, n20={n20}, "
-                f"observed_species_in_clade={observed_species_in_clade}"
+            logger.warning(
+                "Observed-species accounting mismatch: tre=%s, gd=%s, "
+                "n22=%d, n21=%d, n20=%d, "
+                "observed_species_in_clade=%d",
+                tre_id, gd_id, n22, n21, n20, observed_species_in_clade
             )
 
         gd_id += 1
@@ -578,7 +583,7 @@ def get_path_str_num_dic(
         t = PhyloTree(tre_path)
         
         if len(t.children) != 2:
-            print(f"{tre_id} is not a binary tree, skipping.")
+            logger.warning("%s is not a binary tree, skipping.", tre_id)
             continue
         t1 = rename_input_tre(t, gene2new_named_gene_dic)
         annotate_gene_tree(t1,renamed_sptree)
@@ -602,18 +607,18 @@ def get_path_str_num_dic(
         for taxa in target_species_list:
             vouchers = [k for k, v in voucher2taxa_dic.items() if v == taxa]
             target_voucher_set.update(vouchers)
-        print(
-            "[Filter] Loss endpoint restricted to: "
-            f"{target_species_list} (vouchers: {sorted(target_voucher_set)})"
+        logger.info(
+            "[Filter] Loss endpoint restricted to: %s (vouchers: %s)",
+            target_species_list, sorted(target_voucher_set)
         )
 
     if allowed_gd_species_sets:
-        print(
+        logger.info(
             "[Filter] GD event must occur at EXACT MRCA node(s), covering "
-            f"{len(allowed_gd_species_sets)} specified clade(s)."
+            "%d specified clade(s).", len(allowed_gd_species_sets)
         )
     else:
-        print("[Filter] No restriction on GD node location.")
+        logger.info("[Filter] No restriction on GD node location.")
 
     with open("gd_loss_summary.txt", "w") as out:
         out.write(
@@ -689,7 +694,7 @@ def get_path_str_num_dic(
                 f.write(f"{new_k}\t{v}\n")
 
     if not path_str_num_dic:
-        print("Warning: No paths matched the filters. Result is empty.")
+        logger.warning("No paths matched the filters. Result is empty.")
 
     return path_str_num_dic, path2_treeid_dic
 
@@ -731,7 +736,7 @@ def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
     The summary file follows the expected path-count format.
     """
     if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
-        print("Warning: Summary file is missing or empty. Creating placeholder Excel.")
+        logger.warning("Summary file is missing or empty. Creating placeholder Excel.")
         placeholder_df = pd.DataFrame(
             {
                 "Message": [
@@ -740,7 +745,7 @@ def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
             }
         )
         placeholder_df.to_excel(output_file, sheet_name="No_Data", index=False)
-        print(f"Placeholder Excel saved as {output_file}")
+        logger.info("Placeholder Excel saved as %s", output_file)
         return
 
     group_dict = {}
@@ -763,12 +768,12 @@ def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
             group_dict[key].append(line.strip())
 
     if not group_dict:
-        print("Warning: No valid data groups found after parsing. Creating placeholder Excel.")
+        logger.warning("No valid data groups found after parsing. Creating placeholder Excel.")
         placeholder_df = pd.DataFrame(
             {"Message": ["No gene loss paths matched the filters after parsing."]}
         )
         placeholder_df.to_excel(output_file, sheet_name="No_Data", index=False)
-        print(f"Placeholder Excel saved as {output_file}")
+        logger.info("Placeholder Excel saved as %s", output_file)
         return
 
     def parse_lines_to_df(lines):
@@ -826,7 +831,7 @@ def parse_text_to_excel(file_path, output_file="gd_loss.xlsx"):
             sheet_name = f"{start}_{species}"[:31]
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    print(f"Excel report successfully generated: {output_file}")
+    logger.info("Excel report successfully generated: %s", output_file)
 
 
 # ======================================================

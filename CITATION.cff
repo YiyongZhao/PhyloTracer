@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "PhyloTracer"
+abstract: "A Comprehensive and User-Friendly Toolkit for Evolutionary Genomic Analysis"
+version: "1.0.0"
+license: MIT
+repository-code: "https://github.com/YiyongZhao/PhyloTracer"
+authors:
+  - family-names: "Zhao"
+    given-names: "Yiyong"
+    email: "yzhao@bwh.harvard.edu"
+  - family-names: "Li"
+    given-names: "Tao"
+    email: "Taoli@gmail.com"
+keywords:
+  - phylogenetics
+  - gene duplication
+  - ortholog
+  - hybridization
+  - tree visualization
+  - evolutionary genomics

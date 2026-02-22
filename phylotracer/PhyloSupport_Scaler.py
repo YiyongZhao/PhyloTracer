@@ -5,8 +5,11 @@ This module rescales node support values to a consistent numeric range and
 writes standardized Newick outputs for downstream analyses.
 """
 
+import logging
 import os
 import shutil
+
+logger = logging.getLogger(__name__)
 
 from ete3 import Tree
 from tqdm import tqdm
@@ -55,7 +58,7 @@ def scale_support(phylo_tree: object, scale: str = "100") -> object:
                 if hasattr(node, "support"):
                     node.support *= 100
         else:
-            print(
+            logger.info(
                 "No need to scale down support, as all tree node supports are already < 1."
             )
     else:
@@ -64,7 +67,7 @@ def scale_support(phylo_tree: object, scale: str = "100") -> object:
                 if hasattr(node, "support"):
                     node.support /= 100
         else:
-            print(
+            logger.info(
                 "No need to scale support, as tree node supports are already in the range [1, 100]."
             )
     return phylo_tree
@@ -109,7 +112,7 @@ def support_scaler_main(tree_dict: dict, scale: str = "100") -> None:
             tree_str = scaled_tree.write(format=0)
             write_tree_to_newick(tree_str, tree_id, dir_path)
         except Exception as exc:
-            print(f"Error processing {tree_id}: {exc}")
+            logger.error("Error processing %s: %s", tree_id, exc)
         pbar.update(1)
     pbar.close()
 
