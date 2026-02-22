@@ -203,9 +203,16 @@ PhyloTracer GD_Detector \
 ---
 ## Installation
 
+> **Important: Python 3.13 is NOT supported.** PhyloTracer depends on `ete3`, which uses the `cgi` module that was removed in Python 3.13. Please use **Python 3.8–3.12**. We recommend creating a dedicated conda environment:
+> ```bash
+> conda create -n phylotracer python=3.12 -y
+> conda activate phylotracer
+> pip install PhyloTracer
+> ```
+
 ### Required dependencies:
 
-* Python 3.8+
+* Python 3.8–3.12 (Python 3.13+ is not supported due to ete3 dependency)
 * Python modules:
   * ete3==3.1.3
   * HyDe (https://github.com/pblischak/HyDe)
