@@ -5,6 +5,7 @@ This module provides visualization helpers for gene and species trees,
 including branch-length realignment, duplication annotation, and
 multi-category tip labeling for publication-quality figures.
 """
+from __future__ import annotations
 
 import os
 import re

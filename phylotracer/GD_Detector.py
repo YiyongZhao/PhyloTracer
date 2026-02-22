@@ -5,6 +5,7 @@ This module identifies duplication clades in gene trees relative to a species
 framework, classifies duplication patterns, and writes detailed summaries for
 phylogenomic interpretation.
 """
+from __future__ import annotations
 
 import logging
 from collections import Counter

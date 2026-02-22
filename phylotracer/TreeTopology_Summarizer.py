@@ -4,6 +4,7 @@ Tree topology summarization and visualization for the PhyloTracer pipeline.
 This module groups gene trees by topology, writes absolute and relative
 summaries, and optionally renders representative topologies for reporting.
 """
+from __future__ import annotations
 
 import logging
 import math
