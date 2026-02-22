@@ -443,7 +443,7 @@ The ASCII banner prints at import time, and `parser.parse_args()` runs at module
 | D4 | `docs/analyze.rst` | 109-122 | **OrthoFilter_Mono documents nonexistent parameters**: `--branch_length_multiples`, `--insert_branch_index` |
 | D5 | `docs/analyze.rst` | 215-223 | **GD_Loss_Tracker documents nonexistent parameters**: `--all`, `--start_node`, `--end_species` |
 | D6 | `docs/analyze.rst` | 271 | **Hybrid_Tracer documents `--target_node`** — does not exist. Actual parameter is `--mrca_node` |
-| D7 | `docs/analyze.rst` | all examples | **Command invocation uses `Phylo_Tracer.py`** — should be `phylotracer` |
+| D7 | `docs/analyze.rst` | all examples | **Command invocation uses `Phylo_Tracer.py`** — should be `PhyloTracer` |
 | D8 | `docs/input_files.rst` | 8,29,45,59,75,91,107,123 | **All GitHub links point to `/examples/`** — actual directory is `/example_data/`. All links 404 |
 | D9 | `docs/analyze.rst` | 195-201 | **GD_Visualizer missing required `--input_imap`** parameter |
 | D10 | `docs/analyze.rst` | 232-238 | **GD_Loss_Visualizer missing required `--gd_loss_result`** parameter |
@@ -500,7 +500,7 @@ The ASCII banner prints at import time, and `parser.parse_args()` runs at module
 ### Medium Priority (Documentation)
 
 14. **D4-D6** — Update stale parameters in `docs/analyze.rst`
-15. **D7** — Change all `Phylo_Tracer.py` to `phylotracer` in examples
+15. **D7** — Change all `Phylo_Tracer.py` to `PhyloTracer` in examples
 16. **D8** — Fix `/examples/` to `/example_data/` in `docs/input_files.rst`
 17. **D9, D10** — Add missing required parameters to docs
 

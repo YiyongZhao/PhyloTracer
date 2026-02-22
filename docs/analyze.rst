@@ -24,7 +24,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
+        PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
 
 
 2. PhyloSupport_Scaler
@@ -40,7 +40,7 @@ Required Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1
+        PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1
 
 
 3. BranchLength_NumericConverter
@@ -58,7 +58,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
+        PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
 
 
 4. Phylo_Rooter
@@ -76,7 +76,7 @@ Required Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
+        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
 
 
 5. OrthoFilter_LB
@@ -97,7 +97,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
+        PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
 
 
 6. OrthoFilter_Mono
@@ -120,7 +120,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
+        PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
 
 
 7. TreeTopology_Summarizer
@@ -139,7 +139,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10]
+        PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10]
 
 
 8. Tree_Visualizer
@@ -164,7 +164,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2order.imap --keep_branch 1 --tree_style r --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression gene2expression.imap --visual_gd]
+        PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2order.imap --keep_branch 1 --tree_style r --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression gene2expression.imap --visual_gd]
 
 
 9. GD_Detector
@@ -189,7 +189,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]
+        PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0.5 --dup_species_num 1 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]
 
 
 10. GD_Visualizer
@@ -206,7 +206,7 @@ Required Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap
+        PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap
 
 
 11. GD_Loss_Tracker
@@ -228,7 +228,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_species Arabidopsis_thaliana --mrca_node SpeciesA,SpeciesB --include_unobserved_species]
+        PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_species Arabidopsis_thaliana --mrca_node SpeciesA,SpeciesB --include_unobserved_species]
 
 
 12. GD_Loss_Visualizer
@@ -244,7 +244,7 @@ Required Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer GD_Loss_Visualizer --gd_loss_result gd_loss_summary.txt --input_sps_tree numbered_species_tree.nwk
+        PhyloTracer GD_Loss_Visualizer --gd_loss_result gd_loss_summary.txt --input_sps_tree numbered_species_tree.nwk
 
 
 13. Ortho_Retriever
@@ -261,7 +261,7 @@ Required Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
+        PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
 
 
 14. Hybrid_Tracer
@@ -283,7 +283,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 1]
+        PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 1]
 
 
 15. Hybrid_Visualizer
@@ -302,7 +302,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node]
+        PhyloTracer Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node]
 
 
 16. HaploFinder
@@ -332,7 +332,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        phylotracer HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --gd_support 50 [--mode haplofinder --pair_support 50 --visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001]
+        PhyloTracer HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --gd_support 50 [--mode haplofinder --pair_support 50 --visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001]
 
 
 For additional modules and detailed usage examples, refer to the relevant sections in this documentation.

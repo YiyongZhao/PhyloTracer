@@ -50,7 +50,7 @@ Homepage = "https://github.com/YiyongZhao/PhyloTracer"
 Documentation = "https://phylotracer.readthedocs.io"
 
 [project.scripts]
-phylotracer = "phylotracer.Phylo_Tracer:main"
+PhyloTracer = "phylotracer.Phylo_Tracer:main"
 
 [tool.setuptools.packages.find]
 include = ["phylotracer*"]
