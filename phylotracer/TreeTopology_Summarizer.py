@@ -13,6 +13,7 @@ from PIL import Image
 
 from phylotracer import (
     gene_id_transfer,
+    get_species_set,
     read_and_return_dict,
     read_tree,
     realign_branch_length,
@@ -49,7 +50,7 @@ def get_only_sps_tree(Phylo_t: object) -> object:
     return Phylo_t_c
 
 
-def get_max_tree(trees: list[object]) -> object:
+def get_max_tree(trees: list) -> object:
     """
     Identify the tree with the maximum number of leaves.
 

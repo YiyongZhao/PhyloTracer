@@ -22,7 +22,7 @@
                                                                          
 ###############################################################################################
 ```
-![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+![Version](https://img.shields.io/badge/Version-0.3.0-blue)
 [![Documentation Status](https://readthedocs.org/projects/phylotracer/badge/?version=latest)](https://phylotracer.readthedocs.io)
 [![PhyloTracer Issues](https://img.shields.io/badge/PhyloTracer-Issues-blue.svg)](https://github.com/YiyongZhao/PhyloTracer/issues)
 [![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
@@ -210,7 +210,7 @@ PhyloTracer GD_Detector \
   * pandas==2.2.1
   * numpy==1.26.4
   * tqdm==4.66.2
-  * pypdf4==1.27.0
+  * pypdf>=3.0.0
   * matplotlib==3.8.3
   * pyqt5==5.15.10
   * pyqt5-qt5==5.15.12
@@ -226,7 +226,7 @@ PhyloTracer GD_Detector \
   * six==1.16.0
   * tzdata==2024.1
     
-Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](http://etetoolkit.org/) and detects species hybridization signals using ABAB-BABA test by [HyDe](https://github.com/pblischak/HyDe).
+Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](https://etetoolkit.org/) and detects species hybridization signals using ABAB-BABA test by [HyDe](https://github.com/pblischak/HyDe).
 
 ---
 ## Example input files

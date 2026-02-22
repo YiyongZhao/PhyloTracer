@@ -14,7 +14,7 @@ import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
 from ete3 import NodeStyle, TextFace, Tree, TreeStyle
-from PyPDF4 import PdfFileReader, PdfFileWriter
+from pypdf import PdfReader, PdfWriter
 from tqdm import tqdm
 
 from phylotracer import (
@@ -227,18 +227,18 @@ def merge_pdfs(left_pdf: str, right_pdf: str, output_pdf: str) -> None:
     -----------
     Each input PDF contains at least one page.
     """
-    writer = PdfFileWriter()
+    writer = PdfWriter()
 
     with open(left_pdf, "rb") as f1, open(right_pdf, "rb") as f2:
-        pdf1, pdf2 = PdfFileReader(f1), PdfFileReader(f2)
-        page1, page2 = pdf1.getPage(0), pdf2.getPage(0)
+        pdf1, pdf2 = PdfReader(f1), PdfReader(f2)
+        page1, page2 = pdf1.pages[0], pdf2.pages[0]
 
-        width = page1.mediaBox.getWidth() + page2.mediaBox.getWidth()
-        height = max(page1.mediaBox.getHeight(), page2.mediaBox.getHeight())
+        width = float(page1.mediabox.width) + float(page2.mediabox.width)
+        height = max(float(page1.mediabox.height), float(page2.mediabox.height))
 
-        new_page = writer.addBlankPage(width, height)
-        new_page.mergeTranslatedPage(page1, 0, 0)
-        new_page.mergeTranslatedPage(page2, page1.mediaBox.getWidth(), 0)
+        new_page = writer.add_blank_page(width, height)
+        new_page.merge_translated_page(page1, 0, 0)
+        new_page.merge_translated_page(page2, float(page1.mediabox.width), 0)
 
         with open(output_pdf, "wb") as out:
             writer.write(out)

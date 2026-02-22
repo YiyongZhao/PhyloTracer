@@ -29,5 +29,5 @@ dependencies:
       - gprofiler-official==1.0.0
       - mygene==3.2.2
       - biothings-client==0.4.1
-      - pypdf4>=1.27.0
+      - pypdf>=3.0.0
       - bio==1.7.1

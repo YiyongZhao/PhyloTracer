@@ -706,8 +706,7 @@ def find_tre_dup(tree: PhyloTree) -> Tuple[List[str], Set[str]]:
 
     for ev in tree.get_descendant_evol_events():
         if ev.etype == "D":
-            pairs.append(",".join(ev.in_seqs) + "<=>" + ",".join(ev.out_seqs)
-            )
+            pairs.append(",".join(ev.in_seqs) + "<=>" + ",".join(ev.out_seqs))
 
     return pairs, leaves
 
