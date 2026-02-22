@@ -5,7 +5,27 @@
 Installation
 ============
 
-PhyloTracer requires Python v3.8+, ete3, HyDe, pandas, numpy, tqdm, pypdf4, matplotlib, pyqt5 Python modules (listed below).
+PhyloTracer requires **Python 3.8–3.12**, ete3, HyDe, pandas, numpy, tqdm, pypdf, matplotlib, and pyqt5.
+
+.. warning::
+
+   **Python 3.13 is NOT supported.** PhyloTracer depends on ``ete3``, which uses
+   the ``cgi`` module that was removed in Python 3.13. Please use Python 3.8–3.12.
+
+Quick Install (Recommended)
+---------------------------
+
+.. code:: bash
+
+  # Create a conda environment with Python 3.12
+  conda create -n phylotracer python=3.12 -y
+  conda activate phylotracer
+
+  # Install from PyPI
+  pip install PhyloTracer
+
+  # Verify installation
+  PhyloTracer --help
 
 Miniconda
 ---------
@@ -17,7 +37,7 @@ to manage modules and environments.
 
   # Get Miniconda for your operating system (Mac or Linux)
   # Answer yes to the questions the Installer asks
-  # These commands will download Python 3.8+ for Mac OSX
+  # These commands will download Python 3 for Mac OSX
   curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
   bash Miniconda3-latest-MacOSX-x86_64.sh
 
@@ -25,12 +45,12 @@ Required Python Packages
 ------------------------
 
 With Miniconda installed, we can use ``pip`` (or ``conda``) to install all of the Python
-modules that PhyloTracer requires (ete3, HyDe, pandas, numpy, tqdm, pypdf4, matplotlib, pyqt5).
+modules that PhyloTracer requires (ete3, HyDe, pandas, numpy, tqdm, pypdf, matplotlib, pyqt5).
 
 .. code:: bash
 
   # Install packages with conda
-  conda install ete3 HyDe pandas numpy tqdm pypdf4 matplotlib pyqt5
+  conda install ete3 pandas numpy tqdm matplotlib pyqt5
 
 Installing PhyloTracer
 ----------------------
@@ -42,7 +62,7 @@ To install from PyPI, all we need to do is type the following command:
 
 .. code:: bash
 
-  #installing from PyPI
+  # Installing from PyPI
   pip install PhyloTracer
 
 Next, we'll take a look at how to install PhyloTracer by cloning it from GitHub.
@@ -50,16 +70,49 @@ The commands below take you through every step to accomplish this:
 
 .. code:: bash
 
-    #A convenient one-click installation by using conda (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) with the following commands:
+    # A convenient one-click installation by using conda
+    # (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html)
     git clone https://github.com/YiyongZhao/PhyloTracer.git
     cd PhyloTracer
     conda env create -f environment.yml
     conda activate PhyloTracer
 
-    #Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:
+    # Alternatively, a convenient one-click installation by using pip
     chmod +x install_packages.sh
     bash install_packages.sh
 
-    #Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-    #Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
+Docker
+------
+
+PhyloTracer is also available as a Docker image for fully reproducible environments:
+
+.. code:: bash
+
+    # Build the image
+    docker build -t phylotracer .
+
+    # Run PhyloTracer
+    docker run --rm -v $(pwd):/data phylotracer --help
+
+Troubleshooting
+---------------
+
+**Qt platform plugin error:**
+
+If you encounter ``qt.qpa.plugin: Could not load the Qt platform plugin "xcb"``
+when running on a headless server, set the following environment variable:
+
+.. code:: bash
+
     export QT_QPA_PLATFORM=offscreen
+
+**Python 3.13 error (``ModuleNotFoundError: No module named 'cgi'``):**
+
+This is caused by ``ete3`` using the deprecated ``cgi`` module which was removed
+in Python 3.13. The solution is to downgrade to Python 3.12:
+
+.. code:: bash
+
+    conda create -n phylotracer python=3.12 -y
+    conda activate phylotracer
+    pip install PhyloTracer
