@@ -1,11 +1,6 @@
-import os
-import sys
-
 import pytest
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "bin"))
-
-from GD_Loss_Tracker import classify_species_copy_state
+from phylotracer.GD_Loss_Tracker import classify_species_copy_state
 
 
 class FakeLeaf:

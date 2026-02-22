@@ -16,7 +16,10 @@ from signal import SIGUSR2
 
 import numpy as np
 import pandas as pd
-import phyde as hd
+try:
+    import phyde as hd
+except ImportError:
+    hd = None
 from Bio import SeqIO
 from ete3 import PhyloTree
 from tqdm import tqdm
