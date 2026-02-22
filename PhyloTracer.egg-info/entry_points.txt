@@ -1,0 +1,2 @@
+[console_scripts]
+PhyloTracer = phylotracer.Phylo_Tracer:main

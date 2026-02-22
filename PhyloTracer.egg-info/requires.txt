@@ -1,0 +1,16 @@
+ete3
+numpy
+pandas
+matplotlib
+seaborn
+tqdm
+biopython
+pypdf>=3.0.0
+pillow
+phyde>=1.0.2
+scipy
+
+[dev]
+pytest
+pytest-cov
+ruff
