@@ -7,9 +7,9 @@
 
 FROM continuumio/miniconda3
 
-LABEL maintainer="Yiyong Zhao <yzhao@bwh.harvard.edu>"
+LABEL maintainer="Yiyong Zhao <yiyong.zhao@yale.edu>"
 LABEL description="PhyloTracer: a toolkit for gene tree rooting, gene duplication identification, ortholog retrieval, phylogenetic noise elimination, species hybridization detection, and visualization."
-LABEL version="0.3.0"
+LABEL version="1.0.0"
 LABEL license="MIT"
 LABEL url="https://github.com/YiyongZhao/PhyloTracer"
 

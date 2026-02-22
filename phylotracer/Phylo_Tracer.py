@@ -65,7 +65,7 @@ BANNER = textwrap.dedent("""
 #    Licence: MIT license                                                                     #
 #    Release Date: 2023-7                                                                     #
 #    Please cite: Li et al. 2024, XXXX.                                                       #
-#    Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yzhao@bwh.harvard.edu)                     #
+#    Contacts: Taoli(Taoli@gmail.com); Yiyong Zhao(yiyong.zhao@yale.edu)                     #
 #                                                                                             #
 ###############################################################################################
 """)
