@@ -15,7 +15,14 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from ete3 import NodeStyle, PhyloTree, RectFace, TextFace, Tree, TreeStyle
+from ete3 import PhyloTree, Tree
+try:
+    from ete3 import NodeStyle, RectFace, TextFace, TreeStyle
+except ImportError:
+    NodeStyle = None
+    RectFace = None
+    TextFace = None
+    TreeStyle = None
 from tqdm import tqdm
 
 from phylotracer import (

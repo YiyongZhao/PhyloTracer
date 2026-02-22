@@ -15,7 +15,13 @@ from typing import Dict, List, Optional, Set, Tuple
 import re
 import numpy as np
 import pandas as pd
-from ete3 import NodeStyle, PhyloTree, TextFace, Tree, TreeStyle
+from ete3 import PhyloTree, Tree
+try:
+    from ete3 import NodeStyle, TextFace, TreeStyle
+except ImportError:
+    NodeStyle = None
+    TextFace = None
+    TreeStyle = None
 from tqdm import tqdm
 
 __all__ = [

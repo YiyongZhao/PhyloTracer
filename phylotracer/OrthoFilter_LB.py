@@ -13,7 +13,13 @@ from typing import Dict
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import numpy as np
-from ete3 import NodeStyle, TextFace, Tree, TreeStyle
+from ete3 import Tree
+try:
+    from ete3 import NodeStyle, TextFace, TreeStyle
+except ImportError:
+    NodeStyle = None
+    TextFace = None
+    TreeStyle = None
 try:
     from pypdf import PdfReader, PdfWriter
 except ImportError:
