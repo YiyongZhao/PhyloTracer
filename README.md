@@ -82,44 +82,52 @@ PhyloTracer integrates 16 modular tools covering phylogenetic preprocessing, roo
 ---
 ## Getting started with PhyloTracer
 
-### Clone and install environment
+### Option A (recommended): clone + conda + editable install
 
 ```bash
-#A convenient one-click installation by using conda (https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html) with the following commands:
 git clone https://github.com/YiyongZhao/PhyloTracer.git
 cd PhyloTracer
 conda env create -f environment.yml
 conda activate PhyloTracer
-
-#Alternatively, a convenient one-click installation by using pip (the package installer for Python) with the following commands:
-chmod +x install_packages.sh
-bash install_packages.sh
-
-#Reminder for potential visualization issues: qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found and this application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
-#Alternative available platform plugins include: eglfs, linuxfb, minimal, minimalegl, offscreen, vnc, wayland-egl, wayland, wayland-xcomposite-#egl, wayland-xcomposite-glx, webgl, xcb. before running PhyloTracer, please execute the following bash command:
-export QT_QPA_PLATFORM=offscreen
+python -m pip install -e .
 ```
-### Install from PyPI with pip
+
+Why this is recommended:
+- `conda env create` installs dependencies.
+- `python -m pip install -e .` installs the current source in editable mode and registers the `PhyloTracer` command.
+
+Verify installation:
+```bash
+PhyloTracer -h
+```
+
+If `PhyloTracer` is not found in `PATH`, run via module entry:
+```bash
+PYTHONPATH=$(pwd) python -m phylotracer.Phylo_Tracer -h
+```
+
+### Option B: install released package from PyPI
 
 ```bash
-pip install PhyloTracer
+python -m pip install PhyloTracer
+PhyloTracer -h
 ```
 
 ### Quick start from GitHub ZIP (download + extract)
 
 ```bash
 # 1) Download and unzip PhyloTracer-main.zip from GitHub
-# 2) Enter project directory
 cd PhyloTracer-main
 
-# 3) Create environment
+# 2) Create environment and install editable source
 conda env create -f environment.yml
 conda activate PhyloTracer
+python -m pip install -e .
 
-# 4) Run help
+# 3) Run help
 PhyloTracer -h
 
-# 5) Example run
+# 4) Example run
 PhyloTracer GD_Detector \
   --input_GF_list example_data/GD_Detector/GF_ID2path.imap \
   --input_imap example_data/GD_Detector/gene2sps.imap \
@@ -129,6 +137,11 @@ PhyloTracer GD_Detector \
   --dup_species_proportion 0 \
   --dup_species_num 2 \
   --deepvar 1
+```
+
+Optional (Linux headless visualization compatibility):
+```bash
+export QT_QPA_PLATFORM=offscreen
 ```
 ---
 ## Features
