@@ -325,7 +325,7 @@ Description:
     To transform a phylogenetic tree in Newick format into a 'comb' structure based on a predefined support value threshold. It can also revert this `comb` structure to a fully resolved binary tree, allowing dynamic topology adjustments
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
-    --support_value         Node support cutoff used for collapsing internal branches, default=50
+    --support_value         Node support cutoff used for collapsing internal branches, default = 50
 Optional parameter:
     --revert                If set, expand previously collapsed comb structures back to binary form, default=False
 Usage:
@@ -348,7 +348,7 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
 Optional parameter:
-    --decimal_place         Number of decimal places to keep for branch lengths, default=10
+    --decimal_place         Number of decimal places to keep for branch lengths, default = 10
 Usage:
     PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
 ```
@@ -404,8 +404,8 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-    --absolute_branch_length  Absolute branch-length multiplier threshold (integer), default=5
-    --relative_branch_length  Relative branch-length multiplier threshold (float), default=2.5
+    --absolute_branch_length  Absolute branch-length multiplier threshold (integer), default = 5
+    --relative_branch_length  Relative branch-length multiplier threshold (float), default = 2.5
 Optional parameter:
     --visual                If set, export before/after tree visualization PDFs, default=False
 Usage:
@@ -491,8 +491,8 @@ Required parameter:
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
-    --purity_cutoff         Target purity for dominant lineage, default=0.95
-    --max_remove_fraction   Maximum fraction of tips allowed to be removed, default=0.5
+    --purity_cutoff         Target purity for dominant lineage, default = 0.95
+    --max_remove_fraction   Maximum fraction of tips allowed to be removed, default = 0.5
     --visual                If set, export before/after pruning visualization PDFs, default=False
 Usage:
     PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
@@ -505,7 +505,7 @@ Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
 Optional parameter:
-    --visual_top            Number of top-ranked topologies to visualize, default=10
+    --visual_top            Number of top-ranked topologies to visualize, default = 10
 Usage:
     PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10]
 ```
@@ -534,12 +534,12 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-    --gd_support            Minimum support of a GD candidate node (accepted range: 0-100; typical: 50-100), default=50
-    --subclade_support      Minimum support required in GD child subclades (accepted range: 0-100), default=0
-    --dup_species_proportion  Minimum overlap ratio of duplicated species between the two GD child clades (range: 0-1), default=0.2
-    --dup_species_num       Minimum number of overlapping duplicated species under a GD node, default=2
+    --gd_support            Minimum support of a GD candidate node (accepted range: 0-100; typical: 50-100), default = 50
+    --subclade_support      Minimum support required in GD child subclades (accepted range: 0-100), default = 0
+    --dup_species_proportion  Minimum overlap ratio of duplicated species between the two GD child clades (range: 0-1), default = 0.2
+    --dup_species_num       Minimum number of overlapping duplicated species under a GD node, default = 2
     --input_sps_tree        Species tree file in Newick format
-    --deepvar               Maximum tolerated depth-variance score for GD screening, default=1
+    --deepvar               Maximum tolerated depth-variance score for GD screening, default = 1
 Optional parameter:
     --gdtype_mode           GD type mode: relaxed (species overlap only) or strict (overlap + depth constraint), default=relaxed
 Usage:
@@ -552,7 +552,7 @@ Description:
 Required parameter:
     --input_sps_tree        Numbered species tree file in Newick format
     --gd_result             GD result table produced by GD_Detector
-    --input_imap            Two-column mapping file (gene_id<TAB>species_name), default=None
+    --input_imap            Two-column mapping file (gene_id<TAB>species_name)
 Usage:
     PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap
 ```
@@ -602,8 +602,8 @@ Required parameter:
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
-    --mrca_node             Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used.
-    --split_groups          Number of partitions for HYDE batch processing, default=1
+    --mrca_node             Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used. 
+    --split_groups          Number of partitions for HYDE batch processing, default = 1
 Usage:
     PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 2]
 ```
