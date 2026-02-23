@@ -636,11 +636,11 @@ Mode = haplofinder required:
     --species_a_lens        Chromosome-length file for species A (chr<TAB>length)
     --species_b_lens        Chromosome-length file for species B (chr<TAB>length)
 Optional in haplofinder mode:
-    --gd_support            Minimum support of GD nodes used for pair extraction (accepted range: 0-100, default=50)
-    --pair_support          Minimum support of ortholog/speciation pair nodes (accepted range: 0-100, default=50)
+    --gd_support            Minimum support of GD nodes used for pair extraction (accepted range: 0-100, default = 50)
+    --pair_support          Minimum support of ortholog/speciation pair nodes (accepted range: 0-100, default = 50)
     --visual_chr_a          Optional chromosome list file for species A visualization subset
     --visual_chr_b          Optional chromosome list file for species B visualization subset
-    --size                  Point size in dotplot rendering (positive float, default=0.0005)
+    --size                  Point size in dotplot rendering (positive float, default = 0.0005)
 Mode = split required:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); required in haplofinder mode
     --input_imap            Two-column mapping file (gene_id<TAB>species_name); required in both haplofinder and split modes
