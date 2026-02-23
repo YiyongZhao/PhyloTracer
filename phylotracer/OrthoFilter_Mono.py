@@ -367,7 +367,12 @@ def collect_dominant_lineages(
         the specified cutoff, with at least two target tips.
     """
     dominant_roots = []
-    for node in Phylo_t.traverse("preorder"):
+    blocked_ancestors = set()
+    # Postorder ensures we prefer the deepest qualifying lineage roots
+    # (maximal dominant clades) and then block their ancestors.
+    for node in Phylo_t.traverse("postorder"):
+        if node in blocked_ancestors:
+            continue
         target_count, total_count = count_clade_leaves(node, leaf_to_clade, target_clade)
         if target_count <= 1 or total_count == 0:
             continue
@@ -375,9 +380,8 @@ def collect_dominant_lineages(
         purity = target_count / total_count
         if purity < dominant_purity or target_count <= alien_count:
             continue
-        if any(ancestor in dominant_roots for ancestor in node.get_ancestors()):
-            continue
         dominant_roots.append(node)
+        blocked_ancestors.update(node.get_ancestors())
     return dominant_roots
 
 
