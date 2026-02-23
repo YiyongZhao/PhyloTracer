@@ -1,33 +1,20 @@
 name: PhyloTracer
 channels:
   - conda-forge
-  - bioconda
   - defaults
 dependencies:
-  - python>=3.8
+  - python>=3.8,<3.13
   - pip
   - numpy
-  - scipy
   - pandas
+  - scipy
   - matplotlib
   - seaborn
-  - cython
-  - cvxopt
-  - lxml
-  - pillow
-  - requests
   - tqdm
-  - networkx
-  - jinja2
   - biopython
   - ete3
+  - pillow
   - pyqt=5
+  - pypdf>=3.0.0
   - pip:
-      - treeswift==1.1.45
       - phyde>=1.0.2
-      - fastroot==1.5
-      - gprofiler-official==1.0.0
-      - mygene==3.2.2
-      - biothings-client==0.4.1
-      - pypdf>=3.0.0
-      - bio==1.7.1
