@@ -211,9 +211,6 @@ GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='Visualize GD
 GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format')
 GD_Visualizer_parser.add_argument('--gd_result', metavar='GD_RESULT', required=True, help='GD result table produced by GD_Detector')
 GD_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name), default=None')
-GD_Visualizer_parser.add_argument('--target_species', metavar='SP', action='append', default=None, help='Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.')
-GD_Visualizer_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.')
-GD_Visualizer_parser.add_argument('--include_unobserved_species', action='store_true', help='If set, species unobserved in a gene family are still classified by left/right presence instead of labeled as missing_data.')
 
 # GD_Loss_Tracker command
 GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='Track inferred post-GD loss paths across species tree branches', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Tracker --input_GF_list gf.imap --input_sps_tree sptree.nwk --input_imap map.txt')
