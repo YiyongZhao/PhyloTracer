@@ -306,6 +306,8 @@ Most modules generate task-specific outputs in either the current working direct
 - Hybridization outputs: `hyde_out.txt`, `hyde_filtered_out.txt`
 - Ortholog retrieval outputs: `ortho_retriever_summary.txt`, `ortholog_trees.tsv`
 - Topology summaries: `absolute_*.txt`, `relative_*.txt`, merged PNG summaries
+- HaploFinder (haplofinder mode): `gd_pairs_dotplot.pdf`, `gd_pairs_dotplot.png`, `color_label.txt`
+- HaploFinder (split mode): `haplofinder_split/split_assignment.tsv`, `haplofinder_split/split_subgenome_A.fasta`, `haplofinder_split/split_subgenome_B.fasta`, `haplofinder_split/split_subgenome_unknown.fasta`, `haplofinder_split/split_summary.txt`
 
 ---
 ## Command line options
@@ -655,4 +657,3 @@ Check the [Changelog](https://github.com/YiyongZhao/PhyloTracer/commits/PhyloTra
 ## License
 
 PhyloTracer is licensed under the [MIT LICENSE](LICENSE).
-

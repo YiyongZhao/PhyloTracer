@@ -1063,14 +1063,18 @@ def assign_hybrid_subgenome(tree, hybrid_prefix, diploid_tags):
     return result
 
 
-def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff):
+def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff, input_fasta, cluster_file):
     tre_dic = read_and_return_dict(input_GF_list)
     gff_1, dict_gff1 = read_gff(gff)
+    _ = gff_1
     gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(input_imap)
     hyb_sps_renamed = taxa2voucher_dic.get(hyb_sps, hyb_sps)
     parental_sps_renamed = [taxa2voucher_dic.get(s, s) for s in parental_sps]
     all_gene_labels = {}
-    c = 0
+    conflict_genes = set()
+
+    logger.info("split mode received --cluster_file=%s (currently not used in assignment logic)", cluster_file)
+
     for tre_ID, tre_path in tre_dic.items():
         logger.info("%s", tre_ID)
         Phylo_t0 = read_phylo_tree(tre_path)
@@ -1087,13 +1091,85 @@ def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff):
         b = {new_named_gene2gene_dic[k]: v for k, v in a.items()}
 
         for k1, v1 in b.items():
+            if k1 in all_gene_labels and all_gene_labels[k1] != v1:
+                all_gene_labels[k1] = "unknown"
+                conflict_genes.add(k1)
+            else:
+                all_gene_labels[k1] = v1
             if k1 in dict_gff1:
-                c = dict_gff1[k1][0]
-                is_correct_assignment = get_chromosome_subgenome(c)
+                chr_name = dict_gff1[k1][0]
+                is_correct_assignment = get_chromosome_subgenome(chr_name)
                 d = "unknown" if v1 == "unknown" else (v1 == is_correct_assignment)
-                logger.info("%s %s %s %s %s", k1, v1, c, is_correct_assignment, d)
+                logger.info("%s %s %s %s %s", k1, v1, chr_name, is_correct_assignment, d)
 
         logger.info("-" * 30)
+
+    all_sequences = read_fasta(input_fasta)
+    out_dir = "haplofinder_split"
+    os.makedirs(out_dir, exist_ok=True)
+
+    split_a = {}
+    split_b = {}
+    split_unknown = {}
+    assigned_total = 0
+    skipped_unassigned = 0
+
+    with open(os.path.join(out_dir, "split_assignment.tsv"), "w") as out:
+        out.write("gene_id\tsubgenome\tstatus\tchromosome\texpected_subgenome\tassignment_matches_expected\n")
+        for gene_id, seq in all_sequences.items():
+            label = all_gene_labels.get(gene_id)
+            if label is None:
+                skipped_unassigned += 1
+                continue
+
+            assigned_total += 1
+            chr_name = dict_gff1.get(gene_id, [None])[0]
+            expected = get_chromosome_subgenome(chr_name) if chr_name else None
+            status = "ok"
+            final_label = label
+            if gene_id in conflict_genes:
+                status = "conflict"
+                final_label = "unknown"
+
+            if final_label == "A":
+                split_a[gene_id] = seq
+            elif final_label == "B":
+                split_b[gene_id] = seq
+            else:
+                split_unknown[gene_id] = seq
+
+            if expected is None:
+                matched = "NA"
+            elif final_label == "unknown":
+                matched = "NA"
+            else:
+                matched = "1" if final_label == expected else "0"
+            out.write(
+                f"{gene_id}\t{final_label}\t{status}\t"
+                f"{chr_name if chr_name else 'NA'}\t{expected if expected else 'NA'}\t{matched}\n"
+            )
+
+    write_fasta(split_a, os.path.join(out_dir, "split_subgenome_A.fasta"))
+    write_fasta(split_b, os.path.join(out_dir, "split_subgenome_B.fasta"))
+    write_fasta(split_unknown, os.path.join(out_dir, "split_subgenome_unknown.fasta"))
+
+    with open(os.path.join(out_dir, "split_summary.txt"), "w") as out:
+        out.write(f"input_fasta_total={len(all_sequences)}\n")
+        out.write(f"assigned_total={assigned_total}\n")
+        out.write(f"subgenome_A={len(split_a)}\n")
+        out.write(f"subgenome_B={len(split_b)}\n")
+        out.write(f"unknown={len(split_unknown)}\n")
+        out.write(f"conflict_genes={len(conflict_genes)}\n")
+        out.write(f"skipped_unassigned={skipped_unassigned}\n")
+
+    logger.info(
+        "split mode outputs written to %s (A=%d, B=%d, unknown=%d, skipped=%d)",
+        os.path.abspath(out_dir),
+        len(split_a),
+        len(split_b),
+        len(split_unknown),
+        skipped_unassigned,
+    )
 
 
 # ======================================================
