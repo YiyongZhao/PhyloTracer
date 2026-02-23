@@ -325,9 +325,9 @@ Description:
     To transform a phylogenetic tree in Newick format into a 'comb' structure based on a predefined support value threshold. It can also revert this `comb` structure to a fully resolved binary tree, allowing dynamic topology adjustments
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
-    --support_value         Node support cutoff used for collapsing internal branches, default=50
+    --support_value         Node support cutoff used for collapsing internal branches, default = 50
 Optional parameter:
-    --revert                If set, expand previously collapsed comb structures back to binary form, default=False
+    --revert                If set, expand previously collapsed comb structures back to binary form, default = False
 Usage:
     PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
 ```
@@ -348,7 +348,7 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
 Optional parameter:
-    --decimal_place         Number of decimal places to keep for branch lengths, default=10
+    --decimal_place         Number of decimal places to keep for branch lengths, default = 10
 Usage:
     PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
 ```
@@ -404,10 +404,10 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-    --absolute_branch_length  Absolute branch-length multiplier threshold (integer), default=5
-    --relative_branch_length  Relative branch-length multiplier threshold (float), default=2.5
+    --absolute_branch_length  Absolute branch-length multiplier threshold (integer), default = 5
+    --relative_branch_length  Relative branch-length multiplier threshold (float), default = 2.5
 Optional parameter:
-    --visual                If set, export before/after tree visualization PDFs, default=False
+    --visual                If set, export before/after tree visualization PDFs, default = False
 Usage:
     PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
 ```
@@ -491,9 +491,9 @@ Required parameter:
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
-    --purity_cutoff         Target purity for dominant lineage, default=0.95
-    --max_remove_fraction   Maximum fraction of tips allowed to be removed, default=0.5
-    --visual                If set, export before/after pruning visualization PDFs, default=False
+    --purity_cutoff         Target purity for dominant lineage, default = 0.95
+    --max_remove_fraction   Maximum fraction of tips allowed to be removed, default = 0.5
+    --visual                If set, export before/after pruning visualization PDFs, default = False
 Usage:
     PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
 ```
@@ -505,7 +505,7 @@ Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
 Optional parameter:
-    --visual_top            Number of top-ranked topologies to visualize, default=10
+    --visual_top            Number of top-ranked topologies to visualize, default = 10
 Usage:
     PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10]
 ```
@@ -523,7 +523,7 @@ Optional parameter:
     --gene_family           Two-column mapping file (gene_id<TAB>family_label)
     --input_sps_tree        Species tree file in Newick format (required with --gene_family)
     --gene_expression       Gene expression matrix file (.csv/.xls/.xlsx), genes as row index
-    --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default=False
+    --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
 Usage:
     PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2order.imap gene2taxa.imap gene2clade.imap --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression gene2expression.csv --visual_gd]
 ```
@@ -534,14 +534,14 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-    --gd_support            Minimum support of a GD candidate node (accepted range: 0-100; typical: 50-100), default=50
-    --subclade_support      Minimum support required in GD child subclades (accepted range: 0-100), default=0
-    --dup_species_proportion  Minimum overlap ratio of duplicated species between the two GD child clades (range: 0-1), default=0.2
-    --dup_species_num       Minimum number of overlapping duplicated species under a GD node, default=2
+    --gd_support            Minimum support of a GD candidate node (accepted range: 0-100; typical: 50-100), default = 50
+    --subclade_support      Minimum support required in GD child subclades (accepted range: 0-100), default = 0
+    --dup_species_proportion  Minimum overlap ratio of duplicated species between the two GD child clades (range: 0-1), default = 0.2
+    --dup_species_num       Minimum number of overlapping duplicated species under a GD node, default = 2
     --input_sps_tree        Species tree file in Newick format
-    --deepvar               Maximum tolerated depth-variance score for GD screening, default=1
+    --deepvar               Maximum tolerated depth-variance score for GD screening, default = 1
 Optional parameter:
-    --gdtype_mode           GD type mode: relaxed (species overlap only) or strict (overlap + depth constraint), default=relaxed
+    --gdtype_mode           GD type assignment mode: relaxed uses species-overlap mapping only; strict additionally enforces depth-consistency filtering with --deepvar, default = relaxed
 Usage:
     PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]
 ```
@@ -552,7 +552,7 @@ Description:
 Required parameter:
     --input_sps_tree        Numbered species tree file in Newick format
     --gd_result             GD result table produced by GD_Detector
-    --input_imap            Two-column mapping file (gene_id<TAB>species_name), default=None
+    --input_imap            Two-column mapping file (gene_id<TAB>species_name), default = None
 Usage:
     PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap
 ```
@@ -567,7 +567,7 @@ Required parameter:
 Optional parameter:
     --target_species        Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.
     --mrca_node             Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.
-    --include_unobserved_species  If set, species unobserved in a gene family are still classified by left/right presence instead of labeled as missing_data.
+    --include_unobserved_species  If set, species unobserved in a gene family are still classified by left/right presence instead of missing_data; this flag changes classification only and does not change path_count_* node-transition counting logic.
 Usage:
     PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_species Arabidopsis_thaliana] [--mrca_node SpeciesA,SpeciesB] [--include_unobserved_species]
 ```
@@ -603,7 +603,7 @@ Required parameter:
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
     --mrca_node             Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used.
-    --split_groups          Number of partitions for HYDE batch processing, default=1
+    --split_groups          Number of partitions for HYDE batch processing, default = 1
 Usage:
     PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 2]
 ```
@@ -624,7 +624,7 @@ Usage:
 Description:
     To detect haplotype-level GD signals and support split-mode FASTA partitioning
 Required parameter:
-    --mode                  Run mode: "haplofinder" for GD analysis, "split" for FASTA partitioning by color labels, default=haplofinder
+    --mode                  Run mode: "haplofinder" for GD analysis, "split" for FASTA partitioning by color labels, default = haplofinder
 Mode = haplofinder required:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); required in haplofinder mode
     --input_imap            Two-column mapping file (gene_id<TAB>species_name); required in both haplofinder and split modes
@@ -636,11 +636,11 @@ Mode = haplofinder required:
     --species_a_lens        Chromosome-length file for species A (chr<TAB>length)
     --species_b_lens        Chromosome-length file for species B (chr<TAB>length)
 Optional in haplofinder mode:
-    --gd_support            Minimum support of GD nodes used for pair extraction (accepted range: 0-100, default=50)
-    --pair_support          Minimum support of ortholog/speciation pair nodes (accepted range: 0-100, default=50)
+    --gd_support            Minimum support of GD nodes used for pair extraction (accepted range: 0-100, default = 50)
+    --pair_support          Minimum support of ortholog/speciation pair nodes (accepted range: 0-100, default = 50)
     --visual_chr_a          Optional chromosome list file for species A visualization subset
     --visual_chr_b          Optional chromosome list file for species B visualization subset
-    --size                  Point size in dotplot rendering (positive float, default=0.0005)
+    --size                  Point size in dotplot rendering (positive float, default = 0.0005)
 Mode = split required:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); required in haplofinder mode
     --input_imap            Two-column mapping file (gene_id<TAB>species_name); required in both haplofinder and split modes
