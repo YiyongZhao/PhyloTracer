@@ -177,7 +177,9 @@ def summarize_small_loss_types_from_path(path_str: str) -> tuple:
 
     c20 = c21 = c10 = 0
     ordered_types = []
+    transition_keys = []
     for i in range(1, len(parsed)):
+        prev_node = parsed[i - 1][0]
         prev_copy = parsed[i - 1][1]
         curr_copy = parsed[i][1]
         if curr_copy >= prev_copy:
@@ -185,14 +187,17 @@ def summarize_small_loss_types_from_path(path_str: str) -> tuple:
         if prev_copy == 2 and curr_copy == 0:
             c20 += 1
             ordered_types.append("2-0")
+            transition_keys.append((prev_node, "2-0"))
         elif prev_copy == 2 and curr_copy == 1:
             c21 += 1
             ordered_types.append("2-1")
+            transition_keys.append((prev_node, "2-1"))
         elif prev_copy == 1 and curr_copy == 0:
             c10 += 1
             ordered_types.append("1-0")
+            transition_keys.append((prev_node, "1-0"))
 
-    return (",".join(ordered_types) if ordered_types else "NA"), c20, c21, c10
+    return (",".join(ordered_types) if ordered_types else "NA"), c20, c21, c10, transition_keys
 
 
 # ======================================================
@@ -213,6 +218,8 @@ def get_maptree_internal_node_name_set(node, sptree):
         path = get_two_nodes_path_str(clade, map_node1)
         names += path
 
+    # Node copy-state on path annotations must stay in biological range {0,1,2},
+    # so each child-side clade contributes at most one vote per internal node.
     return set(names)
 
 
@@ -225,7 +232,11 @@ def get_two_subclade_maptree_node_name_lst(max_clade, sptree):
     return up_down_lst
 
 
-def get_maptree_internal_node_name_count_dic(max_clade, max_clade2sp, sptree):
+def get_maptree_internal_node_name_count_dic(
+    max_clade,
+    max_clade2sp,
+    sptree,
+):
     up_down_lst = get_two_subclade_maptree_node_name_lst(max_clade, sptree)
     dic = {i.name: 0 for i in max_clade2sp.traverse()}
     for i in up_down_lst:
@@ -310,6 +321,7 @@ def get_path_str_with_count_num_lst(
     new_named_gene2gene_dic,
     voucher2taxa_dic,
     include_unobserved_species=False,
+    node_count_mode: str = "nonaccumulate",
 ):
     """
     Process duplication nodes and record gene pairs and loss paths.
@@ -398,6 +410,7 @@ def get_path_str_with_count_num_lst(
         seen_species = set()
         seen_keys = set()
         gd_counter = {"2-2": 0, "2-1": 0, "2-0": 0, "missing_data": 0}
+        gd_seen_transition_keys = set()
         for species_voucher in sorted(clade_species):
             if species_voucher in seen_species:
                 continue
@@ -423,11 +436,38 @@ def get_path_str_with_count_num_lst(
             orig_a = new_named_gene2gene_dic.get(g_a, g_a)
             orig_b = new_named_gene2gene_dic.get(g_b, g_b)
             pretty_path = voucher_to_pretty_path.get(species_voucher, "NA")
-            path_count_types, path_count_2_0, path_count_2_1, path_count_1_0 = (
-                summarize_small_loss_types_from_path(
-                pretty_path
-                )
+            path_count_types, path_count_2_0, path_count_2_1, path_count_1_0, transition_keys = (
+                summarize_small_loss_types_from_path(pretty_path)
             )
+            transition_keys_effective = list(transition_keys)
+            if node_count_mode == "nonaccumulate" and transition_keys:
+                filtered_types = []
+                c20 = c21 = c10 = 0
+                filtered_transition_keys = []
+                for node_name, t in transition_keys:
+                    key = (node_name, t)
+                    if key in gd_seen_transition_keys:
+                        continue
+                    gd_seen_transition_keys.add(key)
+                    filtered_types.append(t)
+                    filtered_transition_keys.append((node_name, t))
+                    if t == "2-0":
+                        c20 += 1
+                    elif t == "2-1":
+                        c21 += 1
+                    elif t == "1-0":
+                        c10 += 1
+                path_count_types = ",".join(filtered_types) if filtered_types else "NA"
+                path_count_2_0, path_count_2_1, path_count_1_0 = c20, c21, c10
+                transition_keys_effective = filtered_transition_keys
+
+            if transition_keys_effective:
+                # Node-aware transition events for downstream visualization.
+                path_count_node_events = ";".join(
+                    f"{node_name}|{trans_type}" for node_name, trans_type in transition_keys_effective
+                )
+            else:
+                path_count_node_events = "NA"
             if confidence == "unobserved_in_family" and not include_unobserved_species:
                 major_loss_class = "missing_data"
             elif loss_type == "2-0":
@@ -466,6 +506,7 @@ def get_path_str_with_count_num_lst(
                     "right_has": int(right_has),
                     "loss_confidence": confidence,
                     "major_loss_class": major_loss_class,
+                    "path_count_node_events": path_count_node_events,
                     "path_count_types": path_count_types,
                     "path_count_2_0": path_count_2_0,
                     "path_count_2_1": path_count_2_1,
@@ -539,6 +580,7 @@ def get_path_str_num_dic(
     target_species_list=None,
     allowed_gd_species_sets=None,
     include_unobserved_species=False,
+    node_count_mode: str = "nonaccumulate",
 ):
     """
     Aggregate loss-path statistics with optional filtering constraints.
@@ -595,6 +637,7 @@ def get_path_str_num_dic(
             new_named_gene2gene_dic,
             voucher2taxa_dic,
             include_unobserved_species=include_unobserved_species,
+            node_count_mode=node_count_mode,
         )
         global_gd_id = new_gd_id
 
@@ -625,7 +668,7 @@ def get_path_str_num_dic(
             "tree_ID\tgd_ID\tgd_support\tlevel\tspecies\tgene1\tgene2\tloss_path\t"
             "left_gene_n\tright_gene_n\tloss_type\tleft_has\tright_has\t"
             "loss_confidence\tmajor_loss_class\t"
-            "path_count_types\tpath_count_2_0\tpath_count_2_1\tpath_count_1_0\n"
+            "path_count_node_events\tpath_count_types\tpath_count_2_0\tpath_count_2_1\tpath_count_1_0\n"
         )
 
         for rec in all_records:
@@ -651,6 +694,7 @@ def get_path_str_num_dic(
                 f"{rec.get('loss_type', 'NA')}\t{rec.get('left_has', 0)}\t"
                 f"{rec.get('right_has', 0)}\t{rec.get('loss_confidence', 'NA')}\t"
                 f"{rec.get('major_loss_class', 'NA')}\t"
+                f"{rec.get('path_count_node_events', 'NA')}\t"
                 f"{rec.get('path_count_types', 'NA')}\t"
                 f"{rec.get('path_count_2_0', 0)}\t{rec.get('path_count_2_1', 0)}\t"
                 f"{rec.get('path_count_1_0', 0)}\n"

@@ -218,7 +218,8 @@ GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', r
 GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 GD_Loss_Tracker_parser.add_argument('--target_species', metavar='SP', action='append', default=None, help='Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.')
 GD_Loss_Tracker_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.')
-GD_Loss_Tracker_parser.add_argument('--include_unobserved_species', action='store_true', help='If set, species unobserved in a gene family are still classified by left/right presence instead of missing_data; this flag changes classification only and does not change path_count_* node-transition counting logic.')
+GD_Loss_Tracker_parser.add_argument('--include_unobserved_species', action='store_true', help='Classification policy for species absent from the current gene family, default = False. If set, treat unobserved species as classifiable (2-2/2-1/2-0) based on left/right presence; if not set, label them as missing_data. This flag does not change loss_path copy-state values (0/1/2) or GD event detection.')
+GD_Loss_Tracker_parser.add_argument('--node_count_mode', choices=['nonaccumulate', 'accumulate'], default='nonaccumulate', help='Node counting mode for path_count_* transition statistics, default = nonaccumulate. nonaccumulate: within one GD event, repeated transitions on the same internal node are counted once; accumulate: keep all repeated transitions. This flag does not change the (0/1/2) copy-state numbers shown in loss_path.')
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='Visualize GD-loss summary results on species tree topology', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Visualizer --gd_loss_result gd_loss_summary.txt --input_sps_tree numed_sptree.nwk')
@@ -539,6 +540,7 @@ def handle_gd_loss_tracker(cli_args):
             target_species_list=cli_args.target_species,
             allowed_gd_species_sets=allowed_gd_species_sets,
             include_unobserved_species=cli_args.include_unobserved_species,
+            node_count_mode=cli_args.node_count_mode,
         )
         parse_text_to_excel('gd_loss_count_summary.txt')
         report_execution_time(start_time)

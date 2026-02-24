@@ -85,6 +85,23 @@ def identify_loss_detail(path_str):
     return identified_losses
 
 
+def parse_node_loss_events(node_events_str):
+    """Parse node-aware loss events encoded as ``node|type;node|type``."""
+    if not node_events_str or node_events_str == "NA":
+        return []
+    events = []
+    for item in node_events_str.split(";"):
+        item = item.strip()
+        if not item or "|" not in item:
+            continue
+        node_name, loss_type = item.split("|", 1)
+        node_name = node_name.strip()
+        loss_type = loss_type.strip()
+        if node_name and loss_type in {"2-0", "2-1", "1-0"}:
+            events.append((node_name, loss_type))
+    return events
+
+
 def get_stats_deduplicated(filepath):
     """
     Deduplicate GD events and compute birth and loss statistics.
@@ -104,7 +121,8 @@ def get_stats_deduplicated(filepath):
     Tree ID and GD ID together form a unique event key.
     """
     gd_birth_sets = defaultdict(set)
-    loss_tracker = defaultdict(lambda: {"2-0": set(), "2-1": set(), "1-0": set()})
+    # Path-level loss counts are occurrence-based (not event-deduplicated).
+    loss_tracker = defaultdict(lambda: {"2-0": 0, "2-1": 0, "1-0": 0})
     event_loss_tracker = defaultdict(lambda: {"2-0": set(), "2-1": set(), "2-2": set()})
     # Enforce mutually exclusive event-level type by keeping the most severe type
     # per (level, event_key): 2-0 > 2-1 > 2-2.
@@ -121,6 +139,7 @@ def get_stats_deduplicated(filepath):
         header_cols = header.split("\t")
         header_idx = {name: idx for idx, name in enumerate(header_cols)}
         loss_type_idx = header_idx.get("loss_type", None)
+        node_events_idx = header_idx.get("path_count_node_events", None)
 
         for line in f:
             line = line.strip()
@@ -144,18 +163,21 @@ def get_stats_deduplicated(filepath):
                     elif event_type_priority[event_loss_type] > event_type_priority[prev]:
                         best_event_type_by_level[level_node][unique_key] = event_loss_type
 
-            loss_path = cols[7].strip()
-            all_losses = identify_loss_detail(loss_path)
+            if node_events_idx is not None and node_events_idx < len(cols):
+                all_losses = parse_node_loss_events(cols[node_events_idx].strip())
+            else:
+                loss_path = cols[7].strip()
+                all_losses = identify_loss_detail(loss_path)
             for loss_node, loss_type in all_losses:
-                loss_tracker[loss_node][loss_type].add(unique_key)
+                loss_tracker[loss_node][loss_type] += 1
 
     final_births = {k: len(v) for k, v in gd_birth_sets.items()}
     final_losses = {}
     for node, types in loss_tracker.items():
         final_losses[node] = {
-            "2-0": len(types["2-0"]),
-            "2-1": len(types["2-1"]),
-            "1-0": len(types["1-0"]),
+            "2-0": types["2-0"],
+            "2-1": types["2-1"],
+            "1-0": types["1-0"],
         }
 
     final_event_losses = {}
@@ -333,6 +355,11 @@ def visualizer_sptree(
                     position="branch-bottom",
                 )
             if total_loss > 0:
+                node.add_face(
+                    TextFace(f"P={c_2_0}/{c_2_1}/{c_1_0}", fsize=6, fgcolor="darkgreen"),
+                    column=0,
+                    position="branch-bottom",
+                )
                 logger.info(
                     "%-15s | %-10d | %-8d | %-8d | %-8d | %-8d | %-8d | %-8.2f | %-8.2f",
                     node_name, gd_births.get(node_name, 0),
@@ -379,6 +406,10 @@ def visualizer_sptree(
     )
     ts.title.add_face(
         TextFace("  Gray Lraw: shown when GD_birth=0 on a node", fsize=6),
+        column=0,
+    )
+    ts.title.add_face(
+        TextFace("  Green P=Path2-0/Path2-1/Path1-0 node-level path counts", fsize=6, fgcolor="darkgreen"),
         column=0,
     )
     try:
