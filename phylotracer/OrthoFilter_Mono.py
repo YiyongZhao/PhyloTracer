@@ -367,11 +367,11 @@ def collect_dominant_lineages(
         the specified cutoff, with at least two target tips.
     """
     dominant_roots = []
-    blocked_ancestors = set()
-    # Postorder ensures we prefer the deepest qualifying lineage roots
-    # (maximal dominant clades) and then block their ancestors.
-    for node in Phylo_t.traverse("postorder"):
-        if node in blocked_ancestors:
+    processed_roots = set()
+    # Preorder ensures we process ancestor candidates first; if any ancestor
+    # has already been accepted as a dominant root, skip this node.
+    for node in Phylo_t.traverse("preorder"):
+        if any(ancestor in processed_roots for ancestor in node.get_ancestors()):
             continue
         target_count, total_count = count_clade_leaves(node, leaf_to_clade, target_clade)
         if target_count <= 1 or total_count == 0:
@@ -381,7 +381,7 @@ def collect_dominant_lineages(
         if purity < dominant_purity or target_count <= alien_count:
             continue
         dominant_roots.append(node)
-        blocked_ancestors.update(node.get_ancestors())
+        processed_roots.add(node)
     return dominant_roots
 
 
@@ -663,6 +663,21 @@ def prune_one_clade_in_tree(
     log_handle,
     tre_ID: str,
 ) -> set:
+    def to_original_gene_name(leaf_name: str) -> str:
+        clade, gene_id = parse_leaf_components(leaf_name)
+        if clade:
+            return new_named_gene2gene_dic.get(gene_id, gene_id)
+        parts = leaf_name.split("_")
+        if len(parts) > 1:
+            fallback_gene_id = "_".join(parts[1:])
+            return new_named_gene2gene_dic.get(fallback_gene_id, fallback_gene_id)
+        return new_named_gene2gene_dic.get(leaf_name, leaf_name)
+
+    preorder_id = {node: idx for idx, node in enumerate(t.traverse("preorder"), start=1)}
+    def get_tree_node_id(node: object) -> str:
+        # Prefer the in-tree node numbering ID (e.g., N37) assigned by num_tre_node.
+        return node.name if getattr(node, "name", "") else f"NODE_{preorder_id[node]}"
+
     dominant_roots = collect_dominant_lineages(
         t, leaf_to_clade, target_clade, dominant_purity
     )
@@ -703,16 +718,39 @@ def prune_one_clade_in_tree(
             max_remove_fraction,
         )
 
-        # Record target clade in logs for traceable pruning decisions.
+        dominant_target_count, dominant_total_count = count_clade_leaves(
+            dominant_root, leaf_to_clade, target_clade
+        )
+        dominant_purity_val = (
+            dominant_target_count / dominant_total_count if dominant_total_count else 0.0
+        )
+        dominant_root_leaf_count = len(dominant_root.get_leaf_names())
+
+        # Record detailed audit rows without changing pruning behavior.
         for item in scores:
-            candidate_name = item["node"].name if item["node"].name else "NA"
-            gene_name = "_".join(candidate_name.split("_")[1:])
-            old_gene_name = new_named_gene2gene_dic.get(gene_name, gene_name)
-            remove_flag = 1 if set(item["leaf_names"]).issubset(selected) else 0
+            candidate_node = item["node"]
+            candidate_leaf_names = item["leaf_names"]
+            candidate_tips_original = [to_original_gene_name(x) for x in candidate_leaf_names]
+            candidate_type = "tip" if candidate_node.is_leaf() else "node"
+            candidate_id = (
+                candidate_tips_original[0]
+                if candidate_type == "tip"
+                else get_tree_node_id(candidate_node)
+            )
+
+            candidate_leaf_set = set(candidate_leaf_names)
+            removed_leaf_names = sorted(candidate_leaf_set & selected)
+            removed_tips_original = [to_original_gene_name(x) for x in removed_leaf_names]
+            remove_flag = 1 if candidate_leaf_set.issubset(selected) else 0
+
             log_handle.write(
-                f"{tre_ID}\t{target_clade}\t{dominant_root.name}\t{old_gene_name}\t"
-                f"{item['phylo_distance']}\t{item['alien_coverage']}\t"
-                f"{item['alien_deepvar']}\t{item['combined_score']}\t{remove_flag}\n"
+                f"{tre_ID}\t{target_clade}\t{get_tree_node_id(dominant_root)}\t"
+                f"{dominant_root_leaf_count}\t{dominant_target_count}\t{dominant_total_count}\t"
+                f"{dominant_purity_val}\t{candidate_id}\t{candidate_type}\t"
+                f"{len(candidate_leaf_names)}\t"
+                f"{item['phylo_distance']}\t{item['alien_coverage']}\t{item['alien_deepvar']}\t"
+                f"{item['combined_score']}\t{remove_flag}\t"
+                f"{','.join(removed_tips_original)}\n"
             )
 
         removal_set.update(selected)
@@ -864,14 +902,16 @@ def prune_main_Mono(
 
     base_dir = os.getcwd()
     out_tree_dir = os.path.join(base_dir, "orthofilter_mono/pruned_tree")
-    out_log_dir = os.path.join(base_dir, "orthofilter_mono/insert_gene")
+    out_audit_dir = os.path.join(base_dir, "orthofilter_mono/audit")
     out_visual_dir = os.path.join(base_dir, "orthofilter_mono/visual")
+    # Backward-compat cleanup: remove legacy duplicated insert logs.
+    shutil.rmtree(os.path.join(base_dir, "orthofilter_mono/insert_gene"), ignore_errors=True)
     if visual:
         os.makedirs(out_visual_dir, exist_ok=True)
     else:
         out_visual_dir = None
 
-    for d in (out_tree_dir, out_log_dir, out_visual_dir):
+    for d in (out_tree_dir, out_audit_dir, out_visual_dir):
         if d is not None:
             shutil.rmtree(d, ignore_errors=True)
             os.makedirs(d, exist_ok=True)
@@ -888,10 +928,13 @@ def prune_main_Mono(
         t = rename_input_tre(t0, gene2new_named_gene_dic)
         num_tre_node(t)
         rename_input_single_tre(t, taxa_dic, new_named_gene2gene_dic)
-        with open(os.path.join(out_log_dir, f"{tre_ID}_insert_gene.txt"), "w") as log:
+        with open(os.path.join(out_audit_dir, f"{tre_ID}.audit.tsv"), "w") as log:
             log.write(
-                "tre_ID\ttarget_clade\tdominant_root\tcandidate\tphylo_distance\t"
-                "alien_coverage\talien_deepvar\tcombined_score\tremoved\n"
+                "tre_ID\ttarget_clade\tdominant_root_id\tdominant_root_leaf_count\t"
+                "dominant_target_count\tdominant_total_count\tdominant_purity\t"
+                "candidate_id\tcandidate_type\tcandidate_leaf_count\t"
+                "phylo_distance\talien_coverage\t"
+                "alien_deepvar\tcombined_score\tremoved_flag\tremoved_tips_original\n"
             )
 
             if visual:
