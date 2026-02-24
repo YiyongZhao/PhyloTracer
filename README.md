@@ -327,7 +327,7 @@ Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --support_value         Node support cutoff used for collapsing internal branches, default = 50
 Optional parameter:
-    --revert                If set, expand previously collapsed comb structures back to binary form, default=False
+    --revert                If set, expand previously collapsed comb structures back to binary form, default = False
 Usage:
     PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
 ```
@@ -407,7 +407,7 @@ Required parameter:
     --absolute_branch_length  Absolute branch-length multiplier threshold (integer), default = 5
     --relative_branch_length  Relative branch-length multiplier threshold (float), default = 2.5
 Optional parameter:
-    --visual                If set, export before/after tree visualization PDFs, default=False
+    --visual                If set, export before/after tree visualization PDFs, default = False
 Usage:
     PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
 ```
@@ -493,7 +493,7 @@ Required parameter:
 Optional parameter:
     --purity_cutoff         Target purity for dominant lineage, default = 0.95
     --max_remove_fraction   Maximum fraction of tips allowed to be removed, default = 0.5
-    --visual                If set, export before/after pruning visualization PDFs, default=False
+    --visual                If set, export before/after pruning visualization PDFs, default = False
 Usage:
     PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
 ```
@@ -523,7 +523,7 @@ Optional parameter:
     --gene_family           Two-column mapping file (gene_id<TAB>family_label)
     --input_sps_tree        Species tree file in Newick format (required with --gene_family)
     --gene_expression       Gene expression matrix file (.csv/.xls/.xlsx), genes as row index
-    --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default=False
+    --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
 Usage:
     PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2order.imap gene2taxa.imap gene2clade.imap --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression gene2expression.csv --visual_gd]
 ```
@@ -541,7 +541,7 @@ Required parameter:
     --input_sps_tree        Species tree file in Newick format
     --deepvar               Maximum tolerated depth-variance score for GD screening, default = 1
 Optional parameter:
-    --gdtype_mode           GD type mode: relaxed (species overlap only) or strict (overlap + depth constraint), default=relaxed
+    --gdtype_mode           GD type mode: relaxed (species overlap only) or strict (overlap + depth constraint), default = relaxed
 Usage:
     PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]
 ```
@@ -624,7 +624,7 @@ Usage:
 Description:
     To detect haplotype-level GD signals and support split-mode FASTA partitioning
 Required parameter:
-    --mode                  Run mode: "haplofinder" for GD analysis, "split" for FASTA partitioning by color labels, default=haplofinder
+    --mode                  Run mode: "haplofinder" for GD analysis, "split" for FASTA partitioning by color labels, default = haplofinder
 Mode = haplofinder required:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); required in haplofinder mode
     --input_imap            Two-column mapping file (gene_id<TAB>species_name); required in both haplofinder and split modes
