@@ -541,7 +541,11 @@ Required parameter:
     --input_sps_tree        Species tree file in Newick format
     --deepvar               Maximum tolerated depth-variance score for GD screening, default = 1
 Optional parameter:
+<<<<<<< HEAD
     --gdtype_mode           GD type assignment mode: relaxed uses species-overlap mapping only; strict additionally enforces depth-consistency filtering with --deepvar, default = relaxed
+=======
+    --gdtype_mode           GD type mode: relaxed (species overlap only) or strict (overlap + depth constraint), default = relaxed
+>>>>>>> origin/main
 Usage:
     PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]
 ```
@@ -552,7 +556,11 @@ Description:
 Required parameter:
     --input_sps_tree        Numbered species tree file in Newick format
     --gd_result             GD result table produced by GD_Detector
+<<<<<<< HEAD
     --input_imap            Two-column mapping file (gene_id<TAB>species_name), default = None
+=======
+    --input_imap            Two-column mapping file (gene_id<TAB>species_name)
+>>>>>>> origin/main
 Usage:
     PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap
 ```
@@ -602,7 +610,11 @@ Required parameter:
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
+<<<<<<< HEAD
     --mrca_node             Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used.
+=======
+    --mrca_node             Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used. 
+>>>>>>> origin/main
     --split_groups          Number of partitions for HYDE batch processing, default = 1
 Usage:
     PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 2]
