@@ -1,0 +1,6 @@
+tre_ID	target_clade	dominant_root_id	dominant_root_leaf_count	dominant_target_count	dominant_total_count	dominant_purity	candidate_id	candidate_type	candidate_leaf_count	phylo_distance	alien_coverage	alien_deepvar	combined_score	removed_flag	removed_tips_original
+OG0000633_253	Magnoliopsida	N143	145	143	145	0.9862068965517241	GIN_0003674	tip	1	1	0.006896551724137931	3	0.0	0	
+OG0000633_253	Magnoliopsida	N143	145	143	145	0.9862068965517241	GIN_0010313	tip	1	1	0.006896551724137931	2	0.0	0	
+OG0000633_253	Magnoliopsida	N203	61	59	61	0.9672131147540983	GIN_0012213	tip	1	1	0.01639344262295082	2	0.0	0	
+OG0000633_253	Magnoliopsida	N203	61	59	61	0.9672131147540983	MAR_0000596	tip	1	3	0.01639344262295082	1	0.0	0	
+OG0000633_253	Polypodiopsida	N225	23	22	23	0.9565217391304348	MAR_0020527	tip	1	2	0.043478260869565216	1	0.0	0	

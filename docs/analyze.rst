@@ -7,6 +7,9 @@ Usage
 
 This section provides detailed usage instructions for the various modules and features of **PhyloTracer**. Each command includes a description, required parameters, optional parameters (if any), and an example of how to use it.
 
+Recommended workflow order for tree-processing modules is root-first:
+``Phylo_Rooter -> PhyloTree_CollapseExpand -> PhyloSupport_Scaler -> BranchLength_NumericConverter -> downstream modules``.
+
 
 1. PhyloTree_CollapseExpand
 ---------------------------

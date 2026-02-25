@@ -106,9 +106,15 @@ def branch_length_numeric_converter_main(
     ):
         raise ValueError("decimal_places must be a non-negative integer or None.")
 
-    dir_path = os.path.join(os.getcwd(), "converter_tree/")
+    cwd = os.getcwd()
+    default_dir = "converter_tree"
+    dir_path = (
+        cwd
+        if os.path.basename(os.path.normpath(cwd)) == default_dir
+        else os.path.join(cwd, f"{default_dir}/")
+    )
     try:
-        if os.path.exists(dir_path):
+        if dir_path != cwd and os.path.exists(dir_path):
             shutil.rmtree(dir_path)
         os.makedirs(dir_path, exist_ok=True)
     except Exception as exc:

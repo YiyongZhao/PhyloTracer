@@ -86,9 +86,15 @@ def collapse_expand_main(
     if not isinstance(tree_dict, dict):
         raise ValueError("tree_dict must be a dictionary.")
 
-    dir_path = os.path.join(os.getcwd(), "collapse_expand_tree/")
+    cwd = os.getcwd()
+    default_dir = "collapse_expand_tree"
+    dir_path = (
+        cwd
+        if os.path.basename(os.path.normpath(cwd)) == default_dir
+        else os.path.join(cwd, f"{default_dir}/")
+    )
     try:
-        if os.path.exists(dir_path):
+        if dir_path != cwd and os.path.exists(dir_path):
             shutil.rmtree(dir_path)
         os.makedirs(dir_path, exist_ok=True)
     except Exception as exc:

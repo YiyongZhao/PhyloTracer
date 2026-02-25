@@ -901,11 +901,16 @@ def prune_main_Mono(
     color_dic = get_color_dict(taxa_dic)
 
     base_dir = os.getcwd()
-    out_tree_dir = os.path.join(base_dir, "orthofilter_mono/pruned_tree")
-    out_audit_dir = os.path.join(base_dir, "orthofilter_mono/audit")
-    out_visual_dir = os.path.join(base_dir, "orthofilter_mono/visual")
+    module_root = (
+        base_dir
+        if os.path.basename(os.path.normpath(base_dir)) == "orthofilter_mono"
+        else os.path.join(base_dir, "orthofilter_mono")
+    )
+    out_tree_dir = os.path.join(module_root, "pruned_tree")
+    out_audit_dir = os.path.join(module_root, "audit")
+    out_visual_dir = os.path.join(module_root, "visual")
     # Backward-compat cleanup: remove legacy duplicated insert logs.
-    shutil.rmtree(os.path.join(base_dir, "orthofilter_mono/insert_gene"), ignore_errors=True)
+    shutil.rmtree(os.path.join(module_root, "insert_gene"), ignore_errors=True)
     if visual:
         os.makedirs(out_visual_dir, exist_ok=True)
     else:

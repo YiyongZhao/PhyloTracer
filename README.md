@@ -60,10 +60,10 @@ All modules are designed to be used independently or combined in larger phylogen
 
 PhyloTracer integrates 16 modular tools covering phylogenetic preprocessing, rooting, orthology refinement, duplication/loss detection, and hybridization analysis. Each module can run independently or be incorporated into larger evolutionary pipelines.
 
-1. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree into a “comb-like” structure based on a predefined support threshold, and re-expands it back to binary form when needed.
-2. **PhyloSupport_Scaler:** Recalibrates branch support values to standardized scales ([0–1] or [1–100]) for consistent computation.
-3. **BranchLength_NumericConverter:** Converts branch-length strings to numeric format for downstream quantitative analyses.
-4. **Phylo_Rooter:** Implements an accurate, automated rooting algorithm for gene trees to enhance evolutionary inference.
+1. **Phylo_Rooter:** Implements an accurate, automated rooting algorithm for gene trees to enhance evolutionary inference.
+2. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree into a “comb-like” structure based on a predefined support threshold, and re-expands it back to binary form when needed.
+3. **PhyloSupport_Scaler:** Recalibrates branch support values to standardized scales ([0–1] or [1–100]) for consistent computation.
+4. **BranchLength_NumericConverter:** Converts branch-length strings to numeric format for downstream quantitative analyses.
 5. **OrthoFilter_LB:** Removes tips with excessively long branches to eliminate phylogenomic noise.
 6. **OrthoFilter_Mono:** Prunes non-monophyletic outliers and paralogs under user-defined taxonomic constraints.
 7. **TreeTopology_Summarizer:** Summarizes frequencies of absolute and relative topologies across gene trees or predefined clades.
@@ -319,6 +319,18 @@ Most modules generate task-specific outputs in either the current working direct
 
 This section follows an OrthoFinder-like CLI reference style with compact layout and explicit parameter meanings.
 
+### Phylo_Rooter
+```
+Description:
+    Enables an accurate method for gene tree rooting and enhancing the downstream evolutionary genomic analysis
+Required parameter:
+    --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
+    --input_imap            Two-column mapping file (gene_id<TAB>species_name)
+    --input_gene_length     Two-column mapping file (gene_id<TAB>gene_length)
+    --input_sps_tree        Species tree file in Newick format
+Usage:
+    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
+```
 ### PhyloTree_CollapseExpand
 ```
 Description:
@@ -351,18 +363,6 @@ Optional parameter:
     --decimal_place         Number of decimal places to keep for branch lengths, default = 10
 Usage:
     PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
-```
-### Phylo_Rooter
-```
-Description:
-    Enables an accurate method for gene tree rooting and enhancing the downstream evolutionary genomic analysis
-Required parameter:
-    --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
-    --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-    --input_gene_length     Two-column mapping file (gene_id<TAB>gene_length)
-    --input_sps_tree        Species tree file in Newick format
-Usage:
-    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
 ```
 ### OrthoFilter_LB
 
