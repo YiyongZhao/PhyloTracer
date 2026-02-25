@@ -5,6 +5,7 @@ This module parses duplication results, aggregates events by species-tree
 nodes, and renders annotated species trees with duplication summaries.
 """
 
+import os
 import re
 from collections import defaultdict
 
@@ -104,7 +105,12 @@ def get_count_dic(gene_duplications: list) -> dict:
 # ======================================================
 
 
-def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
+def mark_sptree(
+    sptree: object,
+    count_dic: dict,
+    taxa: dict,
+    output_pdf: str = "phylotracer_gd_visualizer.pdf",
+) -> object:
     """
     Annotate a species tree with duplication summaries and taxa labels.
 
@@ -228,7 +234,7 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
 
     sptree.convert_to_ultrametric()
 
-    return sptree.render("phylotracer_gd_visualizer.pdf", w=210, units="mm", tree_style=ts)
+    return sptree.render(output_pdf, w=210, units="mm", tree_style=ts)
 
 
 # ======================================================
@@ -259,7 +265,9 @@ def gd_visualizer_main(sptree, gd_result, taxa):
     """
     gds = process_gd_result(gd_result)
     count_dic = get_count_dic(gds)
-    mark_sptree(sptree, count_dic, taxa)
+    gd_base = os.path.splitext(os.path.basename(gd_result))[0]
+    output_pdf = f"{gd_base}.pdf"
+    mark_sptree(sptree, count_dic, taxa, output_pdf=output_pdf)
 
 
 # ======================================================

@@ -41,7 +41,7 @@ PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt 
 
 # 11_GD_Loss_Tracker
 cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/11_GD_Loss_Tracker
-PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree /Users/apple/Documents/GitHub/PhyloTracer/example_data/9_GD_Detector/numed_sptree.nwk --input_imap gene2sps.imap --node_count_mode nonaccumulate
+PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap --node_count_mode nonaccumulate
 
 # 12_GD_Loss_Visualizer
 cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/12_GD_Loss_Visualizer
