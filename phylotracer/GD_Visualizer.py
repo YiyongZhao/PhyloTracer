@@ -20,8 +20,6 @@ except ImportError:
 from phylotracer import (
     read_phylo_tree,
     read_and_return_dict,
-    realign_branch_length,
-    rejust_root_dist,
 )
 
 # ======================================================
@@ -228,8 +226,7 @@ def mark_sptree(sptree: object, count_dic: dict, taxa: dict) -> object:
             id_face = TextFace(node_name, fsize=6, fgcolor="blue", ftype="Arial")
             node.add_face(id_face, column=0, position="branch-bottom")
 
-    realign_branch_length(sptree)
-    rejust_root_dist(sptree)
+    sptree.convert_to_ultrametric()
 
     return sptree.render("phylotracer_gd_visualizer.pdf", w=210, units="mm", tree_style=ts)
 

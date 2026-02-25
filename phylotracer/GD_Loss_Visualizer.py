@@ -20,7 +20,6 @@ except ImportError:
     TextFace = None
     TreeStyle = None
 
-from phylotracer import realign_branch_length, rejust_root_dist
 
 # ======================================================
 # Section 1: Loss Parsing and Statistics
@@ -413,8 +412,7 @@ def visualizer_sptree(
         column=0,
     )
     try:
-        realign_branch_length(sptree)
-        rejust_root_dist(sptree)
+        sptree.convert_to_ultrametric()
     except Exception:
         pass
 

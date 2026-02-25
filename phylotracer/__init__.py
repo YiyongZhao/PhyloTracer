@@ -35,7 +35,6 @@ __all__ = [
     "root_tre_with_midpoint_outgroup",
     "num_sptree",
     "num_tre_node",
-    "get_max_deepth",
     "calculate_depth",
     "calculate_deepvar",
     "get_species_list",
@@ -43,8 +42,6 @@ __all__ = [
     "calculate_species_num",
     "annotate_gene_tree",
     "compute_tip_to_root_branch_length_variance",
-    "realign_branch_length",
-    "rejust_root_dist",
     "judge_support",
     "sps_dup_num",
     "get_gene_pairs",
@@ -331,24 +328,6 @@ def num_tre_node(tree: Tree) -> Tree:
 
 
 
-def get_max_deepth(root) -> int:
-    """Compute the maximum depth below a node.
-
-    Args:
-        root: Tree node with a ``children`` attribute.
-
-    Returns:
-        int: Maximum depth from the node to any descendant leaf.
-
-    Assumptions:
-        The tree is finite and acyclic.
-    """
-    if root is None:
-        return 0
-    return 1 + max((get_max_deepth(c) for c in root.children), default=0)
-
-
-
 def calculate_depth(node_a, node_b) -> int:
     """Compute a legacy topological distance between two nodes.
 
@@ -538,74 +517,6 @@ def compute_tip_to_root_branch_length_variance(tree: Tree) -> float:
     return float(np.var(distances)) if len(distances) > 1 else 0.0
 
 
-
-def realign_branch_length(tree: Tree) -> Tree:
-    """Reassign branch lengths for visualization-oriented layouts.
-
-    The tree is ladderized and polytomies are resolved; branch lengths are then
-    adjusted to align depths for clearer visualization.
-
-    Args:
-        tree (Tree): ete3 Tree to modify.
-
-    Returns:
-        Tree: The same tree with modified branch lengths.
-
-    Assumptions:
-        The tree can be treated as binary after polytomy resolution.
-    """
-    tree.ladderize()
-    tree.resolve_polytomy(recursive=True)
-    tree.sort_descendants("support")
-
-    max_depth = get_max_deepth(tree)
-
-    for node in tree.traverse():
-        if not node.is_root():
-            node.dist = max_depth - get_max_deepth(node) - (
-                node.get_distance(tree.get_tree_root()) + 1
-            )
-
-    clade_a, clade_b = tree.get_children()
-    diff = abs(get_max_deepth(clade_a) - get_max_deepth(clade_b)) + 1
-    clade_a.dist += diff
-    clade_b.dist += diff
-
-    return tree
-
-
-
-def rejust_root_dist(tree: Tree) -> Tree:
-    """Adjust root branch distances to balance the two primary clades.
-
-    Args:
-        tree (Tree): ete3 Tree whose root branches will be adjusted.
-
-    Returns:
-        Tree: The same tree with updated root branch lengths.
-
-    Assumptions:
-        The root has exactly two children.
-    """
-    clade_a, clade_b = tree.get_children()
-
-    def adjust(main, other):
-        """Assign branch lengths to emphasize depth balance between clades."""
-        main.dist = 1
-        other.dist = (
-            get_max_deepth(tree) - 1
-            if other.is_leaf()
-            else get_max_deepth(tree) - get_max_deepth(other)
-        )
-
-    if len(clade_a) > len(clade_b):
-        adjust(clade_a, clade_b)
-    else:
-        adjust(clade_b, clade_a)
-
-    return tree
-
-
 # =========================
 # Duplication Detection
 # =========================
@@ -769,7 +680,7 @@ def find_dup_node(
     gene_tree: PhyloTree,
     species_tree: PhyloTree,
     gd_support: int = 50,
-    clade_support: int = 50,
+    clade_support: int = 0,
     dup_species_num: int = 1,
     dup_species_percent: float = 0,
     max_topology_distance: int = 1,
