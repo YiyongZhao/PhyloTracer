@@ -29,8 +29,6 @@ from PIL import Image, ImageDraw, ImageFont
 
 from phylotracer import (
     num_tre_node,
-    realign_branch_length,
-    rejust_root_dist,
 )
 
 # ======================================================
@@ -245,8 +243,7 @@ def generate_tree_leaf(t, hybrid_sps, filename):
     ts.scale = 10
     ts.show_leaf_name = False
     ts.show_scale = False
-    realign_branch_length(t)
-    rejust_root_dist(t)
+    t.convert_to_ultrametric()
 
     t.render(file_name=filename + "_img_faces.png", h=3200, tree_style=ts)
 
@@ -327,8 +324,7 @@ def generate_tree_node(t, node, filename):
 
     ts.show_scale = False
 
-    realign_branch_length(t)
-    rejust_root_dist(t)
+    t.convert_to_ultrametric()
 
     t.render(file_name=filename + "_img_faces.png", h=3200, tree_style=ts)
 

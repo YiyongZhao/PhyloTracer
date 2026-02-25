@@ -27,15 +27,13 @@ except ImportError:
 from tqdm import tqdm
 
 from phylotracer import (
+    annotate_gene_tree,
     find_dup_node,
     gene_id_transfer,
-    get_max_deepth,
     is_rooted,
     num_tre_node,
     read_and_return_dict,
     read_phylo_tree,
-    realign_branch_length,
-    rejust_root_dist,
     rename_input_tre,
     root_tre_with_midpoint_outgroup,
     get_species_list,
@@ -73,7 +71,8 @@ def dup_nodeids_from_numbered_gfs(
     if not is_rooted(phylo_t):
         phylo_t = root_tre_with_midpoint_outgroup(phylo_t)
     phylo_t = num_tre_node(phylo_t)
-    dup_node_list = find_dup_node(phylo_t, species_tree)
+    annotate_gene_tree(phylo_t, species_tree)
+    dup_node_list = find_dup_node(phylo_t, species_tree,50,0,1,0,1)
     phylo_t1 = Tree(phylo_t.write())
     num_tre_node(phylo_t1)
     return phylo_t1, dup_node_list
@@ -126,6 +125,10 @@ def create_tree_style(tree_style: str, tree_id: str, visual: bool = False) -> ob
     ts.show_branch_support = True
     ts.extra_branch_line_type = 0
     ts.extra_branch_line_color = "black"
+    ts.complete_branch_lines_when_necessary = True
+    ts.draw_guiding_lines = False
+    ts.guiding_lines_type = 0
+    ts.guiding_lines_color = "black"
     ts.branch_vertical_margin = -1
 
     return ts
@@ -385,6 +388,7 @@ def tips_mark(
     dir_path,
     gene_color_dict=None,
     df=None,
+    keep_branch: object = "1",
 ) -> object:
     """
     Annotate tree tips with categorical colors and optional heatmap values.
@@ -536,7 +540,8 @@ def tips_mark(
                 ftype="Arial",
                 fstyle="italic",
             )
-            node.add_face(gene_face, column=-1)
+            gene_pos = "aligned" if str(keep_branch) != "1" else "branch-right"
+            node.add_face(gene_face, column=-1, position=gene_pos)
         if species in sps_color_dict:
             color = sps_color_dict[species].split("@")[ -1]
             species_face = TextFace(
@@ -769,7 +774,7 @@ def tips_mark(
         add_color_bar(ts)
 
     return Phylo_t1.render(
-        f'{dir_path}{tre_ID}.pdf',
+        os.path.join(dir_path, f"{tre_ID}.pdf"),
         w=210,
         units="mm",
         tree_style=ts,
@@ -960,15 +965,21 @@ def get_sptree_style(sorted_dict: dict) -> any:
     ts.legend_position = 1
     ts.mode = "r"
     ts.scale = 30
+    ts.show_scale = False
+    ts.force_topology = False
     ts.show_border = True
     ts.margin_bottom = 20
     ts.margin_left = 20
     ts.margin_right = 50
     ts.margin_top = 20
-    ts.show_leaf_name = True
+    ts.show_leaf_name = False
     ts.extra_branch_line_type = 0
     ts.extra_branch_line_color = "black"
-    ts.branch_vertical_margin = -1
+    ts.complete_branch_lines_when_necessary = True
+    ts.draw_guiding_lines = True
+    ts.guiding_lines_type = 0
+    ts.guiding_lines_color = "black"
+    ts.branch_vertical_margin = 4
     for k, v in sorted_dict.items():
         ts.legend.add_face(
             TextFace(v.split("@")[1] + " " + k, fsize=20, fgcolor=v.split("@")[0]),
@@ -1047,10 +1058,10 @@ def mark_gene_to_sptree(
     def add_face_to_node(node, face, column, position="aligned"):
         if (node, column, position) not in faces_added:
             node.add_face(face, column=column, position=position)
-            faces_added.add((color_dict[node.name].split("@")[0], column, position))
+            faces_added.add((node, column, position))
 
     def generate_face_mark(node, species, column, color_dict):
-        if (color_dict[node.name].split("@")[0], column, "aligned") not in faces_added:
+        if (node, column, "aligned") not in faces_added:
             if species in color_dict:
                 color = color_dict[species].split("@")[ -1]
                 face = TextFace(
@@ -1085,6 +1096,11 @@ def mark_gene_to_sptree(
                             position=position,
                         )
         else:
+            i.add_face(
+                TextFace(i.name, fsize=10, fgcolor="black", ftype="Arial", fstyle="italic"),
+                column=0,
+                position="aligned",
+            )
             column = 1
             species = i.name
             for color_dict in color_dicts:
@@ -1185,7 +1201,7 @@ def view_main(
     dir_path = (
         cwd
         if os.path.basename(os.path.normpath(cwd)) == default_dir
-        else os.path.join(cwd, f"{default_dir}/")
+        else os.path.join(cwd, default_dir)
     )
     if dir_path != cwd and os.path.exists(dir_path):
         shutil.rmtree(dir_path)
@@ -1211,8 +1227,8 @@ def view_main(
         Phylo_t1.resolve_polytomy(recursive=True)
         Phylo_t1.sort_descendants("support")
         if str(keep_branch) != "1":
-            realign_branch_length(Phylo_t1)
-            rejust_root_dist(Phylo_t1)
+            Phylo_t1.convert_to_ultrametric(tree_length=1)
+            ts.draw_guiding_lines = True
 
         tips_mark(
             Phylo_t1,
@@ -1225,6 +1241,7 @@ def view_main(
             dir_path,
             gene_color_dict,
             df,
+            keep_branch=keep_branch,
         )
         pbar.update(1)
     pbar.close()
@@ -1290,12 +1307,9 @@ def mark_gene_to_sptree_main(
     )
 
     rename_sptree(sp2)
+    sp2.sort_descendants("support")
     ts = get_sptree_style(sorted_dict)
-    realign_branch_length(sp2)
-    clade_up = sp2.get_children()[0]
-    clade_down = sp2.get_children()[1]
-    clade_up.dist = 1
-    clade_down.dist = get_max_deepth(clade_up)
+    sp2.convert_to_ultrametric()
     sp2.render(file_name="genefamily_map2_sptree.pdf", tree_style=ts)
 
 

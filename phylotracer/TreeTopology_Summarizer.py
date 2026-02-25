@@ -9,6 +9,8 @@ from __future__ import annotations
 import logging
 import math
 import os
+import shutil
+import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +28,6 @@ from phylotracer import (
     get_species_set,
     read_and_return_dict,
     read_tree,
-    realign_branch_length,
-    rejust_root_dist,
     rename_input_tre,
 )
 
@@ -316,11 +316,14 @@ def visualize_top_trees(
     -----------
     Tree rendering and PIL image operations are available.
     """
+    def _layout_fixed_leaf_font(node):
+        if node.is_leaf():
+            node.add_face(TextFace(node.name, fsize=22), column=0, position="branch-right")
+
     cols = math.ceil(math.sqrt(top_n))
     rows = math.ceil(top_n / cols)
     sorted_trees = list(tree_count_dict.items())[:top_n]
-    temp_dir = "temp_trees"
-    os.makedirs(temp_dir, exist_ok=True)
+    temp_dir = tempfile.mkdtemp(prefix="temp_trees_")
     tree_images = []
     for i, (tree_str, count) in enumerate(sorted_trees):
         tree0 = read_tree(tree_str)
@@ -329,8 +332,7 @@ def visualize_top_trees(
         tree.resolve_polytomy(recursive=True)
         tree.sort_descendants("support")
 
-        realign_branch_length(tree)
-        rejust_root_dist(tree)
+        tree.convert_to_ultrametric()
 
         nstyle = NodeStyle()
         nstyle["vt_line_width"] = 1
@@ -344,15 +346,21 @@ def visualize_top_trees(
             node.set_style(nstyle)
         ts = TreeStyle()
         ts.scale = 10
-        ts.show_leaf_name = True
+        ts.show_leaf_name = False
+        ts.layout_fn = _layout_fixed_leaf_font
         ts.title.add_face(TextFace(f" Count: {len(count)}"), column=1)
         ts.show_scale = False
         tree_path = os.path.join(temp_dir, f"tree_{i + 1}.png")
         tree.render(tree_path, h=3200, tree_style=ts)
         tree_images.append(tree_path)
     if tree_images:
-        with Image.open(tree_images[0]) as img:
-            single_image_width, single_image_height = img.size
+        single_image_width = 0
+        single_image_height = 0
+        for img_path in tree_images:
+            with Image.open(img_path) as img:
+                w, h = img.size
+                single_image_width = max(single_image_width, w)
+                single_image_height = max(single_image_height, h)
     else:
         single_image_width, single_image_height = 1600, 1600
     final_width = cols * single_image_width
@@ -363,11 +371,12 @@ def visualize_top_trees(
             row, col = divmod(idx, cols)
             x_offset = col * single_image_width
             y_offset = row * single_image_height
-            combined_image.paste(img, (x_offset, y_offset))
+            # Center each tree image in a fixed-size grid cell to avoid overlap.
+            paste_x = x_offset + (single_image_width - img.size[0]) // 2
+            paste_y = y_offset + (single_image_height - img.size[1]) // 2
+            combined_image.paste(img, (paste_x, paste_y))
     combined_image.save(output_path)
-    for img_path in tree_images:
-        os.remove(img_path)
-    os.rmdir(temp_dir)
+    shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 # ======================================================
