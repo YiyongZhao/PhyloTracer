@@ -362,7 +362,7 @@ Required parameter:
 Optional parameter:
     --decimal_place         Number of decimal places to keep for branch lengths, default = 10
 Usage:
-    PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
+    PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap
 ```
 ### OrthoFilter_LB
 
@@ -495,7 +495,7 @@ Optional parameter:
     --max_remove_fraction   Maximum fraction of tips allowed to be removed, default = 0.5
     --visual                If set, export before/after pruning visualization PDFs, default = False
 Usage:
-    PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
+    PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
 ```
 ### TreeTopology_Summarizer
 ```
@@ -507,7 +507,7 @@ Required parameter:
 Optional parameter:
     --visual_top            Number of top-ranked topologies to visualize, default = 10
 Usage:
-    PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10]
+    PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap
 ```
 ### Tree_Visualizer
 ```
@@ -525,7 +525,7 @@ Optional parameter:
     --gene_expression       Gene expression matrix file (.csv/.xls/.xlsx), genes as row index
     --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
 Usage:
-    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2order.imap gene2taxa.imap gene2clade.imap --keep_branch {1,0} --tree_style {r,c} --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression gene2expression.csv --visual_gd]
+    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap
 ```
 ### GD_Detector
 ```
@@ -651,8 +651,8 @@ Mode = split required:
     --parental_sps          Parental species names used for split-mode assignment; provide as a single quoted, space-separated string
     --species_b_gff         Genome annotation file for species B in GFF/GTF-compatible format
 Usage:
-    PhyloTracer HaploFinder --mode haplofinder --input_GF_list GF.list --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --gd_support 50 --pair_support 50 [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001]
-    PhyloTracer HaploFinder --mode split --input_GF_list GF.list --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.txt --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff
+    PhyloTracer HaploFinder --mode haplofinder --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --gd_support 50 --pair_support 50 [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001]
+    PhyloTracer HaploFinder --mode split --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff
 ```
 
 ---

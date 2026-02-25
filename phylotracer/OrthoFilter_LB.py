@@ -8,7 +8,7 @@ orthology-aware analyses.
 
 import os
 import shutil
-from typing import Dict
+from typing import Dict, Optional, TextIO
 
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
@@ -262,7 +262,7 @@ def remove_long_branches(
     tree: object,
     abs_threshold: float,
     rel_threshold: float,
-    log_handle,
+    audit_handle: Optional[TextIO],
     tree_id: str,
     renamed2gene: Dict[str, str],
 ) -> object:
@@ -304,14 +304,16 @@ def remove_long_branches(
         gene_name = renamed2gene.get(leaf_name, leaf_name)
 
         if leaf_dist == 0:
-            log_handle.write(f"{tree_id}\t\t{gene_name}\t0\t0\n")
+            if audit_handle is not None:
+                audit_handle.write(f"{tree_id}\t{gene_name}\t0\t0\t0\n")
             continue
 
         root_ratio = (leaf_dist - avg_tip_length) / avg_tip_length
 
         sisters = leaf.get_sisters()
         if not sisters:
-            log_handle.write(f"{tree_id}\t\t{gene_name}\t0\t0\n")
+            if audit_handle is not None:
+                audit_handle.write(f"{tree_id}\t{gene_name}\t0\t0\t0\n")
             continue
         sister = sisters[0]
         if sister.is_leaf():
@@ -321,19 +323,14 @@ def remove_long_branches(
 
         sister_ratio = (leaf_dist - sister_avg) / sister_avg
 
+        removed_flag = 0
         if root_ratio >= abs_threshold:
             if sister_ratio >= rel_threshold:
-                log_handle.write(
-                    f"{tree_id}\t*\t{gene_name}\t{root_ratio}\t{sister_ratio}\n"
-                )
                 to_remove.add(leaf_name)
-            else:
-                log_handle.write(
-                    f"{tree_id}\t\t{gene_name}\t{root_ratio}\t{sister_ratio}\n"
-                )
-        else:
-            log_handle.write(
-                f"{tree_id}\t\t{gene_name}\t{root_ratio}\t{sister_ratio}\n"
+                removed_flag = 1
+        if audit_handle is not None:
+            audit_handle.write(
+                f"{tree_id}\t{gene_name}\t{root_ratio}\t{sister_ratio}\t{removed_flag}\n"
             )
 
     keep_leaves = set(pruned_tree.get_leaf_names()) - to_remove
@@ -392,14 +389,13 @@ def prune_main_LB(
         else os.path.join(base_dir, "orthofilter_lb")
     )
     pruned_dir = os.path.join(module_root, "pruned_tree")
-    log_dir = os.path.join(module_root, "long_branch_gene")
+    audit_dir = os.path.join(module_root, "audit")
     if visual:
         pdf_dir = os.path.join(module_root, "pruned_tree_pdf")
     else:
         pdf_dir = None
 
-
-    for d in (pruned_dir, log_dir, pdf_dir):
+    for d in (pruned_dir, audit_dir, pdf_dir):
         if d is not None:
             shutil.rmtree(d, ignore_errors=True)
             os.makedirs(d, exist_ok=True)
@@ -416,11 +412,11 @@ def prune_main_LB(
         tree = rename_input_tre(tree, gene2renamed)
         num_tre_node(tree)
 
-        log_path = os.path.join(log_dir, f"{tree_id}_delete_gene.txt")
-        with open(log_path, "w") as log:
-            log.write(
-                "tre_ID\tlong_branch_label\tgene\t"
-                "root_relative_branch_ratio\tsister_relative_branch_ratio\n"
+        audit_path = os.path.join(audit_dir, f"{tree_id}.audit.tsv")
+        with open(audit_path, "w") as audit:
+            audit.write(
+                "tre_ID\tgene\troot_relative_branch_ratio\t"
+                "sister_relative_branch_ratio\tremoved_flag\n"
             )
 
             if visual:
@@ -431,7 +427,7 @@ def prune_main_LB(
                 tree,
                 absolute_branch_length,
                 relative_branch_length,
-                log,
+                audit,
                 tree_id,
                 renamed2gene,
             )

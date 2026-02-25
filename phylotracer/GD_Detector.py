@@ -145,10 +145,6 @@ def write_gene_duplication_results(
                 child_a, child_b = clade.get_children()
                 dup_species_count = len(get_species_set(child_a) & get_species_set(child_b))
                 dup_ratio = dup_species_count / len(species_set) if species_set else 0
-                gd_num_dict.setdefault(
-                    voucher_to_taxa.get(clade.map, clade.map),
-                    set(),
-                ).add(clade)
 
                 mapped_parent = species_tree & clade.map
                 
@@ -164,6 +160,13 @@ def write_gene_duplication_results(
                 
                 if mapped_parent.is_leaf():
                     continue
+
+                # Keep numerator/denominator consistent with `gd_clade_count`
+                # by excluding leaf-level mappings from GD ratio counting.
+                gd_num_dict.setdefault(
+                    voucher_to_taxa.get(clade.map, clade.map),
+                    set(),
+                ).add(clade)
                 
 
                 gd_type_dict.setdefault(

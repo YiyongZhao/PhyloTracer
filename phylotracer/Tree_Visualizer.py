@@ -224,10 +224,15 @@ def get_treestyle(
     -----------
     Duplication inference requires a valid species tree.
     """
-    Phylo_t1, dup_node_list = dup_nodeids_from_numbered_gfs(
-        Phylo_t,
-        species_tree,
-    )
+    if visual:
+        Phylo_t1, dup_node_list = dup_nodeids_from_numbered_gfs(
+            Phylo_t,
+            species_tree,
+        )
+    else:
+        Phylo_t1 = Tree(Phylo_t.write())
+        num_tre_node(Phylo_t1)
+        dup_node_list = []
     ts = create_tree_style(tree_style, tre_ID, visual)
     dup_node_name_list = [node.name for node in dup_node_list]
     for node in Phylo_t1.traverse():
