@@ -615,8 +615,14 @@ def root_main(
     Assumptions:
         Input trees are readable Newick files and species labels are consistent.
     """
-    dir_path = os.path.join(os.getcwd(), "rooted_trees/")
-    if os.path.exists(dir_path):
+    cwd = os.getcwd()
+    default_dir = "rooted_trees"
+    dir_path = (
+        cwd
+        if os.path.basename(os.path.normpath(cwd)) == default_dir
+        else os.path.join(cwd, f"{default_dir}/")
+    )
+    if dir_path != cwd and os.path.exists(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path, exist_ok=True)
 

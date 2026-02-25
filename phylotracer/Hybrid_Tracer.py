@@ -769,6 +769,11 @@ def run_hyde_from_matrix_integrated(
     -----------
     Temporary files ``temp.phy`` and ``temp.imap`` can be created.
     """
+    if clean_matrix is None or clean_matrix.empty or clean_matrix.shape[1] == 0:
+        return []
+    if not seq_dic:
+        return []
+
     target_sps = clade.get_leaf_names()
 
     import tempfile

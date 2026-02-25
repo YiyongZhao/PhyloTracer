@@ -29,6 +29,7 @@ from tqdm import tqdm
 from phylotracer import (
     find_dup_node,
     gene_id_transfer,
+    get_max_deepth,
     is_rooted,
     num_tre_node,
     read_and_return_dict,
@@ -37,6 +38,7 @@ from phylotracer import (
     rejust_root_dist,
     rename_input_tre,
     root_tre_with_midpoint_outgroup,
+    get_species_list,
 )
 
 
@@ -982,29 +984,28 @@ def create_species_mappings(dict_list: list[dict[str, str]]) -> list[dict[str, s
     Parameters
     ----------
     dict_list : list[dict[str, str]]
-        List of gene-level mappings: gene2sps, gene2family, gene2order, gene2clade.
+        List of gene-level mappings where the first item is gene2sps and any
+        remaining items are optional category mappings.
 
     Returns
     -------
     list[dict[str, str]]
-        List containing sps2family, sps2order, and sps2clade mappings.
+        Species-level mappings corresponding to each optional category mapping.
 
     Assumptions
     -----------
     Gene identifiers are shared across the input dictionaries.
     """
-    gene2sps, gene2family, gene2order, gene2clade = dict_list
-    sps2family = {}
-    sps2order = {}
-    sps2clade = {}
-    for gene, sps in gene2sps.items():
-        if gene in gene2family:
-            sps2family[sps] = gene2family[gene]
-        if gene in gene2order:
-            sps2order[sps] = gene2order[gene]
-        if gene in gene2clade:
-            sps2clade[sps] = gene2clade[gene]
-    return [sps2family, sps2order, sps2clade]
+    gene2sps = dict_list[0]
+    category_maps = dict_list[1:]
+    species_maps = []
+    for category_map in category_maps:
+        species_map = {}
+        for gene, sps in gene2sps.items():
+            if gene in category_map:
+                species_map[sps] = category_map[gene]
+        species_maps.append(species_map)
+    return species_maps
 
 
 def mark_gene_to_sptree(
@@ -1179,8 +1180,14 @@ def view_main(
     -----------
     Input trees are valid and consistent with identifier mappings.
     """
-    dir_path = os.path.join(os.getcwd(), "tree_visualizer/")
-    if os.path.exists(dir_path):
+    cwd = os.getcwd()
+    default_dir = "tree_visualizer"
+    dir_path = (
+        cwd
+        if os.path.basename(os.path.normpath(cwd)) == default_dir
+        else os.path.join(cwd, f"{default_dir}/")
+    )
+    if dir_path != cwd and os.path.exists(dir_path):
         shutil.rmtree(dir_path)
     os.makedirs(dir_path, exist_ok=True)
     color_dicts = generate_color_dict(gene_categories)

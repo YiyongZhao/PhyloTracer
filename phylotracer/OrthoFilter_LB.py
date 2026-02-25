@@ -386,10 +386,15 @@ def prune_main_LB(
     color_map = create_color_mapping(voucher2taxa)
 
     base_dir = os.getcwd()
-    pruned_dir = os.path.join(base_dir, "orthofilter_lb/pruned_tree")
-    log_dir = os.path.join(base_dir, "orthofilter_lb/long_branch_gene")
+    module_root = (
+        base_dir
+        if os.path.basename(os.path.normpath(base_dir)) == "orthofilter_lb"
+        else os.path.join(base_dir, "orthofilter_lb")
+    )
+    pruned_dir = os.path.join(module_root, "pruned_tree")
+    log_dir = os.path.join(module_root, "long_branch_gene")
     if visual:
-        pdf_dir = os.path.join(base_dir, "orthofilter_lb/pruned_tree_pdf")
+        pdf_dir = os.path.join(module_root, "pruned_tree_pdf")
     else:
         pdf_dir = None
 

@@ -85,6 +85,15 @@ def read_and_return_dict(filename: str, separator: str = "\t") -> Dict[str, str]
         df = pd.read_csv(filename, sep=separator, header=None)
         if df.empty:
             raise ValueError("Mapping file is empty")
+        if 1 not in df.columns and separator == "\t":
+            # Fallback for legacy mapping files using generic whitespace
+            # delimiters instead of tabs.
+            df = pd.read_csv(filename, sep=r"\s+", header=None, engine="python")
+        if 1 not in df.columns:
+            raise ValueError(
+                "Mapping file must contain at least two columns "
+                "(key and value)."
+            )
         return df.set_index(0)[1].to_dict()
     except Exception as exc:
         logging.error(f"Failed to parse mapping file {filename}: {exc}")

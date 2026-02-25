@@ -1,2 +1,0 @@
-python ../bin/Phylo_Tracer.py PhyloTree_CollapseExpand --input_GF_list 1_PhyloTree_CollapseExpand/input/GF_ID2path.imap --support_value 50
-python ../bin/Phylo_Tracer.py PhyloSupport_Scaler --input_GF_list 2_PhyloSupport_Scaler/GF_ID2path.imap --scale_to 1 
