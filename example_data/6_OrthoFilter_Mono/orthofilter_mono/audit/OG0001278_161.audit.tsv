@@ -1,6 +1,0 @@
-tre_ID	target_clade	dominant_root_id	dominant_root_leaf_count	dominant_target_count	dominant_total_count	dominant_purity	candidate_id	candidate_type	candidate_leaf_count	phylo_distance	alien_coverage	alien_deepvar	combined_score	removed_flag	removed_tips_original
-OG0001278_161	Magnoliopsida	N159	161	152	161	0.9440993788819876	MAR_0003379	tip	1	3	0.006211180124223602	13	1.4665929497783712	1	MAR_0003379
-OG0001278_161	Magnoliopsida	N159	161	152	161	0.9440993788819876	MAR_0003347	tip	1	3	0.006211180124223602	5	0.4888643165927904	0	
-OG0001278_161	Magnoliopsida	N159	161	152	161	0.9440993788819876	N152	node	3	2	0.018633540372670808	5	0.19193112659871292	0	
-OG0001278_161	Magnoliopsida	N159	161	152	161	0.9440993788819876	N154	node	2	1	0.012422360248447204	4	0.0	0	
-OG0001278_161	Magnoliopsida	N159	161	152	161	0.9440993788819876	N158	node	2	4	0.012422360248447204	1	0.0	0	

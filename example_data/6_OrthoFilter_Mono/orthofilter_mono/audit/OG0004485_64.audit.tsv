@@ -1,4 +1,0 @@
-tre_ID	target_clade	dominant_root_id	dominant_root_leaf_count	dominant_target_count	dominant_total_count	dominant_purity	candidate_id	candidate_type	candidate_leaf_count	phylo_distance	alien_coverage	alien_deepvar	combined_score	removed_flag	removed_tips_original
-OG0004485_64	Magnoliopsida	N58	60	55	60	0.9166666666666666	GIN_0024552	tip	1	1	0.016666666666666666	3	0.0	0	
-OG0004485_64	Magnoliopsida	N58	60	55	60	0.9166666666666666	N55	node	2	3	0.03333333333333333	2	0.7379101608496221	1	MAR_0000613,MAR_0000614
-OG0004485_64	Magnoliopsida	N58	60	55	60	0.9166666666666666	N57	node	2	2	0.03333333333333333	1	0.0	1	CER_0041040,CER_0041041

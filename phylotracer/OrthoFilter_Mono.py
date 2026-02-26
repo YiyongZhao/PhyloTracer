@@ -562,6 +562,11 @@ def select_alien_tips_for_removal(
     target_count, total_count = count_clade_leaves(dominant_root, leaf_to_clade, target_clade)
     alien_count = total_count - target_count
     max_remove = max(int(max_remove_fraction * total_count), 1)
+    alien_clade_counts = Counter(
+        leaf_to_clade.get(leaf.name, "")
+        for leaf in dominant_root.iter_leaves()
+        if leaf_to_clade.get(leaf.name) != target_clade
+    )
 
     removal_set = set()
     sorted_scores = sorted(scores, key=lambda x: x["combined_score"], reverse=True)
@@ -582,6 +587,14 @@ def select_alien_tips_for_removal(
         candidate_leaves = set(item["leaf_names"])
         new_leaves = candidate_leaves - removal_set
         if not new_leaves:
+            continue
+        # Keep at least one tip for every non-target clade in each dominant lineage.
+        removed_by_clade = Counter(leaf_to_clade.get(name, "") for name in new_leaves)
+        if any(
+            clade_label
+            and alien_clade_counts.get(clade_label, 0) <= removed_count
+            for clade_label, removed_count in removed_by_clade.items()
+        ):
             continue
         if len(removal_set) + len(new_leaves) > max_remove:
             break
@@ -726,32 +739,25 @@ def prune_one_clade_in_tree(
         )
         dominant_root_leaf_count = len(dominant_root.get_leaf_names())
 
-        # Record detailed audit rows without changing pruning behavior.
+        # Record deletion rows only (one row per removed tip) without changing pruning behavior.
         for item in scores:
             candidate_node = item["node"]
             candidate_leaf_names = item["leaf_names"]
-            candidate_tips_original = [to_original_gene_name(x) for x in candidate_leaf_names]
-            candidate_type = "tip" if candidate_node.is_leaf() else "node"
-            candidate_id = (
-                candidate_tips_original[0]
-                if candidate_type == "tip"
-                else get_tree_node_id(candidate_node)
-            )
 
             candidate_leaf_set = set(candidate_leaf_names)
             removed_leaf_names = sorted(candidate_leaf_set & selected)
-            removed_tips_original = [to_original_gene_name(x) for x in removed_leaf_names]
-            remove_flag = 1 if candidate_leaf_set.issubset(selected) else 0
+            if not removed_leaf_names:
+                continue
 
-            log_handle.write(
-                f"{tre_ID}\t{target_clade}\t{get_tree_node_id(dominant_root)}\t"
-                f"{dominant_root_leaf_count}\t{dominant_target_count}\t{dominant_total_count}\t"
-                f"{dominant_purity_val}\t{candidate_id}\t{candidate_type}\t"
-                f"{len(candidate_leaf_names)}\t"
-                f"{item['phylo_distance']}\t{item['alien_coverage']}\t{item['alien_deepvar']}\t"
-                f"{item['combined_score']}\t{remove_flag}\t"
-                f"{','.join(removed_tips_original)}\n"
-            )
+            for removed_leaf in removed_leaf_names:
+                removed_gene = to_original_gene_name(removed_leaf)
+                log_handle.write(
+                    f"{tre_ID}\t{target_clade}\t{get_tree_node_id(dominant_root)}\t"
+                    f"{dominant_root_leaf_count}\t{dominant_target_count}\t{dominant_total_count}\t"
+                    f"{dominant_purity_val}\t{removed_gene}\ttip\t1\t"
+                    f"{item['phylo_distance']}\t{item['alien_coverage']}\t{item['alien_deepvar']}\t"
+                    f"{item['combined_score']}\t1\t{removed_gene}\n"
+                )
 
         removal_set.update(selected)
 
