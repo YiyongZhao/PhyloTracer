@@ -148,11 +148,17 @@ export QT_QPA_PLATFORM=offscreen
 
 - Rooting (core, via `Phylo_Rooter`):  
   Uses a two-stage strategy:
-  1) **Stage 1 (fast screening, no RF)** computes `deep`, `var`, `GD`, and `species_overlap`;  
+  1) **Stage 1 (fast screening, no RF)** computes `OD`, `BLV`, `GD`, and `SO`;  
   2) **Stage 2 (fine screening)** computes `RF` only for top candidates, then selects the best root by sorting `RF` first, then Stage-1 score.
 
+  Metric definitions used in Stage-1:
+  - `OD` (Outgroup depth): average depth of candidate outgroup clades. Larger values support deeper/more plausible outgroup partitioning.
+  - `BLV` (Branch length variance): branch-length variance under the candidate rooting. Smaller values indicate more clock-like and stable rooting.
+  - `GD` (GD events count): number of inferred duplication events under the candidate rooting. In multi-copy families, larger values carry stronger rooting signal.
+  - `SO` (GD clade species overlap): average species overlap between the two child clades of inferred GD nodes. Larger overlap suggests poorer speciation-like separation, so this term is penalized.
+
   Stage-1 scoring in code:
-  `score = w_deep * norm(deep) + w_var * norm(var) + w_GD * norm(GD) - w_SO * norm(species_overlap)`  
+  `score = w_OD * norm(OD) + w_BLV * norm(BLV) + w_GD * norm(GD) - w_SO * norm(SO)`  
   where `norm(x)` is min-max normalization in `[0, 1]`.
 
   <details>
@@ -160,10 +166,10 @@ export QT_QPA_PLATFORM=offscreen
 
   | Metric | Multi-copy GFs | Single-copy GFs (Stage-1) |
   |---|---:|---:|
-  | `deep` | 0.30 | 0.70 |
-  | `var` | 0.10 | 0.30 |
+  | `OD` | 0.30 | 0.70 |
+  | `BLV` | 0.10 | 0.30 |
   | `GD` | 0.50 | 0.00 |
-  | `species_overlap` (subtracted) | 0.10 | 0.00 |
+  | `SO` | 0.10 | 0.00 |
 
   </details>
 
