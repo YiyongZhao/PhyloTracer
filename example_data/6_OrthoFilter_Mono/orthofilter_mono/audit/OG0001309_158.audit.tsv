@@ -1,3 +1,0 @@
-tre_ID	target_clade	dominant_root_id	dominant_root_leaf_count	dominant_target_count	dominant_total_count	dominant_purity	candidate_id	candidate_type	candidate_leaf_count	phylo_distance	alien_coverage	alien_deepvar	combined_score	removed_flag	removed_tips_original
-OG0001309_158	Magnoliopsida	N152	154	139	154	0.9025974025974026	N140	node	4	1	0.025974025974025976	2	0.0	0	
-OG0001309_158	Magnoliopsida	N152	154	139	154	0.9025974025974026	N151	node	11	2	0.07142857142857142	1	0.0	1	CER_0035320,CER_0037509,CER_0037510,CER_0037511,CER_0037512,CER_0037513,CER_0037514,CER_0073593,CER_0073594,CER_0073595,CER_0073596

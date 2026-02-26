@@ -69,6 +69,11 @@ Example:
 
 Description:
     Enables an accurate method for gene tree rooting and enhancing the downstream evolutionary genomic analysis.
+    Stage-1 rooting metrics:
+    - ``OD`` (Outgroup depth): larger values generally support deeper/more plausible outgroup partitioning.
+    - ``BLV`` (Branch length variance): smaller values indicate more stable branch-length balance after rooting.
+    - ``GD`` (GD events count): number of inferred GD events under the candidate root.
+    - ``SO`` (GD clade species overlap): overlap between GD child-clade species sets; this term is penalized in Stage-1 scoring.
 
 Required Parameters:
     - ``--input_GF_list``       File containing paths to gene tree files, one per line.
