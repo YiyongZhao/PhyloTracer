@@ -91,8 +91,8 @@ Description:
 Required Parameters:
     - ``--input_GF_list``           File containing paths to gene tree files, one per line.
     - ``--input_imap``              File with species classification information corresponding to genes.
-    - ``--absolute_branch_length``  Absolute branch length multiplier (default is 5).
-    - ``--relative_branch_length``  Relative branch length multiplier (default is 2.5).
+    - ``--rrbr_cutoff``  RRBR cutoff based on root-to-tip distance (default is 5).
+    - ``--srbr_cutoff``  SRBR cutoff based on sister-relative branch ratio (default is 2.5).
 
 Optional Parameters:
     - ``--visual``                  Visualize the results of gene family trees before and after removing long branches.
@@ -100,7 +100,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
+        PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 [--visual]
 
 
 6. OrthoFilter_Mono

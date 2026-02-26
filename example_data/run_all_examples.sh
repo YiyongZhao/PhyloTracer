@@ -74,8 +74,8 @@ run_cmd m04 BranchLength_NumericConverter \
 run_cmd m05 OrthoFilter_LB \
   --input_GF_list "${SCRIPT_DIR}/5_OrthoFilter_LB/GF_ID2path.imap" \
   --input_imap "${SCRIPT_DIR}/5_OrthoFilter_LB/gene2sps.imap" \
-  --absolute_branch_length 5 \
-  --relative_branch_length 2.5
+  --rrbr_cutoff 5 \
+  --srbr_cutoff 2.5
 
 run_cmd m06 OrthoFilter_Mono \
   --input_GF_list "${SCRIPT_DIR}/6_OrthoFilter_Mono/GF_ID2path.imap" \
@@ -156,4 +156,3 @@ echo "OUTPUT_DIR: ${BASE_OUT}" | tee -a "${BASE_OUT}/run.log"
 if [[ ${FAIL_COUNT} -gt 0 ]]; then
   exit 1
 fi
-

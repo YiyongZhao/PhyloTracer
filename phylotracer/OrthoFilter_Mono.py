@@ -907,7 +907,7 @@ def prune_main_Mono(
         else os.path.join(base_dir, "orthofilter_mono")
     )
     out_tree_dir = os.path.join(module_root, "pruned_tree")
-    out_audit_dir = os.path.join(module_root, "audit")
+    out_delete_gene_dir = os.path.join(module_root, "delete_gene")
     out_visual_dir = os.path.join(module_root, "visual")
     # Backward-compat cleanup: remove legacy duplicated insert logs.
     shutil.rmtree(os.path.join(module_root, "insert_gene"), ignore_errors=True)
@@ -916,7 +916,7 @@ def prune_main_Mono(
     else:
         out_visual_dir = None
 
-    for d in (out_tree_dir, out_audit_dir, out_visual_dir):
+    for d in (out_tree_dir, out_delete_gene_dir, out_visual_dir):
         if d is not None:
             shutil.rmtree(d, ignore_errors=True)
             os.makedirs(d, exist_ok=True)
@@ -933,7 +933,7 @@ def prune_main_Mono(
         t = rename_input_tre(t0, gene2new_named_gene_dic)
         num_tre_node(t)
         rename_input_single_tre(t, taxa_dic, new_named_gene2gene_dic)
-        with open(os.path.join(out_audit_dir, f"{tre_ID}.audit.tsv"), "w") as log:
+        with open(os.path.join(out_delete_gene_dir, f"{tre_ID}.delete_gene.tsv"), "w") as log:
             log.write(
                 "tre_ID\ttarget_clade\tdominant_root_id\tdominant_root_leaf_count\t"
                 "dominant_target_count\tdominant_total_count\tdominant_purity\t"
