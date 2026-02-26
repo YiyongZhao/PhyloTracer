@@ -164,7 +164,6 @@ export QT_QPA_PLATFORM=offscreen
   | `var` | 0.10 | 0.30 |
   | `GD` | 0.50 | 0.00 |
   | `species_overlap` (subtracted) | 0.10 | 0.00 |
-  | `RF` | not used in Stage-1 | not used in Stage-1 |
 
   </details>
 
