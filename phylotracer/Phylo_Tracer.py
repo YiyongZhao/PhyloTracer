@@ -167,11 +167,11 @@ Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', requ
 Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # OrthoFilter_LB command
-OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5')
+OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5')
 OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 OrthoFilter_LB_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
-OrthoFilter_LB_parser.add_argument('--absolute_branch_length', metavar='INT', type=bounded_int(1), default=5, required=True, help='Absolute branch-length multiplier threshold (integer), default = 5')
-OrthoFilter_LB_parser.add_argument('--relative_branch_length', metavar='FLOAT', type=bounded_float(0.0), default=2.5, required=True, help='Relative branch-length multiplier threshold (float), default = 2.5')
+OrthoFilter_LB_parser.add_argument('--rrbr_cutoff', metavar='FLOAT', type=bounded_float(0.0), default=5, required=True, help='RRBR cutoff based on root-to-tip distance, default = 5')
+OrthoFilter_LB_parser.add_argument('--srbr_cutoff', metavar='FLOAT', type=bounded_float(0.0), default=2.5, required=True, help='SRBR cutoff based on sister-relative branch ratio, default = 2.5')
 OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='If set, export before/after tree visualization PDFs, default = False')
 OrthoFilter_LB_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
@@ -365,12 +365,12 @@ def handle_ortho_filter_lb(cli_args):
     if (
         cli_args.input_GF_list
         and cli_args.input_imap
-        and cli_args.absolute_branch_length is not None
-        and cli_args.relative_branch_length is not None
+        and cli_args.rrbr_cutoff is not None
+        and cli_args.srbr_cutoff is not None
     ):
         start_time = time.time()
-        absolute_branch_length = cli_args.absolute_branch_length
-        relative_branch_length = cli_args.relative_branch_length
+        rrbr_cutoff = cli_args.rrbr_cutoff
+        srbr_cutoff = cli_args.srbr_cutoff
         gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, _ = gene_id_transfer(cli_args.input_imap)
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
         prune_main_LB(
@@ -378,8 +378,8 @@ def handle_ortho_filter_lb(cli_args):
             voucher2taxa_dic,
             gene2new_named_gene_dic,
             new_named_gene2gene_dic,
-            absolute_branch_length,
-            relative_branch_length,
+            rrbr_cutoff,
+            srbr_cutoff,
             visual=cli_args.visual,
         )
         report_execution_time(start_time)

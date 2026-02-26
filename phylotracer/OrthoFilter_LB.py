@@ -66,9 +66,9 @@ def has_multiple_copies(tree: object) -> bool:
     return len(tree.get_leaf_names()) != len(get_species_set(tree))
 
 
-def get_average_tip_length(tree: object) -> float:
+def get_average_tip_root_distance(tree: object) -> float:
     """
-    Compute the mean branch length of terminal leaves.
+    Compute the mean root-to-tip distance across all leaves.
 
     Parameters
     ----------
@@ -78,13 +78,13 @@ def get_average_tip_length(tree: object) -> float:
     Returns
     -------
     float
-        Mean terminal branch length across all leaves.
+        Mean root-to-tip path length across all leaves.
 
     Assumptions
     -----------
     The tree contains at least one leaf and branch lengths are defined.
     """
-    return sum(leaf.dist for leaf in tree) / len(tree)
+    return sum(tree.get_distance(leaf) for leaf in tree) / len(tree)
 
 
 def get_average_node_length(subtree: object) -> float:
@@ -260,9 +260,9 @@ def merge_pdfs(left_pdf: str, right_pdf: str, output_pdf: str) -> None:
 
 def remove_long_branches(
     tree: object,
-    abs_threshold: float,
-    rel_threshold: float,
-    audit_handle: Optional[TextIO],
+    rrbr_cutoff: float,
+    srbr_cutoff: float,
+    delete_handle: Optional[TextIO],
     tree_id: str,
     renamed2gene: Dict[str, str],
 ) -> object:
@@ -273,12 +273,12 @@ def remove_long_branches(
     ----------
     tree : object
         ETE tree object representing a gene tree.
-    abs_threshold : float
-        Absolute threshold on the root-relative branch ratio.
-    rel_threshold : float
-        Relative threshold on the sister-relative branch ratio.
-    log_handle : object
-        File handle for recording pruning decisions.
+    rrbr_cutoff : float
+        Threshold on Root Relative Branch Ratio (RRBR), based on root-to-tip distance.
+    srbr_cutoff : float
+        Threshold on Sister Relative Branch Ratio (SRBR), based on terminal branch comparison.
+    delete_handle : object
+        File handle for recording removed genes only.
     tree_id : str
         Identifier of the gene tree.
     renamed2gene : Dict[str, str]
@@ -294,47 +294,50 @@ def remove_long_branches(
     Tree is rooted and branch lengths are comparable across leaves.
     """
     pruned_tree = tree.copy()
-    to_remove: Set[str] = set()
+    max_rounds = len(pruned_tree.get_leaf_names())
 
-    avg_tip_length = get_average_tip_length(pruned_tree)
+    for _ in range(max_rounds):
+        to_remove = set()
+        avg_tip_root_distance = get_average_tip_root_distance(pruned_tree)
 
-    for leaf in pruned_tree:
-        leaf_name = leaf.name
-        leaf_dist = leaf.dist
-        gene_name = renamed2gene.get(leaf_name, leaf_name)
+        for leaf in pruned_tree:
+            leaf_name = leaf.name
+            leaf_dist = leaf.dist
+            tip_root_distance = pruned_tree.get_distance(leaf)
+            gene_name = renamed2gene.get(leaf_name, leaf_name)
 
-        if leaf_dist == 0:
-            if audit_handle is not None:
-                audit_handle.write(f"{tree_id}\t{gene_name}\t0\t0\t0\n")
-            continue
+            if leaf_dist == 0 or avg_tip_root_distance == 0:
+                continue
 
-        root_ratio = (leaf_dist - avg_tip_length) / avg_tip_length
+            root_ratio = (
+                tip_root_distance - avg_tip_root_distance
+            ) / avg_tip_root_distance
 
-        sisters = leaf.get_sisters()
-        if not sisters:
-            if audit_handle is not None:
-                audit_handle.write(f"{tree_id}\t{gene_name}\t0\t0\t0\n")
-            continue
-        sister = sisters[0]
-        if sister.is_leaf():
-            sister_avg = sister.dist or 1e-6
-        else:
-            sister_avg = get_average_node_length(sister) or 1e-6
+            sisters = leaf.get_sisters()
+            if not sisters:
+                continue
+            sister = sisters[0]
+            if sister.is_leaf():
+                sister_avg = sister.dist or 1e-6
+            else:
+                sister_avg = get_average_node_length(sister) or 1e-6
 
-        sister_ratio = (leaf_dist - sister_avg) / sister_avg
+            sister_ratio = (leaf_dist - sister_avg) / sister_avg
 
-        removed_flag = 0
-        if root_ratio >= abs_threshold:
-            if sister_ratio >= rel_threshold:
+            if root_ratio >= rrbr_cutoff and sister_ratio >= srbr_cutoff:
                 to_remove.add(leaf_name)
-                removed_flag = 1
-        if audit_handle is not None:
-            audit_handle.write(
-                f"{tree_id}\t{gene_name}\t{root_ratio}\t{sister_ratio}\t{removed_flag}\n"
-            )
+                if delete_handle is not None:
+                    delete_handle.write(
+                        f"{tree_id}\t{gene_name}\t{root_ratio}\t{sister_ratio}\n"
+                    )
 
-    keep_leaves = set(pruned_tree.get_leaf_names()) - to_remove
-    pruned_tree.prune(keep_leaves, preserve_branch_length=True)
+        if not to_remove:
+            break
+
+        keep_leaves = set(pruned_tree.get_leaf_names()) - to_remove
+        if len(keep_leaves) < 2:
+            break
+        pruned_tree.prune(keep_leaves, preserve_branch_length=True)
     return pruned_tree
 
 
@@ -347,8 +350,8 @@ def prune_main_LB(
     voucher2taxa: Dict[str, str],
     gene2renamed: Dict[str, str],
     renamed2gene: Dict[str, str],
-    absolute_branch_length: float = 5,
-    relative_branch_length: float = 5,
+    rrbr_cutoff: float = 5,
+    srbr_cutoff: float = 2.5,
     visual: bool = False,
 ) -> None:
     """
@@ -364,10 +367,10 @@ def prune_main_LB(
         Mapping from original gene identifiers to renamed identifiers.
     renamed2gene : Dict[str, str]
         Mapping from renamed gene identifiers to original gene names.
-    absolute_branch_length : float, optional
-        Absolute threshold for the root-relative branch ratio.
-    relative_branch_length : float, optional
-        Relative threshold for the sister-relative branch ratio.
+    rrbr_cutoff : float, optional
+        Threshold for Root Relative Branch Ratio (RRBR).
+    srbr_cutoff : float, optional
+        Threshold for Sister Relative Branch Ratio (SRBR).
     visual : bool, optional
         Whether to generate before/after tree visualization PDFs.
 
@@ -389,13 +392,13 @@ def prune_main_LB(
         else os.path.join(base_dir, "orthofilter_lb")
     )
     pruned_dir = os.path.join(module_root, "pruned_tree")
-    audit_dir = os.path.join(module_root, "audit")
+    delete_gene_dir = os.path.join(module_root, "delete_gene")
     if visual:
         pdf_dir = os.path.join(module_root, "pruned_tree_pdf")
     else:
         pdf_dir = None
 
-    for d in (pruned_dir, audit_dir, pdf_dir):
+    for d in (pruned_dir, delete_gene_dir, pdf_dir):
         if d is not None:
             shutil.rmtree(d, ignore_errors=True)
             os.makedirs(d, exist_ok=True)
@@ -412,11 +415,11 @@ def prune_main_LB(
         tree = rename_input_tre(tree, gene2renamed)
         num_tre_node(tree)
 
-        audit_path = os.path.join(audit_dir, f"{tree_id}.audit.tsv")
-        with open(audit_path, "w") as audit:
-            audit.write(
+        delete_path = os.path.join(delete_gene_dir, f"{tree_id}.delete_gene.tsv")
+        with open(delete_path, "w") as delete_gene:
+            delete_gene.write(
                 "tre_ID\tgene\troot_relative_branch_ratio\t"
-                "sister_relative_branch_ratio\tremoved_flag\n"
+                "sister_relative_branch_ratio\n"
             )
 
             if visual:
@@ -425,9 +428,9 @@ def prune_main_LB(
 
             pruned_tree = remove_long_branches(
                 tree,
-                absolute_branch_length,
-                relative_branch_length,
-                audit,
+                rrbr_cutoff,
+                srbr_cutoff,
+                delete_gene,
                 tree_id,
                 renamed2gene,
             )
@@ -458,8 +461,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Long-branch pruning filter")
     parser.add_argument("--input_GF_list", required=True, help="Gene family list file")
     parser.add_argument("--input_imap", required=True, help="Imap file")
-    parser.add_argument("--absolute_branch_length", type=float, default=5, help="Absolute branch length cutoff")
-    parser.add_argument("--relative_branch_length", type=float, default=5, help="Relative branch length cutoff")
+    parser.add_argument("--rrbr_cutoff", type=float, default=5, help="RRBR cutoff (root-relative branch ratio)")
+    parser.add_argument("--srbr_cutoff", type=float, default=2.5, help="SRBR cutoff (sister-relative branch ratio)")
     parser.add_argument("--visual", action="store_true", help="Enable visual output")
     args = parser.parse_args()
 
@@ -476,7 +479,7 @@ if __name__ == "__main__":
         voucher2taxa,
         gene2renamed,
         renamed2gene,
-        absolute_branch_length=args.absolute_branch_length,
-        relative_branch_length=args.relative_branch_length,
+        rrbr_cutoff=args.rrbr_cutoff,
+        srbr_cutoff=args.srbr_cutoff,
         visual=args.visual,
     )

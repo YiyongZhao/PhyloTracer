@@ -17,7 +17,7 @@ PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap --deci
 
 # 5_OrthoFilter_LB
 cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/5_OrthoFilter_LB
-PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 --visual
+PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 --visual
 
 # 6_OrthoFilter_Mono
 cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/6_OrthoFilter_Mono

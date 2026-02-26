@@ -8236,20 +8236,20 @@ Program execution time: 0 d, 0 h, 0 m, 0.11 s
 ###############################################################################################
 
 Usage: PhyloTracer OrthoFilter_LB [-h] --input_GF_list file --input_imap file
-                                  --absolute_branch_length
-                                  ABSOLUTE_BRANCH_LENGTH
-                                  --relative_branch_length
-                                  RELATIVE_BRANCH_LENGTH [--visual]
+                                  --rrbr_cutoff
+                                  RRBR_CUTOFF
+                                  --srbr_cutoff
+                                  SRBR_CUTOFF [--visual]
 
 Options:
   -h, --help            show this help message and exit
   --input_GF_list file  File containing paths to gene tree files, one per line
   --input_imap file     File with classification information of species
                         corresponding to genes
-  --absolute_branch_length ABSOLUTE_BRANCH_LENGTH
-                        Absolute branch length multiplier and default = 5
-  --relative_branch_length RELATIVE_BRANCH_LENGTH
-                        Relative branch length multiplier and default = 2.5
+  --rrbr_cutoff RRBR_CUTOFF
+                        RRBR cutoff based on root-to-tip distance, default = 5
+  --srbr_cutoff SRBR_CUTOFF
+                        SRBR cutoff based on sister-relative branch ratio, default = 2.5
   --visual              Visualize the results of gene family trees before and
                         after removing long branches
 </pre>
@@ -8265,7 +8265,7 @@ Options:
 <div class="jp-InputPrompt jp-InputArea-prompt">In [17]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
 <div class="cm-editor cm-s-jupyter">
-<div class="highlight hl-bash"><pre><span></span>python<span class="w"> </span>../Phylo_Tracer.py<span class="w">  </span>OrthoFilter_LB<span class="w"> </span>--input_GF_list<span class="w">  </span>5_OrthoFilter_LB/GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>5_OrthoFilter_LB/gene2sps.imap<span class="w">  </span>--absolute_branch_length<span class="w"> </span><span class="m">5</span><span class="w"> </span>--relative_branch_length<span class="w"> </span><span class="m">2</span>.5
+<div class="highlight hl-bash"><pre><span></span>python<span class="w"> </span>../Phylo_Tracer.py<span class="w">  </span>OrthoFilter_LB<span class="w"> </span>--input_GF_list<span class="w">  </span>5_OrthoFilter_LB/GF_ID2path.imap<span class="w"> </span>--input_imap<span class="w"> </span>5_OrthoFilter_LB/gene2sps.imap<span class="w">  </span>--rrbr_cutoff<span class="w"> </span><span class="m">5</span><span class="w"> </span>--srbr_cutoff<span class="w"> </span><span class="m">2</span>.5
 </pre></div>
 </div>
 </div>

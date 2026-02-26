@@ -152,10 +152,8 @@ export QT_QPA_PLATFORM=offscreen
   2) **Stage 2 (fine screening)** computes `RF` only for top candidates, then selects the best root by sorting `RF` first, then Stage-1 score.
 
   Stage-1 scoring in code:
-  $$
-  score = w_{deep}\cdot norm(deep)+w_{var}\cdot norm(var)+w_{GD}\cdot norm(GD)-w_{SO}\cdot norm(species\_overlap)
-  $$
-  where `norm(x)` is min-max normalization in \([0,1]\).
+  `score = w_deep * norm(deep) + w_var * norm(var) + w_GD * norm(GD) - w_SO * norm(species_overlap)`  
+  where `norm(x)` is min-max normalization in `[0, 1]`.
 
   <details>
   <summary>📊 Stage-1 weights in <code>Phylo_Rooter</code> (from code)</summary>
@@ -304,8 +302,8 @@ Glyma.07G273800.2     0.0
 Most modules generate task-specific outputs in either the current working directory or module-specific subdirectories. Common outputs include:
 
 - Rooted tree outputs: `rooted_trees/`
-- Long-branch filter outputs: `orthofilter_lb/`
-- Monophyly filter outputs: `orthofilter_mono/`
+- Long-branch filter outputs: `orthofilter_lb/pruned_tree/`, `orthofilter_lb/delete_gene/`
+- Monophyly filter outputs: `orthofilter_mono/pruned_tree/`, `orthofilter_mono/delete_gene/`
 - GD detection tables: `gd_result_*.txt`, `gd_type_*.tsv`
 - GD-loss tables: `gd_loss_summary.txt`, `gd_loss_count_summary.txt`, `gd_loss.xlsx`
 - Hybridization outputs: `hyde_out.txt`, `hyde_filtered_out.txt`
@@ -368,17 +366,17 @@ Usage:
 
 **Description:** Prunes phylogenomic noise from both single-copy and multi-copy gene family trees by removing tips with abnormally long branches. This module helps eliminate potential artifacts such as Long Branch Attraction (LBA).
 
-**Required parameters (CLI):** `--input_GF_list`, `--input_imap`, `--absolute_branch_length`, `--relative_branch_length`
+**Required parameters (CLI):** `--input_GF_list`, `--input_imap`, `--rrbr_cutoff`, `--srbr_cutoff`
 
 **1. Root Relative Branch Ratio (RRBR)**
 
-**Concept:** Measures the deviation of a specific gene's branch length relative to the **global average** of the entire gene family tree.
+**Concept:** Measures the deviation of a specific gene's **root-to-tip path length** relative to the **global average** of root-to-tip distances in the same gene tree.
 
 * **Purpose:** Detects outlier sequences evolving significantly faster or slower than the family norm.
 * **Formula:**
 
 $$
-\text{RRBR} = \frac{\text{Branch Length} - \text{Average Branch Length}}{\text{Average Branch Length}}
+\text{RRBR} = \frac{\text{Root-to-tip distance} - \text{Average root-to-tip distance}}{\text{Average root-to-tip distance}}
 $$
 
 **2. Sister Relative Branch Ratio (SRBR)**
@@ -394,8 +392,8 @@ $$
 
 **Where:**
 
-* **Branch Length:** The branch length of the specified gene.
-* **Average Branch Length:** The arithmetic mean of all branch lengths in the gene family tree.
+* **Root-to-tip distance:** Path length from the tip to the root.
+* **Average root-to-tip distance:** Mean root-to-tip path length across all tips in the same gene tree.
 * **Sister Branch Length:** The branch length of the nearest "neighbor" or "sister" gene.
 
 ```
@@ -404,12 +402,12 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-    --absolute_branch_length  Absolute branch-length multiplier threshold (integer), default = 5
-    --relative_branch_length  Relative branch-length multiplier threshold (float), default = 2.5
+    --rrbr_cutoff           RRBR cutoff based on root-to-tip distance, default = 5
+    --srbr_cutoff           SRBR cutoff based on sister-relative branch ratio, default = 2.5
 Optional parameter:
     --visual                If set, export before/after tree visualization PDFs, default = False
 Usage:
-    PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --absolute_branch_length 5 --relative_branch_length 2.5 [--visual]
+    PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 [--visual]
 ```
 ### OrthoFilter_Mono
 
