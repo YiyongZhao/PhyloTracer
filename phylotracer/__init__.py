@@ -535,9 +535,9 @@ def judge_support(support: float, threshold: float) -> bool:
     Assumptions:
         Values <= 1 are interpreted as fractions and converted to percent.
     """
-    if 0 < support < 1:
+    if 0 < support <= 1:
         support = support * 100
-    if 0 < threshold < 1:
+    if 0 < threshold <= 1:
         threshold = threshold * 100
     return support >= threshold
 
@@ -714,7 +714,7 @@ def find_dup_node(
         
         if not judge_support(node.support, gd_support):
             continue
-
+        
         children = node.get_children()
         if len(children) != 2:
             continue

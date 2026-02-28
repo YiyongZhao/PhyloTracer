@@ -91,52 +91,6 @@ def get_species_map_and_depth(species_tree: object) -> dict:
     return species_depth
 
 
-def annotate_mapped_depths(gene_tree: object, species_tree: object) -> object:
-    """Annotate gene-tree nodes with mapped species-tree depths.
-
-    Args:
-        gene_tree (object): Gene tree with species-labeled leaves.
-        species_tree (object): Species tree for LCA mapping.
-
-    Returns:
-        object: The same gene tree with ``mapped_depth`` features attached.
-
-    Assumptions:
-        Leaf names encode species identifiers compatible with the species tree.
-    """
-    if not gene_tree or not species_tree:
-        return gene_tree
-
-    sp_depths = get_species_map_and_depth(species_tree)
-
-    cache = {}
-    for node in gene_tree.traverse():
-        species_set = get_species_set(node)
-        if not species_set:
-            node.add_feature("mapped_depth", 0)
-            continue
-
-        key = frozenset(species_set)
-        if key in cache:
-            node.add_feature("mapped_depth", cache[key])
-            continue
-
-        try:
-            if len(species_set) == 1:
-                species_name = list(species_set)[0]
-                mapped_node = species_tree & species_name
-            else:
-                mapped_node = species_tree.get_common_ancestor(species_set)
-
-            depth = sp_depths.get(mapped_node, 0)
-
-            cache[key] = depth
-            node.add_feature("mapped_depth", depth)
-        except Exception:
-            node.add_feature("mapped_depth", 0)
-    return gene_tree
-
-
 def get_species_tree_basal_set(species_tree_obj: object) -> set:
     """Select a basal species set from the species tree.
 
@@ -392,6 +346,55 @@ def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set, newid2
     return rerooted_trees
 
 
+def _root_signature(tree: object) -> tuple:
+    """Build a stable signature of the current root split for candidate deduplication."""
+    if len(tree.children) < 2:
+        return tuple()
+    parts = []
+    for child in tree.children[:2]:
+        parts.append(tuple(sorted(child.get_leaf_names())))
+    return tuple(sorted(parts))
+
+
+def _reroot_by_node_set(base_tree: object, node_list: list) -> list:
+    """Generate rerooted candidates by setting outgroup to each node in ``node_list``."""
+    rerooted = []
+    seen = set()
+    for node in node_list:
+        try:
+            leaf_names = node.get_leaf_names()
+            tcopy = base_tree.copy()
+            if len(leaf_names) == 1:
+                target = tcopy & leaf_names[0]
+            else:
+                target = tcopy.get_common_ancestor(leaf_names)
+            if target == tcopy:
+                continue
+            tcopy.set_outgroup(target)
+            sig = _root_signature(tcopy)
+            if sig in seen:
+                continue
+            seen.add(sig)
+            rerooted.append(tcopy)
+        except Exception:
+            continue
+    return rerooted
+
+
+def merge_unique_root_candidates(*candidate_groups: list) -> list:
+    """Merge candidate trees and keep only unique root-split signatures."""
+    merged = []
+    seen = set()
+    for group in candidate_groups:
+        for tree in group:
+            sig = _root_signature(tree)
+            if sig in seen:
+                continue
+            seen.add(sig)
+            merged.append(tree)
+    return merged
+
+
 def calculate_tree_statistics(tree: object, species_tree: object) -> tuple:
     """Compute fast, RF-free statistics for candidate trees.
 
@@ -400,13 +403,13 @@ def calculate_tree_statistics(tree: object, species_tree: object) -> tuple:
         species_tree (object): Species tree used for GD and overlap metrics.
 
     Returns:
-        tuple: (deep, var, GD, species_overlap) summary statistics.
+        tuple: (deep, var, GD, species_overlap, gd_consistency) summary statistics.
 
     Assumptions:
         The tree is bifurcating at the root.
     """
     if len(tree.children) < 2:
-        return 0, 0, 0, 0
+        return 0, 0, 0, 0, 0
     up_clade = tree.children[1]
     down_clade = tree.children[0]
 
@@ -416,15 +419,15 @@ def calculate_tree_statistics(tree: object, species_tree: object) -> tuple:
 
     # Use pre-calculated mapped_depth
     if len(up_clade.get_leaf_names()) > len(down_clade.get_leaf_names()):
-        deep = getattr(down_clade, 'mapped_depth', 0)
+        deep = getattr(down_clade, 'depth', 0)
     else:
-        deep = getattr(up_clade, 'mapped_depth', 0)
+        deep = getattr(up_clade, 'depth', 0)
 
-    species_overlap, GD = calculate_species_overlap_gd_num(tree, species_tree)
-    return deep, var, GD, species_overlap
+    species_overlap, GD, gd_consistency = calculate_species_overlap_gd_num(tree, species_tree)
+    return deep, var, GD, species_overlap, gd_consistency
 
 
-def calculate_species_overlap_gd_num(gene_tree: object, species_tree: object) -> float:
+def calculate_species_overlap_gd_num(gene_tree: object, species_tree: object) -> tuple:
     """Compute species overlap ratio and GD count from duplication nodes.
 
     Args:
@@ -434,13 +437,14 @@ def calculate_species_overlap_gd_num(gene_tree: object, species_tree: object) ->
     Returns:
         float: Overlap ratio between the two child clades of the largest GD node.
         int: Number of detected duplication nodes.
+        float: Mean GD consistency across duplication nodes.
 
     Assumptions:
         Duplication detection is performed by ``find_dup_node``.
     """
     dup_nodes = find_dup_node(gene_tree, species_tree)
     if not dup_nodes:
-        return 0.0, 0
+        return 0.0, 0, 0.0
     largest_tree = max(dup_nodes, key=lambda node: len(node.get_leaves()))
     up_clade = largest_tree.children[1]
     down_clade = largest_tree.children[0]
@@ -449,10 +453,28 @@ def calculate_species_overlap_gd_num(gene_tree: object, species_tree: object) ->
 
     union_len = len(set(species_list_a) | set(species_list_b))
     if union_len == 0:
-        return 0.0, len(dup_nodes)
+        return 0.0, len(dup_nodes), 0.0
 
     overlap_ratio = len(set(species_list_a) & set(species_list_b)) / union_len
-    return overlap_ratio, len(dup_nodes)
+    gd_consistency_vals = []
+    for dup_node in dup_nodes:
+        if len(dup_node.children) < 2:
+            continue
+        left_species = set(get_species_list(dup_node.children[0]))
+        right_species = set(get_species_list(dup_node.children[1]))
+        if not left_species or not right_species:
+            continue
+        size_symmetry = min(len(left_species), len(right_species)) / max(
+            len(left_species), len(right_species)
+        )
+        union_size = len(left_species | right_species)
+        jaccard = (
+            len(left_species & right_species) / union_size if union_size else 0.0
+        )
+        gd_consistency_vals.append(size_symmetry * jaccard)
+
+    gd_consistency = float(np.mean(gd_consistency_vals)) if gd_consistency_vals else 0.0
+    return overlap_ratio, len(dup_nodes), gd_consistency
 
 # --------------------------
 # 2. Core RF Calculation Logic
@@ -552,7 +574,8 @@ def normalize_and_score(df: pd.DataFrame, weights: dict, include_rf=True):
         pandas Series: Score values for each row.
 
     Assumptions:
-        Metrics are numeric and higher overlap is better while deep/var/GD are lower.
+        Metrics are numeric and higher overlap/consistency are better while
+        deep/var/GD are lower.
     """
     def norm(values: pd.Series) -> pd.Series:
         """Normalize a series of values to [0, 1] range.
@@ -567,11 +590,12 @@ def normalize_and_score(df: pd.DataFrame, weights: dict, include_rf=True):
             return (values - values.min()) / (values.max() - values.min())
         return pd.Series(0.0, index=values.index)
 
-    # deep/var/GD: smaller is better; overlap: larger is better
+    # deep/var/GD: smaller is better; overlap/consistency: larger is better
     norm_deep = norm(df["deep"])
     norm_var = norm(df["var"])
     norm_GD = norm(df["GD"])
     norm_species_overlap = norm(df["species_overlap"])
+    norm_gd_consistency = norm(df["gd_consistency"])
 
     weighted_norm_RF = 0
     if include_rf and "RF" in df.columns:
@@ -579,11 +603,13 @@ def normalize_and_score(df: pd.DataFrame, weights: dict, include_rf=True):
         weighted_norm_RF = norm_RF * weights.get("RF", 0)
 
     weighted_norm_overlap = norm_species_overlap * weights.get("species_overlap", 0)
+    weighted_norm_gd_consistency = norm_gd_consistency * weights.get("gd_consistency", 0)
     score = (
         norm_deep * weights.get("deep", 0) +
         norm_var * weights.get("var", 0) +
         norm_GD * weights.get("GD", 0) -
         weighted_norm_overlap +
+        (-weighted_norm_gd_consistency) +
         weighted_norm_RF
     )
     return score
@@ -598,7 +624,8 @@ def root_main(
     gene_to_new_name: dict,
     renamed_length_dict: dict,
     new_name_to_gene: dict,
-    renamed_species_tree: object
+    renamed_species_tree: object,
+    stage1_weights: dict = None,
 ) -> None:
     """Root gene trees and select optimal candidates using staged scoring.
 
@@ -608,6 +635,8 @@ def root_main(
         renamed_length_dict (dict): Length dictionary used in offcut processing.
         new_name_to_gene (dict): Mapping from renamed IDs to original IDs.
         renamed_species_tree (object): Species tree with renamed taxa.
+        stage1_weights (dict, optional): Stage-1 weights for
+            deep/var/GD/species_overlap/gd_consistency.
 
     Returns:
         None
@@ -633,8 +662,23 @@ def root_main(
     pbar = tqdm(total=len(tree_dict), desc="Processing trees", unit="tree")
     stat_matrix = []
 
-    stage1_weights_multi = {"deep": 0.3, "var": 0.1, "RF": 0.0, "GD": 0.5, "species_overlap": 0.1}
-    stage1_weights_single = {"deep": 0.7, "var": 0.3, "RF": 0.0}
+    if stage1_weights is None:
+        stage1_weights = {
+            "deep": 0.30,
+            "var": 0.10,
+            "GD": 0.40,
+            "species_overlap": 0.10,
+            "gd_consistency": 0.10,
+            "RF": 0.0,
+        }
+    logger.info(
+        "Stage-1 weights (OD, BLV, GD, SO, GD_consistency) = %.3f, %.3f, %.3f, %.3f, %.3f",
+        stage1_weights.get("deep", 0.0),
+        stage1_weights.get("var", 0.0),
+        stage1_weights.get("GD", 0.0),
+        stage1_weights.get("species_overlap", 0.0),
+        stage1_weights.get("gd_consistency", 0.0),
+    )
 
     try:
         for tree_id, tree_path in tree_dict.items():
@@ -652,18 +696,37 @@ def root_main(
                 continue
 
             # 3. Depth annotation & Basal filtering
-            Phylo_t2 = annotate_mapped_depths(Phylo_t2, renamed_species_tree)
+            Phylo_t2 = annotate_gene_tree(Phylo_t2, renamed_species_tree)
 
             current_gene_species = set(get_species_list(Phylo_t2))
             dynamic_basal_set = get_dynamic_basal_set(current_gene_species, renamed_species_tree)
-            root_list = get_all_rerooted_trees_filtered(Phylo_t2, dynamic_basal_set, new_name_to_gene)
+            outgroup_root_list = get_all_rerooted_trees_filtered(
+                Phylo_t2, dynamic_basal_set, new_name_to_gene
+            )
+
+            gd_nodes = find_dup_node(Phylo_t2, renamed_species_tree)
+            gd_root_list = _reroot_by_node_set(Phylo_t2, gd_nodes)
+
+            c1=Phylo_t1.get_common_ancestor('ADK.1046083','ACX.1023956')
+            c2=Phylo_t2&c1.name
+            
+            for c in gd_nodes:
+                print(rename_input_tre(c, new_name_to_gene))
+            root_list = merge_unique_root_candidates(outgroup_root_list, gd_root_list)
+            logger.info(
+                "%s: candidate roots from outgroup=%d, from GD nodes=%d, merged=%d",
+                tree_id,
+                len(outgroup_root_list),
+                len(gd_root_list),
+                len(root_list),
+            )
 
             if not root_list:
                 logger.warning("No valid root candidates after basal filter.")
                 rename_output_tre(Phylo_t2, new_name_to_gene, tree_id, dir_path)
                 pbar.update(1)
                 continue
-
+            root_list.append(c2)
             # ==========================================
             # Stage 1: Fast Screening (No RF)
             # ==========================================
@@ -677,24 +740,23 @@ def root_main(
                 tree_objects[tree_key] = tree
                 # print(rename_input_tre(tree, new_name_to_gene))
 
-                deep, var, GD, species_overlap = calculate_tree_statistics(tree, renamed_species_tree)
-                # print(f"deep: {deep}, var: {var}, GD: {GD}, species_overlap: {species_overlap}")
-                # print('='*50)
+                deep, var, GD, species_overlap, gd_consistency = calculate_tree_statistics(tree, renamed_species_tree)
+                
+                print(f"deep: {deep}, var: {var}, GD: {GD}, species_overlap: {species_overlap}, gd_consistency: {gd_consistency}")
+                print('='*50)
                 temp_stats.append({
                     "Tree": tree_key,
                     "deep": deep, "var": var, "GD": GD,
-                    "species_overlap": species_overlap, "RF": 0,
+                    "species_overlap": species_overlap,
+                    "gd_consistency": gd_consistency,
+                    "RF": 0,
                     "tree_obj_ref": tree  # Store object reference for Stage 2
                 })
 
             current_df = pd.DataFrame(temp_stats)
 
-            # Weight selection
-            is_multi_copy = len(get_species_list(Phylo_t2)) != len(get_species_set(Phylo_t2))
-            used_weights = stage1_weights_multi if is_multi_copy else stage1_weights_single
-
             # Initial scoring
-            current_df["score"] = normalize_and_score(current_df, used_weights, include_rf=False)
+            current_df["score"] = normalize_and_score(current_df, stage1_weights, include_rf=False)
 
             # ==========================================
             # Stage 2: Fine Screening (Calculate RF for Top N)
@@ -723,7 +785,8 @@ def root_main(
                 )
 
                 top_candidates_df.at[idx, "RF"] = rf_val
-
+                print(f"RF for {row['Tree']}: {rf_val}")
+                print('='*50)
             # 3. [Core Modification] Sort directly to select the best, no re-weighting
             # Logic: Prioritize RF (smaller is better), if RF is equal, check Stage 1 Score (smaller is better)
             best_row = top_candidates_df.sort_values(
@@ -749,7 +812,7 @@ def root_main(
         stat_df = pd.DataFrame(stat_matrix)
         if not stat_df.empty:
             stat_df["tree_id"] = stat_df["Tree"].apply(lambda x: "_".join(x.split("_")[:-1]))
-            cols = ["Tree", "score", "deep", "var", "GD", "species_overlap", "RF"]
+            cols = ["Tree", "score", "deep", "var", "GD", "species_overlap", "gd_consistency", "RF"]
             stat_df = stat_df.sort_values(by=["tree_id", "score"])[cols]
             stat_df.to_csv("stat_matrix.csv", index=False)
 
