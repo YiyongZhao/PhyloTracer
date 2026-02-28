@@ -148,7 +148,7 @@ export QT_QPA_PLATFORM=offscreen
 
 - Rooting (core, via `Phylo_Rooter`):  
   Uses a two-stage strategy:
-  1) **Stage 1 (fast screening, no RF)** computes `OD`, `BLV`, `GD`, and `SO`;  
+  1) **Stage 1 (fast screening, no RF)** computes `OD`, `BLV`, `GD`, `SO`, and `GD_consistency`;  
   2) **Stage 2 (fine screening)** computes `RF` only for top candidates, then selects the best root by sorting `RF` first, then Stage-1 score.
 
   Metric definitions used in Stage-1:
@@ -156,20 +156,22 @@ export QT_QPA_PLATFORM=offscreen
   - `BLV` (Branch length variance): branch-length variance under the candidate rooting. Smaller values indicate more clock-like and stable rooting.
   - `GD` (GD events count): number of inferred duplication events under the candidate rooting. In multi-copy families, larger values carry stronger rooting signal.
   - `SO` (GD clade species overlap): average species overlap between the two child clades of inferred GD nodes. Larger overlap suggests poorer speciation-like separation, so this term is penalized.
+  - `GD_consistency`: consistency of GD child-clade species composition (higher is better), combining clade-size symmetry and Jaccard overlap.
 
   Stage-1 scoring in code:
-  `score = w_OD * norm(OD) + w_BLV * norm(BLV) + w_GD * norm(GD) - w_SO * norm(SO)`  
+  `score = w_OD * norm(OD) + w_BLV * norm(BLV) + w_GD * norm(GD) - w_SO * norm(SO) - w_GDC * norm(GD_consistency)`  
   where `norm(x)` is min-max normalization in `[0, 1]`.
 
   <details>
   <summary>📊 Stage-1 weights in <code>Phylo_Rooter</code> (from code)</summary>
 
-  | Metric | Multi-copy GFs | Single-copy GFs (Stage-1) |
-  |---|---:|---:|
-  | `OD` | 0.30 | 0.70 |
-  | `BLV` | 0.10 | 0.30 |
-  | `GD` | 0.50 | 0.00 |
-  | `SO` | 0.10 | 0.00 |
+  | Metric | User-defined Stage-1 weight |
+  |---|---:|
+  | `OD` | user-defined |
+  | `BLV` | user-defined |
+  | `GD` | user-defined |
+  | `SO` | user-defined |
+  | `GD_consistency` | user-defined |
 
   </details>
 
@@ -331,8 +333,10 @@ Required parameter:
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_gene_length     Two-column mapping file (gene_id<TAB>gene_length)
     --input_sps_tree        Species tree file in Newick format
+Optional parameter:
+    --weights               Stage-1 weights in fixed order: OD BLV GD SO GD_consistency; input exactly five floats with sum = 1, default = 0.30 0.10 0.40 0.10 0.10
 Usage:
-    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
+    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk [--weights 0.30 0.10 0.40 0.10 0.10]
 ```
 ### PhyloTree_CollapseExpand
 ```
