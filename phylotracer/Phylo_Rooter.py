@@ -528,9 +528,10 @@ def calculate_rf_strategy(
             phylo_tree_0 = read_phylo_tree(tree_path)
             phylo_tree = root_tre_with_midpoint_outgroup(phylo_tree_0)
             phylo_tree_OG_list = extract_tree(OG_list, phylo_tree)
+            print(phylo_tree_OG_list)
             phylo_tree_OG_list = rename_input_tre(phylo_tree_OG_list, gene_to_new_name)
             RF += calculate_RF_distance(phylo_tree_OG_list, renamed_species_tree)
-
+            print(f"RF for {tre_name}: {calculate_RF_distance(phylo_tree_OG_list, renamed_species_tree)}")
         return RF
 
 
@@ -672,7 +673,7 @@ def root_main(
             "RF": 0.0,
         }
     logger.info(
-        "Stage-1 weights (OD, BLV, GD, SO, GD_consistency) = %.3f, %.3f, %.3f, %.3f, %.3f",
+        "Stage-1 weights (OD, BLV, GD, SO, GD_consistency) = %.2f, %.2f, %.2f, %.2f, %.2f",
         stage1_weights.get("deep", 0.0),
         stage1_weights.get("var", 0.0),
         stage1_weights.get("GD", 0.0),
@@ -714,7 +715,7 @@ def root_main(
                 print(rename_input_tre(c, new_name_to_gene))
             root_list = merge_unique_root_candidates(outgroup_root_list, gd_root_list)
             logger.info(
-                "%s: candidate roots from outgroup=%d, from GD nodes=%d, merged=%d",
+                "%s: candidate roots from outgroup=%d, from GD_nodes=%d, merged=%d",
                 tree_id,
                 len(outgroup_root_list),
                 len(gd_root_list),
@@ -772,21 +773,38 @@ def root_main(
             # 2. Calculate RF for Top N
             for idx, row in top_candidates_df.iterrows():
                 target_tree = row["tree_obj_ref"]
+                if row['Tree'] =='og00001_1_1':
+                    # Calculate RF
+                    rf_val = calculate_rf_strategy(
+                        tree=target_tree,
+                        renamed_species_tree=renamed_species_tree,
+                        renamed_length_dict=renamed_length_dict,
+                        gene_to_new_name=gene_to_new_name,
+                        new_name_to_gene=new_name_to_gene,
+                        tree_path=tree_path,
+                        tree_id=tree_id
+                    )
 
-                # Calculate RF
-                rf_val = calculate_rf_strategy(
-                    tree=target_tree,
-                    renamed_species_tree=renamed_species_tree,
-                    renamed_length_dict=renamed_length_dict,
-                    gene_to_new_name=gene_to_new_name,
-                    new_name_to_gene=new_name_to_gene,
-                    tree_path=tree_path,
-                    tree_id=tree_id
-                )
+                    top_candidates_df.at[idx, "RF"] = rf_val
 
-                top_candidates_df.at[idx, "RF"] = rf_val
-                print(f"RF for {row['Tree']}: {rf_val}")
-                print('='*50)
+                    print(f"RF for {row['Tree']}: {rf_val}")
+                    print('='*50)
+                if row['Tree'] =='og00001_1_4':
+                    # Calculate RF
+                    rf_val = calculate_rf_strategy(
+                        tree=target_tree,
+                        renamed_species_tree=renamed_species_tree,
+                        renamed_length_dict=renamed_length_dict,
+                        gene_to_new_name=gene_to_new_name,
+                        new_name_to_gene=new_name_to_gene,
+                        tree_path=tree_path,
+                        tree_id=tree_id
+                    )
+
+                    top_candidates_df.at[idx, "RF"] = rf_val
+
+                    print(f"RF for {row['Tree']}: {rf_val}")
+                    print('*'*50)
             # 3. [Core Modification] Sort directly to select the best, no re-weighting
             # Logic: Prioritize RF (smaller is better), if RF is equal, check Stage 1 Score (smaller is better)
             best_row = top_candidates_df.sort_values(
