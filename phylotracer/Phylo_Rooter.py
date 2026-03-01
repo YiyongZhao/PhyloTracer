@@ -528,10 +528,9 @@ def calculate_rf_strategy(
             phylo_tree_0 = read_phylo_tree(tree_path)
             phylo_tree = root_tre_with_midpoint_outgroup(phylo_tree_0)
             phylo_tree_OG_list = extract_tree(OG_list, phylo_tree)
-            print(phylo_tree_OG_list)
             phylo_tree_OG_list = rename_input_tre(phylo_tree_OG_list, gene_to_new_name)
             RF += calculate_RF_distance(phylo_tree_OG_list, renamed_species_tree)
-            print(f"RF for {tre_name}: {calculate_RF_distance(phylo_tree_OG_list, renamed_species_tree)}")
+
         return RF
 
 
@@ -708,11 +707,6 @@ def root_main(
             gd_nodes = find_dup_node(Phylo_t2, renamed_species_tree)
             gd_root_list = _reroot_by_node_set(Phylo_t2, gd_nodes)
 
-            c1=Phylo_t1.get_common_ancestor('ADK.1046083','ACX.1023956')
-            c2=Phylo_t2&c1.name
-            
-            for c in gd_nodes:
-                print(rename_input_tre(c, new_name_to_gene))
             root_list = merge_unique_root_candidates(outgroup_root_list, gd_root_list)
             logger.info(
                 "%s: candidate roots from outgroup=%d, from GD_nodes=%d, merged=%d",
@@ -727,7 +721,7 @@ def root_main(
                 rename_output_tre(Phylo_t2, new_name_to_gene, tree_id, dir_path)
                 pbar.update(1)
                 continue
-            root_list.append(c2)
+
             # ==========================================
             # Stage 1: Fast Screening (No RF)
             # ==========================================
@@ -742,9 +736,6 @@ def root_main(
                 # print(rename_input_tre(tree, new_name_to_gene))
 
                 deep, var, GD, species_overlap, gd_consistency = calculate_tree_statistics(tree, renamed_species_tree)
-                
-                print(f"deep: {deep}, var: {var}, GD: {GD}, species_overlap: {species_overlap}, gd_consistency: {gd_consistency}")
-                print('='*50)
                 temp_stats.append({
                     "Tree": tree_key,
                     "deep": deep, "var": var, "GD": GD,
@@ -773,38 +764,19 @@ def root_main(
             # 2. Calculate RF for Top N
             for idx, row in top_candidates_df.iterrows():
                 target_tree = row["tree_obj_ref"]
-                if row['Tree'] =='og00001_1_1':
-                    # Calculate RF
-                    rf_val = calculate_rf_strategy(
-                        tree=target_tree,
-                        renamed_species_tree=renamed_species_tree,
-                        renamed_length_dict=renamed_length_dict,
-                        gene_to_new_name=gene_to_new_name,
-                        new_name_to_gene=new_name_to_gene,
-                        tree_path=tree_path,
-                        tree_id=tree_id
-                    )
 
-                    top_candidates_df.at[idx, "RF"] = rf_val
+                # Calculate RF
+                rf_val = calculate_rf_strategy(
+                    tree=target_tree,
+                    renamed_species_tree=renamed_species_tree,
+                    renamed_length_dict=renamed_length_dict,
+                    gene_to_new_name=gene_to_new_name,
+                    new_name_to_gene=new_name_to_gene,
+                    tree_path=tree_path,
+                    tree_id=tree_id
+                )
 
-                    print(f"RF for {row['Tree']}: {rf_val}")
-                    print('='*50)
-                if row['Tree'] =='og00001_1_4':
-                    # Calculate RF
-                    rf_val = calculate_rf_strategy(
-                        tree=target_tree,
-                        renamed_species_tree=renamed_species_tree,
-                        renamed_length_dict=renamed_length_dict,
-                        gene_to_new_name=gene_to_new_name,
-                        new_name_to_gene=new_name_to_gene,
-                        tree_path=tree_path,
-                        tree_id=tree_id
-                    )
-
-                    top_candidates_df.at[idx, "RF"] = rf_val
-
-                    print(f"RF for {row['Tree']}: {rf_val}")
-                    print('*'*50)
+                top_candidates_df.at[idx, "RF"] = rf_val
             # 3. [Core Modification] Sort directly to select the best, no re-weighting
             # Logic: Prioritize RF (smaller is better), if RF is equal, check Stage 1 Score (smaller is better)
             best_row = top_candidates_df.sort_values(
