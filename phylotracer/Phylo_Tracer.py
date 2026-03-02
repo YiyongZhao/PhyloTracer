@@ -39,6 +39,7 @@ from phylotracer.Hybrid_Visualizer import *
 from phylotracer.Ortho_Retriever import *
 from phylotracer.OrthoFilter_LB import *
 from phylotracer.OrthoFilter_Mono import *
+from phylotracer.MulRF_Distance import *
 from phylotracer.Phylo_Rooter import *
 from phylotracer.PhyloSupport_Scaler import *
 from phylotracer.PhyloTree_CollapseExpand import *
@@ -165,7 +166,18 @@ Phylo_Rooter_parser.add_argument('--input_imap', metavar='IMAP', required=True, 
 Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
 Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 Phylo_Rooter_parser.add_argument('--weights',nargs=5,type=bounded_float(0.0, 1.0),metavar=('OD', 'BLV', 'GD', 'SO', 'GDC'),default=[0.30, 0.10, 0.40, 0.10, 0.10],help='Stage-1 weights in fixed order: OD BLV GD SO GD_consistency; five values must sum to 1, default = 0.30 0.10 0.40 0.10 0.10',)
+Phylo_Rooter_parser.add_argument('--rf_mode', choices=['MulRF_Distance', 'split_sum'], default='MulRF_Distance', help='Stage-2 RF strategy: MulRF_Distance (default) or split_sum (legacy split multi-copy trees and sum RF)')
 Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
+
+# MulRF_Distance command
+MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute species-level MulRF distances for rooted multi-copy gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer MulRF_Distance --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
+MulRF_Distance_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
+MulRF_Distance_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
+MulRF_Distance_parser.add_argument('--input_imap', metavar='IMAP', default=None, help='Optional two-column mapping file (gene_id<TAB>species_name); if absent, species are inferred from leaf names')
+MulRF_Distance_parser.add_argument('--sep', metavar='STR', default='_', help='Separator used when inferring species from gene names, default = _')
+MulRF_Distance_parser.add_argument('--position', choices=['last', 'first'], default='last', help='Species inference mode from gene names: last=before last separator, first=after first separator, default = last')
+MulRF_Distance_parser.add_argument('--quiet', action='store_true', help='If set, suppress summary logging, default = False')
+MulRF_Distance_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # OrthoFilter_LB command
 OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5')
@@ -381,10 +393,28 @@ def handle_phylo_rooter(cli_args):
             new_named_gene2gene_dic,
             renamed_sptree,
             stage1_weights=stage1_weights,
+            rf_mode=cli_args.rf_mode,
         )
         report_execution_time(start_time)
     else:
         logger.error("Required arguments for Phylo_Rooter command are missing.")
+
+
+def handle_mulrf_distance(cli_args):
+    if cli_args.input_GF_list and cli_args.input_sps_tree:
+        start_time = time.time()
+        tre_dic = read_and_return_dict(cli_args.input_GF_list)
+        mulrf_main(
+            tre_dic=tre_dic,
+            species_tree_path=cli_args.input_sps_tree,
+            gene2sp_map_path=cli_args.input_imap,
+            separator=cli_args.sep,
+            position=cli_args.position,
+            quiet=cli_args.quiet,
+        )
+        report_execution_time(start_time)
+    else:
+        logger.error("Required arguments for MulRF_Distance command are missing.")
 
 
 def handle_ortho_filter_lb(cli_args):
@@ -760,13 +790,13 @@ def handle_haplofinder(cli_args):
 
 
 def print_cli_usage():
-    print("Usage: python PhyloTracer.py  [-h]  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}")
+    print("Usage: python PhyloTracer.py  [-h]  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, MulRF_Distance, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}")
     print()
     print("Optional arguments:")
     print('  -h, --help            show this help message and exit')
     print()
     print('Available programs:')
-    print('  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}')
+    print('  {BranchLength_NumericConverter, GD_Detector, GD_Loss_Tracker, GD_Loss_Visualizer, GD_Visualizer, HaploFinder, Hybrid_Tracer, Hybrid_Visualizer, MulRF_Distance, OrthoFilter_LB, OrthoFilter_Mono, Ortho_Retriever, PhyloSupport_Scaler, PhyloTree_CollapseExpand, Phylo_Rooter, TreeTopology_Summarizer, Tree_Visualizer}')
 
 
 COMMAND_HANDLERS = {
@@ -774,6 +804,7 @@ COMMAND_HANDLERS = {
     'PhyloSupport_Scaler': handle_phylo_support_scaler,
     'BranchLength_NumericConverter': handle_branch_length_numeric_converter,
     'Phylo_Rooter': handle_phylo_rooter,
+    'MulRF_Distance': handle_mulrf_distance,
     'OrthoFilter_LB': handle_ortho_filter_lb,
     'OrthoFilter_Mono': handle_ortho_filter_mono,
     'TreeTopology_Summarizer': handle_tree_topology_summarizer,
@@ -793,6 +824,7 @@ DEFAULT_OUTPUT_DIRS = {
     "PhyloSupport_Scaler": "support_scaler_tree",
     "BranchLength_NumericConverter": "converter_tree",
     "Phylo_Rooter": "rooted_trees",
+    "MulRF_Distance": "mulrf_distance",
     "OrthoFilter_LB": "orthofilter_lb",
     "OrthoFilter_Mono": "orthofilter_mono",
     "TreeTopology_Summarizer": "tree_topology_summarizer",

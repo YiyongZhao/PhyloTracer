@@ -10,25 +10,22 @@ import logging
 import math
 import os
 import shutil
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 from itertools import combinations
 
 import numpy as np
 import pandas as pd
-from ete3 import PhyloTree
+from ete3 import PhyloTree, Tree
 from tqdm import tqdm
 
 from phylotracer import (
     annotate_gene_tree,
-    calculate_species_num,
     compute_tip_to_root_branch_length_variance,
     find_dup_node,
-    gene_id_transfer,
     get_species_list,
     get_species_set,
-    is_rooted,
-    read_and_return_dict,
     read_phylo_tree,
     rename_input_tre,
     root_tre_with_midpoint_outgroup,
@@ -395,6 +392,42 @@ def merge_unique_root_candidates(*candidate_groups: list) -> list:
     return merged
 
 
+def _tip_distance_mad(tree: object) -> float:
+    """Compute mean absolute deviation of root-to-tip distances."""
+    distances = [tree.get_distance(leaf) for leaf in tree.iter_leaves()]
+    if len(distances) < 2:
+        return 0.0
+    median_val = float(np.median(distances))
+    return float(np.mean([abs(x - median_val) for x in distances]))
+
+
+def _select_statistical_root_candidates(base_tree: object, max_candidates: int = 20) -> tuple:
+    """Generate MAD/MinVar root candidates from internal-node rerooting.
+
+    Args:
+        base_tree (object): Input rooted tree in renamed ID space.
+        max_candidates (int): Max candidates kept per strategy.
+
+    Returns:
+        tuple: (mad_candidates, minvar_candidates)
+    """
+    internal_nodes = [n for n in base_tree.traverse() if (not n.is_leaf() and not n.is_root())]
+    if not internal_nodes:
+        return [], []
+
+    all_candidates = _reroot_by_node_set(base_tree, internal_nodes)
+    if not all_candidates:
+        return [], []
+
+    if max_candidates <= 0:
+        max_candidates = 1
+    keep_n = min(max_candidates, len(all_candidates))
+
+    mad_ranked = sorted(all_candidates, key=_tip_distance_mad)
+    var_ranked = sorted(all_candidates, key=compute_tip_to_root_branch_length_variance)
+    return mad_ranked[:keep_n], var_ranked[:keep_n]
+
+
 def calculate_tree_statistics(tree: object, species_tree: object) -> tuple:
     """Compute fast, RF-free statistics for candidate trees.
 
@@ -480,6 +513,105 @@ def calculate_species_overlap_gd_num(gene_tree: object, species_tree: object) ->
 # 2. Core RF Calculation Logic
 # --------------------------
 
+RF_MODE = os.environ.get("PHYLOROOTER_RF_MODE", "mulrf_distance").strip().lower()
+USE_LEGACY_SPLIT_RF = RF_MODE in {"legacy", "split", "old", "split_sum"}
+
+
+def _species_of_leaf(name: str) -> str:
+    """Extract species token from a leaf name.
+
+    Rules are kept consistent with ``calculate_RF_distance``:
+    if '_' exists, species is the prefix before the first '_'; otherwise the full name.
+    """
+    if "_" in name:
+        return name.split("_", 1)[0]
+    return name
+
+
+def _fully_differentiate_gene_tree(gene_tree: PhyloTree) -> PhyloTree:
+    """Relabel gene-tree leaves as Species__i according to per-species copy order."""
+    tcopy = gene_tree.copy()
+    counts = Counter()
+    for leaf in tcopy.iter_leaves():
+        sp = _species_of_leaf(leaf.name)
+        counts[sp] += 1
+        leaf.name = f"{sp}__{counts[sp]}"
+    return tcopy
+
+
+def _expand_species_tree_to_match_counts(species_tree: PhyloTree, gene_tree: PhyloTree) -> PhyloTree:
+    """Expand species-tree leaves to match species copy counts observed in gene tree."""
+    spcopy = species_tree.copy()
+    gene_species = [_species_of_leaf(leaf.name) for leaf in gene_tree.iter_leaves()]
+    copy_counts = Counter(gene_species)
+
+    keep_species = sorted(set(copy_counts) & set(spcopy.get_leaf_names()))
+    if len(keep_species) < 3:
+        spcopy.prune(keep_species, preserve_branch_length=True)
+        return spcopy
+
+    spcopy.prune(keep_species, preserve_branch_length=True)
+
+    for leaf in list(spcopy.iter_leaves()):
+        sp = leaf.name
+        k = int(copy_counts.get(sp, 0))
+        if k <= 0:
+            continue
+        if k == 1:
+            leaf.name = f"{sp}__1"
+            continue
+
+        parent = leaf.up
+        original_dist = leaf.dist
+        if parent is None:
+            # Defensive branch for degenerate one-leaf trees.
+            leaf.name = f"{sp}__EXP"
+            leaf.children = []
+            for i in range(1, k + 1):
+                leaf.add_child(name=f"{sp}__{i}", dist=0.0)
+            continue
+
+        leaf.detach()
+        exp_node = Tree(name=f"{sp}__EXP", dist=original_dist)
+        parent.add_child(exp_node)
+        for i in range(1, k + 1):
+            exp_node.add_child(name=f"{sp}__{i}", dist=0.0)
+
+    return spcopy
+
+
+def calculate_mulrf_rf_distance(gene_tree: PhyloTree, species_tree: PhyloTree, unrooted: bool = True) -> int:
+    """Compute MulRF(genRF)-style RF by full differentiation + species-tree expansion."""
+    try:
+        observed_species = {_species_of_leaf(leaf.name) for leaf in gene_tree.iter_leaves()}
+        logger.debug("MulRF input: gene_leaves=%d, species_covered=%d", len(gene_tree), len(observed_species))
+        if len(observed_species) < 3:
+            return 0
+
+        gene_fd = _fully_differentiate_gene_tree(gene_tree)
+        species_exp = _expand_species_tree_to_match_counts(species_tree, gene_tree)
+
+        if len(gene_fd.get_leaf_names()) < 3 or len(species_exp.get_leaf_names()) < 3:
+            return 0
+
+        common_labels = sorted(set(gene_fd.get_leaf_names()) & set(species_exp.get_leaf_names()))
+        logger.debug(
+            "MulRF expanded leaves: gene=%d, species=%d, common=%d",
+            len(gene_fd.get_leaf_names()),
+            len(species_exp.get_leaf_names()),
+            len(common_labels),
+        )
+        if len(common_labels) < 3:
+            return 0
+
+        gene_fd.prune(common_labels, preserve_branch_length=True)
+        species_exp.prune(common_labels, preserve_branch_length=True)
+        rf = gene_fd.robinson_foulds(species_exp, unrooted_trees=unrooted)[0]
+        return int(rf)
+    except Exception as exc:
+        logger.debug("MulRF failed: %s", exc)
+        return 100
+
 
 def calculate_rf_strategy(
     tree: object,
@@ -488,7 +620,8 @@ def calculate_rf_strategy(
     gene_to_new_name: dict,
     new_name_to_gene: dict,
     tree_path: str,
-    tree_id: str
+    tree_id: str,
+    rf_mode: str = "mulrf_distance",
 ) -> float:
     """Select RF calculation strategy based on copy number.
 
@@ -508,30 +641,37 @@ def calculate_rf_strategy(
         Single-copy trees are compared directly; multi-copy trees are split into
         principal and minor ortholog sets using existing helper functions.
     """
+    mode = (rf_mode or "mulrf_distance").strip().lower()
+    use_legacy = mode in {"split_sum", "legacy", "split", "old"}
+    if rf_mode is None:
+        use_legacy = USE_LEGACY_SPLIT_RF
+
+    # Default path: unified MulRF(genRF)-style RF for both single-copy and multi-copy trees.
+    if not use_legacy:
+        return calculate_mulrf_rf_distance(tree, renamed_species_tree, unrooted=True)
+
+    # Legacy path (kept for compatibility/debugging; not default).
     species_list = get_species_list(tree)
     species_set = get_species_set(tree)
-
-    # --- Case A: Single Copy ---
     if len(species_list) == len(species_set):
         return calculate_RF_distance(tree, renamed_species_tree)
 
-    # --- Case B: Multi Copy (Integrated User Logic) ---
-    else:
-        # 1. Split Principal Gene Set and Offcuts
-        principal_gene_set, filtered_offcut_ev_seqs = offcut_tre(tree, renamed_length_dict)
-        minor_orthologs = []
-        minor_orthologs = iterator(filtered_offcut_ev_seqs, tree, gene_to_new_name, minor_orthologs, tree_path, renamed_length_dict)
-        ordered_name_OG_list = rename_OGs_tre_name(principal_gene_set, minor_orthologs, tree_id)
-        RF = 0
-        for tre_name, OG_set in ordered_name_OG_list:
-            OG_list = [new_name_to_gene[OG] for OG in OG_set]
-            phylo_tree_0 = read_phylo_tree(tree_path)
-            phylo_tree = root_tre_with_midpoint_outgroup(phylo_tree_0)
-            phylo_tree_OG_list = extract_tree(OG_list, phylo_tree)
-            phylo_tree_OG_list = rename_input_tre(phylo_tree_OG_list, gene_to_new_name)
-            RF += calculate_RF_distance(phylo_tree_OG_list, renamed_species_tree)
+    principal_gene_set, filtered_offcut_ev_seqs = offcut_tre(tree, renamed_length_dict)
+    minor_orthologs = []
+    minor_orthologs = iterator(
+        filtered_offcut_ev_seqs, tree, gene_to_new_name, minor_orthologs, tree_path, renamed_length_dict
+    )
+    ordered_name_OG_list = rename_OGs_tre_name(principal_gene_set, minor_orthologs, tree_id)
+    RF = 0
+    for tre_name, OG_set in ordered_name_OG_list:
+        OG_list = [new_name_to_gene[OG] for OG in OG_set]
+        phylo_tree_0 = read_phylo_tree(tree_path)
+        phylo_tree = root_tre_with_midpoint_outgroup(phylo_tree_0)
+        phylo_tree_OG_list = extract_tree(OG_list, phylo_tree)
+        phylo_tree_OG_list = rename_input_tre(phylo_tree_OG_list, gene_to_new_name)
+        RF += calculate_RF_distance(phylo_tree_OG_list, renamed_species_tree)
 
-        return RF
+    return RF
 
 
 def calculate_RF_distance(Phylo_t_OG_L: object, sptree: object) -> int:
@@ -548,11 +688,24 @@ def calculate_RF_distance(Phylo_t_OG_L: object, sptree: object) -> int:
         Leaf names are formatted as ``Species_Gene`` and are reduced to species IDs.
     """
     tcopy = Phylo_t_OG_L.copy()
+    spcopy = sptree.copy()
+
     for leaf in tcopy:
         if "_" in leaf.name:
             leaf.name = leaf.name.split('_')[0]
+
+    gene_species = tcopy.get_leaf_names()
+    if len(gene_species) != len(set(gene_species)):
+        return 100
+
+    keep_species = sorted(set(gene_species) & set(spcopy.get_leaf_names()))
+    if len(keep_species) < 3:
+        return 0
+
     try:
-        rf, _ = tcopy.robinson_foulds(sptree)[:2]
+        tcopy.prune(keep_species, preserve_branch_length=True)
+        spcopy.prune(keep_species, preserve_branch_length=True)
+        rf, _ = tcopy.robinson_foulds(spcopy)[:2]
         return rf
     except Exception:
         return 100  # Penalty for error
@@ -626,6 +779,7 @@ def root_main(
     new_name_to_gene: dict,
     renamed_species_tree: object,
     stage1_weights: dict = None,
+    rf_mode: str = "mulrf_distance",
 ) -> None:
     """Root gene trees and select optimal candidates using staged scoring.
 
@@ -679,6 +833,10 @@ def root_main(
         stage1_weights.get("species_overlap", 0.0),
         stage1_weights.get("gd_consistency", 0.0),
     )
+    mode = (rf_mode or "").strip().lower()
+    if not mode:
+        mode = "split_sum" if USE_LEGACY_SPLIT_RF else "mulrf_distance"
+    logger.info("Stage-2 RF mode: %s", mode)
 
     try:
         for tree_id, tree_path in tree_dict.items():
@@ -706,13 +864,26 @@ def root_main(
 
             gd_nodes = find_dup_node(Phylo_t2, renamed_species_tree)
             gd_root_list = _reroot_by_node_set(Phylo_t2, gd_nodes)
+            mad_root_list, minvar_root_list = _select_statistical_root_candidates(
+                Phylo_t2, max_candidates=20
+            )
 
-            root_list = merge_unique_root_candidates(outgroup_root_list, gd_root_list)
+            root_list = merge_unique_root_candidates(
+                outgroup_root_list,
+                gd_root_list,
+                mad_root_list,
+                minvar_root_list,
+            )
             logger.info(
-                "%s: candidate roots from outgroup=%d, from GD_nodes=%d, merged=%d",
+                (
+                    "%s: candidate roots from outgroup=%d, from GD_nodes=%d, "
+                    "from MAD=%d, from MinVar=%d, merged=%d"
+                ),
                 tree_id,
                 len(outgroup_root_list),
                 len(gd_root_list),
+                len(mad_root_list),
+                len(minvar_root_list),
                 len(root_list),
             )
 
@@ -773,7 +944,8 @@ def root_main(
                     gene_to_new_name=gene_to_new_name,
                     new_name_to_gene=new_name_to_gene,
                     tree_path=tree_path,
-                    tree_id=tree_id
+                    tree_id=tree_id,
+                    rf_mode=mode,
                 )
 
                 top_candidates_df.at[idx, "RF"] = rf_val

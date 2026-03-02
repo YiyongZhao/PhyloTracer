@@ -58,24 +58,25 @@ All modules are designed to be used independently or combined in larger phylogen
 ---
 ## Module Features
 
-PhyloTracer integrates 16 modular tools covering phylogenetic preprocessing, rooting, orthology refinement, duplication/loss detection, and hybridization analysis. Each module can run independently or be incorporated into larger evolutionary pipelines.
+PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, rooting, orthology refinement, duplication/loss detection, and hybridization analysis. Each module can run independently or be incorporated into larger evolutionary pipelines.
 
 1. **Phylo_Rooter:** Implements an accurate, automated rooting algorithm for gene trees to enhance evolutionary inference.
-2. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree into a “comb-like” structure based on a predefined support threshold, and re-expands it back to binary form when needed.
-3. **PhyloSupport_Scaler:** Recalibrates branch support values to standardized scales ([0–1] or [1–100]) for consistent computation.
-4. **BranchLength_NumericConverter:** Converts branch-length strings to numeric format for downstream quantitative analyses.
-5. **OrthoFilter_LB:** Removes tips with excessively long branches to eliminate phylogenomic noise.
-6. **OrthoFilter_Mono:** Prunes non-monophyletic outliers and paralogs under user-defined taxonomic constraints.
-7. **TreeTopology_Summarizer:** Summarizes frequencies of absolute and relative topologies across gene trees or predefined clades.
-8. **Tree_Visualizer:** Visualizes duplication events, node labels, and expression profiles on gene and species trees.
-9. **GD_Detector:** Identifies gene duplication events via reconciliation between gene and species trees.
-10. **GD_Visualizer:** Displays detected duplication nodes in a species tree context.
-11. **GD_Loss_Tracker:** Tracks duplication-loss patterns following major GD bursts across species tree nodes.
-12. **GD_Loss_Visualizer:** Visualizes node/tip-specific gene loss summaries.
-13. **Ortho_Retriever:** Extracts putative single-copy orthologs by recursively splitting paralogous clades.
-14. **Hybrid_Tracer:** Detects hybridization signals from duplicated genes using coalescent-based phylogenetic invariants.
-15. **Hybrid_Visualizer:** Highlights hybridization proportions (γ) and support values across the species tree.
-16. **HaploFinder:** Identifies ancient recombination (conversion/crossover) events by tracing subgenome haplotypes.
+2. **MulRF_Distance:** Computes species-level MulRF distances between multi-copy gene trees and a species tree for topology compatibility ranking.
+3. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree into a “comb-like” structure based on a predefined support threshold, and re-expands it back to binary form when needed.
+4. **PhyloSupport_Scaler:** Recalibrates branch support values to standardized scales ([0–1] or [1–100]) for consistent computation.
+5. **BranchLength_NumericConverter:** Converts branch-length strings to numeric format for downstream quantitative analyses.
+6. **OrthoFilter_LB:** Removes tips with excessively long branches to eliminate phylogenomic noise.
+7. **OrthoFilter_Mono:** Prunes non-monophyletic outliers and paralogs under user-defined taxonomic constraints.
+8. **TreeTopology_Summarizer:** Summarizes frequencies of absolute and relative topologies across gene trees or predefined clades.
+9. **Tree_Visualizer:** Visualizes duplication events, node labels, and expression profiles on gene and species trees.
+10. **GD_Detector:** Identifies gene duplication events via reconciliation between gene and species trees.
+11. **GD_Visualizer:** Displays detected duplication nodes in a species tree context.
+12. **GD_Loss_Tracker:** Tracks duplication-loss patterns following major GD bursts across species tree nodes.
+13. **GD_Loss_Visualizer:** Visualizes node/tip-specific gene loss summaries.
+14. **Ortho_Retriever:** Extracts putative single-copy orthologs by recursively splitting paralogous clades.
+15. **Hybrid_Tracer:** Detects hybridization signals from duplicated genes using coalescent-based phylogenetic invariants.
+16. **Hybrid_Visualizer:** Highlights hybridization proportions (γ) and support values across the species tree.
+17. **HaploFinder:** Identifies ancient recombination (conversion/crossover) events by tracing subgenome haplotypes.
 
 *Together, these modules provide a comprehensive workflow for constructing, refining, and interpreting large-scale phylogenomic data.*
 
@@ -309,6 +310,7 @@ Glyma.07G273800.2     0.0
 Most modules generate task-specific outputs in either the current working directory or module-specific subdirectories. Common outputs include:
 
 - Rooted tree outputs: `rooted_trees/`
+- MulRF distance outputs: `mulrf_distance/mulrf_distance.tsv`
 - Long-branch filter outputs: `orthofilter_lb/pruned_tree/`, `orthofilter_lb/delete_gene/`
 - Monophyly filter outputs: `orthofilter_mono/pruned_tree/`, `orthofilter_mono/delete_gene/`
 - GD detection tables: `gd_result_*.txt`, `gd_type_*.tsv`
@@ -337,6 +339,21 @@ Optional parameter:
     --weights               Stage-1 weights in fixed order: OD BLV GD SO GD_consistency; input exactly five floats with sum = 1, default = 0.30 0.10 0.40 0.10 0.10
 Usage:
     PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk [--weights 0.30 0.10 0.40 0.10 0.10]
+```
+### MulRF_Distance
+```
+Description:
+    To compute species-level MulRF distances between rooted multi-copy gene trees and a species tree
+Required parameter:
+    --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
+    --input_sps_tree        Species tree file in Newick format
+Optional parameter:
+    --input_imap            Optional two-column mapping file (gene_id<TAB>species_name); if absent, species are inferred from gene names
+    --sep                   Separator used when inferring species from gene names, default = _
+    --position              Species inference mode from gene names: last=before last separator, first=after first separator, default = last
+    --quiet                 If set, suppress summary logging, default = False
+Usage:
+    PhyloTracer MulRF_Distance --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk [--input_imap gene2sps.imap]
 ```
 ### PhyloTree_CollapseExpand
 ```
