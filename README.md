@@ -338,7 +338,7 @@ Required parameter:
 Optional parameter:
     --weights               Stage-1 weights in fixed order: OD BLV GD SO GD_consistency; input exactly five floats with sum = 1, default = 0.30 0.10 0.40 0.10 0.10
 Usage:
-    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk [--weights 0.30 0.10 0.40 0.10 0.10]
+    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk [--weights 0.30 0.10 0.40 0.10 0.10] [--output_dir DIR]
 ```
 ### MulRF_Distance
 ```
@@ -347,13 +347,13 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_sps_tree        Species tree file in Newick format
+    --input_imap            Two-column mapping file (gene_id<TAB>species_name)
 Optional parameter:
-    --input_imap            Optional two-column mapping file (gene_id<TAB>species_name); if absent, species are inferred from gene names
     --sep                   Separator used when inferring species from gene names, default = _
     --position              Species inference mode from gene names: last=before last separator, first=after first separator, default = last
     --quiet                 If set, suppress summary logging, default = False
 Usage:
-    PhyloTracer MulRF_Distance --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk [--input_imap gene2sps.imap]
+    PhyloTracer MulRF_Distance --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--sep _] [--position last] [--quiet] [--output_dir DIR]
 ```
 ### PhyloTree_CollapseExpand
 ```
@@ -365,7 +365,7 @@ Required parameter:
 Optional parameter:
     --revert                If set, expand previously collapsed comb structures back to binary form, default = False
 Usage:
-    PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert]
+    PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50 [--revert] [--output_dir DIR]
 ```
 ### PhyloSupport_Scaler
 ```
@@ -375,7 +375,7 @@ Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --scale_to              Target support scale: "1" for [0,1], "100" for [0,100]
 Usage:
-    PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1
+    PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1 [--output_dir DIR]
 ```
 ### BranchLength_NumericConverter
 ```
@@ -386,7 +386,7 @@ Required parameter:
 Optional parameter:
     --decimal_place         Number of decimal places to keep for branch lengths, default = 10
 Usage:
-    PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap
+    PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10] [--output_dir DIR]
 ```
 ### OrthoFilter_LB
 
@@ -433,7 +433,7 @@ Required parameter:
 Optional parameter:
     --visual                If set, export before/after tree visualization PDFs, default = False
 Usage:
-    PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 [--visual]
+    PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 [--visual] [--output_dir DIR]
 ```
 ### OrthoFilter_Mono
 
@@ -519,7 +519,7 @@ Optional parameter:
     --max_remove_fraction   Maximum fraction of tips allowed to be removed, default = 0.5
     --visual                If set, export before/after pruning visualization PDFs, default = False
 Usage:
-    PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
+    PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95] [--max_remove_fraction 0.5] [--visual] [--output_dir DIR]
 ```
 ### TreeTopology_Summarizer
 ```
@@ -531,7 +531,7 @@ Required parameter:
 Optional parameter:
     --visual_top            Number of top-ranked topologies to visualize, default = 10
 Usage:
-    PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap
+    PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10] [--output_dir DIR]
 ```
 ### Tree_Visualizer
 ```
@@ -549,7 +549,7 @@ Optional parameter:
     --gene_expression       Gene expression matrix file (.csv/.xls/.xlsx), genes as row index
     --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
 Usage:
-    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap
+    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories category1.imap category2.imap] [--gene_family gene2family.imap --input_sps_tree sptree.nwk] [--gene_expression expr.csv] [--visual_gd] [--output_dir DIR]
 ```
 ### GD_Detector
 ```
@@ -567,7 +567,7 @@ Required parameter:
 Optional parameter:
     --gdtype_mode           GD type assignment mode: relaxed uses species-overlap mapping only; strict additionally enforces depth-consistency filtering with --deepvar, default = relaxed
 Usage:
-    PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed]
+    PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed] [--output_dir DIR]
 ```
 ### GD_Visualizer
 ```
@@ -578,7 +578,7 @@ Required parameter:
     --gd_result             GD result table produced by GD_Detector
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
 Usage:
-    PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap
+    PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap [--output_dir DIR]
 ```
 ### GD_Loss_Tracker
 ```
@@ -594,7 +594,7 @@ Optional parameter:
     --include_unobserved_species  Classification policy for species absent from the current gene family, default = False. If set, unobserved species are still assigned 2-2/2-1/2-0 by left/right presence; if not set, they are labeled as missing_data. This affects classification labels only.
     --node_count_mode       Node counting mode for path_count_* transition statistics, default = nonaccumulate. Choices: nonaccumulate|accumulate.
 Usage:
-    PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_species Arabidopsis_thaliana] [--mrca_node SpeciesA,SpeciesB] [--include_unobserved_species] [--node_count_mode nonaccumulate]
+    PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_species Arabidopsis_thaliana] [--mrca_node SpeciesA,SpeciesB] [--include_unobserved_species] [--node_count_mode nonaccumulate] [--output_dir DIR]
 ```
 ### GD_Loss_Visualizer
 ```
@@ -604,7 +604,7 @@ Required parameter:
     --gd_loss_result        Detailed table generated by GD_Loss_Tracker (gd_loss_summary.txt)
     --input_sps_tree        Numbered species tree file in Newick format
 Usage:
-    PhyloTracer GD_Loss_Visualizer --input_sps_tree numbered_species_tree.nwk --gd_loss_result gd_loss_summary.txt
+    PhyloTracer GD_Loss_Visualizer --input_sps_tree numbered_species_tree.nwk --gd_loss_result gd_loss_summary.txt [--output_dir DIR]
 ```
 ### Ortho_Retriever
 ```
@@ -615,7 +615,7 @@ Required parameter:
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_gene_length     Two-column mapping file (gene_id<TAB>gene_length)
 Usage:
-    PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
+    PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap [--output_dir DIR]
 ```
 ### Hybrid_Tracer
 ```
@@ -630,7 +630,7 @@ Optional parameter:
     --mrca_node             Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used.
     --split_groups          Number of partitions for HYDE batch processing, default = 1
 Usage:
-    PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 2]
+    PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB] [--split_groups 2] [--output_dir DIR]
 ```
 ### Hybrid_Visualizer
 ```
@@ -642,7 +642,7 @@ Required parameter:
 Optional parameter:
     --node                  Use node-mode heatmaps (monophyletic clade stacking) instead of leaf-mode output
 Usage:
-    PhyloTracer Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node]
+    PhyloTracer Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node] [--output_dir DIR]
 ```
 ### HaploFinder
 ```
@@ -675,8 +675,8 @@ Mode = split required:
     --parental_sps          Parental species names used for split-mode assignment; provide as a single quoted, space-separated string
     --species_b_gff         Genome annotation file for species B in GFF/GTF-compatible format
 Usage:
-    PhyloTracer HaploFinder --mode haplofinder --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens --gd_support 50 --pair_support 50 [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001]
-    PhyloTracer HaploFinder --mode split --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff
+    PhyloTracer HaploFinder --mode haplofinder --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens [--gd_support 50] [--pair_support 50] [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001] [--output_dir DIR]
+    PhyloTracer HaploFinder --mode split --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff [--output_dir DIR]
 ```
 
 ---

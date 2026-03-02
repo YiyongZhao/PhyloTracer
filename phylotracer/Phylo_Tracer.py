@@ -166,14 +166,13 @@ Phylo_Rooter_parser.add_argument('--input_imap', metavar='IMAP', required=True, 
 Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
 Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 Phylo_Rooter_parser.add_argument('--weights',nargs=5,type=bounded_float(0.0, 1.0),metavar=('OD', 'BLV', 'GD', 'SO', 'GDC'),default=[0.30, 0.10, 0.40, 0.10, 0.10],help='Stage-1 weights in fixed order: OD BLV GD SO GD_consistency; five values must sum to 1, default = 0.30 0.10 0.40 0.10 0.10',)
-Phylo_Rooter_parser.add_argument('--rf_mode', choices=['MulRF_Distance', 'split_sum'], default='MulRF_Distance', help='Stage-2 RF strategy: MulRF_Distance (default) or split_sum (legacy split multi-copy trees and sum RF)')
 Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # MulRF_Distance command
 MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute species-level MulRF distances for rooted multi-copy gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer MulRF_Distance --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
 MulRF_Distance_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 MulRF_Distance_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
-MulRF_Distance_parser.add_argument('--input_imap', metavar='IMAP', default=None, help='Optional two-column mapping file (gene_id<TAB>species_name); if absent, species are inferred from leaf names')
+MulRF_Distance_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 MulRF_Distance_parser.add_argument('--sep', metavar='STR', default='_', help='Separator used when inferring species from gene names, default = _')
 MulRF_Distance_parser.add_argument('--position', choices=['last', 'first'], default='last', help='Species inference mode from gene names: last=before last separator, first=after first separator, default = last')
 MulRF_Distance_parser.add_argument('--quiet', action='store_true', help='If set, suppress summary logging, default = False')
@@ -393,7 +392,6 @@ def handle_phylo_rooter(cli_args):
             new_named_gene2gene_dic,
             renamed_sptree,
             stage1_weights=stage1_weights,
-            rf_mode=cli_args.rf_mode,
         )
         report_execution_time(start_time)
     else:
