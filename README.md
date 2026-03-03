@@ -61,7 +61,7 @@ All modules are designed to be used independently or combined in larger phylogen
 PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, rooting, orthology refinement, duplication/loss detection, and hybridization analysis. Each module can run independently or be incorporated into larger evolutionary pipelines.
 
 1. **Phylo_Rooter:** Implements an accurate, automated rooting algorithm for gene trees to enhance evolutionary inference.
-2. **MulRF_Distance:** Computes species-level MulRF distances between multi-copy gene trees and a species tree for topology compatibility ranking.
+2. **MulRF_Distance:** measures tree distances between single-copy gene trees, between multi-copy gene trees, and across single-copy and multi-copy gene trees.
 3. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree into a “comb-like” structure based on a predefined support threshold, and re-expands it back to binary form when needed.
 4. **PhyloSupport_Scaler:** Recalibrates branch support values to standardized scales ([0–1] or [1–100]) for consistent computation.
 5. **BranchLength_NumericConverter:** Converts branch-length strings to numeric format for downstream quantitative analyses.
