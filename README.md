@@ -292,20 +292,8 @@ This section follows an OrthoFinder-like CLI reference style with compact layout
 
 **3. Stage weighted scoring**
 
-$$
-\text{score}
-=
-w_{OD}\cdot \mathrm{norm}(OD)
-+
-w_{BLV}\cdot \mathrm{norm}(BLV)
-+
-w_{GD}\cdot \mathrm{norm}(GD)
--
-w_{SO}\cdot \mathrm{norm}(SO)
--
-w_{GDC}\cdot \mathrm{norm}(GD\ consistency)
-+
-w_{RF}\cdot \mathrm{norm}(MulRF)
+$$ 
+\text{score} = w_{OD}\cdot norm(OD) + w_{BLV}\cdot norm(BLV) + w_{GD}\cdot norm(GD) - w_{SO}\cdot norm(SO) - w_{GDC}\cdot norm(GD_consistency) + w_{RF}\cdot norm(MulRF) 
 $$
 
 **4. User-defined weights (`--weights`)**
