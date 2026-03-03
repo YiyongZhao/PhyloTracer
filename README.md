@@ -287,12 +287,12 @@ This section follows an OrthoFinder-like CLI reference style with compact layout
 - `BLV` (Branch length variance)
 - `GD` (GD events count)
 - `SO` (GD clade species overlap)
-- `GD_consistency` (consistency of species composition between the two child clades of GD nodes; higher means more consistent)
+- `GD consistency` (consistency of species composition between the two child clades of GD nodes; higher means more consistent)
 - `MulRF` (normalized MulRF RF rate)
 
 **3. Stage weighted scoring**
 
-$$ \text{score} = w_{OD}\cdot norm(OD) + w_{BLV}\cdot norm(BLV) + w_{GD}\cdot norm(GD) - w_{SO}\cdot norm(SO) - w_{GDC}\cdot norm(GDconsistency) + w_{RF}\cdot norm(MulRF) $$
+$$ \text{score} = w_{OD}\cdot norm(OD) + w_{BLV}\cdot norm(BLV) + w_{GD}\cdot norm(GD) - w_{SO}\cdot norm(SO) - w_{GDC}\cdot norm(GD consistency) + w_{RF}\cdot norm(MulRF) $$
 
 **4. User-defined weights (`--weights`)**
 
