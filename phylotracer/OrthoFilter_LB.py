@@ -302,7 +302,7 @@ def remove_long_branches(
 
         for leaf in pruned_tree:
             leaf_name = leaf.name
-            leaf_dist = leaf.dist
+            leaf_dist = pruned_tree.get_distance(leaf)
             tip_root_distance = pruned_tree.get_distance(leaf)
             gene_name = renamed2gene.get(leaf_name, leaf_name)
 
@@ -318,9 +318,9 @@ def remove_long_branches(
                 continue
             sister = sisters[0]
             if sister.is_leaf():
-                sister_avg = sister.dist or 1e-6
+                sister_avg = pruned_tree.get_distance(sister)
             else:
-                sister_avg = get_average_node_length(sister) or 1e-6
+                sister_avg = get_average_node_length(sister) + pruned_tree.get_distance(sister) or 1e-6
 
             sister_ratio = (leaf_dist - sister_avg) / sister_avg
 
