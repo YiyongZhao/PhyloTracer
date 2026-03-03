@@ -240,11 +240,12 @@ AMTR_s00796p00010580  Nitrogen-fixing
 ATCG00500.1           Nitrogen-fixing
 Glyma.07G273800.2     non-Nitrogen-fixing
 
-Provide a two-column file in TSV format: each line contains <gene_id><TAB><expression_values>
-------------gene2expression.imap--------------------------------------------------------------------------------------------------
-AMTR_s00796p00010580  5.0
-ATCG00500.1           12.0
-Glyma.07G273800.2     0.0
+Provide an expression matrix file (CSV/XLS/XLSX) with gene IDs as row index.
+------------expression.csv---------------------------------------------------------------------------------------------------------
+gene_id,SampleA,SampleB
+AMTR_s00796p00010580,5.0,3.2
+ATCG00500.1,12.0,9.4
+Glyma.07G273800.2,0.0,0.8
 
 #Note: You can add any number of imap files. They will sequentially provide annotations to the right of the gene tips according to the order of input.
 ```
@@ -531,13 +532,16 @@ Optional parameter:
     --keep_branch           Whether to preserve branch lengths in plotting: 1=yes, 0=no
     --tree_style            Tree layout style: r=rectangular, c=circular
     --gene_categories       One or more two-column files (gene_id<TAB>category_label) for color annotations
+                            Format: each line is "gene_id<TAB>label" (no header required)
+                            Meaning: each file is one categorical layer (e.g., family/order/clade)
+                            Example files in 09_Tree_Visualizer: gene2family.imap, gene2order.imap, gene2clade.imap
     --gene_family           Two-column mapping file (gene_id<TAB>family_label)
     --input_sps_tree        Species tree file in Newick format (required with --gene_family)
     --gene_expression       Gene expression matrix file (.csv/.xls/.xlsx), genes as row index
     --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories category1.imap category2.imap] [--gene_family gene2family.imap --input_sps_tree sptree.nwk] [--gene_expression expr.csv] [--visual_gd] [--output_dir DIR]
+    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories gene2family.imap gene2order.imap gene2clade.imap] [--gene_family gene2family.imap --input_sps_tree sptree.nwk] [--gene_expression expression.csv] [--visual_gd] [--output_dir DIR]
 ```
 ### GD_Detector
 ```
