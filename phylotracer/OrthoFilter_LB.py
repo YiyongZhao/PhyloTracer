@@ -10,9 +10,6 @@ import os
 import shutil
 from typing import Dict, Optional, TextIO
 
-import matplotlib.colors as mcolors
-import matplotlib.pyplot as plt
-import numpy as np
 from ete3 import Tree
 try:
     from ete3 import NodeStyle, TextFace, TreeStyle
@@ -33,6 +30,7 @@ from phylotracer import (
     num_tre_node,
     read_and_return_dict,
     rename_input_tre,
+    stable_color_for_label,
 )
 from phylotracer.BranchLength_NumericConverter import (
     trans_branch_length,
@@ -133,14 +131,7 @@ def create_color_mapping(voucher2taxa: Dict[str, str]) -> Dict[str, str]:
     -----------
     Taxa names are finite and can be uniquely mapped to colors.
     """
-    unique_taxa = sorted(set(voucher2taxa.values()))
-    cmap = plt.get_cmap("gist_rainbow")
-    color_values = [
-        mcolors.rgb2hex(cmap(i))
-        for i in np.linspace(0, 1, len(unique_taxa))
-    ]
-    taxa_color = dict(zip(unique_taxa, color_values))
-    return {k: f"{v}*{taxa_color[v]}" for k, v in voucher2taxa.items()}
+    return {k: f"{v}*{stable_color_for_label(v)}" for k, v in voucher2taxa.items()}
 
 
 def style_tree(

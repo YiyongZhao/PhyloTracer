@@ -567,13 +567,13 @@ Usage:
 Description:
     To visualize gene duplication detection results and integrate findings onto the species tree
 Required parameter:
-    --input_sps_tree        Numbered species tree file in Newick format
+    --input_sps_tree        Numbered species tree file in Newick format (use the numbered tree output from GD_Detector, e.g., numed_sptree.nwk)
     --gd_result             GD result table produced by GD_Detector
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
 Optional parameter:
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap [--output_dir DIR]
+    PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap [--output_dir DIR]
 ```
 ### GD_Loss_Tracker
 ```

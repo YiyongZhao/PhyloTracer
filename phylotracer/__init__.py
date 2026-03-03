@@ -7,6 +7,7 @@ helpers used across the project to improve reproducibility and traceability.
 
 import logging
 logger = logging.getLogger(__name__)
+import hashlib
 import os
 import random
 import shutil
@@ -49,7 +50,36 @@ __all__ = [
     "map_species_set_to_node",
     "find_dup_node",
     "calculate_gd_num",
+    "stable_color_for_label",
 ]
+
+# Fixed qualitative palette for consistent colors across all plotting modules.
+# Same label -> same color in every figure/file.
+_FIXED_COLOR_PALETTE = [
+    "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+    "#393b79", "#637939", "#8c6d31", "#843c39", "#7b4173",
+    "#3182bd", "#e6550d", "#31a354", "#756bb1", "#636363",
+]
+
+
+def stable_color_for_label(label: str) -> str:
+    """Return a deterministic color for a category label.
+
+    Args:
+        label (str): Category label (species/family/clade/etc).
+
+    Returns:
+        str: Hex color code, stable across runs/files/modules.
+    """
+    if label is None:
+        label = ""
+    normalized = str(label).strip()
+    if normalized == "":
+        return "#9e9e9e"
+    digest = hashlib.md5(normalized.encode("utf-8")).hexdigest()
+    idx = int(digest[:8], 16) % len(_FIXED_COLOR_PALETTE)
+    return _FIXED_COLOR_PALETTE[idx]
 
 # =========================
 # I/O & Mapping Utilities
