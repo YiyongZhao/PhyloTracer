@@ -288,11 +288,12 @@ This section follows an OrthoFinder-like CLI reference style with compact layout
 - `GD` (GD events count)
 - `SO` (GD clade species overlap)
 - `GD_consistency`
+- `MulRF` (normalized MulRF RF rate)
 
-**3. Stage-1 weighted scoring**
+**3. Stage weighted scoring**
 
 $$
-\text{score} = w_{OD}\cdot norm(OD) + w_{BLV}\cdot norm(BLV) + w_{GD}\cdot norm(GD) - w_{SO}\cdot norm(SO) - w_{GDC}\cdot norm(GD\_consistency)
+\text{score} = w_{OD}\cdot norm(OD) + w_{BLV}\cdot norm(BLV) + w_{GD}\cdot norm(GD) - w_{SO}\cdot norm(SO) - w_{GDC}\cdot norm(GD\_consistency) + w_{RF}\cdot norm(MulRF)
 $$
 
 **4. User-defined weights (`--weights`)**
