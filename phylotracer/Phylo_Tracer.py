@@ -205,10 +205,24 @@ TreeTopology_Summarizer_parser.add_argument('--visual_top', metavar='INT', type=
 TreeTopology_Summarizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # Tree_Visualizer command
-Tree_Visualizer_parser = subparsers.add_parser('Tree_Visualizer', help='Render gene-tree figures with optional metadata overlays', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap')
+Tree_Visualizer_parser = subparsers.add_parser(
+    'Tree_Visualizer',
+    help='Render gene-tree figures with optional metadata overlays',
+    formatter_class=CustomHelpFormatter,
+    epilog='Example:\n'
+           '  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap '
+           '--gene_categories gene2family.imap gene2order.imap gene2clade.imap '
+           '--gene_family gene2family.imap --input_sps_tree sptree.nwk '
+           '--gene_expression expression.csv --keep_branch 1 --tree_style r --visual_gd'
+)
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Tree_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
-Tree_Visualizer_parser.add_argument('--gene_categories', metavar='TAXA_LIST', nargs='+', help='One or more two-column files (gene_id<TAB>category_label) for color annotations')
+Tree_Visualizer_parser.add_argument(
+    '--gene_categories',
+    metavar='TAXA_LIST',
+    nargs='+',
+    help='One or more two-column files (gene_id<TAB>category_label), each file is one annotation layer; e.g., gene2family.imap gene2order.imap gene2clade.imap'
+)
 Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Whether to preserve branch lengths in plotting: 1=yes, 0=no')
 Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree layout style: r=rectangular, c=circular')
 Tree_Visualizer_parser.add_argument('--gene_family', metavar='GENE_FAMILY', help='Two-column mapping file (gene_id<TAB>family_label)')
@@ -230,8 +244,13 @@ GD_Detector_parser.add_argument('--deepvar', metavar='INT', type=bounded_int(0),
 GD_Detector_parser.add_argument('--gdtype_mode', choices=['relaxed', 'strict'], default='relaxed', help='GD type mode: relaxed (species overlap only) or strict (overlap + depth constraint), default = relaxed')
 GD_Detector_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 # GD_Visualizer command
-GD_Visualizer_parser = subparsers.add_parser('GD_Visualizer', help='Visualize GD counts or GD-type summaries on a species tree', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result.txt --input_imap gene2sps.imap')
-GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format')
+GD_Visualizer_parser = subparsers.add_parser(
+    'GD_Visualizer',
+    help='Visualize GD counts or GD-type summaries on a species tree',
+    formatter_class=CustomHelpFormatter,
+    epilog='Example:\n  PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap'
+)
+GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format (use the numbered tree output from GD_Detector, e.g., numed_sptree.nwk)')
 GD_Visualizer_parser.add_argument('--gd_result', metavar='GD_RESULT', required=True, help='GD result table produced by GD_Detector')
 GD_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 GD_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')

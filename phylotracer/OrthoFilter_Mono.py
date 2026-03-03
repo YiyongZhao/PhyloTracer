@@ -13,8 +13,6 @@ import os
 import shutil
 from collections import Counter
 
-import matplotlib.colors as colors
-import matplotlib.pyplot as plt
 import numpy as np
 from ete3 import PhyloTree, Tree
 try:
@@ -34,6 +32,7 @@ from phylotracer import (
     num_tre_node,
     read_and_return_dict,
     rename_input_tre,
+    stable_color_for_label,
 )
 from phylotracer.BranchLength_NumericConverter import (
     trans_branch_length,
@@ -780,10 +779,7 @@ def get_color_dict(taxa_dic: dict) -> dict:
     Assumptions:
         A rainbow colormap is used to assign unique taxa colors.
     """
-    cmap = plt.get_cmap("gist_rainbow")
-    uniq = list(set(taxa_dic.values()))
-    color_list = [colors.rgb2hex(cmap(i)) for i in np.linspace(0, 1, len(uniq))]
-    return {k: f"{v}*{dict(zip(uniq, color_list))[v]}" for k, v in taxa_dic.items()}
+    return {k: f"{v}*{stable_color_for_label(v)}" for k, v in taxa_dic.items()}
 
 
 def set_style(

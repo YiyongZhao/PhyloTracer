@@ -11,6 +11,11 @@ import math
 import os
 import shutil
 import tempfile
+try:
+    import matplotlib as mpl
+    mpl.rcParams["pdf.fonttype"] = 42
+except Exception:
+    mpl = None
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +26,17 @@ except ImportError:
     NodeStyle = None
     TextFace = None
     TreeStyle = None
-from PIL import Image
+try:
+    import fitz  # PyMuPDF
+except ImportError:
+    fitz = None
+try:
+    from pypdf import PdfReader, PdfWriter
+    from pypdf import Transformation
+except ImportError:
+    PdfReader = None
+    PdfWriter = None
+    Transformation = None
 
 from phylotracer import (
     gene_id_transfer,
@@ -197,8 +212,8 @@ def write_relative_summary_with_ids(
     sorted_dict = dict(sorted(dic.items(), key=lambda item: len(item[1]), reverse=True))
 
     if top_n:
-        output_path = f"merge_relative_top{top_n}.png"
-        visualize_top_trees(sorted_dict, output_path, voucher2taxa_dic, top_n)
+        output_pdf = f"merge_relative_top{top_n}.pdf"
+        visualize_top_trees(sorted_dict, output_pdf, voucher2taxa_dic, top_n)
 
     with open(f"relative_{outfile}.txt", "w") as file:
         file.write("Topology_ID\tTopology_num\tTopology\tTree_IDs\n")
@@ -267,8 +282,8 @@ def write_absolute_summary(
     )
 
     if top_n:
-        output_path = f"merge_absolutely_top{top_n}.png"
-        visualize_top_trees(sorted_dict, output_path, voucher2taxa_dic, top_n)
+        output_pdf = f"merge_absolutely_top{top_n}.pdf"
+        visualize_top_trees(sorted_dict, output_pdf, voucher2taxa_dic, top_n)
 
     with open(f"absolute_{outfile}.txt", "w") as file:
         file.write("Topology_ID\tTopology_num\tTopology\tTree_IDs\n")
@@ -314,17 +329,129 @@ def visualize_top_trees(
 
     Assumptions
     -----------
-    Tree rendering and PIL image operations are available.
+    Tree rendering is available, and PDF merge backend (PyMuPDF or pypdf)
+    is installed.
     """
     def _layout_fixed_leaf_font(node):
         if node.is_leaf():
-            node.add_face(TextFace(node.name, fsize=22), column=0, position="branch-right")
+            # Nature-like panel typography baseline.
+            node.add_face(TextFace(node.name, fsize=6), column=0, position="branch-right")
+
+    def _get_pdf_panel_sizes(pdf_files: list[str]) -> tuple[float, float]:
+        max_w = 0.0
+        max_h = 0.0
+        if fitz is not None:
+            for path in pdf_files:
+                src = fitz.open(path)
+                rect = src[0].rect
+                max_w = max(max_w, float(rect.width))
+                max_h = max(max_h, float(rect.height))
+                src.close()
+            return max_w, max_h
+        if PdfReader is not None:
+            for path in pdf_files:
+                with open(path, "rb") as handle:
+                    p = PdfReader(handle).pages[0]
+                    max_w = max(max_w, float(p.mediabox.width))
+                    max_h = max(max_h, float(p.mediabox.height))
+            return max_w, max_h
+        return 0.0, 0.0
+
+    def _merge_pdf_with_pymupdf(
+        pdf_files: list[str],
+        output_pdf_path: str,
+        cols: int,
+        rows: int,
+        cell_w: float,
+        cell_h: float,
+        gap_x: float,
+        gap_y: float,
+        margin: float,
+    ) -> bool:
+        if fitz is None:
+            return False
+        # Keep panel size unchanged to avoid any compression/scaling.
+        page_width = 2 * margin + cols * cell_w + (cols - 1) * gap_x
+        page_height = 2 * margin + rows * cell_h + (rows - 1) * gap_y
+        merged_doc = fitz.open()
+        page = merged_doc.new_page(width=page_width, height=page_height)
+        x = margin
+        y = margin
+        count = 0
+        for panel_pdf in pdf_files:
+            src = fitz.open(panel_pdf)
+            src_rect = src[0].rect
+            # Zero-scaling placement: keep original panel width/height.
+            rect = fitz.Rect(x, y, x + float(src_rect.width), y + float(src_rect.height))
+            page.show_pdf_page(rect, src, 0)
+            src.close()
+
+            count += 1
+            if count % cols == 0:
+                x = margin
+                y += cell_h + gap_y
+            else:
+                x += cell_w + gap_x
+
+            if count == rows * cols and panel_pdf != pdf_files[-1]:
+                page = merged_doc.new_page(width=page_width, height=page_height)
+                x = margin
+                y = margin
+                count = 0
+
+        merged_doc.save(output_pdf_path)
+        merged_doc.close()
+        return True
+
+    def _merge_pdf_with_pypdf(
+        pdf_files: list[str],
+        output_pdf_path: str,
+        cols: int,
+        rows: int,
+        cell_w: float,
+        cell_h: float,
+        gap_x: float,
+        gap_y: float,
+        margin: float,
+    ) -> bool:
+        if PdfReader is None or PdfWriter is None or Transformation is None:
+            return False
+        page_width = 2 * margin + cols * cell_w + (cols - 1) * gap_x
+        page_height = 2 * margin + rows * cell_h + (rows - 1) * gap_y
+        writer = PdfWriter()
+        page = writer.add_blank_page(width=page_width, height=page_height)
+        x = margin
+        y = margin
+        count = 0
+        for panel_pdf in pdf_files:
+            with open(panel_pdf, "rb") as handle:
+                src_page = PdfReader(handle).pages[0]
+                # Zero-scaling placement for publication fidelity.
+                page.merge_translated_page(src_page, tx=x, ty=y)
+            count += 1
+            if count % cols == 0:
+                x = margin
+                y += cell_h + gap_y
+            else:
+                x += cell_w + gap_x
+            if count == rows * cols and panel_pdf != pdf_files[-1]:
+                page = writer.add_blank_page(width=page_width, height=page_height)
+                x = margin
+                y = margin
+                count = 0
+        with open(output_pdf_path, "wb") as out_handle:
+            writer.write(out_handle)
+        return True
 
     cols = math.ceil(math.sqrt(top_n))
     rows = math.ceil(top_n / cols)
+    panel_h = 2200
+    gap_x = 60
+    gap_y = 60
+    margin = 40
     sorted_trees = list(tree_count_dict.items())[:top_n]
     temp_dir = tempfile.mkdtemp(prefix="temp_trees_")
-    tree_images = []
+    tree_panels_pdf = []
     for i, (tree_str, count) in enumerate(sorted_trees):
         tree0 = read_tree(tree_str)
         tree = rename_input_tre(tree0, voucher2taxa_dic)
@@ -335,8 +462,8 @@ def visualize_top_trees(
         tree.convert_to_ultrametric()
 
         nstyle = NodeStyle()
-        nstyle["vt_line_width"] = 1
-        nstyle["hz_line_width"] = 1
+        nstyle["vt_line_width"] = 0.5
+        nstyle["hz_line_width"] = 0.5
         nstyle["vt_line_type"] = 0
         nstyle["hz_line_type"] = 0
         nstyle["size"] = 0
@@ -348,34 +475,34 @@ def visualize_top_trees(
         ts.scale = 10
         ts.show_leaf_name = False
         ts.layout_fn = _layout_fixed_leaf_font
-        ts.title.add_face(TextFace(f" Count: {len(count)}"), column=1)
+        ts.title.add_face(TextFace(f"Count: {len(count)}", fsize=6), column=1)
         ts.show_scale = False
-        tree_path = os.path.join(temp_dir, f"tree_{i + 1}.png")
-        tree.render(tree_path, h=3200, tree_style=ts)
-        tree_images.append(tree_path)
-    if tree_images:
-        single_image_width = 0
-        single_image_height = 0
-        for img_path in tree_images:
-            with Image.open(img_path) as img:
-                w, h = img.size
-                single_image_width = max(single_image_width, w)
-                single_image_height = max(single_image_height, h)
-    else:
-        single_image_width, single_image_height = 1600, 1600
-    final_width = cols * single_image_width
-    final_height = rows * single_image_height
-    combined_image = Image.new("RGB", (final_width, final_height), "white")
-    for idx, img_path in enumerate(tree_images):
-        with Image.open(img_path) as img:
-            row, col = divmod(idx, cols)
-            x_offset = col * single_image_width
-            y_offset = row * single_image_height
-            # Center each tree image in a fixed-size grid cell to avoid overlap.
-            paste_x = x_offset + (single_image_width - img.size[0]) // 2
-            paste_y = y_offset + (single_image_height - img.size[1]) // 2
-            combined_image.paste(img, (paste_x, paste_y))
-    combined_image.save(output_path)
+        ts.force_topology = True
+        ts.branch_vertical_margin = 4
+        ts.margin_left = 20
+        ts.margin_right = 20
+        ts.margin_top = 20
+        ts.margin_bottom = 20
+        panel_pdf = os.path.join(temp_dir, f"tree_{i + 1}.pdf")
+        # Keep natural width; only fix height to avoid width/height squeeze.
+        tree.render(panel_pdf, h=panel_h, tree_style=ts)
+        tree_panels_pdf.append(panel_pdf)
+    if tree_panels_pdf:
+        output_pdf = output_path if output_path.lower().endswith(".pdf") else f"{os.path.splitext(output_path)[0]}.pdf"
+        cell_w, cell_h = _get_pdf_panel_sizes(tree_panels_pdf)
+        if cell_w <= 0 or cell_h <= 0:
+            raise RuntimeError("Unable to read panel PDF size for vector merge.")
+        merged_ok = _merge_pdf_with_pymupdf(
+            tree_panels_pdf, output_pdf, cols, rows, cell_w, cell_h, gap_x, gap_y, margin
+        )
+        if not merged_ok:
+            merged_ok = _merge_pdf_with_pypdf(
+                tree_panels_pdf, output_pdf, cols, rows, cell_w, cell_h, gap_x, gap_y, margin
+            )
+        if not merged_ok:
+            raise RuntimeError(
+                "Failed to merge vector PDF panels: install pymupdf or pypdf."
+            )
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 

@@ -12,8 +12,6 @@ import re
 import shutil
 import string
 
-import matplotlib.colors as colors
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from ete3 import PhyloTree, Tree
@@ -37,6 +35,7 @@ from phylotracer import (
     rename_input_tre,
     root_tre_with_midpoint_outgroup,
     get_species_list,
+    stable_color_for_label,
 )
 
 
@@ -264,17 +263,9 @@ def get_color_dict(dictionary: dict) -> dict:
     -----------
     Categories are finite and can be mapped to a rainbow colormap.
     """
-    colormap = plt.get_cmap("rainbow")
-    unique_values = set(dictionary.values())
-    colors_list = [
-        colors.rgb2hex(colormap(i))
-        for i in np.linspace(0, 1, len(unique_values))
-    ]
-    color_dict = dict(zip(unique_values, colors_list))
     sps_color_list = {
-        k: f"{v}@{color_dict.get(v)}"
+        k: f"{v}@{stable_color_for_label(v)}"
         for k, v in dictionary.items()
-        if v in color_dict
     }
     return sps_color_list
 
