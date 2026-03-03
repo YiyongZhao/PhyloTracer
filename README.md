@@ -45,6 +45,7 @@ All modules are designed to be used independently or combined in larger phylogen
 
 - [What does PhyloTracer do?](#what-does-phylotracer-do)
 - [Module Features](#module-features)
+- [Features](#features)
 - [Getting started with PhyloTracer](#getting-started-with-phylotracer)
 - [Advanced installation notes](#advanced-installation-notes)
 - [Example input files](#example-input-files)
@@ -79,6 +80,24 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
 17. **HaploFinder:** Identifies ancient recombination (conversion/crossover) events by tracing subgenome haplotypes.
 
 *Together, these modules provide a comprehensive workflow for constructing, refining, and interpreting large-scale phylogenomic data.*
+
+---
+## Features
+
+- Rooting (via `Phylo_Rooter`):  
+  Automatically evaluates multiple rooting candidates and selects the most plausible root using OD/BLV/GD/SO/GD_consistency and RF-guided ranking.
+
+- Topology statistics (via `TreeTopology_Summarizer`):  
+  Computes absolute and relative topology frequencies for single-copy gene trees, with optional grouped summarization by user-defined clade labels.
+
+- Hybridization screening (via `Hybrid_Tracer`):  
+  Extracts GD-informed gene sets and performs node-focused hybridization signal screening in grouped or ungrouped modes.
+
+- GD & loss profiling (via `GD_Detector` and `GD_Loss_Tracker`):  
+  Reconciles gene–species trees to summarize duplication events and downstream lineage-specific loss patterns.
+
+- HaploFinder:  
+  Detects ancient recombination signals (including gene conversion/crossover) by tracing subgenome haplotype patterns.
 
 ---
 ## Getting started with PhyloTracer
@@ -144,81 +163,6 @@ Optional (Linux headless visualization compatibility):
 ```bash
 export QT_QPA_PLATFORM=offscreen
 ```
----
-## Features
-
-- Rooting (core, via `Phylo_Rooter`):  
-  Uses a two-stage strategy:
-  1) **Stage 1 (fast screening, no RF)** computes `OD`, `BLV`, `GD`, `SO`, and `GD_consistency`;  
-  2) **Stage 2 (fine screening)** computes `RF` only for top candidates, then selects the best root by sorting `RF` first, then Stage-1 score.
-
-  Metric definitions used in Stage-1:
-  - `OD` (Outgroup depth): average depth of candidate outgroup clades. Larger values support deeper/more plausible outgroup partitioning.
-  - `BLV` (Branch length variance): branch-length variance under the candidate rooting. Smaller values indicate more clock-like and stable rooting.
-  - `GD` (GD events count): number of inferred duplication events under the candidate rooting. In multi-copy families, larger values carry stronger rooting signal.
-  - `SO` (GD clade species overlap): average species overlap between the two child clades of inferred GD nodes. Larger overlap suggests poorer speciation-like separation, so this term is penalized.
-  - `GD_consistency`: consistency of GD child-clade species composition (higher is better), combining clade-size symmetry and Jaccard overlap.
-
-  Stage-1 scoring in code:
-  `score = w_OD * norm(OD) + w_BLV * norm(BLV) + w_GD * norm(GD) - w_SO * norm(SO) - w_GDC * norm(GD_consistency)`  
-  where `norm(x)` is min-max normalization in `[0, 1]`.
-
-  <details>
-  <summary>📊 Stage-1 weights in <code>Phylo_Rooter</code> (from code)</summary>
-
-  | Metric | User-defined Stage-1 weight |
-  |---|---:|
-  | `OD` | user-defined |
-  | `BLV` | user-defined |
-  | `GD` | user-defined |
-  | `SO` | user-defined |
-  | `GD_consistency` | user-defined |
-
-  </details>
-
-  Stage-2 selection in code:
-  - keep top `max(20, ceil(0.8 * total_candidates))` candidates by Stage-1 score;
-  - compute `RF` for them;
-  - choose best by `sort_values(by=["RF", "score"], ascending=[True, True])`.
-
----
-
-- Topology statistics (via `TreeTopology_Summarizer`):  
-  Computes the absolute and relative topology frequencies for single-copy gene trees.  
-  Supports grouped summarization by user-provided labels (e.g., family/order tags) when supplied.
-
----
-
-- Hybridization screening (via `Hybrid_Tracer`):  
-  `Hybrid_Tracer` extends conventional HyDe-style hybridization detection by leveraging gene duplication (GD)–based signal extraction, offering both grouped and ungrouped analytical modes for cleaner and more node-specific hybridization inference.
-
-  Two complementary strategies are implemented:
-
-  - Ungrouped mode (concatenation-based):  
-    For a specific ancestral node, `Hybrid_Tracer` concatenates the alignment sequences from all duplicated genes descending from that node’s GD events, forming a targeted alignment matrix.  
-    This enables direct HyDe-like inference of hybridization signals while minimizing unrelated noise, since only genes phylogenetically tied to that duplication origin are included.
-
-  - Grouped mode (signal integration):  
-    Alternatively, GD events can be partitioned into multiple groups according to their gene tree topology or taxonomic context.  
-    Each group is analyzed independently to estimate its hybridization proportion (γ) and support.  
-    These group-level results are then integrated (e.g., averaged or weighted) to infer the overall hybridization signal of that ancestral node.
-
-  Compared with the traditional HyDe pipeline that concatenates all single-copy genes across the genome, `Hybrid_Tracer` focuses exclusively on GD-derived gene sets related to the evolutionary node of interest.  
-  This design produces cleaner, more interpretable, and more localized hybridization signals, reducing interference from unrelated loci and improving the biological relevance of γ estimates.
-
----
-
-- GD & loss profiling (via `GD_Detector` and `GD_Loss_Tracker`):  
-  Reconciles gene–species trees to summarize gene duplication events and lineage-specific loss patterns.  
-  Paired visualizers (`GD_Visualizer`, `GD_Loss_Visualizer`) assist in comparative interpretation.
-
----
-
-- HaploFinder:  
-  Detects ancient genome recombination signals, including gene conversions and crossover events, by tracing subgenome-specific haplotypes through phylogenomic profiling.  
-  This module helps characterize the historical exchange of genetic material between subgenomes and provides insights into genome evolution following duplication or hybridization.
-
-
 ---
 ## Installation
 
@@ -326,6 +270,40 @@ Most modules generate task-specific outputs in either the current working direct
 
 This section follows an OrthoFinder-like CLI reference style with compact layout and explicit parameter meanings.
 
+### Rooting principle (for `Phylo_Rooter`)
+
+`Phylo_Rooter` selects gene-tree roots by scoring multiple candidate roots and choosing the best-ranked result.
+
+**1. Candidate root generation**
+
+- Outgroup-based candidates
+- GD-node-based candidates
+- MAD candidates
+- MinVar candidates
+
+**2. Root quality metrics**
+
+- `OD` (Outgroup depth)
+- `BLV` (Branch length variance)
+- `GD` (GD events count)
+- `SO` (GD clade species overlap)
+- `GD_consistency`
+
+**3. Stage-1 weighted scoring**
+
+$$
+\text{score} = w_{OD}\cdot norm(OD) + w_{BLV}\cdot norm(BLV) + w_{GD}\cdot norm(GD) - w_{SO}\cdot norm(SO) - w_{GDC}\cdot norm(GD\_consistency)
+$$
+
+**4. User-defined weights (`--weights`)**
+
+- Input order must be: `OD BLV GD SO GD_consistency RF`
+- Exactly 6 values; sum must be 1
+
+**5. Final root selection**
+
+- Select the best root by combined ranking (lower score, better RF consistency)
+
 ### Phylo_Rooter
 ```
 Description:
@@ -333,13 +311,12 @@ Description:
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-    --input_gene_length     Two-column mapping file (gene_id<TAB>gene_length)
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
-    --weights               Stage-1 weights in fixed order: OD BLV GD SO GD_consistency; input exactly five floats with sum = 1, default = 0.30 0.10 0.40 0.10 0.10
+    --weights               Weights in fixed order: OD BLV GD SO GD_consistency RF; input exactly six floats with sum = 1, default = 0.30 0.10 0.30 0.10 0.10 0.10
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk [--weights 0.30 0.10 0.40 0.10 0.10] [--output_dir DIR]
+    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--weights 0.30 0.10 0.30 0.10 0.10 0.10] [--output_dir DIR]
 ```
 ### MulRF_Distance
 ```

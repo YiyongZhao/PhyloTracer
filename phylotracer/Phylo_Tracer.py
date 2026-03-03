@@ -160,12 +160,11 @@ BranchLength_NumericConverter_parser.add_argument('--decimal_place', metavar='IN
 BranchLength_NumericConverter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # Phylo_Rooter command
-Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Root gene trees using species-tree guidance and gene length', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk')
+Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Root gene trees using species-tree guidance', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk')
 Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Phylo_Rooter_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
-Phylo_Rooter_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
 Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
-Phylo_Rooter_parser.add_argument('--weights',nargs=5,type=bounded_float(0.0, 1.0),metavar=('OD', 'BLV', 'GD', 'SO', 'GDC'),default=[0.30, 0.10, 0.40, 0.10, 0.10],help='Stage-1 weights in fixed order: OD BLV GD SO GD_consistency; five values must sum to 1, default = 0.30 0.10 0.40 0.10 0.10',)
+Phylo_Rooter_parser.add_argument('--weights',nargs=6,type=bounded_float(0.0, 1.0),metavar=('OD', 'BLV', 'GD', 'SO', 'GDC', 'RF'),default=[0.30, 0.10, 0.30, 0.10, 0.10, 0.10],help='Weights in fixed order: OD BLV GD SO GD_consistency RF; six values must sum to 1, default = 0.30 0.10 0.30 0.10 0.10 0.10',)
 Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # MulRF_Distance command
@@ -359,15 +358,15 @@ def handle_branch_length_numeric_converter(cli_args):
 
 
 def handle_phylo_rooter(cli_args):
-    if cli_args.input_GF_list and cli_args.input_imap and cli_args.input_sps_tree and cli_args.input_gene_length:
+    if cli_args.input_GF_list and cli_args.input_imap and cli_args.input_sps_tree:
         start_time = time.time()
-        if cli_args.weights is None or len(cli_args.weights) != 5:
-            logger.error("Phylo_Rooter: --weights requires exactly 5 values (OD BLV GD SO GD_consistency).")
+        if cli_args.weights is None or len(cli_args.weights) != 6:
+            logger.error("Phylo_Rooter: --weights requires exactly 6 values (OD BLV GD SO GD_consistency RF).")
             return
         weight_sum = sum(cli_args.weights)
         if abs(weight_sum - 1.0) > 1e-6:
             logger.error(
-                "Phylo_Rooter: --weights must sum to 1. Current sum = %.6f. Input order: OD BLV GD SO GD_consistency.",
+                "Phylo_Rooter: --weights must sum to 1. Current sum = %.6f. Input order: OD BLV GD SO GD_consistency RF.",
                 weight_sum,
             )
             return
@@ -377,18 +376,15 @@ def handle_phylo_rooter(cli_args):
             "GD": cli_args.weights[2],
             "species_overlap": cli_args.weights[3],
             "gd_consistency": cli_args.weights[4],
-            "RF": 0.0,
+            "RF": cli_args.weights[5],
         }
         gene2new_named_gene_dic, new_named_gene2gene_dic, _, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
-        len_dic = read_and_return_dict(cli_args.input_gene_length)
-        renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
         sptree = PhyloTree(cli_args.input_sps_tree)
         renamed_sptree = rename_input_tre(sptree, taxa2voucher_dic)
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
         root_main(
             tre_dic,
             gene2new_named_gene_dic,
-            renamed_len_dic,
             new_named_gene2gene_dic,
             renamed_sptree,
             stage1_weights=stage1_weights,
