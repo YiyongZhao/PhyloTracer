@@ -286,6 +286,7 @@ def remove_long_branches(
     """
     pruned_tree = tree.copy()
     max_rounds = len(pruned_tree.get_leaf_names())
+    use_and = False  # False: RRBR OR SRBR; True: RRBR AND SRBR
 
     for _ in range(max_rounds):
         to_remove = set()
@@ -293,33 +294,36 @@ def remove_long_branches(
 
         for leaf in pruned_tree:
             leaf_name = leaf.name
-            leaf_dist = pruned_tree.get_distance(leaf)
             tip_root_distance = pruned_tree.get_distance(leaf)
             gene_name = renamed2gene.get(leaf_name, leaf_name)
-
-            if leaf_dist == 0 or avg_tip_root_distance == 0:
-                continue
-
-            root_ratio = (
-                tip_root_distance - avg_tip_root_distance
-            ) / avg_tip_root_distance
-
             sisters = leaf.get_sisters()
             if not sisters:
                 continue
+
+            if tip_root_distance == 0 or avg_tip_root_distance == 0:
+                continue
+
+            rrbr_value = (
+                tip_root_distance - avg_tip_root_distance
+            ) / avg_tip_root_distance
+
             sister = sisters[0]
             if sister.is_leaf():
                 sister_avg = pruned_tree.get_distance(sister)
             else:
                 sister_avg = get_average_node_length(sister) + pruned_tree.get_distance(sister) or 1e-6
 
-            sister_ratio = (leaf_dist - sister_avg) / sister_avg
+            # SRBR is also defined on root-to-tip distances.
+            srbr_value = (tip_root_distance - sister_avg) / sister_avg
+            is_rrbr = rrbr_value >= rrbr_cutoff
+            is_srbr = srbr_value >= srbr_cutoff
+            should_remove = (is_rrbr and is_srbr) if use_and else (is_rrbr or is_srbr)
 
-            if root_ratio >= rrbr_cutoff and sister_ratio >= srbr_cutoff:
+            if should_remove:
                 to_remove.add(leaf_name)
                 if delete_handle is not None:
                     delete_handle.write(
-                        f"{tree_id}\t{gene_name}\t{root_ratio}\t{sister_ratio}\n"
+                        f"{tree_id}\t{gene_name}\t{rrbr_value}\t{srbr_value}\n"
                     )
 
         if not to_remove:
@@ -385,7 +389,10 @@ def prune_main_LB(
     pruned_dir = os.path.join(module_root, "pruned_tree")
     delete_gene_dir = os.path.join(module_root, "delete_gene")
     if visual:
-        pdf_dir = os.path.join(module_root, "pruned_tree_pdf")
+        # Keep visualization directory name consistent with OrthoFilter_Mono.
+        pdf_dir = os.path.join(module_root, "visual")
+        # Backward-compat cleanup for legacy directory name.
+        shutil.rmtree(os.path.join(module_root, "pruned_tree_pdf"), ignore_errors=True)
     else:
         pdf_dir = None
 
