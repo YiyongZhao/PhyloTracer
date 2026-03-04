@@ -570,24 +570,23 @@ def select_alien_tips_for_removal(
     removal_set = set()
     sorted_scores = sorted(scores, key=lambda x: x["combined_score"], reverse=True)
 
+    def _current_purity() -> float:
+        remaining_alien_local = max(alien_count - len(removal_set), 0)
+        current_total_local = target_count + remaining_alien_local
+        return target_count / current_total_local if current_total_local else 0.0
+
+    # Pass 1: keep at least one tip for every non-target clade in the dominant lineage.
     for item in sorted_scores:
         if item.get("is_protected_sister", False):
             continue
-
-        remaining_alien = max(alien_count - len(removal_set), 0)
-        current_total = target_count + remaining_alien
-        current_purity = target_count / current_total if current_total else 0.0
-
-        if current_purity >= final_purity:
-            break
-        if len(removal_set) >= max_remove:
+        if _current_purity() >= final_purity or len(removal_set) >= max_remove:
             break
 
         candidate_leaves = set(item["leaf_names"])
         new_leaves = candidate_leaves - removal_set
         if not new_leaves:
             continue
-        # Keep at least one tip for every non-target clade in each dominant lineage.
+
         removed_by_clade = Counter(leaf_to_clade.get(name, "") for name in new_leaves)
         if any(
             clade_label
@@ -598,6 +597,23 @@ def select_alien_tips_for_removal(
         if len(removal_set) + len(new_leaves) > max_remove:
             break
         removal_set.update(new_leaves)
+
+    # Pass 2 (fallback): if purity target is still unmet, allow deleting the last alien tip
+    # of a non-target clade (still respects protected-sister and max_remove constraints).
+    if _current_purity() < final_purity and len(removal_set) < max_remove:
+        for item in sorted_scores:
+            if item.get("is_protected_sister", False):
+                continue
+            if _current_purity() >= final_purity or len(removal_set) >= max_remove:
+                break
+
+            candidate_leaves = set(item["leaf_names"])
+            new_leaves = candidate_leaves - removal_set
+            if not new_leaves:
+                continue
+            if len(removal_set) + len(new_leaves) > max_remove:
+                break
+            removal_set.update(new_leaves)
 
     return removal_set
 
