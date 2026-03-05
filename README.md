@@ -545,6 +545,7 @@ Optional parameter:
                             Format: each line is "gene_id<TAB>label" (no header required)
                             Meaning: each file is one categorical layer (e.g., family/order/clade)
                             Example files in 09_Tree_Visualizer: gene2family.imap, gene2order.imap, gene2clade.imap
+                            Note: for species-tree family-duplication mapping, the first file in --gene_categories is used as the family map
     --input_sps_tree        Species tree file in Newick format
     --gene_expression       Gene expression matrix file (.csv/.xls/.xlsx), genes as row index
     --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False

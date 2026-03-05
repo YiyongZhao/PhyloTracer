@@ -222,7 +222,7 @@ Tree_Visualizer_parser.add_argument(
     '--gene_categories',
     metavar='TAXA_LIST',
     nargs='+',
-    help='One or more two-column files (gene_id<TAB>category_label), each file is one annotation layer; e.g., gene2family.imap gene2order.imap gene2clade.imap'
+    help='One or more two-column files (gene_id<TAB>category_label), each file is one annotation layer; e.g., gene2family.imap gene2order.imap gene2clade.imap. For species-tree family-duplication summary, the first file is used as the family mapping.'
 )
 Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Whether to preserve branch lengths in plotting: 1=yes, 0=no')
 Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree layout style: r=rectangular, c=circular')
@@ -518,8 +518,9 @@ def handle_tree_visualizer(cli_args):
             sptree = Tree(cli_args.input_sps_tree)
             sptree1 = rename_input_tre(sptree, taxa2voucher_dic)
 
-        # Use the first gene category file as family-level mapping for
-        # species-tree mark-up when available.
+        # Use the first category map as family-level input only for species-tree
+        # mark-up. Do not pass it again to gene-tree tip rendering, otherwise
+        # the family layer is drawn twice.
         if species_category_list:
             gene2fam = species_category_list[0]
         if gene2fam is not None and sptree1 is not None:
@@ -553,7 +554,7 @@ def handle_tree_visualizer(cli_args):
             cli_args.tree_style,
             cli_args.keep_branch,
             new_named_gene2gene_dic,
-            gene2fam,
+            None,
             df,
             visual=cli_args.visual_gd,
         )
