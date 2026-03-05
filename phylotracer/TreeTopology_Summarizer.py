@@ -334,47 +334,34 @@ def visualize_top_trees(
     """
     def _layout_fixed_leaf_font(node):
         if node.is_leaf():
-            # Keep leaf labels as vector text and improve readability.
-            node.add_face(TextFace(node.name, fsize=9), column=0, position="branch-right")
+            node.add_face(TextFace(node.name, fsize=8), column=0, position="branch-right")
 
-    def _get_pdf_panel_sizes(pdf_files: list[str]) -> list[tuple[float, float]]:
-        sizes: list[tuple[float, float]] = []
-        if fitz is not None:
-            for path in pdf_files:
-                src = fitz.open(path)
-                rect = src[0].rect
-                sizes.append((float(rect.width), float(rect.height)))
-                src.close()
-            return sizes
-        if PdfReader is not None:
-            for path in pdf_files:
-                with open(path, "rb") as handle:
-                    p = PdfReader(handle).pages[0]
-                    sizes.append((float(p.mediabox.width), float(p.mediabox.height)))
-            return sizes
-        return sizes
+    def _build_a4_grid_layout(n_panels: int) -> tuple[list[dict], float, float]:
+        # A4 portrait in points (72 dpi)
+        page_w, page_h = 595.0, 842.0
+        margin_x, margin_y = 20.0, 20.0
+        gap_x, gap_y = 12.0, 12.0
+        cols = 2
+        rows = max(1, math.ceil(n_panels / cols))
 
-    def _build_layout(
-        panel_sizes: list[tuple[float, float]],
-        gap_y: float,
-        margin: float,
-    ) -> tuple[list[dict], float, float]:
-        # New merge strategy: one-column vertical stack, no panel scaling.
-        placements = []
-        page_width = max(w for w, _ in panel_sizes) + 2 * margin
-        page_height = 2 * margin + sum(h for _, h in panel_sizes) + gap_y * max(len(panel_sizes) - 1, 0)
+        cell_w = (page_w - 2 * margin_x - gap_x) / cols
+        cell_h = (page_h - 2 * margin_y - (rows - 1) * gap_y) / rows
 
-        y = margin
-        for idx, (w, h) in enumerate(panel_sizes):
-            x = margin + (page_width - 2 * margin - w) / 2.0
-            placements.append({"idx": idx, "x": x, "y": y, "w": w, "h": h})
-            y += h + gap_y
-        return placements, page_width, page_height
+        items = []
+        for idx in range(n_panels):
+            row = idx // cols
+            col = idx % cols
+            x0 = margin_x + col * (cell_w + gap_x)
+            y0 = margin_y + row * (cell_h + gap_y)
+            items.append(
+                {"idx": idx, "x0": x0, "y0": y0, "x1": x0 + cell_w, "y1": y0 + cell_h}
+            )
+        return items, page_w, page_h
 
     def _merge_pdf_with_pymupdf(
         pdf_files: list[str],
         output_pdf_path: str,
-        placements: list[dict],
+        page_items: list[dict],
         page_width: float,
         page_height: float,
     ) -> bool:
@@ -382,14 +369,19 @@ def visualize_top_trees(
             return False
         merged_doc = fitz.open()
         page = merged_doc.new_page(width=page_width, height=page_height)
-        for item in placements:
-            panel_pdf = pdf_files[item["idx"]]
-            src = fitz.open(panel_pdf)
-            # 1:1 vector placement; destination size equals source size.
-            rect = fitz.Rect(item["x"], item["y"], item["x"] + item["w"], item["y"] + item["h"])
+        for item in page_items:
+            src = fitz.open(pdf_files[item["idx"]])
+            src_rect = src[0].rect
+            cell_w = item["x1"] - item["x0"]
+            cell_h = item["y1"] - item["y0"]
+            scale = min(cell_w / float(src_rect.width), cell_h / float(src_rect.height))
+            draw_w = float(src_rect.width) * scale
+            draw_h = float(src_rect.height) * scale
+            dx = item["x0"] + (cell_w - draw_w) / 2.0
+            dy = item["y0"] + (cell_h - draw_h) / 2.0
+            rect = fitz.Rect(dx, dy, dx + draw_w, dy + draw_h)
             page.show_pdf_page(rect, src, 0)
             src.close()
-
         merged_doc.save(output_pdf_path)
         merged_doc.close()
         return True
@@ -397,7 +389,7 @@ def visualize_top_trees(
     def _merge_pdf_with_pypdf(
         pdf_files: list[str],
         output_pdf_path: str,
-        placements: list[dict],
+        page_items: list[dict],
         page_width: float,
         page_height: float,
     ) -> bool:
@@ -405,30 +397,25 @@ def visualize_top_trees(
             return False
         writer = PdfWriter()
         page = writer.add_blank_page(width=page_width, height=page_height)
-        for item in placements:
-            panel_pdf = pdf_files[item["idx"]]
-            with open(panel_pdf, "rb") as handle:
+        for item in page_items:
+            with open(pdf_files[item["idx"]], "rb") as handle:
                 src_page = PdfReader(handle).pages[0]
-                # 1:1 placement without any scaling.
-                page.merge_translated_page(src_page, tx=item["x"], ty=item["y"])
+                src_w = float(src_page.mediabox.width)
+                src_h = float(src_page.mediabox.height)
+                cell_w = item["x1"] - item["x0"]
+                cell_h = item["y1"] - item["y0"]
+                scale = min(cell_w / src_w, cell_h / src_h)
+                draw_w = src_w * scale
+                draw_h = src_h * scale
+                tx = item["x0"] + (cell_w - draw_w) / 2.0
+                ty = item["y0"] + (cell_h - draw_h) / 2.0
+                transform = Transformation().scale(scale, scale).translate(tx=tx, ty=ty)
+                page.merge_transformed_page(src_page, transform)
         with open(output_pdf_path, "wb") as out_handle:
             writer.write(out_handle)
         return True
 
-    # A4 size in points (72 dpi): 595 x 842
-    panel_w = 595
-    gap_y = 18
-    margin = 24
     sorted_trees = list(tree_count_dict.items())[:top_n]
-    max_tip_count = 0
-    for tree_str, _ in sorted_trees:
-        try:
-            t = read_tree(tree_str)
-            max_tip_count = max(max_tip_count, len(t.get_leaves()))
-        except Exception:
-            continue
-    if max_tip_count <= 0:
-        max_tip_count = 1
     temp_dir = tempfile.mkdtemp(prefix="temp_trees_")
     tree_panels_pdf = []
     for i, (tree_str, count) in enumerate(sorted_trees):
@@ -439,8 +426,8 @@ def visualize_top_trees(
         tree.sort_descendants("support")
 
         nstyle = NodeStyle()
-        nstyle["vt_line_width"] = 1
-        nstyle["hz_line_width"] = 1
+        nstyle["vt_line_width"] = 1.2
+        nstyle["hz_line_width"] = 1.2
         nstyle["vt_line_type"] = 0
         nstyle["hz_line_type"] = 0
         nstyle["size"] = 0
@@ -448,43 +435,37 @@ def visualize_top_trees(
         nstyle["fgcolor"] = "black"
         for node in tree.traverse():
             node.set_style(nstyle)
+
         ts = TreeStyle()
         ts.show_leaf_name = False
         ts.layout_fn = _layout_fixed_leaf_font
-        ts.title.add_face(TextFace(f"Count: {len(count)}", fsize=9), column=1)
+        ts.title.add_face(TextFace(f"Count: {len(count)}", fsize=8), column=1)
         ts.show_scale = False
-        ts.force_topology = True
-        # Normalize visual tree-body height relative to the largest-tip tree.
-        tip_count = max(len(tree.get_leaves()), 1)
-        base_bvm = 6.0
-        ratio = float(max_tip_count) / float(tip_count)
-        adaptive_bvm = int(round(base_bvm * ratio))
-        ts.branch_vertical_margin = max(3, min(160, adaptive_bvm))
-        ts.margin_left = 30
-        ts.margin_right = 30
-        ts.margin_top = 30
-        ts.margin_bottom = 30
+        # Keep branch-length geometry so ultrametric tip alignment is visible.
+        ts.force_topology = False
+        ts.draw_guiding_lines = True
+        ts.guiding_lines_type = 2
+        ts.guiding_lines_color = "#666666"
+        ts.branch_vertical_margin = 8
+        ts.margin_left = 24
+        ts.margin_right = 24
+        ts.margin_top = 20
+        ts.margin_bottom = 20
+
         panel_pdf = os.path.join(temp_dir, f"tree_{i + 1}.pdf")
-        # Fix only width to A4 and keep natural height to avoid non-uniform stretching.
-        tree.render(panel_pdf, w=panel_w, tree_style=ts)
+        tree.convert_to_ultrametric(tree_length=1)
+        tree.render(panel_pdf, w=900, tree_style=ts)
         tree_panels_pdf.append(panel_pdf)
+
     if tree_panels_pdf:
         output_pdf = output_path if output_path.lower().endswith(".pdf") else f"{os.path.splitext(output_path)[0]}.pdf"
-        panel_sizes = _get_pdf_panel_sizes(tree_panels_pdf)
-        if not panel_sizes:
-            raise RuntimeError("Unable to read panel PDF size for vector merge.")
-        placements, page_width, page_height = _build_layout(panel_sizes, gap_y, margin)
-        merged_ok = _merge_pdf_with_pymupdf(
-            tree_panels_pdf, output_pdf, placements, page_width, page_height
-        )
+        page_items, page_w, page_h = _build_a4_grid_layout(len(tree_panels_pdf))
+        merged_ok = _merge_pdf_with_pymupdf(tree_panels_pdf, output_pdf, page_items, page_w, page_h)
         if not merged_ok:
-            merged_ok = _merge_pdf_with_pypdf(
-                tree_panels_pdf, output_pdf, placements, page_width, page_height
-            )
+            merged_ok = _merge_pdf_with_pypdf(tree_panels_pdf, output_pdf, page_items, page_w, page_h)
         if not merged_ok:
-            raise RuntimeError(
-                "Failed to merge vector PDF panels: install pymupdf or pypdf."
-            )
+            raise RuntimeError("Failed to merge vector PDF panels: install pymupdf or pypdf.")
+
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 

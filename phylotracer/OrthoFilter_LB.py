@@ -33,7 +33,6 @@ from phylotracer import (
     stable_color_for_label,
 )
 from phylotracer.BranchLength_NumericConverter import (
-    trans_branch_length,
     write_tree_to_newick,
 )
 
@@ -449,7 +448,7 @@ def prune_main_LB(
             os.remove(f"{tree_id}_after.pdf")
 
         restored_tree = rename_input_tre(pruned_tree, renamed2gene)
-        tree_str = trans_branch_length(restored_tree)
+        tree_str = restored_tree.write(format=0)
         write_tree_to_newick(tree_str, tree_id, pruned_dir)
     pbar.close()
 
