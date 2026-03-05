@@ -535,13 +535,12 @@ Optional parameter:
                             Format: each line is "gene_id<TAB>label" (no header required)
                             Meaning: each file is one categorical layer (e.g., family/order/clade)
                             Example files in 09_Tree_Visualizer: gene2family.imap, gene2order.imap, gene2clade.imap
-    --gene_family           Two-column mapping file (gene_id<TAB>family_label)
-    --input_sps_tree        Species tree file in Newick format (required with --gene_family)
+    --input_sps_tree        Species tree file in Newick format
     --gene_expression       Gene expression matrix file (.csv/.xls/.xlsx), genes as row index
     --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories gene2family.imap gene2order.imap gene2clade.imap] [--gene_family gene2family.imap --input_sps_tree sptree.nwk] [--gene_expression expression.csv] [--visual_gd] [--output_dir DIR]
+    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories gene2family.imap gene2order.imap gene2clade.imap] [--input_sps_tree sptree.nwk] [--gene_expression expression.csv] [--visual_gd] [--output_dir DIR]
 ```
 ### GD_Detector
 ```
