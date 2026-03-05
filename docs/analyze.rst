@@ -164,15 +164,14 @@ Required Parameters:
 
 Optional Parameters:
     - ``--gene_categories`` One or more two-column files in format ``gene_id<TAB>category_label``; each file is one annotation layer (e.g., family/order/clade).
-    - ``--gene_family``     File with family classification information corresponding to genes.
-    - ``--input_sps_tree``  Species tree file in Newick format (required with --gene_family).
+    - ``--input_sps_tree``  Species tree file in Newick format.
     - ``--gene_expression`` Gene expression level files.
     - ``--visual_gd``       Visualize GD nodes of gene family trees.
 
 Example:
     .. code-block:: bash
 
-        PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2family.imap gene2order.imap gene2clade.imap --keep_branch 1 --tree_style r --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression expression.csv --visual_gd]
+        PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2family.imap gene2order.imap gene2clade.imap --keep_branch 1 --tree_style r --input_sps_tree sptree.nwk --gene_expression expression.csv --visual_gd]
 
 
 9. GD_Detector

@@ -212,7 +212,7 @@ Tree_Visualizer_parser = subparsers.add_parser(
     epilog='Example:\n'
            '  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap '
            '--gene_categories gene2family.imap gene2order.imap gene2clade.imap '
-           '--gene_family gene2family.imap --input_sps_tree sptree.nwk '
+           '--input_sps_tree sptree.nwk '
            '--gene_expression expression.csv --keep_branch 1 --tree_style r --visual_gd'
 )
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
@@ -225,8 +225,7 @@ Tree_Visualizer_parser.add_argument(
 )
 Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Whether to preserve branch lengths in plotting: 1=yes, 0=no')
 Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree layout style: r=rectangular, c=circular')
-Tree_Visualizer_parser.add_argument('--gene_family', metavar='GENE_FAMILY', help='Two-column mapping file (gene_id<TAB>family_label)')
-Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', help='Species tree file in Newick format (required with --gene_family)')
+Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', help='Species tree file in Newick format')
 Tree_Visualizer_parser.add_argument('--gene_expression', metavar='EXPRESSION_FILE', help='Gene expression matrix file (.csv/.xls/.xlsx), genes as row index')
 Tree_Visualizer_parser.add_argument('--visual_gd', action='store_true', help='If set, overlay predicted GD nodes on gene-tree figures, default = False')
 Tree_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
@@ -513,16 +512,15 @@ def handle_tree_visualizer(cli_args):
         df = None
         sptree1 = None
 
-        if cli_args.gene_family and not cli_args.input_sps_tree:
-            logger.error("Tree_Visualizer: --input_sps_tree is required when --gene_family is provided.")
-            return
-
         if cli_args.input_sps_tree:
             sptree = Tree(cli_args.input_sps_tree)
             sptree1 = rename_input_tre(sptree, taxa2voucher_dic)
 
-        if cli_args.gene_family:
-            gene2fam = read_and_return_dict(cli_args.gene_family)
+        # Use the first gene category file as family-level mapping for
+        # species-tree mark-up when available.
+        if species_category_list:
+            gene2fam = species_category_list[0]
+        if gene2fam is not None and sptree1 is not None:
             gene2sps = read_and_return_dict(cli_args.input_imap)
             mark_gene_to_sptree_main(
                 tre_dic,
@@ -903,7 +901,6 @@ def _normalize_input_paths(args):
         "gd_result",
         "gd_loss_result",
         "hyde_out",
-        "gene_family",
         "gene_expression",
         "input_fasta",
         "cluster_file",

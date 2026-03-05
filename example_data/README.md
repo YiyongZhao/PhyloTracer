@@ -29,7 +29,7 @@ PhyloTracer TreeTopology_Summarizer --input_GF_list gf.txt --input_imap imap --v
 
 # 8_Tree_Visualizer（我实际跑的是20棵代表树）
 cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/8_Tree_Visualizer
-PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap --gene_categories gene2family.imap gene2order.imap gene2clade.imap --keep_branch 1 --tree_style r --gene_family gene2family.imap --input_sps_tree sptree.nwk --gene_expression expression.csv --visual_gd
+PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap --gene_categories gene2family.imap gene2order.imap gene2clade.imap --keep_branch 1 --tree_style r --input_sps_tree sptree.nwk --gene_expression expression.csv --visual_gd
 
 # 9_GD_Detector
 cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/9_GD_Detector
