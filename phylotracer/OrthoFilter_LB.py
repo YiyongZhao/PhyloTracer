@@ -253,6 +253,7 @@ def remove_long_branches(
     tree: object,
     rrbr_cutoff: float,
     srbr_cutoff: float,
+    lb_mode: str,
     delete_handle: Optional[TextIO],
     tree_id: str,
     renamed2gene: Dict[str, str],
@@ -286,7 +287,7 @@ def remove_long_branches(
     """
     pruned_tree = tree.copy()
     max_rounds = len(pruned_tree.get_leaf_names())
-    use_and = False  # False: RRBR OR SRBR; True: RRBR AND SRBR
+    use_and = str(lb_mode).lower() == "and"
 
     for _ in range(max_rounds):
         to_remove = set()
@@ -347,6 +348,7 @@ def prune_main_LB(
     renamed2gene: Dict[str, str],
     rrbr_cutoff: float = 5,
     srbr_cutoff: float = 2.5,
+    lb_mode: str = "or",
     visual: bool = False,
 ) -> None:
     """
@@ -366,6 +368,8 @@ def prune_main_LB(
         Threshold for Root Relative Branch Ratio (RRBR).
     srbr_cutoff : float, optional
         Threshold for Sister Relative Branch Ratio (SRBR).
+    lb_mode : str, optional
+        Decision mode for combining RRBR and SRBR (or|and).
     visual : bool, optional
         Whether to generate before/after tree visualization PDFs.
 
@@ -428,6 +432,7 @@ def prune_main_LB(
                 tree,
                 rrbr_cutoff,
                 srbr_cutoff,
+                lb_mode,
                 delete_gene,
                 tree_id,
                 renamed2gene,
@@ -461,6 +466,7 @@ if __name__ == "__main__":
     parser.add_argument("--input_imap", required=True, help="Imap file")
     parser.add_argument("--rrbr_cutoff", type=float, default=5, help="RRBR cutoff (root-relative branch ratio)")
     parser.add_argument("--srbr_cutoff", type=float, default=2.5, help="SRBR cutoff (sister-relative branch ratio)")
+    parser.add_argument("--lb_mode", choices=["or", "and"], default="or", help="Long-branch decision mode: or=RRBR OR SRBR, and=RRBR AND SRBR")
     parser.add_argument("--visual", action="store_true", help="Enable visual output")
     args = parser.parse_args()
 
@@ -479,5 +485,6 @@ if __name__ == "__main__":
         renamed2gene,
         rrbr_cutoff=args.rrbr_cutoff,
         srbr_cutoff=args.srbr_cutoff,
+        lb_mode=args.lb_mode,
         visual=args.visual,
     )

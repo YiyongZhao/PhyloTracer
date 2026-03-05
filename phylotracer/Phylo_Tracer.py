@@ -178,11 +178,12 @@ MulRF_Distance_parser.add_argument('--quiet', action='store_true', help='If set,
 MulRF_Distance_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # OrthoFilter_LB command
-OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5')
+OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 --lb_mode or')
 OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 OrthoFilter_LB_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 OrthoFilter_LB_parser.add_argument('--rrbr_cutoff', metavar='FLOAT', type=bounded_float(0.0), default=5, required=True, help='RRBR cutoff based on root-to-tip distance, default = 5')
 OrthoFilter_LB_parser.add_argument('--srbr_cutoff', metavar='FLOAT', type=bounded_float(0.0), default=2.5, required=True, help='SRBR cutoff based on sister-relative branch ratio, default = 2.5')
+OrthoFilter_LB_parser.add_argument('--lb_mode', choices=['or', 'and'], default='or', help='Long-branch decision mode: or=RRBR OR SRBR, and=RRBR AND SRBR, default = or')
 OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='If set, export before/after tree visualization PDFs, default = False')
 OrthoFilter_LB_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
@@ -448,6 +449,7 @@ def handle_ortho_filter_lb(cli_args):
             new_named_gene2gene_dic,
             rrbr_cutoff,
             srbr_cutoff,
+            cli_args.lb_mode,
             visual=cli_args.visual,
         )
         report_execution_time(start_time)
