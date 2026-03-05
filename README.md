@@ -519,11 +519,6 @@ Required parameter:
 Optional parameter:
     --visual_top            Number of top-ranked topologies to visualize, default = 10
     --output_dir            Output directory (default: current working directory)
-Output files:
-    absolute_topology.txt
-    relative_topology.txt
-    merge_absolutely_topN.pdf
-    merge_relative_topN.pdf
 Usage:
     PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10] [--output_dir DIR]
 ```
@@ -546,9 +541,6 @@ Optional parameter:
     --gene_expression       Gene expression matrix file (.csv/.xls/.xlsx), genes as row index
     --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
     --output_dir            Output directory (default: current working directory)
-Output files:
-    tree_visualizer/*.pdf   Per-gene tree visualization PDFs
-    iTOL_sptree.txt         Species-tree annotation table (generated when species-tree mapping is enabled)
 Usage:
     PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories gene2family.imap gene2order.imap gene2clade.imap] [--input_sps_tree sptree.nwk] [--gene_expression expression.csv] [--visual_gd] [--output_dir DIR]
 ```
