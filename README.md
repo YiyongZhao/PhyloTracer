@@ -407,6 +407,13 @@ $$
 * **Average root-to-tip distance:** Mean root-to-tip path length across all tips in the same gene tree.
 * **Sister Branch Length:** The branch length of the nearest "neighbor" or "sister" gene.
 
+**3. Long-branch decision mode**
+
+**Concept:** Controls how RRBR and SRBR are combined during pruning.
+
+* `or` (lenient): remove a tip when `RRBR >= rrbr_cutoff` **OR** `SRBR >= srbr_cutoff`.
+* `and` (strict): remove a tip only when `RRBR >= rrbr_cutoff` **AND** `SRBR >= srbr_cutoff`.
+
 ```
 Description:
     To prune phylogenomic noises from both single-copy and multi-copy gene family trees by removing the tips with long branch length
@@ -416,10 +423,11 @@ Required parameter:
     --rrbr_cutoff           RRBR cutoff based on root-to-tip distance, default = 5
     --srbr_cutoff           SRBR cutoff based on sister-relative branch ratio, default = 2.5
 Optional parameter:
+    --lb_mode              Long-branch decision mode: or|and, default = or
     --visual                If set, export before/after tree visualization PDFs, default = False
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 [--visual] [--output_dir DIR]
+    PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 [--lb_mode or] [--visual] [--output_dir DIR]
 ```
 ### OrthoFilter_Mono
 
