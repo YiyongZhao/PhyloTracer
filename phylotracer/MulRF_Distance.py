@@ -192,24 +192,43 @@ def mulrf_main(
     rows.sort(key=lambda x: (x["mulrf"] if x["mulrf"] is not None else float("inf")))
 
     out_file = "mulrf_distance.tsv"
+    # Use explicit, self-explanatory column names in output TSV.
     columns = [
         "tree_index",
         "gene_family",
-        "n_leaves",
-        "n_species",
-        "n_shared_species",
-        "mulrf",
-        "max_rf",
-        "normalized_mulrf",
-        "shared_bipartitions",
-        "only_in_gene",
-        "only_in_sp",
-        "error",
+        "gene_tree_leaf_count",
+        "gene_tree_species_count",
+        "shared_species_count",
+        "mulrf_distance",
+        "maximum_possible_mulrf_distance",
+        "normalized_mulrf_distance",
+        "shared_species_bipartition_count",
+        "gene_tree_only_bipartition_count",
+        "species_tree_only_bipartition_count",
+        "error_message",
     ]
+
+    def _to_verbose_row(raw_row: Dict[str, object]) -> Dict[str, object]:
+        return {
+            "tree_index": raw_row.get("tree_index"),
+            "gene_family": raw_row.get("gene_family"),
+            "gene_tree_leaf_count": raw_row.get("n_leaves"),
+            "gene_tree_species_count": raw_row.get("n_species"),
+            "shared_species_count": raw_row.get("n_shared_species"),
+            "mulrf_distance": raw_row.get("mulrf"),
+            "maximum_possible_mulrf_distance": raw_row.get("max_rf"),
+            "normalized_mulrf_distance": raw_row.get("normalized_mulrf"),
+            "shared_species_bipartition_count": raw_row.get("shared_bipartitions"),
+            "gene_tree_only_bipartition_count": raw_row.get("only_in_gene"),
+            "species_tree_only_bipartition_count": raw_row.get("only_in_sp"),
+            "error_message": raw_row.get("error"),
+        }
+
+    verbose_rows = [_to_verbose_row(r) for r in rows]
     with open(out_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=columns, delimiter="\t", extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows(verbose_rows)
 
     valid = [r for r in rows if r.get("mulrf") is not None]
     if not quiet and valid:

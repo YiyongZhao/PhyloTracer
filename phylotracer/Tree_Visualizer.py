@@ -1064,12 +1064,12 @@ def mark_gene_to_sptree(
                     "   ▐" + "  " + color_dict[species].split("@")[0],
                     fgcolor=color,
                     ftype="Arial",
-                    fstyle="italic",
+                    fstyle="normal",
                 )
                 add_face_to_node(node, face, column, position="aligned")
         else:
             color = color_dict[species].split("@")[ -1]
-            face = TextFace("   ▐" + "  ", fgcolor=color, ftype="Arial", fstyle="italic")
+            face = TextFace("   ▐" + "  ", fgcolor=color, ftype="Arial", fstyle="normal")
             add_face_to_node(node, face, column, position="aligned")
 
     for i in sptree.traverse():

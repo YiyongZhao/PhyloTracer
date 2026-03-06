@@ -62,7 +62,7 @@ All modules are designed to be used independently or combined in larger phylogen
 PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, rooting, orthology refinement, duplication/loss detection, and hybridization analysis. Each module can run independently or be incorporated into larger evolutionary pipelines.
 
 1. **Phylo_Rooter:** Implements an accurate, automated rooting algorithm for gene trees to enhance evolutionary inference.
-2. **MulRF_Distance:** measures tree distances between single-copy gene trees, between multi-copy gene trees, and across single-copy and multi-copy gene trees.
+2. **MulRF_Distance:** computes species-level topological conflict distance between gene trees (single-copy or multi-copy) and a species tree; useful for quantifying gene-tree/species-tree discordance and for comparing duplication/divergence patterns across gene families.
 3. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree into a “comb-like” structure based on a predefined support threshold, and re-expands it back to binary form when needed.
 4. **PhyloSupport_Scaler:** Recalibrates branch support values to standardized scales ([0–1] or [1–100]) for consistent computation.
 5. **BranchLength_NumericConverter:** Converts branch-length strings to numeric format for downstream quantitative analyses.
@@ -323,7 +323,12 @@ Usage:
 ### MulRF_Distance
 ```
 Description:
-    To compute species-level MulRF distances between rooted multi-copy gene trees and a species tree
+    To compute species-level MulRF topological conflict distances between gene trees and a species tree
+    (this is a topology-distance metric, not a sequence/genetic distance)
+    Practical uses:
+    1) Quantify gene-tree/species-tree conflict intensity (higher distance = stronger discordance/complex history)
+    2) Compare evolutionary pattern similarity among gene families for clustering/filtering/modeling
+    3) Support rooting tie-break in Phylo_Rooter by preferring roots with lower normalized MulRF conflict
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_sps_tree        Species tree file in Newick format
