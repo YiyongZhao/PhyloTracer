@@ -168,7 +168,7 @@ Phylo_Rooter_parser.add_argument('--weights',nargs=6,type=bounded_float(0.0, 1.0
 Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # MulRF_Distance command
-MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute species-level MulRF distances for rooted multi-copy gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer MulRF_Distance --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
+MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute species-level topological conflict distance (MulRF) between gene trees and a species tree', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer MulRF_Distance --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
 MulRF_Distance_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 MulRF_Distance_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 MulRF_Distance_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
