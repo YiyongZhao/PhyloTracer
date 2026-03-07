@@ -155,83 +155,133 @@ def compute_mulrf(
     }
 
 
+def compute_mulrf_between_gene_trees(
+    gene_tree_1: Tree,
+    gene_tree_2: Tree,
+    gene2sp_map_1: Optional[Dict[str, str]] = None,
+    gene2sp_map_2: Optional[Dict[str, str]] = None,
+    separator: str = "_",
+    position: str = "last",
+) -> Dict[str, object]:
+    """Compute species-level MulRF distance between two gene trees."""
+    sp_map_1 = build_species_map(gene_tree_1, gene2sp_map_1, separator, position)
+    sp_map_2 = build_species_map(gene_tree_2, gene2sp_map_2, separator, position)
+
+    species_1 = set(sp_map_1.values())
+    species_2 = set(sp_map_2.values())
+    shared_species = species_1 & species_2
+
+    if len(shared_species) < 2:
+        return {
+            "gene_tree_1_leaf_count": len(gene_tree_1.get_leaves()),
+            "gene_tree_2_leaf_count": len(gene_tree_2.get_leaves()),
+            "gene_tree_1_species_count": len(species_1),
+            "gene_tree_2_species_count": len(species_2),
+            "shared_species_count": len(shared_species),
+            "mulrf_distance": None,
+            "maximum_possible_mulrf_distance": None,
+            "normalized_mulrf_distance": None,
+            "shared_species_bipartition_count": None,
+            "gene_tree_1_only_bipartition_count": None,
+            "gene_tree_2_only_bipartition_count": None,
+        }
+
+    bip_1 = get_bipartitions_species_level(gene_tree_1, sp_map_1, shared_species)
+    bip_2 = get_bipartitions_species_level(gene_tree_2, sp_map_2, shared_species)
+
+    shared = bip_1 & bip_2
+    only_1 = bip_1 - bip_2
+    only_2 = bip_2 - bip_1
+    mulrf = len(only_1) + len(only_2)
+    max_rf = len(bip_1) + len(bip_2)
+    normalized = mulrf / max_rf if max_rf > 0 else 0.0
+
+    return {
+        "gene_tree_1_leaf_count": len(gene_tree_1.get_leaves()),
+        "gene_tree_2_leaf_count": len(gene_tree_2.get_leaves()),
+        "gene_tree_1_species_count": len(species_1),
+        "gene_tree_2_species_count": len(species_2),
+        "shared_species_count": len(shared_species),
+        "mulrf_distance": mulrf,
+        "maximum_possible_mulrf_distance": max_rf,
+        "normalized_mulrf_distance": round(normalized, 6),
+        "shared_species_bipartition_count": len(shared),
+        "gene_tree_1_only_bipartition_count": len(only_1),
+        "gene_tree_2_only_bipartition_count": len(only_2),
+    }
+
+
 def mulrf_main(
     tre_dic: Dict[str, str],
-    species_tree_path: str,
+    species_tree_path: Optional[str] = None,
     gene2sp_map_path: Optional[str] = None,
+    tre_dic_2: Optional[Dict[str, str]] = None,
+    gene2sp_map_path_2: Optional[str] = None,
     separator: str = "_",
     position: str = "last",
     quiet: bool = False,
 ) -> None:
-    """Batch MulRF calculation for all gene trees in ``tre_dic``."""
-    gene2sp_map = load_gene2sp_map(gene2sp_map_path) if gene2sp_map_path else None
-    sp_tree = Tree(species_tree_path)
-
-    rows = []
-    for idx, (family, tree_path) in enumerate(tre_dic.items()):
-        try:
-            gt = Tree(tree_path)
-            res = compute_mulrf(gt, sp_tree, gene2sp_map, separator, position)
-        except Exception as exc:
-            res = {
-                "n_leaves": None,
-                "n_species": None,
-                "n_shared_species": None,
-                "mulrf": None,
-                "max_rf": None,
-                "normalized_mulrf": None,
-                "shared_bipartitions": None,
-                "only_in_gene": None,
-                "only_in_sp": None,
-                "error": f"Parse/compute error: {exc}",
-            }
-        res["tree_index"] = idx
-        res["gene_family"] = family
-        rows.append(res)
-
-    rows.sort(key=lambda x: (x["mulrf"] if x["mulrf"] is not None else float("inf")))
-
+    """Batch MulRF calculation in dual-list (many-to-many) mode."""
+    gene2sp_map_1 = load_gene2sp_map(gene2sp_map_path) if gene2sp_map_path else None
     out_file = "mulrf_distance.tsv"
-    # Use explicit, self-explanatory column names in output TSV.
+
+    if tre_dic_2 is None:
+        raise ValueError("tre_dic_2 is required in dual-list mode.")
+    gene2sp_map_2 = load_gene2sp_map(gene2sp_map_path_2) if gene2sp_map_path_2 else None
+    rows = []
+    for tre_id_1, tree_path_1 in tre_dic.items():
+        for tre_id_2, tree_path_2 in tre_dic_2.items():
+            try:
+                gt1 = Tree(tree_path_1)
+                gt2 = Tree(tree_path_2)
+                res = compute_mulrf_between_gene_trees(
+                    gt1,
+                    gt2,
+                    gene2sp_map_1,
+                    gene2sp_map_2,
+                    separator,
+                    position,
+                )
+            except Exception:
+                res = {
+                    "gene_tree_1_leaf_count": None,
+                    "gene_tree_2_leaf_count": None,
+                    "gene_tree_1_species_count": None,
+                    "gene_tree_2_species_count": None,
+                    "shared_species_count": None,
+                    "mulrf_distance": None,
+                    "maximum_possible_mulrf_distance": None,
+                    "normalized_mulrf_distance": None,
+                    "shared_species_bipartition_count": None,
+                    "gene_tree_1_only_bipartition_count": None,
+                    "gene_tree_2_only_bipartition_count": None,
+                }
+            row = {"tre_id_1": tre_id_1, "tre_id_2": tre_id_2}
+            row.update(res)
+            rows.append(row)
+    rows.sort(key=lambda x: (x["mulrf_distance"] if x["mulrf_distance"] is not None else float("inf")))
     columns = [
-        "tree_index",
-        "gene_family",
-        "gene_tree_leaf_count",
-        "gene_tree_species_count",
+        "tre_id_1",
+        "tre_id_2",
+        "gene_tree_1_leaf_count",
+        "gene_tree_2_leaf_count",
+        "gene_tree_1_species_count",
+        "gene_tree_2_species_count",
         "shared_species_count",
         "mulrf_distance",
         "maximum_possible_mulrf_distance",
         "normalized_mulrf_distance",
         "shared_species_bipartition_count",
-        "gene_tree_only_bipartition_count",
-        "species_tree_only_bipartition_count",
-        "error_message",
+        "gene_tree_1_only_bipartition_count",
+        "gene_tree_2_only_bipartition_count",
     ]
-
-    def _to_verbose_row(raw_row: Dict[str, object]) -> Dict[str, object]:
-        return {
-            "tree_index": raw_row.get("tree_index"),
-            "gene_family": raw_row.get("gene_family"),
-            "gene_tree_leaf_count": raw_row.get("n_leaves"),
-            "gene_tree_species_count": raw_row.get("n_species"),
-            "shared_species_count": raw_row.get("n_shared_species"),
-            "mulrf_distance": raw_row.get("mulrf"),
-            "maximum_possible_mulrf_distance": raw_row.get("max_rf"),
-            "normalized_mulrf_distance": raw_row.get("normalized_mulrf"),
-            "shared_species_bipartition_count": raw_row.get("shared_bipartitions"),
-            "gene_tree_only_bipartition_count": raw_row.get("only_in_gene"),
-            "species_tree_only_bipartition_count": raw_row.get("only_in_sp"),
-            "error_message": raw_row.get("error"),
-        }
-
-    verbose_rows = [_to_verbose_row(r) for r in rows]
     with open(out_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=columns, delimiter="\t", extrasaction="ignore")
         writer.writeheader()
-        writer.writerows(verbose_rows)
+        writer.writerows(rows)
 
-    valid = [r for r in rows if r.get("mulrf") is not None]
+    valid = [r for r in rows if r.get("mulrf_distance") is not None]
     if not quiet and valid:
-        mean_mulrf = sum(r["mulrf"] for r in valid) / len(valid)
-        logger.info("MulRF summary: valid_trees=%d, mean_mulrf=%.4f", len(valid), mean_mulrf)
-    logger.info("MulRF results written to %s", out_file)
+        mean_mulrf = sum(r["mulrf_distance"] for r in valid) / len(valid)
+        logger.info("MulRF pairwise summary: valid_pairs=%d, mean_mulrf=%.4f", len(valid), mean_mulrf)
+    logger.info("MulRF pairwise results written to %s", out_file)
