@@ -426,8 +426,8 @@ def visualize_top_trees(
         tree.sort_descendants("support")
 
         nstyle = NodeStyle()
-        nstyle["vt_line_width"] = 1.2
-        nstyle["hz_line_width"] = 1.2
+        nstyle["vt_line_width"] = 1
+        nstyle["hz_line_width"] = 1
         nstyle["vt_line_type"] = 0
         nstyle["hz_line_type"] = 0
         nstyle["size"] = 0
