@@ -47,6 +47,11 @@ from phylotracer import (
 def dup_nodeids_from_numbered_gfs(
     phylo_t: object,
     species_tree: object,
+    gd_support: int = 50,
+    subclade_support: int = 0,
+    dup_species_num: int = 2,
+    dup_species_proportion: float = 0.2,
+    deepvar: int = 1,
 ) -> tuple:
     """
     Number nodes and infer duplication events in a gene tree.
@@ -71,7 +76,15 @@ def dup_nodeids_from_numbered_gfs(
         phylo_t = root_tre_with_midpoint_outgroup(phylo_t)
     phylo_t = num_tre_node(phylo_t)
     annotate_gene_tree(phylo_t, species_tree)
-    dup_node_list = find_dup_node(phylo_t, species_tree,50,0,1,0,1)
+    dup_node_list = find_dup_node(
+        phylo_t,
+        species_tree,
+        gd_support,
+        subclade_support,
+        dup_species_num,
+        dup_species_proportion,
+        deepvar,
+    )
     phylo_t1 = Tree(phylo_t.write())
     num_tre_node(phylo_t1)
     return phylo_t1, dup_node_list
@@ -105,12 +118,7 @@ def create_tree_style(tree_style: str, tree_id: str, visual: bool = False) -> ob
     if visual:
         ts.title.add_face(TextFace("★", fgcolor="red", ftype="Arial"), column=0)
         ts.title.add_face(
-            TextFace("Interspecific gene duplication event", ftype="Arial"),
-            column=1,
-        )
-        ts.title.add_face(TextFace("★", fgcolor="blue", ftype="Arial"), column=0)
-        ts.title.add_face(
-            TextFace("Intraspecific gene duplication event", ftype="Arial"),
+            TextFace("Gene duplication event", ftype="Arial"),
             column=1,
         )
     ts.mode = tree_style
@@ -170,13 +178,7 @@ def set_node_style(
     nstyle["fgcolor"] = "black"
 
     if visual:
-        if node.name in dup_node_name_list and len(splist) == 1:
-            node.add_face(
-                TextFace("★", fsize=7, fgcolor="blue", ftype="Arial"),
-                column=1,
-                position="branch-top",
-            )
-        elif node.name in dup_node_name_list and len(splist) != 1:
+        if node.name in dup_node_name_list:
             node.add_face(
                 TextFace("★", fsize=7, fgcolor="red", ftype="Arial"),
                 column=1,
@@ -197,6 +199,11 @@ def get_treestyle(
     tre_ID: str,
     visual: bool = False,
     species_tree: object = None,
+    gd_support: int = 50,
+    subclade_support: int = 0,
+    dup_species_num: int = 2,
+    dup_species_proportion: float = 0.2,
+    deepvar: int = 1,
 ) -> object:
     """
     Build a styled tree and TreeStyle for rendering.
@@ -227,6 +234,11 @@ def get_treestyle(
         Phylo_t1, dup_node_list = dup_nodeids_from_numbered_gfs(
             Phylo_t,
             species_tree,
+            gd_support=gd_support,
+            subclade_support=subclade_support,
+            dup_species_num=dup_species_num,
+            dup_species_proportion=dup_species_proportion,
+            deepvar=deepvar,
         )
     else:
         Phylo_t1 = Tree(Phylo_t.write())
@@ -606,25 +618,25 @@ def tips_mark(
         if np.isnan(value):
             return "white"
         else:
-            if 0 <= value <= 5:
+            if 0 <= value <= 10:
                 return "#006599"
-            elif 5 < value <= 10:
+            elif 10 < value <= 20:
                 return "#408ca6"
-            elif 10 < value <= 15:
+            elif 20 < value <= 30:
                 return "#7fb2b2"
-            elif 15 < value <= 20:
+            elif 30 < value <= 40:
                 return "#bfd9bf"
-            elif 20 < value <= 25:
+            elif 40 < value <= 50:
                 return "#ffffcc"
-            elif 25 < value <= 30:
+            elif 50 < value <= 60:
                 return "#f7deab"
-            elif 30 < value <= 35:
+            elif 60 < value <= 70:
                 return "#eebc88"
-            elif 35 < value <= 40:
+            elif 70 < value <= 80:
                 return "#e69966"
-            elif 40 < value <= 45:
+            elif 80 < value <= 90:
                 return "#dc7845"
-            elif 45 < value <= 50:
+            elif 90 < value <= 100:
                 return "#d55623"
             else:
                 return "#cc3300"
@@ -658,13 +670,22 @@ def tips_mark(
         DataFrame indices can be matched to gene labels by regex.
         """
         columns = df.columns.tolist()
+        df_index_set = set(df.index)
+        matched_cache = {}
         for node in tree:
             gene = new_named_gene2gene_dic[node.name]
-            matched_key = None
-            for key in df.index:
-                if fuzzy_match(key, gene):
-                    matched_key = key
-                    break
+            if gene in matched_cache:
+                matched_key = matched_cache[gene]
+            elif gene in df_index_set:
+                matched_key = gene
+                matched_cache[gene] = matched_key
+            else:
+                matched_key = None
+                for key in df.index:
+                    if fuzzy_match(key, gene):
+                        matched_key = key
+                        break
+                matched_cache[gene] = matched_key
             for ind, col_name in enumerate(columns):
                 col_idx = start_col + ind
                 if node.is_leaf() and matched_key in df.index:
@@ -735,7 +756,7 @@ def tips_mark(
             "#d55623",
             "#cc3300",
         ]
-        bounds = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+        bounds = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         col_dic = dict(zip(bounds, cols))
         n = 1
         for k, v in col_dic.items():
@@ -782,7 +803,7 @@ def tips_mark(
 # ======================================================
 
 
-def get_matched_value(gene: str, gene2fam: dict) -> tuple:
+def get_matched_value(gene: str, gene2fam: dict, match_cache: dict = None) -> tuple:
     """
     Match a gene to a family using fuzzy string patterns.
 
@@ -802,10 +823,28 @@ def get_matched_value(gene: str, gene2fam: dict) -> tuple:
     -----------
     Gene identifiers can be matched using regex patterns.
     """
+    # Fast path: exact ID match (most common case)
+    if gene in gene2fam:
+        result = (gene, gene2fam[gene])
+        if match_cache is not None:
+            match_cache[gene] = result
+        return result
+
+    if match_cache is not None and gene in match_cache:
+        return match_cache[gene]
+
+    # Fallback: fuzzy pattern matching for legacy/non-uniform IDs.
     for key, value in gene2fam.items():
-        if fuzzy_match(gene, key):
-            return key, value
-    return None, None
+        if fuzzy_match(key, gene):
+            result = (key, value)
+            if match_cache is not None:
+                match_cache[gene] = result
+            return result
+
+    result = (None, None)
+    if match_cache is not None:
+        match_cache[gene] = result
+    return result
 
 
 def get_fam_dic(t: any, gene2fam: dict, new_named_gene2gene_dic: dict) -> dict:
@@ -831,9 +870,10 @@ def get_fam_dic(t: any, gene2fam: dict, new_named_gene2gene_dic: dict) -> dict:
     Each tree node name is present in ``new_named_gene2gene_dic``.
     """
     fam_dic = {}
+    match_cache = {}
     for i in t:
         gene = new_named_gene2gene_dic[i.name]
-        match_gene, match_family = get_matched_value(gene, gene2fam)
+        match_gene, match_family = get_matched_value(gene, gene2fam, match_cache)
         if match_family and match_family in gene2fam.values():
             fam_dic.setdefault(match_family, []).append(i.name)
     return fam_dic
@@ -1155,6 +1195,11 @@ def view_main(
     gene2fam=None,
     df=None,
     visual: bool = False,
+    gd_support: int = 50,
+    subclade_support: int = 0,
+    dup_species_num: int = 2,
+    dup_species_proportion: float = 0.2,
+    deepvar: int = 1,
 ):
     """
     Render annotated gene trees with categorical tip markings.
@@ -1218,6 +1263,11 @@ def view_main(
             tre_ID,
             visual,
             species_tree=sptree,
+            gd_support=gd_support,
+            subclade_support=subclade_support,
+            dup_species_num=dup_species_num,
+            dup_species_proportion=dup_species_proportion,
+            deepvar=deepvar,
         )
         Phylo_t1.ladderize()
         Phylo_t1.resolve_polytomy(recursive=True)
@@ -1325,6 +1375,11 @@ if __name__ == "__main__":
     parser.add_argument("--keep_branch", type=int, default=1, help="Whether to keep branch lengths (1=yes, 0=no)")
     parser.add_argument("--gene2fam", default=None, help="Gene to family mapping file (optional)")
     parser.add_argument("--visual", action="store_true", help="Enable visual output")
+    parser.add_argument("--gd_support", type=int, default=50, help="GD node support threshold")
+    parser.add_argument("--subclade_support", type=int, default=0, help="Subclade support threshold")
+    parser.add_argument("--dup_species_num", type=int, default=2, help="Minimum duplicated species count")
+    parser.add_argument("--dup_species_proportion", type=float, default=0.2, help="Duplicated species proportion threshold")
+    parser.add_argument("--deepvar", type=int, default=1, help="Maximum depth variance")
     args = parser.parse_args()
 
     os.makedirs(os.path.join(os.getcwd(), "pdf_result"), exist_ok=True)
@@ -1346,4 +1401,9 @@ if __name__ == "__main__":
         new_named_gene2gene_dic,
         gene2fam=gene2fam,
         visual=args.visual,
+        gd_support=args.gd_support,
+        subclade_support=args.subclade_support,
+        dup_species_num=args.dup_species_num,
+        dup_species_proportion=args.dup_species_proportion,
+        deepvar=args.deepvar,
     )
