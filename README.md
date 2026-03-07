@@ -343,6 +343,20 @@ Optional parameter:
     --output_dir            Output directory (default: current working directory)
 Usage:
     PhyloTracer MulRF_Distance --input_GF_list GF_ID2path_1.imap --input_imap gene2sps_1.imap --input_GF_list_2 GF_ID2path_2.imap [--input_imap_2 gene2sps_2.imap] [--sep _] [--position last] [--quiet] [--output_dir DIR]
+Output columns (mulrf_distance.tsv):
+    tre_id_1                           Tree ID from GF1
+    tre_id_2                           Tree ID from GF2
+    gene_tree_1_leaf_count             Leaf count of tree 1
+    gene_tree_2_leaf_count             Leaf count of tree 2
+    gene_tree_1_species_count          Species count represented in tree 1
+    gene_tree_2_species_count          Species count represented in tree 2
+    shared_species_count               Number of shared species between the two trees
+    mulrf_distance                     Raw MulRF topological conflict distance
+    maximum_possible_mulrf_distance    Theoretical maximum MulRF distance for this pair
+    normalized_mulrf_distance          mulrf_distance / maximum_possible_mulrf_distance
+    shared_species_bipartition_count   Shared species-level bipartitions
+    gene_tree_1_only_bipartition_count Bipartitions unique to tree 1
+    gene_tree_2_only_bipartition_count Bipartitions unique to tree 2
 ```
 ### PhyloTree_CollapseExpand
 ```
