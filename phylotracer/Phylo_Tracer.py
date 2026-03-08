@@ -209,10 +209,11 @@ Tree_Visualizer_parser = subparsers.add_parser(
     help='Render gene-tree figures with optional metadata overlays',
     formatter_class=CustomHelpFormatter,
     epilog='Example:\n'
-           '  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap '
+           '  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap '
            '--gene_categories gene2family.imap gene2order.imap gene2clade.imap '
-           '--input_sps_tree sptree.nwk '
-           '--heatmap_matrix heatmap_matrix.txt --keep_branch 1 --tree_style r --visual_gd'
+           '--input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt '
+           '--keep_branch 1 --tree_style r --visual_gd --gd_support 50 --subclade_support 0 '
+           '--dup_species_proportion 0.2 --dup_species_num 2 --deepvar 1'
 )
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Tree_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
@@ -220,7 +221,7 @@ Tree_Visualizer_parser.add_argument(
     '--gene_categories',
     metavar='TAXA_LIST',
     nargs='+',
-    help='One or more two-column files (gene_id<TAB>category_label), each file is one annotation layer; e.g., gene2family.imap gene2order.imap gene2clade.imap. For species-tree family-duplication summary, the first file is used as the family mapping.'
+    help='One or more files (gene_id<TAB>category_label); each file is one annotation layer. Optional header row supported as gene_id<TAB>HeaderName (e.g., Family/Order/Clade). For species-tree family-duplication summary, the first file is used as the family mapping.'
 )
 Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Whether to preserve branch lengths in plotting: 1=yes, 0=no')
 Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree layout style: r=rectangular, c=circular')
@@ -283,7 +284,7 @@ Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_
 Ortho_Retriever_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # Hybrid_Tracer
-Hybrid_Tracer_parser = subparsers.add_parser('Hybrid_Tracer', help='Prepare HYDE input from GD-supported candidate triplets', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
+Hybrid_Tracer_parser = subparsers.add_parser('Hybrid_Tracer', help='Prepare HYDE input from GD-supported candidate triplets', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
 Hybrid_Tracer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Hybrid_Tracer_parser.add_argument('--input_Seq_GF_list', metavar='ALIGNMENT_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>alignment_path), aligned with --input_GF_list IDs')
 Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
@@ -300,7 +301,7 @@ Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=Fal
 Hybrid_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # HaploFinder
-haplofinder_parser = subparsers.add_parser('HaploFinder', help='Detect and visualize haplotype-level GD signals; also supports FASTA split mode', formatter_class=CustomHelpFormatter, epilog='Examples:\n  PhyloTracer HaploFinder --mode haplofinder --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens\n  PhyloTracer HaploFinder --mode split --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps \"P1 P2\" --species_b_gff B.gff')
+haplofinder_parser = subparsers.add_parser('HaploFinder', help='Detect and visualize haplotype-level GD signals; also supports FASTA split mode', formatter_class=CustomHelpFormatter, epilog='Examples:\n  PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a arh --species_b ard --species_a_gff arh.gff --species_b_gff ard.gff --species_a_lens arh.lens --species_b_lens ard.lens\n  PhyloTracer HaploFinder --mode split --input_GF_list gf.txt --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps \"P1 P2\" --species_b_gff ard.gff')
 haplofinder_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=False, default=None, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); required in haplofinder mode')
 haplofinder_parser.add_argument('--input_imap', metavar='IMAP', required=False, default=None, help='Two-column mapping file (gene_id<TAB>species_name); required in both haplofinder and split modes')
 haplofinder_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='Species tree file in Newick format; required in haplofinder mode')
@@ -506,14 +507,58 @@ def handle_tree_topology_summarizer(cli_args):
 
 
 def handle_tree_visualizer(cli_args):
+    def _load_category_map_with_optional_header(file_path):
+        """Load a two-column gene-category map and optional column header.
+
+        Supported format:
+        - No header: gene_id<TAB>category
+        - With header: gene_id<TAB>HeaderName  (first row)
+        """
+        header_label = None
+        with open(file_path, "r", encoding="utf-8") as fh:
+            first_line = fh.readline().strip()
+
+        first_fields = first_line.split("\t") if "\t" in first_line else first_line.split()
+        has_header = (
+            len(first_fields) >= 2
+            and first_fields[0].strip().lower() in {"gene", "geneid", "gene_id", "id"}
+        )
+        if has_header:
+            header_label = first_fields[1].strip()
+            try:
+                df = pd.read_csv(file_path, sep="\t", header=None, skiprows=1, dtype=str)
+                if 1 not in df.columns:
+                    df = pd.read_csv(
+                        file_path,
+                        sep=r"\s+",
+                        header=None,
+                        skiprows=1,
+                        dtype=str,
+                        engine="python",
+                    )
+                category_map = df.set_index(0)[1].to_dict()
+            except Exception:
+                # Fallback to legacy robust parser if parsing fails.
+                category_map = read_and_return_dict(file_path)
+        else:
+            category_map = read_and_return_dict(file_path)
+
+        if not header_label:
+            header_label = os.path.splitext(os.path.basename(file_path))[0]
+        return category_map, header_label
+
     if cli_args.input_GF_list and cli_args.input_imap:
         start_time = time.time()
         if cli_args.visual_gd and not cli_args.input_sps_tree:
             logger.error("Tree_Visualizer: --input_sps_tree is required when --visual_gd is enabled.")
             return
         species_category_list = []
+        category_headers = []
         if cli_args.gene_categories is not None:
-            species_category_list = [read_and_return_dict(i) for i in cli_args.gene_categories]
+            for category_file in cli_args.gene_categories:
+                category_map, header_label = _load_category_map_with_optional_header(category_file)
+                species_category_list.append(category_map)
+                category_headers.append(header_label)
 
         gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
@@ -563,8 +608,9 @@ def handle_tree_visualizer(cli_args):
             cli_args.tree_style,
             cli_args.keep_branch,
             new_named_gene2gene_dic,
-            None,
-            df,
+            category_headers=category_headers,
+            gene2fam=None,
+            df=df,
             visual=cli_args.visual_gd,
             gd_support=cli_args.gd_support,
             subclade_support=cli_args.subclade_support,
