@@ -400,7 +400,21 @@ def handle_phylo_rooter(cli_args):
             logger.error("Phylo_Rooter: --weights requires exactly 6 values (OD BLV GD SO GD_consistency RF).")
             return
         weight_sum = sum(cli_args.weights)
-        if abs(weight_sum - 1.0) > 1e-6:
+        if cli_args.weight_strategy == "entropy":
+            if abs(weight_sum - 1.0) > 1e-6:
+                logger.warning(
+                    "Phylo_Rooter: --weight-strategy entropy is active; "
+                    "--weights values will be ignored (current sum = %.6f). "
+                    "Weights will be derived automatically from the candidate distribution.",
+                    weight_sum,
+                )
+            else:
+                logger.warning(
+                    "Phylo_Rooter: --weight-strategy entropy is active; "
+                    "the supplied --weights will be ignored. "
+                    "Weights will be derived automatically from the candidate distribution."
+                )
+        elif abs(weight_sum - 1.0) > 1e-6:
             logger.error(
                 "Phylo_Rooter: --weights must sum to 1. Current sum = %.6f. Input order: OD BLV GD SO GD_consistency RF.",
                 weight_sum,

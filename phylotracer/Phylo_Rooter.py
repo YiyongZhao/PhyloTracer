@@ -643,7 +643,15 @@ def normalize_and_score(
     if weight_strategy == "entropy":
         w = compute_entropy_weights(normed)
     else:
-        w = weights
+        # Re-normalize empirical weights to only the active (present) columns so
+        # that dropping RF (include_rf=False) does not deflate the total score.
+        raw_w = {c: weights.get(c, 0.0) for c in normed.columns}
+        w_sum = sum(raw_w.values())
+        if w_sum > 0:
+            w = {c: v / w_sum for c, v in raw_w.items()}
+        else:
+            n = len(normed.columns)
+            w = {c: 1.0 / n for c in normed.columns}
 
     score = pd.Series(0.0, index=df.index)
     for col in normed.columns:
