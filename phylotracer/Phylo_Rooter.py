@@ -533,56 +533,121 @@ def calculate_mulrf_rf_distance(gene_tree: PhyloTree, species_tree: PhyloTree, u
 # --------------------------
 
 
-def normalize_and_score(df: pd.DataFrame, weights: dict, include_rf=True):
-    """Normalize metrics and compute a composite score.
+def _minmax_norm(s: pd.Series, cost: bool) -> pd.Series:
+    """Direction-aware min-max normalization to [0, 1], higher = better.
 
     Args:
-        df: pandas DataFrame with metric columns.
-        weights (dict): Weighting scheme for metrics.
-        include_rf (bool): Whether to include RF in the score.
+        s (pd.Series): Raw metric values.
+        cost (bool): True if lower raw value is better (cost metric),
+            False if higher raw value is better (benefit metric).
 
     Returns:
-        pandas Series: Score values for each row.
-
-    Assumptions:
-        Metrics are numeric and higher overlap/consistency are better while
-        deep/var/GD are lower.
+        pd.Series: Values in [0, 1] where 1 means best.
+            When max == min (no discriminative power), returns 0.5 (neutral).
     """
-    def norm(values: pd.Series) -> pd.Series:
-        """Normalize a series of values to [0, 1] range.
+    lo, hi = s.min(), s.max()
+    if hi == lo:
+        return pd.Series(0.5, index=s.index)
+    normed = (s - lo) / (hi - lo)
+    return (1.0 - normed) if cost else normed
 
-        Args:
-            values (pd.Series): Input metric values.
 
-        Returns:
-            pd.Series: Normalized values.
-        """
-        if values.max() != values.min():
-            return (values - values.min()) / (values.max() - values.min())
-        return pd.Series(0.0, index=values.index)
+def compute_entropy_weights(df_normed: pd.DataFrame) -> dict:
+    """Entropy Weight Method (EWM): data-driven objective weighting.
 
-    # deep/var/GD: smaller is better; overlap/consistency: larger is better
-    norm_deep = norm(df["deep"])
-    norm_var = norm(df["var"])
-    norm_GD = norm(df["GD"])
-    norm_species_overlap = norm(df["species_overlap"])
-    norm_gd_consistency = norm(df["gd_consistency"])
+    Assigns higher weight to metrics that vary more among candidates
+    (i.e., provide more discriminative information).
 
-    weighted_norm_RF = 0
+    Algorithm (Entropy Weight Method):
+      1. P_ij = X_ij / sum_i(X_ij)        -- proportion of candidate i in metric j
+      2. E_j  = -1/ln(m) * sum_i(P_ij*ln(P_ij+eps))  -- entropy of metric j
+      3. D_j  = 1 - E_j                    -- information utility
+      4. W_j  = D_j / sum(D_j)             -- normalized weight
+
+    Args:
+        df_normed (pd.DataFrame): Normalized values in [0, 1], all higher = better.
+
+    Returns:
+        dict: {column_name: weight}, weights sum to 1.
+    """
+    m, n_cols = df_normed.shape
+    cols = list(df_normed.columns)
+    if m < 2:
+        return {c: 1.0 / n_cols for c in cols}
+
+    eps = 1e-10
+    D = {}
+    for col in cols:
+        col_sum = df_normed[col].sum()
+        if col_sum < eps:
+            D[col] = 0.0
+            continue
+        P = df_normed[col] / col_sum
+        E = -(1.0 / np.log(m)) * (P * np.log(P + eps)).sum()
+        D[col] = max(0.0, 1.0 - E)
+
+    total_D = sum(D.values())
+    if total_D < eps:
+        return {c: 1.0 / n_cols for c in cols}
+    return {c: d / total_D for c, d in D.items()}
+
+
+def normalize_and_score(
+    df: pd.DataFrame,
+    weights: dict,
+    include_rf: bool = True,
+    weight_strategy: str = "empirical",
+) -> pd.Series:
+    """Direction-aware min-max normalization and weighted composite scoring.
+
+    All six metrics (OD, BLV, GD, SO, GD_consistency, MulRF) are mapped to
+    [0, 1] with **higher = better** before weighting, ensuring that assigned
+    weights have their intended relative influence regardless of raw scale.
+
+    Cost metrics (lower raw value is better):
+        deep (OD), var (BLV), GD, RF -- normalized as (max - x)/(max - min).
+
+    Benefit metrics (higher raw value is better):
+        species_overlap (SO), gd_consistency -- normalized as (x - min)/(max - min).
+
+    When max == min for any metric the column is set to 0.5 (neutral).
+
+    Args:
+        df (pd.DataFrame): Candidate-tree statistics with columns
+            ``deep``, ``var``, ``GD``, ``species_overlap``, ``gd_consistency``,
+            and optionally ``RF``.
+        weights (dict): Prior-knowledge weights keyed by column name.
+            Used when ``weight_strategy="empirical"``.
+        include_rf (bool): Whether to include the RF column in scoring.
+        weight_strategy (str): ``"empirical"`` uses the supplied ``weights``;
+            ``"entropy"`` ignores ``weights`` and applies EWM to derive
+            data-driven weights from the normalized metrics.
+
+    Returns:
+        pd.Series: Combined score per candidate. **Higher is better.**
+    """
+    COST_COLS    = ["deep", "var", "GD", "RF"]
+    BENEFIT_COLS = ["species_overlap", "gd_consistency"]
+
+    active_cols = ["deep", "var", "GD", "species_overlap", "gd_consistency"]
     if include_rf and "RF" in df.columns:
-        norm_RF = norm(df["RF"])
-        weighted_norm_RF = norm_RF * weights.get("RF", 0)
+        active_cols.append("RF")
 
-    weighted_norm_overlap = norm_species_overlap * weights.get("species_overlap", 0)
-    weighted_norm_gd_consistency = norm_gd_consistency * weights.get("gd_consistency", 0)
-    score = (
-        norm_deep * weights.get("deep", 0) +
-        norm_var * weights.get("var", 0) +
-        norm_GD * weights.get("GD", 0) -
-        weighted_norm_overlap +
-        (-weighted_norm_gd_consistency) +
-        weighted_norm_RF
-    )
+    # Build normalized DataFrame (all higher = better)
+    normed = pd.DataFrame(index=df.index)
+    for col in active_cols:
+        if col not in df.columns:
+            continue
+        normed[col] = _minmax_norm(df[col], cost=(col in COST_COLS))
+
+    if weight_strategy == "entropy":
+        w = compute_entropy_weights(normed)
+    else:
+        w = weights
+
+    score = pd.Series(0.0, index=df.index)
+    for col in normed.columns:
+        score += normed[col] * w.get(col, 0.0)
     return score
 
 # --------------------------
@@ -596,6 +661,7 @@ def root_main(
     new_name_to_gene: dict,
     renamed_species_tree: object,
     stage1_weights: dict = None,
+    weight_strategy: str = "empirical",
 ) -> None:
     """Root gene trees and select optimal candidates using staged scoring.
 
@@ -604,8 +670,12 @@ def root_main(
         gene_to_new_name (dict): Mapping from original gene IDs to renamed IDs.
         new_name_to_gene (dict): Mapping from renamed IDs to original IDs.
         renamed_species_tree (object): Species tree with renamed taxa.
-        stage1_weights (dict, optional): Stage-1 weights for
-            deep/var/GD/species_overlap/gd_consistency.
+        stage1_weights (dict, optional): Prior-knowledge weights for
+            deep/var/GD/species_overlap/gd_consistency/RF.
+            Used when ``weight_strategy="empirical"``.
+        weight_strategy (str): ``"empirical"`` (default) or ``"entropy"``.
+            ``"entropy"`` applies the Entropy Weight Method to derive
+            data-driven weights from the candidate distribution.
 
     Returns:
         None
@@ -733,8 +803,8 @@ def root_main(
                 # print(rename_input_tre(tree, new_name_to_gene))
                 # print(deep, var, GD, species_overlap, gd_consistency, RF)
             current_df = pd.DataFrame(temp_stats)
-            current_df["score"] = normalize_and_score(current_df, stage1_weights, include_rf=True)
-            best_row = current_df.nsmallest(1, "score").iloc[0]
+            current_df["score"] = normalize_and_score(current_df, stage1_weights, include_rf=True, weight_strategy=weight_strategy)
+            best_row = current_df.nlargest(1, "score").iloc[0]
 
             # ==========================================
             # Output
@@ -755,7 +825,7 @@ def root_main(
         if not stat_df.empty:
             stat_df["tree_id"] = stat_df["Tree"].apply(lambda x: "_".join(x.split("_")[:-1]))
             cols = ["Tree", "score", "deep", "var", "GD", "species_overlap", "gd_consistency", "RF"]
-            stat_df = stat_df.sort_values(by=["tree_id", "score"])[cols]
+            stat_df = stat_df.sort_values(by=["tree_id", "score"], ascending=[True, False])[cols]
             stat_df.to_csv("stat_matrix.csv", index=False)
 
     finally:
