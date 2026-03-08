@@ -8,6 +8,7 @@ phylogenomic interpretation.
 from __future__ import annotations
 
 import logging
+import re
 from collections import Counter
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ from phylotracer import (
     read_phylo_tree,
     rename_input_tre,
     num_tre_node,
+    num_sptree,
     annotate_gene_tree,
     find_dup_node,
     get_species_set,
@@ -218,7 +220,13 @@ def write_gene_duplication_results(
         )
 
     df = pd.DataFrame(rows)
-    df = df.sort_values("Newick_label", key=lambda x: x.str[1:].astype(int))
+    def _safe_sort_key(name):
+        m = re.match(r'^([A-Za-z]*)(\d+)(.*)$', name or '')
+        if m:
+            return (m.group(1), int(m.group(2)), m.group(3))
+        return (name or '', 0, '')
+
+    df = df.sort_values("Newick_label", key=lambda x: x.map(_safe_sort_key))
     df.to_csv(f"gd_type_{gdtype_mode}.tsv", sep="\t", index=False)
 
 
@@ -365,30 +373,30 @@ if __name__ == "__main__":
     parser.add_argument("--input_imap", required=True, help="Imap file")
     parser.add_argument("--input_sps_tree", required=True, help="Species tree file")
     parser.add_argument("--gd_support", type=int, default=50, help="Duplication support threshold")
-    parser.add_argument("--clade_support", type=int, default=50, help="Subclade support threshold")
-    parser.add_argument("--dup_species_percent", type=float, default=0.5, help="Duplicated species percentage threshold")
+    parser.add_argument("--subclade_support", type=int, default=0, help="Subclade support threshold")
+    parser.add_argument("--dup_species_proportion", type=float, default=0.2, help="Duplicated species percentage threshold")
     parser.add_argument("--dup_species_num", type=int, default=2, help="Duplicated species count threshold")
-    parser.add_argument("--max_topology_distance", type=int, default=0, help="Maximum topology distance")
-    parser.add_argument("--output", default="result.txt", help="Output file path")
+    parser.add_argument("--deepvar", type=int, default=1, help="Maximum topology distance")
     parser.add_argument("--gdtype_mode", default="relaxed", help="GD type mode (relaxed or strict)")
     args = parser.parse_args()
 
-    gene_to_new_name, new_name_to_gene, voucher_to_taxa, _ = gene_id_transfer(args.input_imap)
+    gene_to_new_name, new_name_to_gene, voucher_to_taxa, taxa_to_voucher = gene_id_transfer(args.input_imap)
     species_tree = PhyloTree(args.input_sps_tree)
-    species_tree = rename_input_tre(species_tree, voucher_to_taxa)
-    num_tre_node(species_tree)
+    num_sptree(species_tree)
+    species_tree = rename_input_tre(species_tree, taxa_to_voucher)
     tree_paths = read_and_return_dict(args.input_GF_list)
+    output_file = f"gd_result_{args.gdtype_mode}.txt"
     write_gene_duplication_results(
-        args.output,
+        output_file,
         tree_paths,
         args.gd_support,
-        args.clade_support,
-        args.dup_species_percent,
+        args.subclade_support,
+        args.dup_species_proportion,
         args.dup_species_num,
         species_tree,
         gene_to_new_name,
         new_name_to_gene,
         voucher_to_taxa,
-        args.max_topology_distance,
+        args.deepvar,
         gdtype_mode=args.gdtype_mode,
     )

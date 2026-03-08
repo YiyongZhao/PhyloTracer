@@ -207,15 +207,16 @@ def rm_dup(paralogs_L):
     -----------
     Gene sets are represented as Python sets.
     """
-    for ev_seqs1 in paralogs_L:
-        for ev_seqs2 in paralogs_L:
-            if ev_seqs1.issubset(ev_seqs2):
-                if ev_seqs1 in paralogs_L:
-                    paralogs_L.remove(ev_seqs1)
-            elif ev_seqs2.issubset(ev_seqs1):
-                if ev_seqs2 in paralogs_L:
-                    paralogs_L.remove(ev_seqs2)
-    return paralogs_L
+    result = []
+    for i, ev_seqs1 in enumerate(paralogs_L):
+        is_proper_subset = False
+        for j, ev_seqs2 in enumerate(paralogs_L):
+            if i != j and ev_seqs1 < ev_seqs2:
+                is_proper_subset = True
+                break
+        if not is_proper_subset:
+            result.append(ev_seqs1)
+    return result
 
 
 def split_offcut_ev_seqs(offcut_ev_seqs_L0: list) -> list:

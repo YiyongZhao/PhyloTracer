@@ -246,7 +246,8 @@ def mulrf_main(
                         separator,
                         position,
                     )
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"MulRF computation failed for tree pair: {e}")
                     res = {
                         "gene_tree_1_leaf_count": None,
                         "gene_tree_2_leaf_count": None,
@@ -287,7 +288,8 @@ def mulrf_main(
                     "gene_tree_1_only_bipartition_count": res.get("only_in_gene"),
                     "gene_tree_2_only_bipartition_count": res.get("only_in_sp"),
                 }
-            except Exception:
+            except Exception as e:
+                logger.warning(f"MulRF computation failed for tree pair: {e}")
                 row = {
                     "tre_id_1": tre_id,
                     "tre_id_2": species_tree_id,

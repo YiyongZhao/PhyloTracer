@@ -6,6 +6,7 @@ annotated species trees with loss statistics and legends.
 """
 
 import logging
+import os
 import re
 from collections import defaultdict
 
@@ -269,6 +270,7 @@ def visualizer_sptree(
     filepath,
     sptree,
     output_file="gd_loss_pie_visualizer.PDF",
+    output_dir=None,
 ):
     """
     Render GD loss statistics on a species tree.
@@ -290,6 +292,16 @@ def visualizer_sptree(
     -----------
     Loss summary file follows the expected tabular format.
     """
+    try:
+        from ete3 import TreeStyle, NodeStyle
+    except ImportError:
+        logger.error("ete3 is required for visualization. Install with: pip install ete3")
+        return
+
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        output_file = os.path.join(output_dir, output_file)
+
     gd_births, loss_data, event_loss_data = get_stats_deduplicated(filepath)
 
     sptree.ladderize()
