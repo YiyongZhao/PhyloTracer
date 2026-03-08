@@ -168,15 +168,12 @@ Phylo_Rooter_parser.add_argument('--weights',nargs=6,type=bounded_float(0.0, 1.0
 Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # MulRF_Distance command
-MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute species-level MulRF distance by many-to-many comparison between two GF lists', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer MulRF_Distance --input_GF_list GF_ID2path_1.imap --input_imap gene2sps_1.imap --input_GF_list_2 GF_ID2path_2.imap --input_imap_2 gene2sps_2.imap')
+MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute copy-aware MulRF conflict in mode1 (gene-gene) or mode2 (gene-species)', formatter_class=CustomHelpFormatter, epilog='Examples:\n  PhyloTracer MulRF_Distance --mode 1 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --output mulrf_mode1.tsv\n  PhyloTracer MulRF_Distance --mode 2 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --output mulrf_mode2.tsv')
+MulRF_Distance_parser.add_argument('--mode', choices=['1', '2'], required=True, help='Comparison mode: 1=Gene Tree vs Gene Tree, 2=Gene Tree vs Species Tree')
 MulRF_Distance_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
-MulRF_Distance_parser.add_argument('--input_GF_list_2', metavar='GENE_TREE_LIST_2', required=True, help='Second tab-delimited GF mapping file for many-to-many comparison mode')
 MulRF_Distance_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
-MulRF_Distance_parser.add_argument('--input_imap_2', metavar='IMAP_2', required=False, help='Second two-column mapping file (gene_id<TAB>species_name), used with --input_GF_list_2; default = --input_imap')
-MulRF_Distance_parser.add_argument('--sep', metavar='STR', default='_', help='Separator used when inferring species from gene names, default = _')
-MulRF_Distance_parser.add_argument('--position', choices=['last', 'first'], default='last', help='Species inference mode from gene names: last=before last separator, first=after first separator, default = last')
-MulRF_Distance_parser.add_argument('--quiet', action='store_true', help='If set, suppress summary logging, default = False')
-MulRF_Distance_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
+MulRF_Distance_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='Species tree file in Newick format (required when --mode 2)')
+MulRF_Distance_parser.add_argument('--output', metavar='TSV', default='mulrf_distance.tsv', help='Output TSV filename, default = mulrf_distance.tsv')
 
 # OrthoFilter_LB command
 OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 --lb_mode or')
@@ -215,7 +212,7 @@ Tree_Visualizer_parser = subparsers.add_parser(
            '  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap '
            '--gene_categories gene2family.imap gene2order.imap gene2clade.imap '
            '--input_sps_tree sptree.nwk '
-           '--gene_matrix gene_matrix.csv --keep_branch 1 --tree_style r --visual_gd'
+           '--heatmap_matrix heatmap_matrix.txt --keep_branch 1 --tree_style r --visual_gd'
 )
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Tree_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
@@ -228,7 +225,7 @@ Tree_Visualizer_parser.add_argument(
 Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Whether to preserve branch lengths in plotting: 1=yes, 0=no')
 Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree layout style: r=rectangular, c=circular')
 Tree_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', help='Species tree file in Newick format')
-Tree_Visualizer_parser.add_argument('--gene_matrix', metavar='MATRIX_FILE', help='Gene-associated numeric matrix file (.csv/.xls/.xlsx), genes as row index')
+Tree_Visualizer_parser.add_argument('--heatmap_matrix', metavar='MATRIX_FILE', help='Gene-associated numeric matrix file (recommended: .txt/.tsv tab-delimited; also supports .csv/.xls/.xlsx), genes as row index')
 Tree_Visualizer_parser.add_argument('--visual_gd', action='store_true', help='If set, overlay predicted GD nodes on gene-tree figures, default = False')
 Tree_Visualizer_parser.add_argument('--gd_support', metavar='INT', type=bounded_int(0, 100), default=50, help='Minimum support of a GD candidate node used by --visual_gd (accepted range: 0-100), default = 50')
 Tree_Visualizer_parser.add_argument('--subclade_support', metavar='INT', type=bounded_int(0, 100), default=0, help='Minimum support required in GD child subclades used by --visual_gd (accepted range: 0-100), default = 0')
@@ -420,20 +417,20 @@ def handle_phylo_rooter(cli_args):
 
 
 def handle_mulrf_distance(cli_args):
-    if cli_args.input_GF_list and cli_args.input_GF_list_2:
+    if cli_args.input_GF_list and cli_args.input_imap and cli_args.mode:
         start_time = time.time()
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
-        tre_dic_2 = read_and_return_dict(cli_args.input_GF_list_2)
-        imap2 = cli_args.input_imap_2 if cli_args.input_imap_2 else cli_args.input_imap
+
+        if cli_args.mode == '2' and not cli_args.input_sps_tree:
+            logger.error("MulRF_Distance mode 2 requires --input_sps_tree.")
+            return
+
         mulrf_main(
             tre_dic=tre_dic,
-            tre_dic_2=tre_dic_2,
-            species_tree_path=None,
+            species_tree_path=cli_args.input_sps_tree,
             gene2sp_map_path=cli_args.input_imap,
-            gene2sp_map_path_2=imap2,
-            separator=cli_args.sep,
-            position=cli_args.position,
-            quiet=cli_args.quiet,
+            mode=cli_args.mode,
+            output_file=cli_args.output,
         )
         report_execution_time(start_time)
     else:
@@ -546,14 +543,16 @@ def handle_tree_visualizer(cli_args):
                 voucher2taxa_dic,
             )
 
-        if cli_args.gene_matrix:
-            file_extension = os.path.splitext(cli_args.gene_matrix)[1]
+        if cli_args.heatmap_matrix:
+            file_extension = os.path.splitext(cli_args.heatmap_matrix)[1].lower()
             if file_extension in ('.xlsx', '.xls'):
-                df = pd.read_excel(cli_args.gene_matrix, index_col=0)
+                df = pd.read_excel(cli_args.heatmap_matrix, index_col=0)
             elif file_extension == '.csv':
-                df = pd.read_csv(cli_args.gene_matrix, index_col=0)
+                df = pd.read_csv(cli_args.heatmap_matrix, index_col=0)
+            elif file_extension in ('.txt', '.tsv'):
+                df = pd.read_csv(cli_args.heatmap_matrix, sep='\t', index_col=0)
             else:
-                raise ValueError("Unsupported file format. Please provide an Excel or CSV file.")
+                raise ValueError("Unsupported heatmap matrix format. Use .txt/.tsv (tab-delimited, recommended), .csv, .xls, or .xlsx.")
 
         view_main(
             tre_dic,
@@ -913,16 +912,16 @@ def _normalize_input_paths(args):
     # Paths passed directly as CLI values
     path_args = [
         "input_imap",
-        "input_imap_2",
         "input_gene_length",
         "input_taxa",
         "input_sps_tree",
         "gd_result",
         "gd_loss_result",
         "hyde_out",
-        "gene_matrix",
+        "heatmap_matrix",
         "input_fasta",
         "cluster_file",
+        "output",
         "species_a_gff",
         "species_b_gff",
         "species_a_lens",
@@ -941,8 +940,6 @@ def _normalize_input_paths(args):
     # Mapping files with path-bearing 2nd column
     if hasattr(args, "input_GF_list") and args.input_GF_list:
         args.input_GF_list = _rewrite_mapping_file_with_abs_paths(args.input_GF_list)
-    if hasattr(args, "input_GF_list_2") and args.input_GF_list_2:
-        args.input_GF_list_2 = _rewrite_mapping_file_with_abs_paths(args.input_GF_list_2)
     if hasattr(args, "input_Seq_GF_list") and args.input_Seq_GF_list:
         args.input_Seq_GF_list = _rewrite_mapping_file_with_abs_paths(args.input_Seq_GF_list)
 
