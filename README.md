@@ -192,7 +192,7 @@ export QT_QPA_PLATFORM=offscreen
   * pyqt5 (for visualization modules)
   * phyde>=1.0.2 (HyDe Python interface)
     
-Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](https://etetoolkit.org/) and detects species hybridization signals using ABAB-BABA test by [HyDe](https://github.com/pblischak/HyDe).
+Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](https://etetoolkit.org/) and detects species hybridization signals using ABBA-BABA test by [HyDe](https://github.com/pblischak/HyDe).
 
 ---
 ## Example input files
@@ -255,14 +255,14 @@ Glyma.07G273800.2,0.0,0.8
 Most modules generate task-specific outputs in either the current working directory or module-specific subdirectories. Common outputs include:
 
 - Rooted tree outputs: `rooted_trees/`
-- MulRF distance outputs: `mulrf_distance/mulrf_distance.tsv`
+- MulRF distance outputs: `mulrf_distance.tsv`
 - Long-branch filter outputs: `orthofilter_lb/pruned_tree/`, `orthofilter_lb/delete_gene/`
 - Monophyly filter outputs: `orthofilter_mono/pruned_tree/`, `orthofilter_mono/delete_gene/`
 - GD detection tables: `gd_result_*.txt`, `gd_type_*.tsv`
 - GD-loss tables: `gd_loss_summary.txt`, `gd_loss_count_summary.txt`, `gd_loss.xlsx`
 - Hybridization outputs: `hyde_out.txt`, `hyde_filtered_out.txt`
 - Ortholog retrieval outputs: `ortho_retriever_summary.txt`, `ortholog_trees.tsv`
-- Topology summaries: `absolute_*.txt`, `relative_*.txt`, merged PNG summaries
+- Topology summaries: `absolute_*.txt`, `relative_*.txt`, merged PDF summaries
 - HaploFinder (haplofinder mode): `gd_pairs_dotplot.pdf`, `gd_pairs_dotplot.png`, `color_label.txt`
 - HaploFinder (split mode): `haplofinder_split/split_assignment.tsv`, `haplofinder_split/split_subgenome_A.fasta`, `haplofinder_split/split_subgenome_B.fasta`, `haplofinder_split/split_subgenome_unknown.fasta`, `haplofinder_split/split_summary.txt`
 
@@ -434,20 +434,20 @@ $$
 
 **2. Sister Relative Branch Ratio (SRBR)**
 
-**Concept:** Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister branch).
+**Concept:** Measures the evolutionary distance of a gene relative to its **nearest neighbor** (sister subtree) using root-to-tip distances.
 
 * **Purpose:** Identifies local branch length asymmetry. A gene significantly longer than its "sister" is a high-risk candidate for phylogenetic noise, even in fast-evolving families.
 * **Formula:**
 
 $$
-\text{SRBR} = \frac{\text{Branch Length} - \text{Sister Branch Length}}{\text{Sister Branch Length}}
+\text{SRBR} = \frac{\text{Root-to-tip distance} - \text{Sister root-to-tip distance}}{\text{Sister root-to-tip distance}}
 $$
 
 **Where:**
 
 * **Root-to-tip distance:** Path length from the tip to the root.
 * **Average root-to-tip distance:** Mean root-to-tip path length across all tips in the same gene tree.
-* **Sister Branch Length:** The branch length of the nearest "neighbor" or "sister" gene.
+* **Sister root-to-tip distance:** For a leaf sister, the root-to-tip distance of the sister tip. For an internal sister node, the mean root-to-tip distance across all descendant leaves of the sister subtree.
 
 **3. Long-branch decision mode**
 
@@ -499,7 +499,7 @@ $$
 * **Formula:**
 
 $$
-\text{PhyloDist}=\text{Depth}(\text{MRCA}(\text{alien}))-\text{Depth}(\text{MRCA}(\text{target}\cup\text{alien}))
+\text{PhyloDist}=\text{Depth}(\text{MRCA}(\text{target}))-\text{Depth}(\text{MRCA}(\text{target}\cup\text{alien}))
 $$
 
 **3. Alien Coverage Score**
@@ -591,7 +591,8 @@ Optional parameter:
                             Example files in 09_Tree_Visualizer: Family.imap, Order.imap, Clade.imap
                             Note: for species-tree family-duplication mapping, the first file in --gene_categories is used as the family map
     --input_sps_tree        Species tree file in Newick format
-    --heatmap_matrix        Gene-associated numeric matrix file (recommended: .txt/.tsv tab-delimited; also supports .csv/.xls/.xlsx), genes as row index
+    --heatmap_matrix        Gene-associated numeric matrix file (recommended: .txt/.tsv tab-delimited; also supports .csv/.xls/.xlsx), genes as row index.
+                            Values should be in the range [0, 100]; normalize your data before input if needed.
     --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
     --gd_support            Minimum support of a GD candidate node used by --visual_gd (range: 0-100), default = 50
     --subclade_support      Minimum support required in GD child subclades used by --visual_gd (range: 0-100), default = 0

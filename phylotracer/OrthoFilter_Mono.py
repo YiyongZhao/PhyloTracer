@@ -670,7 +670,11 @@ def prune_all_clades(
 
     if global_remove:
         keep = set(t.get_leaf_names()) - global_remove
-        t.prune(keep, preserve_branch_length=True)
+        if not keep:
+            import logging
+            logging.warning("All tips marked for removal; skipping prune to avoid ETE3 crash")
+        else:
+            t.prune(keep, preserve_branch_length=True)
 
     return t
 
@@ -999,6 +1003,7 @@ def prune_main_Mono(
 
 if __name__ == "__main__":
     import argparse
+    from phylotracer import gene_id_transfer, read_and_return_dict
 
     parser = argparse.ArgumentParser(description="Mono-copy ortholog pruning filter")
     parser.add_argument("--input_GF_list", required=True, help="Gene family list file")

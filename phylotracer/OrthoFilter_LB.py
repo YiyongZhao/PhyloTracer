@@ -103,9 +103,9 @@ def get_average_node_length(subtree: object) -> float:
     Branch lengths are defined for all relevant edges.
     """
     total_distance = sum(
-        subtree.get_distance(leaf) + subtree.dist for leaf in subtree
+        subtree.get_distance(leaf) for leaf in subtree
     )
-    return total_distance / len(subtree)
+    return total_distance / len(subtree) + subtree.dist
 
 
 # ======================================================
@@ -314,6 +314,8 @@ def remove_long_branches(
                 sister_avg = get_average_node_length(sister) + pruned_tree.get_distance(sister) or 1e-6
 
             # SRBR is also defined on root-to-tip distances.
+            if sister_avg < 1e-10:
+                continue
             srbr_value = (tip_root_distance - sister_avg) / sister_avg
             is_rrbr = rrbr_value >= rrbr_cutoff
             is_srbr = srbr_value >= srbr_cutoff

@@ -5,9 +5,12 @@ This module parses duplication results, aggregates events by species-tree
 nodes, and renders annotated species trees with duplication summaries.
 """
 
+import logging
 import os
 import re
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 try:
     from ete3 import CircleFace, NodeStyle, PieChartFace, TextFace, TreeStyle
@@ -132,6 +135,12 @@ def mark_sptree(
     -----------
     Species tree node names match those used in duplication summaries.
     """
+    try:
+        from ete3 import TreeStyle, NodeStyle, TextFace, CircleFace, PieChartFace
+    except ImportError:
+        logger.error("ete3 is required. Install with: pip install ete3")
+        return
+
     sptree.ladderize()
     sptree.sort_descendants("support")
 
@@ -242,7 +251,7 @@ def mark_sptree(
 # ======================================================
 
 
-def gd_visualizer_main(sptree, gd_result, taxa):
+def gd_visualizer_main(sptree, gd_result, taxa, output_dir="."):
     """
     Visualize gene duplication events on a species tree.
 
@@ -254,6 +263,8 @@ def gd_visualizer_main(sptree, gd_result, taxa):
         Path to the gene duplication result file.
     taxa : dict
         Mapping from leaf names to taxa labels.
+    output_dir : str
+        Directory for output files (default: current directory).
 
     Returns
     -------
@@ -263,10 +274,11 @@ def gd_visualizer_main(sptree, gd_result, taxa):
     -----------
     The GD result file uses canonical GD labels per event.
     """
+    os.makedirs(output_dir, exist_ok=True)
     gds = process_gd_result(gd_result)
     count_dic = get_count_dic(gds)
     gd_base = os.path.splitext(os.path.basename(gd_result))[0]
-    output_pdf = f"{gd_base}.pdf"
+    output_pdf = os.path.join(output_dir, f"{gd_base}.pdf")
     mark_sptree(sptree, count_dic, taxa, output_pdf=output_pdf)
 
 

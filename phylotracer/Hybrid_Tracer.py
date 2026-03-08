@@ -109,7 +109,11 @@ def create_fasta_dict(fasta_file, gene2new_named_gene_dic):
     """
     fasta_dict = {}
     for record in SeqIO.parse(fasta_file, "fasta"):
-        fasta_dict[gene2new_named_gene_dic[record.id]] = str(record.seq)
+        new_id = gene2new_named_gene_dic.get(record.id)
+        if new_id is None:
+            logger.warning("FASTA record '%s' not found in gene-to-species mapping; skipping.", record.id)
+            continue
+        fasta_dict[new_id] = str(record.seq)
     return fasta_dict
 
 
@@ -805,6 +809,12 @@ def run_hyde_from_matrix_integrated(
     hyde_result_lst = []
     sps_num = len(imap.keys())
     taxa_num = len(set(imap.values()))
+
+    if hd is None:
+        logger.error("phyde is not installed. Install it with: pip install phyde")
+        os.remove(tmp_phy_path)
+        os.remove(tmp_imap_path)
+        return hyde_result_lst
 
     try:
         dat = hd.HydeData(tmp_phy_path, tmp_imap_path, "out", sps_num, taxa_num, max_length, quiet=True)

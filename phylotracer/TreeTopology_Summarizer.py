@@ -138,7 +138,11 @@ def group_trees_by_topology_with_ids(
         first_tree_id, first_tree = trees_with_ids[0]
 
         for tree_id, tree in trees_with_ids:
-            rf = first_tree.robinson_foulds(tree)[0]
+            try:
+                rf = first_tree.robinson_foulds(tree)[0]
+            except Exception as e:
+                logger.warning("RF computation failed (mismatched leaf sets?): %s", e)
+                rf = float('inf')
             if rf == 0:
                 same_rf_trees.append((tree_id, tree))
             else:
@@ -415,6 +419,13 @@ def visualize_top_trees(
             writer.write(out_handle)
         return True
 
+    if TreeStyle is None or NodeStyle is None or TextFace is None:
+        logger.warning(
+            "ete3 visualization components (TreeStyle/NodeStyle/TextFace) not available; "
+            "skipping tree visualization."
+        )
+        return
+
     sorted_trees = list(tree_count_dict.items())[:top_n]
     temp_dir = tempfile.mkdtemp(prefix="temp_trees_")
     tree_panels_pdf = []
@@ -515,16 +526,11 @@ def statistical_main(
         if len(get_species_set(t2)) == 1:
             continue
         if len(get_species_set(t2)) != len(t2):
-            logger.error("Gene tree %s is not a single-copy gene tree!", k)
-            logger.error(
-                "Number of species: %d, Number of genes: %d",
-                len(get_species_set(t2)), len(t2)
+            logger.warning(
+                "Skipping tree %s: not single-copy (found %d copies for %d species)",
+                k, len(t2), len(get_species_set(t2))
             )
-            logger.error(
-                "This program requires single-copy gene trees as input. "
-                "Program terminated."
-            )
-            exit(1)
+            continue
         trees_with_ids.append((k, t2))
 
     write_absolute_summary(outfile, trees_with_ids, voucher2taxa_dic, top_n)

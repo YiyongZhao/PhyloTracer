@@ -58,6 +58,8 @@ def parse_hyde_out(filename):
     with open(filename, "r") as f:
         for i in f:
             i1 = i.strip().split("\t")
+            if len(i1) < 6:
+                continue
             if i1[0] == "P1":
                 continue
             elif i1[5] == "nan":
@@ -356,9 +358,9 @@ def from_summary_get_hyb_to_date(summary_dic, a_hyb_to_three_tup_list, leafs):
     -----------
     Leaf identifiers match triplet keys.
     """
-    tup_df = pd.DataFrame(index=leafs, columns=leafs, data=0, dtype=float)
-    gamma_df = pd.DataFrame(index=leafs, columns=leafs, data=0, dtype=float)
-    pvalue_df = pd.DataFrame(index=leafs, columns=leafs, data=0, dtype=float)
+    tup_df = pd.DataFrame(index=leafs, columns=leafs, data=np.nan, dtype=float)
+    gamma_df = pd.DataFrame(index=leafs, columns=leafs, data=np.nan, dtype=float)
+    pvalue_df = pd.DataFrame(index=leafs, columns=leafs, data=np.nan, dtype=float)
     for i in a_hyb_to_three_tup_list:
         tup = i.split("-")
         p1, hyb, p2 = tup
@@ -505,6 +507,8 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
     leafs = t.get_leaf_names()
     df_lst = []
     for i in node_s:
+        if i not in hyb_dic:
+            continue
         a_hyb_to_three_tup_list = hyb_dic[i]
         tup_df, gamma_df, filtered_gamma_df = from_summary_get_hyb_to_date(
             summary_dic,
@@ -522,17 +526,18 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
     filter_result_df = average_dataframes(summary_filter_df)
 
     for leaf in node_s:
-        tup_result_df.loc[:, leaf] = 0
-        tup_result_df.loc[leaf] = 0
-        gamma_result_df.loc[:, leaf] = 0
-        gamma_result_df.loc[leaf] = 0
+        tup_result_df.loc[:, leaf] = np.nan
+        tup_result_df.loc[leaf] = np.nan
+        gamma_result_df.loc[:, leaf] = np.nan
+        gamma_result_df.loc[leaf] = np.nan
 
     mask_upper = np.triu(np.ones_like(gamma_result_df, dtype=bool), k=1)
-    tup_result_df[mask_upper] = 0
-    gamma_result_df[mask_upper] = 0
+    tup_result_df[mask_upper] = np.nan
+    gamma_result_df[mask_upper] = np.nan
 
-    tup_annot = tup_result_df.astype(str).where(tup_result_df != 0, other="")
-    gamma_annot = gamma_result_df.map(lambda x: f"{x:.3f}" if x != 0 else "")
+    nan_mask = gamma_result_df.isna()
+    tup_annot = tup_result_df.astype(str).where(~nan_mask, other="")
+    gamma_annot = gamma_result_df.map(lambda x: f"{x:.3f}" if not np.isnan(x) else "")
 
     fig = plt.figure(figsize=(30, 30))
 
@@ -547,6 +552,7 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
         annot=tup_annot,
         fmt="",
         cmap="Greys",
+        mask=nan_mask,
         ax=ax,
         annot_kws={"color": "#FFFFFF", "size": 60, "va": "top"},
         xticklabels=False,
@@ -562,6 +568,7 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
         annot=gamma_annot,
         fmt="",
         cmap="Greys",
+        mask=nan_mask,
         ax=ax,
         annot_kws={"color": "#F5EF70", "size": 60, "va": "bottom"},
         xticklabels=False,
@@ -578,6 +585,7 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
         gamma_result_df,
         annot=False,
         cmap=newcmp,
+        mask=nan_mask,
         ax=ax,
         xticklabels=False,
         yticklabels=False,
@@ -590,7 +598,8 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
         square=True,
     )
 
-    m = ax.imshow(gamma_result_df, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)
+    gamma_masked = np.ma.masked_invalid(gamma_result_df.values)
+    m = ax.imshow(gamma_masked, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)
     position = fig.add_axes([0.9, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
     cbar.ax.tick_params(labelsize=40)
@@ -623,9 +632,9 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
     Leaf names in the tree match those in triplet keys.
     """
     sp = t.get_leaf_names()
-    tup_df = pd.DataFrame(index=sp, columns=sp, data=0, dtype=float)
-    gamma_df = pd.DataFrame(index=sp, columns=sp, data=0, dtype=float)
-    pvalue_df = pd.DataFrame(index=sp, columns=sp, data=0, dtype=float)
+    tup_df = pd.DataFrame(index=sp, columns=sp, data=np.nan, dtype=float)
+    gamma_df = pd.DataFrame(index=sp, columns=sp, data=np.nan, dtype=float)
+    pvalue_df = pd.DataFrame(index=sp, columns=sp, data=np.nan, dtype=float)
 
     for i in a_hyb_to_three_tup_list:
         tup = i.split("-")
@@ -660,18 +669,22 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
                 pvalue_p1_p2 = pvalue_df.loc[p1, p2]
                 pvalue_p2_p1 = pvalue_df.loc[p2, p1]
 
-                if pvalue_p1_p2 > pvalue_p2_p1:
-                    gamma_df.loc[p2, p1] = 0
+                if np.isnan(pvalue_p1_p2) and np.isnan(pvalue_p2_p1):
+                    continue
+                elif np.isnan(pvalue_p1_p2) or pvalue_p1_p2 > pvalue_p2_p1:
+                    gamma_df.loc[p2, p1] = np.nan
                 else:
-                    gamma_df.loc[p1, p2] = 0
+                    gamma_df.loc[p1, p2] = np.nan
 
-    tup_annot = tup_df.astype(str).where(tup_df != 0, other="")
-    gamma_annot = gamma_df.map(lambda x: f"{x:.3f}" if x != 0 else "")
+    nan_mask = gamma_df.isna()
+    tup_annot = tup_df.astype(str).where(~nan_mask, other="")
+    gamma_annot = gamma_df.map(lambda x: f"{x:.3f}" if not np.isnan(x) else "")
     sns.heatmap(
         tup_df,
         annot=tup_annot,
         fmt="",
         cmap="Greys",
+        mask=nan_mask,
         ax=ax,
         annot_kws={"color": "#FFFFFF", "va": "top"},
         xticklabels=False,
@@ -687,6 +700,7 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
         annot=gamma_annot,
         fmt="",
         cmap="Greys",
+        mask=nan_mask,
         ax=ax,
         annot_kws={"color": "#F5EF70", "va": "bottom"},
         xticklabels=False,
@@ -703,6 +717,7 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
         gamma_df,
         annot=False,
         cmap=newcmp,
+        mask=nan_mask,
         ax=ax,
         xticklabels=False,
         yticklabels=False,
@@ -715,7 +730,8 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
         square=True,
     )
 
-    m = ax.imshow(gamma_df, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)
+    gamma_masked = np.ma.masked_invalid(gamma_df.values)
+    m = ax.imshow(gamma_masked, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)
     position = fig.add_axes([0.9, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
     cbar.ax.tick_params(labelsize=40)
@@ -853,7 +869,7 @@ def combine_fig(hybrid_species):
 # ======================================================
 
 
-def hyde_visual_leaf_main(out_file_name, sptree):
+def hyde_visual_leaf_main(out_file_name, sptree, output_dir=None):
     """
     Generate hybridization visualizations centered on leaves.
 
@@ -863,6 +879,8 @@ def hyde_visual_leaf_main(out_file_name, sptree):
         Path to HyDe output file.
     sptree : object
         Species tree object.
+    output_dir : str or None
+        Output directory (default: current working directory).
 
     Returns
     -------
@@ -870,22 +888,25 @@ def hyde_visual_leaf_main(out_file_name, sptree):
 
     Assumptions
     -----------
-    Output files are writable in the current working directory.
+    Output files are writable in the specified output directory.
     """
+    if output_dir is None:
+        output_dir = os.getcwd()
     out1 = parse_hyde_out(out_file_name)
     result1 = calculate_three_tup(out1)
     hybrid_dic1 = get_hybrid_dic(result1)
     for k, v in hybrid_dic1.items():
         logger.info("%s is processing", k)
+        prefix = os.path.join(output_dir, k)
         t1 = sptree.copy()
-        generate_tree_leaf(t1, k, k)
-        create_hot_map_leaf(result1, v, t1, k)
-        combine_fig(k)
-        os.remove(f"{k}_hotmap.png")
-        os.remove(f"{k}_img_faces.png")
+        generate_tree_leaf(t1, k, prefix)
+        create_hot_map_leaf(result1, v, t1, prefix)
+        combine_fig(prefix)
+        os.remove(f"{prefix}_hotmap.png")
+        os.remove(f"{prefix}_img_faces.png")
 
 
-def hyde_visual_node_main(out_file_name, sptree):
+def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
     """
     Generate hybridization visualizations centered on internal nodes.
 
@@ -895,6 +916,8 @@ def hyde_visual_node_main(out_file_name, sptree):
         Path to HyDe output file.
     sptree : object
         Species tree object.
+    output_dir : str or None
+        Output directory (default: current working directory).
 
     Returns
     -------
@@ -904,6 +927,8 @@ def hyde_visual_node_main(out_file_name, sptree):
     -----------
     Internal nodes are numbered prior to visualization.
     """
+    if output_dir is None:
+        output_dir = os.getcwd()
     out1 = parse_hyde_out(out_file_name)
     result1 = calculate_three_tup(out1)
     hybrid_dic1 = get_hybrid_dic(result1)
@@ -916,12 +941,13 @@ def hyde_visual_node_main(out_file_name, sptree):
             continue
         else:
             logger.info("%s is processing", node.name)
+            prefix = os.path.join(output_dir, node.name)
             t1 = sptree.copy()
-            generate_tree_node(t1, node, node.name)
-            create_hot_map_node(result1, hybrid_dic1, node, t1, node.name)
-            combine_fig(node.name)
-            os.remove(f"{node.name}_hotmap.png")
-            os.remove(f"{node.name}_img_faces.png")
+            generate_tree_node(t1, node, prefix)
+            create_hot_map_node(result1, hybrid_dic1, node, t1, prefix)
+            combine_fig(prefix)
+            os.remove(f"{prefix}_hotmap.png")
+            os.remove(f"{prefix}_img_faces.png")
 
 
 # ======================================================

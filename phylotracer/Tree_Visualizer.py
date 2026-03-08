@@ -1138,7 +1138,8 @@ def mark_gene_to_sptree(
                 )
                 add_face_to_node(node, face, column, position="aligned")
         else:
-            color = color_dict[species].split("@")[ -1]
+            entry = color_dict.get(species)
+            color = entry.split("@")[-1] if entry else "black"
             face = TextFace("   ▐" + "  ", fgcolor=color, ftype="Arial", fstyle="normal")
             add_face_to_node(node, face, column, position="aligned")
 
@@ -1153,14 +1154,16 @@ def mark_gene_to_sptree(
                         )
                         column = index if n == 1 or index < n / 2 else index - n / 2
 
-                        i.add_face(
-                            TextFace(
-                                sorted_dict[value].split("@")[1],
-                                fgcolor=sorted_dict[value].split("@")[0],
-                            ),
-                            column=column,
-                            position=position,
-                        )
+                        entry = sorted_dict.get(value)
+                        if entry is not None:
+                            i.add_face(
+                                TextFace(
+                                    entry.split("@")[1],
+                                    fgcolor=entry.split("@")[0],
+                                ),
+                                column=column,
+                                position=position,
+                            )
         else:
             i.add_face(
                 TextFace(i.name, fsize=10, fgcolor="black", ftype="Arial", fstyle="italic"),

@@ -145,7 +145,7 @@ def plot_chr1(lens, gl, gl2, mark, name):
     """
     total_lens = sum([float(k[1]) for k in lens])
     if total_lens == 0:
-        return
+        return 0
     step = gl / float(total_lens)
     gl_start, n, start_x = 0.95, 0, 0.05
     mark_y = 0.04
@@ -190,7 +190,7 @@ def plot_chr2(lens, gl, gl2, mark, name):
     """
     total_lens = sum([float(k[1]) for k in lens])
     if total_lens == 0:
-        return
+        return 0
     step = gl / float(total_lens)
     gl_start, n, start_x = 0.05, 0, 0.95
     mark_y = 0.96
@@ -377,6 +377,7 @@ def generate_dotplot(
     target_chr1=None,
     target_chr2=None,
     size=None,
+    gene_conv_ratio=2,
 ):
     """
     Generate a dotplot for gene pairs with optional chromosome filtering.
@@ -447,6 +448,7 @@ def generate_dotplot(
         dict_gff2,
         lens_1,
         lens_2,
+        gene_conv_ratio=gene_conv_ratio,
     )
 
     result_conversion = find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2, file_name)
@@ -664,7 +666,7 @@ def find_independent_dup_nodes(dup_node_list) -> list:
 # ======================================================
 
 
-def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2):
+def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2, gene_conv_ratio=2):
     chrs_combinations = [(chr_a, chr_b) for chr_a in [i[0] for i in lens_1]
                          for chr_b in [i[0] for i in lens_2]]
 
@@ -678,7 +680,7 @@ def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2):
         chr1 = int(digits_a)
         chr2 = int(digits_b)
 
-        if chr1 * 2 == chr2:
+        if chr1 * gene_conv_ratio == chr2:
             red_count = 0
             blue_count = 0
 
@@ -1063,7 +1065,7 @@ def assign_hybrid_subgenome(tree, hybrid_prefix, diploid_tags):
     return result
 
 
-def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff, input_fasta, cluster_file):
+def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff, input_fasta, cluster_file, chrs_per_subgenome=10):
     tre_dic = read_and_return_dict(input_GF_list)
     gff_1, dict_gff1 = read_gff(gff)
     _ = gff_1
@@ -1098,7 +1100,7 @@ def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff, input
                 all_gene_labels[k1] = v1
             if k1 in dict_gff1:
                 chr_name = dict_gff1[k1][0]
-                is_correct_assignment = get_chromosome_subgenome(chr_name)
+                is_correct_assignment = get_chromosome_subgenome(chr_name, chrs_per_subgenome)
                 d = "unknown" if v1 == "unknown" else (v1 == is_correct_assignment)
                 logger.info("%s %s %s %s %s", k1, v1, chr_name, is_correct_assignment, d)
 
@@ -1124,7 +1126,7 @@ def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff, input
 
             assigned_total += 1
             chr_name = dict_gff1.get(gene_id, [None])[0]
-            expected = get_chromosome_subgenome(chr_name) if chr_name else None
+            expected = get_chromosome_subgenome(chr_name, chrs_per_subgenome) if chr_name else None
             status = "ok"
             final_label = label
             if gene_id in conflict_genes:
@@ -1177,7 +1179,7 @@ def split_sequences(input_GF_list, input_imap, hyb_sps, parental_sps, gff, input
 # ======================================================
 
 
-def get_chromosome_subgenome(chr_name):
+def get_chromosome_subgenome(chr_name, chrs_per_subgenome=10):
     """
     Map chromosome identifiers to subgenome labels.
 
@@ -1185,6 +1187,8 @@ def get_chromosome_subgenome(chr_name):
     ----------
     chr_name : str
         Chromosome identifier.
+    chrs_per_subgenome : int
+        Number of chromosomes per subgenome (default 10).
 
     Returns
     -------
@@ -1193,14 +1197,15 @@ def get_chromosome_subgenome(chr_name):
 
     Assumptions
     -----------
-    Chromosome numbers encode subgenome A (1-10) and B (11-20).
+    Chromosome numbers encode subgenome A (1..chrs_per_subgenome) and
+    B (chrs_per_subgenome+1..2*chrs_per_subgenome).
     """
     match = re.search(r"(\d+)", chr_name)
     if match:
         chr_num = int(match.group(1))
-        if 1 <= chr_num <= 10:
+        if 1 <= chr_num <= chrs_per_subgenome:
             return "A"
-        elif 11 <= chr_num <= 20:
+        elif chrs_per_subgenome + 1 <= chr_num <= 2 * chrs_per_subgenome:
             return "B"
     return None
 

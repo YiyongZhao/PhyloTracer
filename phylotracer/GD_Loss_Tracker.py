@@ -164,7 +164,7 @@ def summarize_small_loss_types_from_path(path_str: str) -> tuple:
         transitions (not biological copy-number states).
     """
     if not path_str or path_str == "NA":
-        return "NA", 0, 0, 0
+        return "NA", 0, 0, 0, []
 
     parsed = []
     for step in path_str.split("->"):
@@ -173,7 +173,7 @@ def summarize_small_loss_types_from_path(path_str: str) -> tuple:
             parsed.append((m.group(1).strip(), int(m.group(2))))
 
     if len(parsed) < 2:
-        return "NA", 0, 0, 0
+        return "NA", 0, 0, 0, []
 
     c20 = c21 = c10 = 0
     ordered_types = []
