@@ -68,23 +68,67 @@ Example:
 ---------------
 
 Description:
-    Enables an accurate method for gene tree rooting and enhancing the downstream evolutionary genomic analysis.
-    Stage-1 rooting metrics:
-    - ``OD`` (Outgroup depth): larger values generally support deeper/more plausible outgroup partitioning.
-    - ``BLV`` (Branch length variance): smaller values indicate more stable branch-length balance after rooting.
-    - ``GD`` (GD events count): number of inferred GD events under the candidate root.
-    - ``SO`` (GD clade species overlap): overlap between GD child-clade species sets; this term is penalized in Stage-1 scoring.
+    Roots gene trees using a six-metric composite scoring framework guided by the species tree.
+    All six metrics are normalized to [0, 1] (higher = better) via direction-aware min-max
+    normalization before weighting, ensuring each metric contributes according to its assigned
+    weight regardless of raw scale.
+
+    Scoring metrics (all mapped to higher-is-better after normalization):
+
+    - ``OD`` (Outgroup Depth, *lower raw value = better*): topological distance from species-tree
+      root to the mapped outgroup clade. A smaller value means a more basal outgroup placement.
+    - ``BLV`` (Branch Length Variance, *lower = better*): absolute difference in tip-to-root
+      branch-length variance between the two root child-clades. Smaller values indicate more
+      balanced, clock-like branch lengths after rooting.
+    - ``GD`` (Gene Duplication count, *lower = better*): number of GD events inferred under the
+      candidate root. Parsimony favours fewer duplications.
+    - ``SO`` (Species Overlap at largest GD node, *higher = better*): Jaccard overlap of species
+      sets in the two child-clades of the largest GD node. High overlap indicates a true
+      duplication rather than a rooting artefact.
+    - ``GDC`` (GD Consistency, *higher = better*): mean of (size_symmetry x Jaccard) across all
+      GD nodes. Measures how consistently the GD nodes are biologically coherent.
+    - ``MulRF`` (Multi-copy RF distance, *lower = better*): normalised Robinson-Foulds distance
+      between the rooted gene tree and the species tree. Measures topological concordance.
 
 Required Parameters:
-    - ``--input_GF_list``       File containing paths to gene tree files, one per line.
-    - ``--input_imap``          File with species classification information corresponding to genes.
-    - ``--input_gene_length``   File with gene length information.
-    - ``--input_sps_tree``      A species tree file in Newick format.
+    - ``--input_GF_list``       Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree per line.
+    - ``--input_imap``          Two-column mapping file (gene_id<TAB>species_name).
+    - ``--input_sps_tree``      Species tree file in Newick format.
+
+Optional Parameters:
+    - ``--weights OD BLV GD SO GDC RF``
+                                Six space-separated float weights applied when
+                                ``--weight-strategy empirical``; must sum to 1.0.
+                                Default: ``0.30 0.10 0.30 0.10 0.10 0.10``.
+    - ``--weight-strategy {empirical,entropy}``
+                                Scoring weight strategy (default: ``empirical``).
+
+                                - ``empirical``: uses the biologically-informed prior weights from
+                                  ``--weights``; recommended when the number of candidate roots is
+                                  small (< 10) where entropy estimates are unreliable.
+                                - ``entropy``: Entropy Weight Method (EWM) -- derives weights
+                                  automatically from the candidate distribution; assigns higher
+                                  weight to metrics with greater variance among candidates.
+                                  Recommended when many diverse candidates exist.
+    - ``--output_dir``          Output directory (default: current working directory).
+
+Output:
+    - ``rooted_trees/``         Directory of rooted gene trees in Newick format.
+    - ``stat_matrix.csv``       Per-tree scoring table with columns:
+                                Tree, score, deep (OD), var (BLV), GD, species_overlap (SO),
+                                gd_consistency (GDC), RF (MulRF).
 
 Example:
     .. code-block:: bash
 
-        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
+        # Default (empirical weights)
+        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
+
+        # Custom empirical weights (OD=0.20 BLV=0.05 GD=0.40 SO=0.15 GDC=0.10 RF=0.10)
+        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weights 0.20 0.05 0.40 0.15 0.10 0.10
+
+        # Entropy (data-driven) weighting
+        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weight-strategy entropy
 
 
 5. OrthoFilter_LB
