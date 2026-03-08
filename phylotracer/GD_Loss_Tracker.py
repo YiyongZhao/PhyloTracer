@@ -160,7 +160,7 @@ def summarize_small_loss_types_from_path(path_str: str) -> tuple:
     Returns
     -------
     tuple
-        ``(path_count_types, c20, c21, c10)`` where counts are path-count
+        ``(path_count_types, c20, c21, c10, transition_keys)`` where counts are path-count
         transitions (not biological copy-number states).
     """
     if not path_str or path_str == "NA":
