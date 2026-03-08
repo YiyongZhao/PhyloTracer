@@ -288,12 +288,12 @@ All six metrics are normalized to [0, 1] (higher = better) via direction-aware m
 
 | Metric | Full name | Direction | Biological rationale |
 |--------|-----------|-----------|----------------------|
-| `OD` | Outgroup Depth | lower raw = better | Smaller topological distance from species-tree root = more basal outgroup |
-| `BLV` | Branch Length Variance | lower raw = better | More balanced branch lengths after rooting |
-| `GD` | Gene Duplication count | lower raw = better | Parsimony: fewer inferred GD events |
-| `SO` | Species Overlap (largest GD node) | higher raw = better | High overlap indicates true duplications, not artefacts |
-| `GDC` | GD Consistency | higher raw = better | Mean (size_symmetry × Jaccard) across GD nodes |
-| `MulRF` | Multi-copy RF distance | lower raw = better | Topological concordance with species tree |
+| `OD` | Outgroup Depth | lower = better | Smaller topological distance from species-tree root = more basal outgroup |
+| `BLV` | Branch Length Variance | lower = better | More balanced branch lengths after rooting |
+| `GD` | Gene Duplication count | lower = better | Parsimony: fewer inferred GD events |
+| `SO` | Species Overlap (largest GD node) | higher = better | High overlap indicates true duplications, not artefacts |
+| `GDC` | GD Consistency | higher = better | Mean (size_symmetry × Jaccard) across GD nodes |
+| `MulRF` | Multi-copy RF distance | lower = better | Topological concordance with species tree |
 
 **3. Composite scoring**
 
