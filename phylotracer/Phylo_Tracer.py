@@ -186,7 +186,7 @@ OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='If set
 OrthoFilter_LB_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: current working directory)')
 
 # OrthoFilter_Mono command
-OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='Prune alien lineages inside dominant clades', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk')
+OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='Prune alien lineages inside dominant clades', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa Clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk')
 OrthoFilter_Mono_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 OrthoFilter_Mono_parser.add_argument('--input_taxa', metavar='TAXA_LIST', required=True, help='Two-column mapping file (gene_id<TAB>clade_or_lineage_label)')
 OrthoFilter_Mono_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
@@ -210,7 +210,7 @@ Tree_Visualizer_parser = subparsers.add_parser(
     formatter_class=CustomHelpFormatter,
     epilog='Example:\n'
            '  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap '
-           '--gene_categories gene2family.imap gene2order.imap gene2clade.imap '
+           '--gene_categories Family.imap Order.imap Clade.imap '
            '--input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt '
            '--keep_branch 1 --tree_style r --visual_gd --gd_support 50 --subclade_support 0 '
            '--dup_species_proportion 0.2 --dup_species_num 2 --deepvar 1'
@@ -221,7 +221,7 @@ Tree_Visualizer_parser.add_argument(
     '--gene_categories',
     metavar='TAXA_LIST',
     nargs='+',
-    help='One or more files (gene_id<TAB>category_label); each file is one annotation layer. Optional header row supported as gene_id<TAB>HeaderName (e.g., Family/Order/Clade). For species-tree family-duplication summary, the first file is used as the family mapping.'
+    help='One or more files (gene_id<TAB>category_label); each file is one annotation layer. Optional header rule: first line must be gene_id<TAB>HeaderName, where HeaderName is the column title shown on the plot (recommended: Family, Order, Clade; avoid spaces/special chars). For species-tree family-duplication summary, the first file is used as the family mapping.'
 )
 Tree_Visualizer_parser.add_argument('--keep_branch', metavar='0|1', choices=['0', '1'], help='Whether to preserve branch lengths in plotting: 1=yes, 0=no')
 Tree_Visualizer_parser.add_argument('--tree_style', metavar='r|c', choices=['r', 'c'], default='r', help='Tree layout style: r=rectangular, c=circular')

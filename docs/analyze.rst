@@ -128,7 +128,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa gene2clade.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
+        PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa Clade.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual]
 
 
 7. TreeTopology_Summarizer
@@ -171,7 +171,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories gene2family.imap gene2order.imap gene2clade.imap --keep_branch 1 --tree_style r --input_sps_tree sptree.nwk --gene_expression expression.csv --visual_gd]
+        PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories Family.imap Order.imap Clade.imap --keep_branch 1 --tree_style r --input_sps_tree sptree.nwk --gene_expression expression.csv --visual_gd]
 
 
 9. GD_Detector
