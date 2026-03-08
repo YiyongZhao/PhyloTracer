@@ -85,7 +85,7 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
 ## Features
 
 - Rooting (via `Phylo_Rooter`):  
-  Automatically evaluates multiple rooting candidates and selects the most plausible root using OD/BLV/GD/SO/GD_consistency and RF-guided ranking.
+  Automatically evaluates multiple rooting candidates and selects the most plausible root using a six-metric composite score (OD, BLV, GD, SO, GDC, MulRF) with direction-aware min-max normalization. Supports empirical or entropy (EWM) weight strategies.
 
 - Topology statistics (via `TreeTopology_Summarizer`):  
   Computes absolute and relative topology frequencies for single-copy gene trees, with optional grouped summarization by user-defined clade labels.
@@ -284,41 +284,62 @@ This section follows an OrthoFinder-like CLI reference style with compact layout
 
 **2. Root quality metrics**
 
-- `OD` (Outgroup depth)
-- `BLV` (Branch length variance)
-- `GD` (GD events count)
-- `SO` (GD clade species overlap)
-- `GD_consistency` (consistency of species composition between the two child clades of GD nodes; higher means more consistent)
-- `MulRF` (normalized MulRF RF rate)
+All six metrics are normalized to [0, 1] (higher = better) via direction-aware min-max normalization before weighting:
 
-**3. Stage weighted scoring**
+| Metric | Full name | Direction | Biological rationale |
+|--------|-----------|-----------|----------------------|
+| `OD` | Outgroup Depth | lower raw = better | Smaller topological distance from species-tree root = more basal outgroup |
+| `BLV` | Branch Length Variance | lower raw = better | More balanced branch lengths after rooting |
+| `GD` | Gene Duplication count | lower raw = better | Parsimony: fewer inferred GD events |
+| `SO` | Species Overlap (largest GD node) | higher raw = better | High overlap indicates true duplications, not artefacts |
+| `GDC` | GD Consistency | higher raw = better | Mean (size_symmetry × Jaccard) across GD nodes |
+| `MulRF` | Multi-copy RF distance | lower raw = better | Topological concordance with species tree |
 
-$$ 
-\text{score} = w_{OD}\cdot norm(OD) + w_{BLV}\cdot norm(BLV) + w_{GD}\cdot norm(GD) - w_{SO}\cdot norm(SO) - w_{GDC}\cdot norm(GD_consistency) + w_{RF}\cdot norm(MulRF) 
+**3. Composite scoring**
+
+$$
+\text{score} = \sum_{m} w_m \cdot \widetilde{m}
 $$
 
-**4. User-defined weights (`--weights`)**
+where $\widetilde{m} \in [0,1]$ is the direction-corrected normalized value of metric $m$ (higher is always better), and $w_m$ is the weight for that metric. The candidate with the **highest** composite score is selected as the optimal root.
 
-- Input order must be: `OD BLV GD SO GD_consistency RF`
-- Exactly 6 values; sum must be 1
+**4. Weight strategies (`--weight-strategy`)**
+
+- `empirical` (default): uses biologically-informed prior weights supplied via `--weights`; recommended when the number of candidate roots is small (< 10).
+- `entropy`: Entropy Weight Method (EWM) — derives weights automatically from the candidate distribution; assigns higher weight to metrics with greater variance among candidates; recommended when many diverse candidates exist.
 
 **5. Final root selection**
 
-- Select the best root by combined ranking (lower score, better RF consistency)
+- The candidate with the **highest** composite score is selected as the optimal root.
 
 ### Phylo_Rooter
 ```
 Description:
-    Enables an accurate method for gene tree rooting and enhancing the downstream evolutionary genomic analysis
+    Roots gene trees using a six-metric composite scoring framework (OD, BLV, GD, SO, GDC, MulRF)
+    guided by the species tree. Supports empirical (prior) or entropy (data-driven) weight strategies.
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
-    --weights               Weights in fixed order: OD BLV GD SO GD_consistency RF; input exactly six floats with sum = 1, default = 0.30 0.10 0.30 0.10 0.10 0.10
+    --weights               Weights in fixed order: OD BLV GD SO GD_consistency RF; input exactly six
+                            floats with sum = 1; used when --weight-strategy empirical
+                            default = 0.30 0.10 0.30 0.10 0.10 0.10
+    --weight-strategy       Scoring weight strategy: empirical (default) or entropy
+                            empirical: biologically-informed prior weights from --weights;
+                                       recommended for small candidate sets (< 10)
+                            entropy:   Entropy Weight Method (EWM) -- data-driven; assigns higher
+                                       weight to metrics with greater variance among candidates
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--weights 0.30 0.10 0.30 0.10 0.10 0.10] [--output_dir DIR]
+    # Default (empirical weights)
+    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
+
+    # Custom empirical weights (OD=0.20 BLV=0.05 GD=0.40 SO=0.15 GDC=0.10 RF=0.10)
+    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weights 0.20 0.05 0.40 0.15 0.10 0.10
+
+    # Entropy (data-driven) weighting
+    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weight-strategy entropy
 ```
 ### MulRF_Distance
 ```
