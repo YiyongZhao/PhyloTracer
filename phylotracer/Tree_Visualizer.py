@@ -397,6 +397,7 @@ def tips_mark(
     gene_color_dict=None,
     df=None,
     keep_branch: object = "1",
+    category_headers: list | None = None,
 ) -> object:
     """
     Annotate tree tips with categorical colors and optional heatmap values.
@@ -723,6 +724,34 @@ def tips_mark(
             face.vt_align = 2
             ts.aligned_header.add_face(face, new_start + ind)
 
+    def add_category_headers_to_tree(ts: any, headers: list[str], start_col: int = 1) -> None:
+        """
+        Add plain-text headers for --gene_categories columns.
+
+        Parameters
+        ----------
+        ts : any
+            TreeStyle object receiving aligned headers.
+        headers : list[str]
+            Header labels in the same order as category files.
+        start_col : int, optional
+            Starting aligned column index for category markers.
+        """
+        def _header_face(label: str) -> TextFace:
+            # Use plain centered text in header row; column index already matches
+            # the aligned tip-mark columns, avoiding glyph-width drift from symbols.
+            face = TextFace(str(label), fgcolor="black", ftype="Arial", fsize=9)
+            face.hz_align = 1
+            return face
+
+        if not headers:
+            # Keep species header even when no extra category file is provided.
+            ts.aligned_header.add_face(_header_face("Species"), 0)
+            return
+        ts.aligned_header.add_face(_header_face("Species"), 0)
+        for idx, label in enumerate(headers):
+            ts.aligned_header.add_face(_header_face(str(label)), start_col + idx)
+
     def add_color_bar(ts: any) -> None:
         """
         Add a heatmap color bar legend to the tree visualization.
@@ -767,6 +796,7 @@ def tips_mark(
         ts.legend_position = 2
 
     faces_added = set()
+    add_category_headers_to_tree(ts, category_headers or [], start_col=1)
 
     for node in Phylo_t1.traverse():
         if node.is_leaf():
@@ -1192,6 +1222,7 @@ def view_main(
     tree_style,
     keep_branch,
     new_named_gene2gene_dic,
+    category_headers=None,
     gene2fam=None,
     df=None,
     visual: bool = False,
@@ -1288,6 +1319,7 @@ def view_main(
             gene_color_dict,
             df,
             keep_branch=keep_branch,
+            category_headers=category_headers,
         )
         pbar.update(1)
     pbar.close()

@@ -380,7 +380,7 @@ Required parameter:
 Optional parameter:
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1 [--output_dir DIR]
+    PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 100 [--output_dir DIR]
 ```
 ### BranchLength_NumericConverter
 ```
@@ -577,7 +577,7 @@ Optional parameter:
     --deepvar               Maximum tolerated depth-variance score used by --visual_gd, default = 1
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories gene2family.imap gene2order.imap gene2clade.imap] [--input_sps_tree sptree.nwk] [--heatmap_matrix heatmap_matrix.txt] [--visual_gd] [--gd_support 50] [--subclade_support 0] [--dup_species_proportion 0.2] [--dup_species_num 2] [--deepvar 1] [--output_dir DIR]
+    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap --gene_categories gene2family.imap gene2order.imap gene2clade.imap --input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt --keep_branch 1 --tree_style r --visual_gd --gd_support 50 --subclade_support 0 --dup_species_proportion 0.2 --dup_species_num 2 --deepvar 1 [--output_dir DIR]
 ```
 ### GD_Detector
 ```
@@ -638,7 +638,7 @@ Required parameter:
 Optional parameter:
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer GD_Loss_Visualizer --input_sps_tree numbered_species_tree.nwk --gd_loss_result gd_loss_summary.txt [--output_dir DIR]
+    PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_result gd_loss_summary.txt [--output_dir DIR]
 ```
 ### Ortho_Retriever
 ```
@@ -667,7 +667,7 @@ Optional parameter:
     --split_groups          Number of partitions for HYDE batch processing, default = 1
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB] [--split_groups 2] [--output_dir DIR]
+    PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB] [--split_groups 2] [--output_dir DIR]
 ```
 ### Hybrid_Visualizer
 ```
@@ -680,7 +680,7 @@ Optional parameter:
     --node                  Use node-mode heatmaps (monophyletic clade stacking) instead of leaf-mode output
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node] [--output_dir DIR]
+    PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk [--node] [--output_dir DIR]
 ```
 ### HaploFinder
 ```
@@ -715,8 +715,8 @@ Mode = split required:
     --parental_sps          Parental species names used for split-mode assignment; provide as a single quoted, space-separated string
     --species_b_gff         Genome annotation file for species B in GFF/GTF-compatible format
 Usage:
-    PhyloTracer HaploFinder --mode haplofinder --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens [--gd_support 50] [--pair_support 50] [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001] [--output_dir DIR]
-    PhyloTracer HaploFinder --mode split --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff [--output_dir DIR]
+    PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a arh --species_b ard --species_a_gff arh.gff --species_b_gff ard.gff --species_a_lens arh.lens --species_b_lens ard.lens [--gd_support 50] [--pair_support 50] [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001] [--output_dir DIR]
+    PhyloTracer HaploFinder --mode split --input_GF_list gf.txt --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff ard.gff [--output_dir DIR]
 ```
 
 ---
