@@ -56,7 +56,7 @@ Gene To Family Map
 
 A two-column tab-delimited file mapping each gene identifier to its taxonomic family. Used by Tree_Visualizer for family-level annotations.
 
-**Example:** ``gene2family.imap``
+**Example:** ``Family.imap``
 
 .. code::
 
@@ -72,7 +72,7 @@ Gene To Order Map
 
 A two-column tab-delimited file mapping each gene identifier to its taxonomic order. Used by Tree_Visualizer for order-level category annotations.
 
-**Example:** ``gene2order.imap``
+**Example:** ``Order.imap``
 
 .. code::
 
@@ -104,7 +104,7 @@ Gene To Clade Map
 
 A two-column tab-delimited file mapping each gene identifier to a predefined clade or lineage label (e.g., Nitrogen-fixing). Used by OrthoFilter_Mono for monophyletic constraint filtering.
 
-**Example:** ``gene2clade.imap``
+**Example:** ``Clade.imap``
 
 .. code::
 

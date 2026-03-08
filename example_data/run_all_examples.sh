@@ -104,7 +104,7 @@ run_cmd m06 1 OrthoFilter_LB \
 
 run_cmd m07 1 OrthoFilter_Mono \
   --input_GF_list "${SCRIPT_DIR}/07_OrthoFilter_Mono/GF_ID2path.imap" \
-  --input_taxa "${SCRIPT_DIR}/07_OrthoFilter_Mono/gene2clade.imap" \
+  --input_taxa "${SCRIPT_DIR}/07_OrthoFilter_Mono/Clade.imap" \
   --input_imap "${SCRIPT_DIR}/07_OrthoFilter_Mono/gene2sps.imap" \
   --input_sps_tree "${SCRIPT_DIR}/07_OrthoFilter_Mono/sptree.nwk"
 
@@ -115,7 +115,7 @@ run_cmd m08 1 TreeTopology_Summarizer \
 run_cmd m09 1 Tree_Visualizer \
   --input_GF_list "${SCRIPT_DIR}/09_Tree_Visualizer/GF_ID2path.visual20.imap" \
   --input_imap "${SCRIPT_DIR}/09_Tree_Visualizer/gene2sps.imap" \
-  --gene_categories "${SCRIPT_DIR}/09_Tree_Visualizer/gene2family.imap" "${SCRIPT_DIR}/09_Tree_Visualizer/gene2order.imap" "${SCRIPT_DIR}/09_Tree_Visualizer/gene2clade.imap" \
+  --gene_categories "${SCRIPT_DIR}/09_Tree_Visualizer/Family.imap" "${SCRIPT_DIR}/09_Tree_Visualizer/Order.imap" "${SCRIPT_DIR}/09_Tree_Visualizer/Clade.imap" \
   --input_sps_tree "${SCRIPT_DIR}/09_Tree_Visualizer/sptree.nwk" \
   --heatmap_matrix "${SCRIPT_DIR}/09_Tree_Visualizer/heatmap_matrix.txt" \
   --keep_branch 1 \

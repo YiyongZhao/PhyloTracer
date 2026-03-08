@@ -217,13 +217,13 @@ ATCG00500.1           Arabidopsis_thaliana
 Glyma.07G273800.2     Glycine_max
 
 Provide a two-column file in TSV format: each line contains <gene_id><TAB><plant_family>
-------------gene2family.imap------------------------------------------------------------------------------------------------------
+------------Family.imap------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborellaceae
 ATCG00500.1           Brassicaceae
 Glyma.07G273800.2     Fabaceae
 
 Provide a two-column file in TSV format: each line contains <gene_id><TAB><plant_order>
-------------gene2order.imap-------------------------------------------------------------------------------------------------------
+------------Order.imap-------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Amborellales
 ATCG00500.1           Brassicales
 Glyma.07G273800.2     Fabales
@@ -235,7 +235,7 @@ ATCG00500.1           Malvids
 Glyma.07G273800.2     Fabids
 
 Provide a two-column file in TSV format: each line contains <gene_id><TAB><functional_clade>
-------------gene2clade.imap-------------------------------------------------------------------------------------------------------
+------------Clade.imap-------------------------------------------------------------------------------------------------------
 AMTR_s00796p00010580  Nitrogen-fixing
 ATCG00500.1           Nitrogen-fixing
 Glyma.07G273800.2     non-Nitrogen-fixing
@@ -535,7 +535,7 @@ Optional parameter:
     --visual                If set, export before/after pruning visualization PDFs, default = False
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa gene2clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95] [--max_remove_fraction 0.5] [--visual] [--output_dir DIR]
+    PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa Clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95] [--max_remove_fraction 0.5] [--visual] [--output_dir DIR]
 ```
 ### TreeTopology_Summarizer
 ```
@@ -564,8 +564,10 @@ Optional parameter:
     --tree_style            Tree layout style: r=rectangular, c=circular
     --gene_categories       One or more two-column files (gene_id<TAB>category_label) for color annotations
                             Format: each line is "gene_id<TAB>label" (no header required)
+                            Optional header naming rule: first line can be "gene_id<TAB>HeaderName";
+                            HeaderName is used as the displayed column title (recommended: Family, Order, Clade; avoid spaces/special chars)
                             Meaning: each file is one categorical layer (e.g., family/order/clade)
-                            Example files in 09_Tree_Visualizer: gene2family.imap, gene2order.imap, gene2clade.imap
+                            Example files in 09_Tree_Visualizer: Family.imap, Order.imap, Clade.imap
                             Note: for species-tree family-duplication mapping, the first file in --gene_categories is used as the family map
     --input_sps_tree        Species tree file in Newick format
     --heatmap_matrix        Gene-associated numeric matrix file (recommended: .txt/.tsv tab-delimited; also supports .csv/.xls/.xlsx), genes as row index
@@ -577,7 +579,7 @@ Optional parameter:
     --deepvar               Maximum tolerated depth-variance score used by --visual_gd, default = 1
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap --gene_categories gene2family.imap gene2order.imap gene2clade.imap --input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt --keep_branch 1 --tree_style r --visual_gd --gd_support 50 --subclade_support 0 --dup_species_proportion 0.2 --dup_species_num 2 --deepvar 1 [--output_dir DIR]
+    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap --gene_categories Family.imap Order.imap Clade.imap --input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt --keep_branch 1 --tree_style r --visual_gd --gd_support 50 --subclade_support 0 --dup_species_proportion 0.2 --dup_species_num 2 --deepvar 1 [--output_dir DIR]
 ```
 ### GD_Detector
 ```
