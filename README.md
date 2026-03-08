@@ -324,25 +324,24 @@ Usage:
 ```
 Description:
     To compute species-level MulRF topological conflict distances
-    Uses one mode only: many-to-many comparison between two gene-tree sets (GF1 × GF2)
-    If you want gene-tree vs species-tree comparison, provide the species tree as an entry in GF2
+    Supports two modes:
+    1) mode 1: Gene Tree vs Gene Tree (pairwise within one GF list; self-comparisons are excluded)
+    2) mode 2: Gene Tree vs Species Tree
     (this is a topology-distance metric, not a sequence/genetic distance)
     Practical uses:
     1) Quantify gene-tree/species-tree conflict intensity (higher distance = stronger discordance/complex history)
     2) Compare evolutionary pattern similarity among gene families for clustering/filtering/modeling
     3) Support rooting tie-break in Phylo_Rooter by preferring roots with lower normalized MulRF conflict
 Required parameter:
+    --mode                  Comparison mode: 1=Gene Tree vs Gene Tree, 2=Gene Tree vs Species Tree
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
-    --input_GF_list_2       Second GF mapping file for many-to-many mode
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
 Optional parameter:
-    --input_imap_2          Second imap file for GF2 (default = --input_imap)
-    --sep                   Separator used when inferring species from gene names, default = _
-    --position              Species inference mode from gene names: last=before last separator, first=after first separator, default = last
-    --quiet                 If set, suppress summary logging, default = False
-    --output_dir            Output directory (default: current working directory)
+    --input_sps_tree        Species tree file in Newick format (required when --mode 2)
+    --output                Output TSV filename, default = mulrf_distance.tsv
 Usage:
-    PhyloTracer MulRF_Distance --input_GF_list GF_ID2path_1.imap --input_imap gene2sps_1.imap --input_GF_list_2 GF_ID2path_2.imap [--input_imap_2 gene2sps_2.imap] [--sep _] [--position last] [--quiet] [--output_dir DIR]
+    PhyloTracer MulRF_Distance --mode 1 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--output mulrf_mode1.tsv]
+    PhyloTracer MulRF_Distance --mode 2 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--output mulrf_mode2.tsv]
 Output columns (mulrf_distance.tsv):
     tre_id_1                           Tree ID from GF1
     tre_id_2                           Tree ID from GF2
@@ -569,7 +568,7 @@ Optional parameter:
                             Example files in 09_Tree_Visualizer: gene2family.imap, gene2order.imap, gene2clade.imap
                             Note: for species-tree family-duplication mapping, the first file in --gene_categories is used as the family map
     --input_sps_tree        Species tree file in Newick format
-    --gene_matrix           Gene-associated numeric matrix file (.csv/.xls/.xlsx), genes as row index
+    --heatmap_matrix        Gene-associated numeric matrix file (recommended: .txt/.tsv tab-delimited; also supports .csv/.xls/.xlsx), genes as row index
     --visual_gd             If set, overlay predicted GD nodes on gene-tree figures, default = False
     --gd_support            Minimum support of a GD candidate node used by --visual_gd (range: 0-100), default = 50
     --subclade_support      Minimum support required in GD child subclades used by --visual_gd (range: 0-100), default = 0
@@ -578,7 +577,7 @@ Optional parameter:
     --deepvar               Maximum tolerated depth-variance score used by --visual_gd, default = 1
     --output_dir            Output directory (default: current working directory)
 Usage:
-    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories gene2family.imap gene2order.imap gene2clade.imap] [--input_sps_tree sptree.nwk] [--gene_matrix gene_matrix.csv] [--visual_gd] [--gd_support 50] [--subclade_support 0] [--dup_species_proportion 0.2] [--dup_species_num 2] [--deepvar 1] [--output_dir DIR]
+    PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--keep_branch 1] [--tree_style r] [--gene_categories gene2family.imap gene2order.imap gene2clade.imap] [--input_sps_tree sptree.nwk] [--heatmap_matrix heatmap_matrix.txt] [--visual_gd] [--gd_support 50] [--subclade_support 0] [--dup_species_proportion 0.2] [--dup_species_num 2] [--deepvar 1] [--output_dir DIR]
 ```
 ### GD_Detector
 ```

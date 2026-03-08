@@ -215,39 +215,86 @@ def mulrf_main(
     tre_dic: Dict[str, str],
     species_tree_path: Optional[str] = None,
     gene2sp_map_path: Optional[str] = None,
-    tre_dic_2: Optional[Dict[str, str]] = None,
-    gene2sp_map_path_2: Optional[str] = None,
+    mode: str = "1",
+    output_file: str = "mulrf_distance.tsv",
     separator: str = "_",
     position: str = "last",
-    quiet: bool = False,
 ) -> None:
-    """Batch MulRF calculation in dual-list (many-to-many) mode."""
-    gene2sp_map_1 = load_gene2sp_map(gene2sp_map_path) if gene2sp_map_path else None
-    out_file = "mulrf_distance.tsv"
+    """
+    Batch MulRF calculation.
 
-    if tre_dic_2 is None:
-        raise ValueError("tre_dic_2 is required in dual-list mode.")
-    gene2sp_map_2 = load_gene2sp_map(gene2sp_map_path_2) if gene2sp_map_path_2 else None
+    mode = \"1\": Gene Tree vs Gene Tree (pairwise within one GF list, excluding self-comparisons)
+    mode = \"2\": Gene Tree vs Species Tree
+    """
+    gene2sp_map_1 = load_gene2sp_map(gene2sp_map_path) if gene2sp_map_path else None
     rows = []
-    for tre_id_1, tree_path_1 in tre_dic.items():
-        for tre_id_2, tree_path_2 in tre_dic_2.items():
+
+    if mode == "1":
+        items = list(tre_dic.items())
+        for i in range(len(items)):
+            tre_id_1, tree_path_1 = items[i]
+            for j in range(i + 1, len(items)):
+                tre_id_2, tree_path_2 = items[j]
+                try:
+                    gt1 = Tree(tree_path_1)
+                    gt2 = Tree(tree_path_2)
+                    res = compute_mulrf_between_gene_trees(
+                        gt1,
+                        gt2,
+                        gene2sp_map_1,
+                        gene2sp_map_1,
+                        separator,
+                        position,
+                    )
+                except Exception:
+                    res = {
+                        "gene_tree_1_leaf_count": None,
+                        "gene_tree_2_leaf_count": None,
+                        "gene_tree_1_species_count": None,
+                        "gene_tree_2_species_count": None,
+                        "shared_species_count": None,
+                        "mulrf_distance": None,
+                        "maximum_possible_mulrf_distance": None,
+                        "normalized_mulrf_distance": None,
+                        "shared_species_bipartition_count": None,
+                        "gene_tree_1_only_bipartition_count": None,
+                        "gene_tree_2_only_bipartition_count": None,
+                    }
+                row = {"tre_id_1": tre_id_1, "tre_id_2": tre_id_2}
+                row.update(res)
+                rows.append(row)
+    elif mode == "2":
+        if not species_tree_path:
+            raise ValueError("species_tree_path is required when mode=2.")
+        sp_tree = Tree(species_tree_path)
+        species_tree_id = "species_tree"
+        for tre_id, tree_path in tre_dic.items():
             try:
-                gt1 = Tree(tree_path_1)
-                gt2 = Tree(tree_path_2)
-                res = compute_mulrf_between_gene_trees(
-                    gt1,
-                    gt2,
-                    gene2sp_map_1,
-                    gene2sp_map_2,
-                    separator,
-                    position,
-                )
+                gt = Tree(tree_path)
+                res = compute_mulrf(gt, sp_tree, gene2sp_map_1, separator, position)
+                row = {
+                    "tre_id_1": tre_id,
+                    "tre_id_2": species_tree_id,
+                    "gene_tree_1_leaf_count": res.get("n_leaves"),
+                    "gene_tree_2_leaf_count": len(sp_tree.get_leaves()),
+                    "gene_tree_1_species_count": res.get("n_species"),
+                    "gene_tree_2_species_count": len(sp_tree.get_leaf_names()),
+                    "shared_species_count": res.get("n_shared_species"),
+                    "mulrf_distance": res.get("mulrf"),
+                    "maximum_possible_mulrf_distance": res.get("max_rf"),
+                    "normalized_mulrf_distance": res.get("normalized_mulrf"),
+                    "shared_species_bipartition_count": res.get("shared_bipartitions"),
+                    "gene_tree_1_only_bipartition_count": res.get("only_in_gene"),
+                    "gene_tree_2_only_bipartition_count": res.get("only_in_sp"),
+                }
             except Exception:
-                res = {
+                row = {
+                    "tre_id_1": tre_id,
+                    "tre_id_2": species_tree_id,
                     "gene_tree_1_leaf_count": None,
-                    "gene_tree_2_leaf_count": None,
+                    "gene_tree_2_leaf_count": len(sp_tree.get_leaves()),
                     "gene_tree_1_species_count": None,
-                    "gene_tree_2_species_count": None,
+                    "gene_tree_2_species_count": len(sp_tree.get_leaf_names()),
                     "shared_species_count": None,
                     "mulrf_distance": None,
                     "maximum_possible_mulrf_distance": None,
@@ -256,9 +303,10 @@ def mulrf_main(
                     "gene_tree_1_only_bipartition_count": None,
                     "gene_tree_2_only_bipartition_count": None,
                 }
-            row = {"tre_id_1": tre_id_1, "tre_id_2": tre_id_2}
-            row.update(res)
             rows.append(row)
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
+
     rows.sort(key=lambda x: (x["mulrf_distance"] if x["mulrf_distance"] is not None else float("inf")))
     columns = [
         "tre_id_1",
@@ -275,13 +323,12 @@ def mulrf_main(
         "gene_tree_1_only_bipartition_count",
         "gene_tree_2_only_bipartition_count",
     ]
-    with open(out_file, "w", newline="", encoding="utf-8") as f:
+    with open(output_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=columns, delimiter="\t", extrasaction="ignore")
         writer.writeheader()
         writer.writerows(rows)
 
     valid = [r for r in rows if r.get("mulrf_distance") is not None]
-    if not quiet and valid:
-        mean_mulrf = sum(r["mulrf_distance"] for r in valid) / len(valid)
-        logger.info("MulRF pairwise summary: valid_pairs=%d, mean_mulrf=%.4f", len(valid), mean_mulrf)
-    logger.info("MulRF pairwise results written to %s", out_file)
+    mean_mulrf = sum(r["mulrf_distance"] for r in valid) / len(valid) if valid else 0.0
+    logger.info("MulRF pairwise summary: valid_pairs=%d, mean_mulrf=%.4f", len(valid), mean_mulrf)
+    logger.info("MulRF results written to %s", output_file)
