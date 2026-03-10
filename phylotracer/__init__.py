@@ -51,6 +51,7 @@ __all__ = [
     "find_dup_node",
     "calculate_gd_num",
     "stable_color_for_label",
+    "write_tree_without_sci_notation",
 ]
 
 # Fixed qualitative palette for consistent colors across all plotting modules.
@@ -80,6 +81,19 @@ def stable_color_for_label(label: str) -> str:
     digest = hashlib.md5(normalized.encode("utf-8")).hexdigest()
     idx = int(digest[:8], 16) % len(_FIXED_COLOR_PALETTE)
     return _FIXED_COLOR_PALETTE[idx]
+
+
+def write_tree_without_sci_notation(tree: Tree, fmt: int = 0, precision: int = 15) -> str:
+    """Serialize an ete3 tree while avoiding scientific notation in branch lengths.
+
+    This function only changes output string formatting (e.g., 1e-06 -> 0.000001),
+    and does not change branch-length values used inside the tree object.
+    """
+    def _dist_formatter(value: float) -> str:
+        out = f"{float(value):.{precision}f}".rstrip("0").rstrip(".")
+        return out if out else "0"
+
+    return tree.write(format=fmt, dist_formatter=_dist_formatter)
 
 # =========================
 # I/O & Mapping Utilities

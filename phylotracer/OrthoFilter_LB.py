@@ -31,6 +31,7 @@ from phylotracer import (
     read_and_return_dict,
     rename_input_tre,
     stable_color_for_label,
+    write_tree_without_sci_notation,
 )
 from phylotracer.BranchLength_NumericConverter import (
     write_tree_to_newick,
@@ -386,9 +387,10 @@ def prune_main_LB(
     color_map = create_color_mapping(voucher2taxa)
 
     base_dir = os.getcwd()
+    explicit_output_dir = os.environ.get("PHYLTR_OUTPUT_DIR_EXPLICIT", "0") == "1"
     module_root = (
         base_dir
-        if os.path.basename(os.path.normpath(base_dir)) == "orthofilter_lb"
+        if explicit_output_dir or os.path.basename(os.path.normpath(base_dir)) == "orthofilter_lb"
         else os.path.join(base_dir, "orthofilter_lb")
     )
     pruned_dir = os.path.join(module_root, "pruned_tree")
@@ -450,7 +452,7 @@ def prune_main_LB(
             os.remove(f"{tree_id}_after.pdf")
 
         restored_tree = rename_input_tre(pruned_tree, renamed2gene)
-        tree_str = restored_tree.write(format=0)
+        tree_str = write_tree_without_sci_notation(restored_tree, fmt=0)
         write_tree_to_newick(tree_str, tree_id, pruned_dir)
     pbar.close()
 

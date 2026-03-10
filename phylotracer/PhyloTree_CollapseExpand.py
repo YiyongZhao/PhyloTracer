@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 from tqdm import tqdm
 
-from phylotracer import read_and_return_dict, read_tree
+from phylotracer import read_and_return_dict, read_tree, write_tree_without_sci_notation
 from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
 
 # =========================
@@ -88,8 +88,9 @@ def collapse_expand_main(
         raise ValueError("tree_dict must be a dictionary.")
 
     base = output_dir if output_dir else os.getcwd()
+    explicit_output_dir = os.environ.get("PHYLTR_OUTPUT_DIR_EXPLICIT", "0") == "1"
     default_dir = "collapse_expand_tree"
-    dir_path = (
+    dir_path = base if explicit_output_dir else (
         base
         if os.path.basename(os.path.normpath(base)) == default_dir
         else os.path.join(base, f"{default_dir}/")
@@ -110,7 +111,7 @@ def collapse_expand_main(
             if revert:
                 collapsed_tree.resolve_polytomy(recursive=True)
                 collapsed_tree.sort_descendants("support")
-            tree_str = collapsed_tree.write(format=0)
+            tree_str = write_tree_without_sci_notation(collapsed_tree, fmt=0)
             write_tree_to_newick(tree_str, tree_id, dir_path)
         except Exception as exc:
             logger.error("Error processing %s: %s", tree_id, exc)
