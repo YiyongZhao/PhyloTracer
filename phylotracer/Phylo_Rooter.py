@@ -28,6 +28,7 @@ from phylotracer import (
     read_phylo_tree,
     rename_input_tre,
     root_tre_with_midpoint_outgroup,
+    write_tree_without_sci_notation,
 )
 from phylotracer.MulRF_Distance import compute_mulrf
 from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
@@ -56,7 +57,7 @@ def rename_output_tre(tree: object, name_mapping: dict, tree_id: str, output_dir
     for node in tree.traverse():
         if node.name in name_mapping:
             node.name = name_mapping[node.name]
-    tree_str = tree.write(format=0)
+    tree_str = write_tree_without_sci_notation(tree, fmt=0)
     write_tree_to_newick(tree_str, tree_id, output_dir)
     
 
@@ -692,8 +693,9 @@ def root_main(
         Input trees are readable Newick files and species labels are consistent.
     """
     cwd = os.getcwd()
+    explicit_output_dir = os.environ.get("PHYLTR_OUTPUT_DIR_EXPLICIT", "0") == "1"
     default_dir = "rooted_trees"
-    dir_path = (
+    dir_path = cwd if explicit_output_dir else (
         cwd
         if os.path.basename(os.path.normpath(cwd)) == default_dir
         else os.path.join(cwd, f"{default_dir}/")
@@ -838,5 +840,3 @@ def root_main(
 
     finally:
         pbar.close()
-
-

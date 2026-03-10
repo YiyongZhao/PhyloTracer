@@ -268,63 +268,64 @@ def mulrf_main(
         if not species_tree_path:
             raise ValueError("species_tree_path is required when mode=2.")
         sp_tree = Tree(species_tree_path)
-        species_tree_id = "species_tree"
         for tre_id, tree_path in tre_dic.items():
             try:
                 gt = Tree(tree_path)
                 res = compute_mulrf(gt, sp_tree, gene2sp_map_1, separator, position)
                 row = {
-                    "tre_id_1": tre_id,
-                    "tre_id_2": species_tree_id,
-                    "gene_tree_1_leaf_count": res.get("n_leaves"),
-                    "gene_tree_2_leaf_count": len(sp_tree.get_leaves()),
-                    "gene_tree_1_species_count": res.get("n_species"),
-                    "gene_tree_2_species_count": len(sp_tree.get_leaf_names()),
-                    "shared_species_count": res.get("n_shared_species"),
+                    "tre_id": tre_id,
+                    "gene_tree_leaf_count": res.get("n_leaves"),
+                    "gene_tree_species_count": res.get("n_species"),
                     "mulrf_distance": res.get("mulrf"),
                     "maximum_possible_mulrf_distance": res.get("max_rf"),
                     "normalized_mulrf_distance": res.get("normalized_mulrf"),
                     "shared_species_bipartition_count": res.get("shared_bipartitions"),
-                    "gene_tree_1_only_bipartition_count": res.get("only_in_gene"),
-                    "gene_tree_2_only_bipartition_count": res.get("only_in_sp"),
+                    "gene_tree_only_bipartition_count": res.get("only_in_gene"),
                 }
             except Exception as e:
                 logger.warning(f"MulRF computation failed for tree pair: {e}")
                 row = {
-                    "tre_id_1": tre_id,
-                    "tre_id_2": species_tree_id,
-                    "gene_tree_1_leaf_count": None,
-                    "gene_tree_2_leaf_count": len(sp_tree.get_leaves()),
-                    "gene_tree_1_species_count": None,
-                    "gene_tree_2_species_count": len(sp_tree.get_leaf_names()),
-                    "shared_species_count": None,
+                    "tre_id": tre_id,
+                    "gene_tree_leaf_count": None,
+                    "gene_tree_species_count": None,
                     "mulrf_distance": None,
                     "maximum_possible_mulrf_distance": None,
                     "normalized_mulrf_distance": None,
                     "shared_species_bipartition_count": None,
-                    "gene_tree_1_only_bipartition_count": None,
-                    "gene_tree_2_only_bipartition_count": None,
+                    "gene_tree_only_bipartition_count": None,
                 }
             rows.append(row)
     else:
         raise ValueError(f"Unsupported mode: {mode}")
 
     rows.sort(key=lambda x: (x["mulrf_distance"] if x["mulrf_distance"] is not None else float("inf")))
-    columns = [
-        "tre_id_1",
-        "tre_id_2",
-        "gene_tree_1_leaf_count",
-        "gene_tree_2_leaf_count",
-        "gene_tree_1_species_count",
-        "gene_tree_2_species_count",
-        "shared_species_count",
-        "mulrf_distance",
-        "maximum_possible_mulrf_distance",
-        "normalized_mulrf_distance",
-        "shared_species_bipartition_count",
-        "gene_tree_1_only_bipartition_count",
-        "gene_tree_2_only_bipartition_count",
-    ]
+    if mode == "2":
+        columns = [
+            "tre_id",
+            "gene_tree_leaf_count",
+            "gene_tree_species_count",
+            "mulrf_distance",
+            "maximum_possible_mulrf_distance",
+            "normalized_mulrf_distance",
+            "shared_species_bipartition_count",
+            "gene_tree_only_bipartition_count",
+        ]
+    else:
+        columns = [
+            "tre_id_1",
+            "tre_id_2",
+            "gene_tree_1_leaf_count",
+            "gene_tree_2_leaf_count",
+            "gene_tree_1_species_count",
+            "gene_tree_2_species_count",
+            "shared_species_count",
+            "mulrf_distance",
+            "maximum_possible_mulrf_distance",
+            "normalized_mulrf_distance",
+            "shared_species_bipartition_count",
+            "gene_tree_1_only_bipartition_count",
+            "gene_tree_2_only_bipartition_count",
+        ]
     with open(output_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=columns, delimiter="\t", extrasaction="ignore")
         writer.writeheader()

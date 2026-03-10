@@ -251,7 +251,7 @@ def mark_sptree(
 # ======================================================
 
 
-def gd_visualizer_main(sptree, gd_result, taxa, output_dir="."):
+def gd_visualizer_main(sptree, gd_result, taxa, output_file=None):
     """
     Visualize gene duplication events on a species tree.
 
@@ -263,8 +263,8 @@ def gd_visualizer_main(sptree, gd_result, taxa, output_dir="."):
         Path to the gene duplication result file.
     taxa : dict
         Mapping from leaf names to taxa labels.
-    output_dir : str
-        Directory for output files (default: current directory).
+    output_file : str or None
+        Output PDF path. If None, default to ``<gd_result_basename>.pdf`` in cwd.
 
     Returns
     -------
@@ -274,11 +274,10 @@ def gd_visualizer_main(sptree, gd_result, taxa, output_dir="."):
     -----------
     The GD result file uses canonical GD labels per event.
     """
-    os.makedirs(output_dir, exist_ok=True)
     gds = process_gd_result(gd_result)
     count_dic = get_count_dic(gds)
     gd_base = os.path.splitext(os.path.basename(gd_result))[0]
-    output_pdf = os.path.join(output_dir, f"{gd_base}.pdf")
+    output_pdf = output_file if output_file else f"{gd_base}.pdf"
     mark_sptree(sptree, count_dic, taxa, output_pdf=output_pdf)
 
 

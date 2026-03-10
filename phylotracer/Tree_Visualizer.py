@@ -738,10 +738,11 @@ def tips_mark(
             Starting aligned column index for category markers.
         """
         def _header_face(label: str) -> TextFace:
-            # Use plain centered text in header row; column index already matches
-            # the aligned tip-mark columns, avoiding glyph-width drift from symbols.
+            # Keep header left-aligned with the category labels below.
             face = TextFace(str(label), fgcolor="black", ftype="Arial", fsize=9)
-            face.hz_align = 1
+            face.hz_align = 0
+            face.margin_left = 0
+            face.margin_right = 0
             return face
 
         if not headers:
@@ -1272,8 +1273,9 @@ def view_main(
     Input trees are valid and consistent with identifier mappings.
     """
     cwd = os.getcwd()
+    explicit_output_dir = os.environ.get("PHYLTR_OUTPUT_DIR_EXPLICIT", "0") == "1"
     default_dir = "tree_visualizer"
-    dir_path = (
+    dir_path = cwd if explicit_output_dir else (
         cwd
         if os.path.basename(os.path.normpath(cwd)) == default_dir
         else os.path.join(cwd, default_dir)

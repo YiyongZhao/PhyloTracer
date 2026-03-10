@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 from ete3 import Tree
 from tqdm import tqdm
 
-from phylotracer import read_and_return_dict, read_tree
+from phylotracer import read_and_return_dict, read_tree, write_tree_without_sci_notation
 from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
 
 # =========================
@@ -96,8 +96,9 @@ def support_scaler_main(tree_dict: dict, scale: str = "100") -> None:
         raise ValueError("tree_dict must be a dictionary.")
 
     cwd = os.getcwd()
+    explicit_output_dir = os.environ.get("PHYLTR_OUTPUT_DIR_EXPLICIT", "0") == "1"
     default_dir = "support_scaler_tree"
-    dir_path = (
+    dir_path = cwd if explicit_output_dir else (
         cwd
         if os.path.basename(os.path.normpath(cwd)) == default_dir
         else os.path.join(cwd, f"{default_dir}/")
@@ -115,7 +116,7 @@ def support_scaler_main(tree_dict: dict, scale: str = "100") -> None:
             pbar.set_description(f"Processing {tree_id}")
             tree = read_tree(tree_path)
             scaled_tree = scale_support(tree, scale)
-            tree_str = scaled_tree.write(format=0)
+            tree_str = write_tree_without_sci_notation(scaled_tree, fmt=0)
             write_tree_to_newick(tree_str, tree_id, dir_path)
         except Exception as exc:
             logger.error("Error processing %s: %s", tree_id, exc)

@@ -107,8 +107,9 @@ def branch_length_numeric_converter_main(
         raise ValueError("decimal_places must be a non-negative integer or None.")
 
     cwd = os.getcwd()
+    explicit_output_dir = os.environ.get("PHYLTR_OUTPUT_DIR_EXPLICIT", "0") == "1"
     default_dir = "converter_tree"
-    dir_path = (
+    dir_path = cwd if explicit_output_dir else (
         cwd
         if os.path.basename(os.path.normpath(cwd)) == default_dir
         else os.path.join(cwd, f"{default_dir}/")

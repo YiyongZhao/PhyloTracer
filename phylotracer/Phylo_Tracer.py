@@ -145,19 +145,19 @@ PhyloTree_CollapseExpand_parser = subparsers.add_parser('PhyloTree_CollapseExpan
 PhyloTree_CollapseExpand_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 PhyloTree_CollapseExpand_parser.add_argument('--support_value', metavar='INT', type=bounded_int(0, 100), default=50, help='Node support cutoff used for collapsing internal branches (default=50)')
 PhyloTree_CollapseExpand_parser.add_argument('--revert', action='store_true', help='If set, expand previously collapsed comb structures back to binary form, default = False')
-PhyloTree_CollapseExpand_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+PhyloTree_CollapseExpand_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # PhyloSupport_Scaler command
 PhyloSupport_Scaler_parser = subparsers.add_parser('PhyloSupport_Scaler', help='Rescale branch support values for all gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 100')
 PhyloSupport_Scaler_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 PhyloSupport_Scaler_parser.add_argument('--scale_to', metavar='1|100', choices=['1', '100'], required=True, help='Target support scale: "1" for [0,1], "100" for [0,100]')
-PhyloSupport_Scaler_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+PhyloSupport_Scaler_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # BranchLength_NumericConverter command
 BranchLength_NumericConverter_parser = subparsers.add_parser('BranchLength_NumericConverter', help='Standardize branch-length precision for all gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap')
 BranchLength_NumericConverter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 BranchLength_NumericConverter_parser.add_argument('--decimal_place', metavar='INT', type=bounded_int(0), default=10, help='Number of decimal places to keep for branch lengths, default = 10')
-BranchLength_NumericConverter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+BranchLength_NumericConverter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # Phylo_Rooter command
 Phylo_Rooter_parser = subparsers.add_parser('Phylo_Rooter', help='Root gene trees using species-tree guidance', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk')
@@ -165,7 +165,7 @@ Phylo_Rooter_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', re
 Phylo_Rooter_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 Phylo_Rooter_parser.add_argument('--weights',nargs=6,type=bounded_float(0.0, 1.0),metavar=('OD', 'BLV', 'GD', 'SO', 'GDC', 'RF'),default=[0.30, 0.10, 0.30, 0.10, 0.10, 0.10],help='Weights in fixed order: OD BLV GD SO GD_consistency RF; six values must sum to 1, default = 0.30 0.10 0.30 0.10 0.10 0.10',)
-Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 Phylo_Rooter_parser.add_argument(
     '--weight-strategy',
     metavar='STRATEGY',
@@ -174,9 +174,11 @@ Phylo_Rooter_parser.add_argument(
     dest='weight_strategy',
     help=(
         'Scoring weight strategy for candidate root selection. '
-        '"empirical": biologically-informed prior weights (default; robust for small candidate sets). '
-        '"entropy": Entropy Weight Method (EWM) -- data-driven, assigns higher weight to metrics '
-        'with greater discriminative power among candidates.'
+        '"empirical": biologically-informed prior weights from --weights; '
+        'recommended for small candidate sets (species < 10). '
+        '"entropy": Entropy Weight Method (EWM), data-driven. Use when species >= 10, '
+        'candidate roots are many/diverse, and you do not have reliable prior weights; '
+        'it is usually less suitable when candidate roots are very few or metrics are nearly identical.'
     ),
 )
 
@@ -196,7 +198,7 @@ OrthoFilter_LB_parser.add_argument('--rrbr_cutoff', metavar='FLOAT', type=bounde
 OrthoFilter_LB_parser.add_argument('--srbr_cutoff', metavar='FLOAT', type=bounded_float(0.0), default=2.5, required=True, help='SRBR cutoff based on sister-relative branch ratio, default = 2.5')
 OrthoFilter_LB_parser.add_argument('--lb_mode', choices=['or', 'and'], default='or', help='Long-branch decision mode: or=RRBR OR SRBR, and=RRBR AND SRBR, default = or')
 OrthoFilter_LB_parser.add_argument('--visual', action='store_true', help='If set, export before/after tree visualization PDFs, default = False')
-OrthoFilter_LB_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+OrthoFilter_LB_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # OrthoFilter_Mono command
 OrthoFilter_Mono_parser = subparsers.add_parser('OrthoFilter_Mono', help='Prune alien lineages inside dominant clades', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa Clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk')
@@ -207,14 +209,14 @@ OrthoFilter_Mono_parser.add_argument('--purity_cutoff', metavar='FLOAT', type=bo
 OrthoFilter_Mono_parser.add_argument('--max_remove_fraction', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0.5, help='Maximum fraction of tips allowed to be removed, default = 0.5')
 OrthoFilter_Mono_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 OrthoFilter_Mono_parser.add_argument('--visual', action='store_true', help='If set, export before/after pruning visualization PDFs, default = False')
-OrthoFilter_Mono_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+OrthoFilter_Mono_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # TreeTopology_Summarizer command
 TreeTopology_Summarizer_parser = subparsers.add_parser('TreeTopology_Summarizer', help='Summarize and rank gene-tree topologies', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap')
 TreeTopology_Summarizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 TreeTopology_Summarizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 TreeTopology_Summarizer_parser.add_argument('--visual_top', metavar='INT', type=bounded_int(1), required=False, default=10, help='Number of top-ranked topologies to visualize, default = 10')
-TreeTopology_Summarizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+TreeTopology_Summarizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # Tree_Visualizer command
 Tree_Visualizer_parser = subparsers.add_parser(
@@ -246,7 +248,7 @@ Tree_Visualizer_parser.add_argument('--subclade_support', metavar='INT', type=bo
 Tree_Visualizer_parser.add_argument('--dup_species_proportion', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0.2, help='Minimum overlap ratio of duplicated species between GD child clades used by --visual_gd (range: 0-1), default = 0.2')
 Tree_Visualizer_parser.add_argument('--dup_species_num', metavar='INT', type=bounded_int(1), default=2, help='Minimum number of overlapping duplicated species under a GD node used by --visual_gd, default = 2')
 Tree_Visualizer_parser.add_argument('--deepvar', metavar='INT', type=bounded_int(0), default=1, help='Maximum tolerated depth-variance score used by --visual_gd, default = 1')
-Tree_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+Tree_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # GD_Detector command
 GD_Detector_parser = subparsers.add_parser('GD_Detector', help='Detect gene-duplication events and classify GD types', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --deepvar 1')
@@ -259,18 +261,18 @@ GD_Detector_parser.add_argument('--dup_species_num', metavar='INT', type=bounded
 GD_Detector_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 GD_Detector_parser.add_argument('--deepvar', metavar='INT', type=bounded_int(0), required=True, default=1, help='Maximum tolerated depth-variance score for GD screening, default = 1')
 GD_Detector_parser.add_argument('--gdtype_mode', choices=['relaxed', 'strict'], default='relaxed', help='GD type mode: relaxed (species overlap only) or strict (overlap + depth constraint), default = relaxed')
-GD_Detector_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+GD_Detector_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 # GD_Visualizer command
 GD_Visualizer_parser = subparsers.add_parser(
     'GD_Visualizer',
     help='Visualize GD counts or GD-type summaries on a species tree',
     formatter_class=CustomHelpFormatter,
-    epilog='Example:\n  PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap'
+    epilog='Example:\n  PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap [--output gd_result_relaxed.pdf]'
 )
 GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format (use the numbered tree output from GD_Detector, e.g., numed_sptree.nwk)')
 GD_Visualizer_parser.add_argument('--gd_result', metavar='GD_RESULT', required=True, help='GD result table produced by GD_Detector')
 GD_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
-GD_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+GD_Visualizer_parser.add_argument('--output', metavar='PDF', default=None, help='Output PDF path, default = <gd_result_basename>.pdf')
 
 # GD_Loss_Tracker command
 GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='Track inferred post-GD loss paths across species tree branches', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
@@ -281,20 +283,20 @@ GD_Loss_Tracker_parser.add_argument('--target_species', metavar='SP', action='ap
 GD_Loss_Tracker_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.')
 GD_Loss_Tracker_parser.add_argument('--include_unobserved_species', action='store_true', help='Classification policy for species absent from the current gene family, default = False. If set, treat unobserved species as classifiable (2-2/2-1/2-0) based on left/right presence; if not set, label them as missing_data. This flag does not change loss_path copy-state values (0/1/2) or GD event detection.')
 GD_Loss_Tracker_parser.add_argument('--node_count_mode', choices=['nonaccumulate', 'accumulate'], default='nonaccumulate', help='Node counting mode for path_count_* transition statistics, default = nonaccumulate. nonaccumulate: within one GD event, repeated transitions on the same internal node are counted once; accumulate: keep all repeated transitions. This flag does not change the (0/1/2) copy-state numbers shown in loss_path.')
-GD_Loss_Tracker_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+GD_Loss_Tracker_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # GD_Loss_Visualizer command
-GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='Visualize GD-loss summary results on species tree topology', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_result gd_loss_summary.txt')
+GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='Visualize GD-loss summary results on species tree topology', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_result gd_loss_summary.txt [--output gd_loss_pie_visualizer.PDF]')
 GD_Loss_Visualizer_parser.add_argument('--gd_loss_result', metavar='GD_LOSS_RESULT', required=True, help='Detailed table generated by GD_Loss_Tracker (gd_loss_summary.txt)')
 GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format (required for species tree layout)')
-GD_Loss_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+GD_Loss_Visualizer_parser.add_argument('--output', metavar='PDF', default='gd_loss_pie_visualizer.PDF', help='Output PDF path, default = gd_loss_pie_visualizer.PDF')
 
 # Ortho_Retriever command
 Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Retrieve ortholog sets from rooted gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap')
 Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Ortho_Retriever_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
-Ortho_Retriever_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+Ortho_Retriever_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # Hybrid_Tracer
 Hybrid_Tracer_parser = subparsers.add_parser('Hybrid_Tracer', help='Prepare HYDE input from GD-supported candidate triplets', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
@@ -304,14 +306,14 @@ Hybrid_Tracer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', req
 Hybrid_Tracer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 Hybrid_Tracer_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used.')
 Hybrid_Tracer_parser.add_argument('--split_groups', type=bounded_int(1), required=False, default=1, help='Number of partitions for HYDE batch processing, default = 1')
-Hybrid_Tracer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+Hybrid_Tracer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # Hybrid_Visualizer
 Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Visualize HYDE hybridization signals', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk')
 Hybrid_Visualizer_parser.add_argument('--hyde_out', metavar='HYDE_OUT', required=True, help='HYDE output table file')
 Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Use node-mode heatmaps (monophyletic clade stacking) instead of leaf-mode output")
-Hybrid_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+Hybrid_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # HaploFinder
 haplofinder_parser = subparsers.add_parser('HaploFinder', help='Detect and visualize haplotype-level GD signals; also supports FASTA split mode', formatter_class=CustomHelpFormatter, epilog='Examples:\n  PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a arh --species_b ard --species_a_gff arh.gff --species_b_gff ard.gff --species_a_lens arh.lens --species_b_lens ard.lens\n  PhyloTracer HaploFinder --mode split --input_GF_list gf.txt --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps \"P1 P2\" --species_b_gff ard.gff')
@@ -335,7 +337,7 @@ haplofinder_parser.add_argument('--hyb_sps', metavar='HYBRID_SPECIES', type=str,
 haplofinder_parser.add_argument('--parental_sps', metavar='PARENTAL_SPECIES', type=str, required=False, help='Parental species names used for split-mode assignment; provide as a single quoted, space-separated string')
 haplofinder_parser.add_argument('--input_fasta', metavar='FASTA_FILE', required=False, help='Input FASTA file (.fa/.fasta), required in split mode')
 haplofinder_parser.add_argument('--cluster_file', metavar='CLUSTER_FILE', required=False, help='Split-mode cluster metadata file (legacy compatibility field; currently required by CLI checks)')
-haplofinder_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory (default: command-specific subfolder in current working directory)')
+haplofinder_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 haplofinder_parser.add_argument('--chrs_per_subgenome', metavar='INT', type=int, default=10, help='Number of chromosomes per subgenome for subgenome mapping (default = 10)')
 haplofinder_parser.add_argument('--gene_conv_ratio', metavar='NUM', type=float, default=2, help='Chromosome number ratio for gene conversion detection (default = 2)')
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
@@ -697,7 +699,7 @@ def handle_gd_visualizer(cli_args):
         start_time = time.time()
         sptree = read_tree(cli_args.input_sps_tree)
         taxa = read_and_return_dict(cli_args.input_imap)
-        gd_visualizer_main(sptree, cli_args.gd_result, taxa, output_dir=cli_args.output_dir)
+        gd_visualizer_main(sptree, cli_args.gd_result, taxa, output_file=cli_args.output)
         report_execution_time(start_time)
     else:
         logger.error("Required arguments for GD_Visualizer command are missing.")
@@ -750,7 +752,7 @@ def handle_gd_loss_visualizer(cli_args):
     if cli_args.input_sps_tree and cli_args.gd_loss_result:
         start_time = time.time()
         sptree = Tree(cli_args.input_sps_tree, format=1)
-        visualizer_sptree(cli_args.gd_loss_result, sptree, output_dir=cli_args.output_dir)
+        visualizer_sptree(cli_args.gd_loss_result, sptree, output_file=cli_args.output)
         report_execution_time(start_time)
     else:
         logger.error("Required arguments for GD_Loss_Visualizer command are missing.")
@@ -1043,7 +1045,9 @@ def main():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     args = _parser.parse_args()
+    output_dir_user_provided = bool(getattr(args, "output_dir", None))
     _normalize_input_paths(args)
+    os.environ["PHYLTR_OUTPUT_DIR_EXPLICIT"] = "1" if output_dir_user_provided else "0"
     handler = COMMAND_HANDLERS.get(args.command)
     if handler is None:
         print_cli_usage()
