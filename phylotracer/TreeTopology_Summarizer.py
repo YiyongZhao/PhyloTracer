@@ -412,7 +412,10 @@ def visualize_top_trees(
                 draw_w = src_w * scale
                 draw_h = src_h * scale
                 tx = item["x0"] + (cell_w - draw_w) / 2.0
-                ty = item["y0"] + (cell_h - draw_h) / 2.0
+                # page_items y0/y1 are defined in a top-origin layout.
+                # pypdf uses bottom-origin coordinates, so flip Y here to keep
+                # panel order consistent with PyMuPDF (top-left -> bottom-right).
+                ty = page_height - item["y0"] - draw_h - (cell_h - draw_h) / 2.0
                 transform = Transformation().scale(scale, scale).translate(tx=tx, ty=ty)
                 page.merge_transformed_page(src_page, transform)
         with open(output_pdf_path, "wb") as out_handle:
@@ -426,10 +429,15 @@ def visualize_top_trees(
         )
         return
 
-    sorted_trees = list(tree_count_dict.items())[:top_n]
+    # Enforce descending frequency order for visualization panels.
+    sorted_trees = sorted(
+        tree_count_dict.items(),
+        key=lambda item: (len(item[1]), item[0]),
+        reverse=True,
+    )[:top_n]
     temp_dir = tempfile.mkdtemp(prefix="temp_trees_")
     tree_panels_pdf = []
-    for i, (tree_str, count) in enumerate(sorted_trees):
+    for i, (tree_str, tree_group) in enumerate(sorted_trees):
         tree0 = read_tree(tree_str)
         tree = rename_input_tre(tree0, voucher2taxa_dic)
         tree.ladderize()
@@ -450,7 +458,7 @@ def visualize_top_trees(
         ts = TreeStyle()
         ts.show_leaf_name = False
         ts.layout_fn = _layout_fixed_leaf_font
-        ts.title.add_face(TextFace(f"Count: {len(count)}", fsize=8), column=1)
+        ts.title.add_face(TextFace(f"Topology {i} Gene trees: {len(tree_group)}", fsize=8), column=1)
         ts.show_scale = False
         # Keep branch-length geometry so ultrametric tip alignment is visible.
         ts.force_topology = False
