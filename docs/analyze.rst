@@ -120,6 +120,8 @@ Optional Parameters:
                                   automatically from the candidate distribution; assigns higher
                                   weight to metrics with greater variance among candidates.
                                   Recommended when many diverse candidates exist.
+                                Note: when ``empirical`` is used and ``--weights`` is not provided,
+                                the default weights are ``0.30 0.10 0.30 0.10 0.10 0.10``.
     - ``--output_dir``          Output directory (default: current working directory).
 
 Output:
@@ -134,8 +136,7 @@ Example:
         # Default (empirical weights)
         PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
 
-        # Custom empirical weights (OD=0.20 BLV=0.05 GD=0.40 SO=0.15 GDC=0.10 RF=0.10)
-        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weights 0.20 0.05 0.40 0.15 0.10 0.10
+        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weights 0.30 0.10 0.30 0.10 0.10 0.10
 
         # Entropy (data-driven) weighting
         PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weight-strategy entropy
