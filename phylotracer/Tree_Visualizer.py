@@ -738,8 +738,9 @@ def tips_mark(
             Starting aligned column index for category markers.
         """
         def _header_face(label: str) -> TextFace:
-            # Keep header left-aligned with the category labels below.
-            face = TextFace(str(label), fgcolor="black", ftype="Arial", fsize=9)
+            # Match the same visual left anchor used by label faces ("  ▐  <label>")
+            # so headers and labels start at the same horizontal position.
+            face = TextFace("    " + str(label), fgcolor="black", ftype="Arial", fsize=9)
             face.hz_align = 0
             face.margin_left = 0
             face.margin_right = 0

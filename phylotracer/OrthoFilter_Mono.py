@@ -580,46 +580,48 @@ def prune_all_clades(
     min_tips_per_clade: int = 1,
 ) -> object:
     t = Phylo_t.copy()
-    leaf_to_clade, leaf_to_voucher = build_leaf_annotations(
-        t, taxa_dic, new_named_gene2gene_dic
-    )
-
-    # Process only clades that are present in this tree and meet minimum size.
-    clade_counts = Counter(leaf_to_clade.values())
-    present_clades = [c for c, n in clade_counts.items() if n >= min_tips_per_clade]
-
     species_depths = compute_species_tree_depths(species_tree)
-    depth_cache = {}
-    gene_depths = compute_gene_tree_depths(t)
 
-    global_remove = set()
-
-    for target_clade in present_clades:
-        remove_set = prune_one_clade_in_tree(
-            t=t,
-            species_tree=species_tree,
-            leaf_to_clade=leaf_to_clade,
-            leaf_to_voucher=leaf_to_voucher,
-            new_named_gene2gene_dic=new_named_gene2gene_dic,
-            species_depths=species_depths,
-            depth_cache=depth_cache,
-            gene_depths=gene_depths,
-            target_clade=target_clade,
-            dominant_purity=dominant_purity,
-            final_purity=final_purity,
-            max_remove_fraction=max_remove_fraction,
-            log_handle=log_handle,
-            tre_ID=tre_ID,
+    # Iterative pruning: after each round, recompute dominant lineages and
+    # candidate scores on the updated tree until no additional tips are removed.
+    while True:
+        leaf_to_clade, leaf_to_voucher = build_leaf_annotations(
+            t, taxa_dic, new_named_gene2gene_dic
         )
-        global_remove.update(remove_set)
+        clade_counts = Counter(leaf_to_clade.values())
+        present_clades = [c for c, n in clade_counts.items() if n >= min_tips_per_clade]
+        depth_cache = {}
+        gene_depths = compute_gene_tree_depths(t)
 
-    if global_remove:
-        keep = set(t.get_leaf_names()) - global_remove
+        round_remove = set()
+        for target_clade in present_clades:
+            remove_set = prune_one_clade_in_tree(
+                t=t,
+                species_tree=species_tree,
+                leaf_to_clade=leaf_to_clade,
+                leaf_to_voucher=leaf_to_voucher,
+                new_named_gene2gene_dic=new_named_gene2gene_dic,
+                species_depths=species_depths,
+                depth_cache=depth_cache,
+                gene_depths=gene_depths,
+                target_clade=target_clade,
+                dominant_purity=dominant_purity,
+                final_purity=final_purity,
+                max_remove_fraction=max_remove_fraction,
+                log_handle=log_handle,
+                tre_ID=tre_ID,
+            )
+            round_remove.update(remove_set)
+
+        if not round_remove:
+            break
+
+        keep = set(t.get_leaf_names()) - round_remove
         if not keep:
             import logging
             logging.warning("All tips marked for removal; skipping prune to avoid ETE3 crash")
-        else:
-            t.prune(keep, preserve_branch_length=True)
+            break
+        t.prune(keep, preserve_branch_length=True)
 
     return t
 
