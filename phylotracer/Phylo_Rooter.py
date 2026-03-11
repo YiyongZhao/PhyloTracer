@@ -28,7 +28,7 @@ from phylotracer import (
     read_phylo_tree,
     rename_input_tre,
     root_tre_with_midpoint_outgroup,
-    write_tree_without_sci_notation,
+    serialize_tree_by_input_branch_length_style,
 )
 from phylotracer.MulRF_Distance import compute_mulrf
 from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
@@ -38,7 +38,13 @@ from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
 # --------------------------
 
 
-def rename_output_tre(tree: object, name_mapping: dict, tree_id: str, output_dir: str) -> None:
+def rename_output_tre(
+    tree: object,
+    name_mapping: dict,
+    tree_id: str,
+    output_dir: str,
+    source_tree_path: str = None,
+) -> None:
     """Rename tree nodes and save to Newick format.
 
     Args:
@@ -57,7 +63,11 @@ def rename_output_tre(tree: object, name_mapping: dict, tree_id: str, output_dir
     for node in tree.traverse():
         if node.name in name_mapping:
             node.name = name_mapping[node.name]
-    tree_str = write_tree_without_sci_notation(tree, fmt=0)
+    tree_str = serialize_tree_by_input_branch_length_style(
+        tree,
+        source_tree_path=source_tree_path,
+        fmt=0,
+    )
     write_tree_to_newick(tree_str, tree_id, output_dir)
     
 
@@ -742,7 +752,13 @@ def root_main(
 
             # 2. Handle simple cases
             if len(get_species_set(Phylo_t2)) == 1 or len(get_species_list(Phylo_t2)) <= 3:
-                rename_output_tre(Phylo_t2, new_name_to_gene, tree_id, dir_path)
+                rename_output_tre(
+                    Phylo_t2,
+                    new_name_to_gene,
+                    tree_id,
+                    dir_path,
+                    source_tree_path=tree_path,
+                )
                 pbar.update(1)
                 continue
 
@@ -782,7 +798,13 @@ def root_main(
 
             if not root_list:
                 logger.warning("No valid root candidates after basal filter.")
-                rename_output_tre(Phylo_t2, new_name_to_gene, tree_id, dir_path)
+                rename_output_tre(
+                    Phylo_t2,
+                    new_name_to_gene,
+                    tree_id,
+                    dir_path,
+                    source_tree_path=tree_path,
+                )
                 pbar.update(1)
                 continue
 
@@ -822,7 +844,13 @@ def root_main(
             best_tree_key = best_row["Tree"]
             best_tree = tree_objects[best_tree_key]
 
-            rename_output_tre(best_tree, new_name_to_gene, tree_id, dir_path)
+            rename_output_tre(
+                best_tree,
+                new_name_to_gene,
+                tree_id,
+                dir_path,
+                source_tree_path=tree_path,
+            )
 
             record = best_row.to_dict()
             del record["tree_obj_ref"]
