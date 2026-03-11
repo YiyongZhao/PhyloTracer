@@ -332,13 +332,15 @@ Optional parameter:
                                        species >= 10, candidate roots are many/diverse, and
                                        reliable prior weights are unavailable; usually avoid
                                        when candidate roots are very few or metrics are similar
+                            default = empirical
+                            note: when empirical is used and --weights is not provided,
+                                  default weights are 0.30 0.10 0.30 0.10 0.10 0.10
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
     # Default (empirical weights)
     PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
 
-    # Custom empirical weights (OD=0.20 BLV=0.05 GD=0.40 SO=0.15 GDC=0.10 RF=0.10)
-    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weights 0.20 0.05 0.40 0.15 0.10 0.10
+    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weights 0.30 0.10 0.30 0.10 0.10 0.10
 
     # Entropy (data-driven) weighting
     PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weight-strategy entropy
