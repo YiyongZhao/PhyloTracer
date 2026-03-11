@@ -568,6 +568,9 @@ def select_alien_tips_for_removal(
     )
 
     removal_set = set()
+    # When user requests full purification (final_purity >= 1), allow removing
+    # sister-lineage aliens as well; otherwise keep the existing sister protection.
+    protect_sister = final_purity < 1.0
     sorted_scores = sorted(scores, key=lambda x: x["combined_score"], reverse=True)
 
     def _current_purity() -> float:
@@ -577,7 +580,7 @@ def select_alien_tips_for_removal(
 
     # Pass 1: keep at least one tip for every non-target clade in the dominant lineage.
     for item in sorted_scores:
-        if item.get("is_protected_sister", False):
+        if protect_sister and item.get("is_protected_sister", False):
             continue
         if _current_purity() >= final_purity or len(removal_set) >= max_remove:
             break
@@ -595,14 +598,14 @@ def select_alien_tips_for_removal(
         ):
             continue
         if len(removal_set) + len(new_leaves) > max_remove:
-            break
+            continue
         removal_set.update(new_leaves)
 
     # Pass 2 (fallback): if purity target is still unmet, allow deleting the last alien tip
     # of a non-target clade (still respects protected-sister and max_remove constraints).
     if _current_purity() < final_purity and len(removal_set) < max_remove:
         for item in sorted_scores:
-            if item.get("is_protected_sister", False):
+            if protect_sister and item.get("is_protected_sister", False):
                 continue
             if _current_purity() >= final_purity or len(removal_set) >= max_remove:
                 break
@@ -612,7 +615,7 @@ def select_alien_tips_for_removal(
             if not new_leaves:
                 continue
             if len(removal_set) + len(new_leaves) > max_remove:
-                break
+                continue
             removal_set.update(new_leaves)
 
     return removal_set
