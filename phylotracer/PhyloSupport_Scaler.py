@@ -14,7 +14,11 @@ logger = logging.getLogger(__name__)
 from ete3 import Tree
 from tqdm import tqdm
 
-from phylotracer import read_and_return_dict, read_tree, write_tree_without_sci_notation
+from phylotracer import (
+    read_and_return_dict,
+    read_tree,
+    serialize_tree_by_input_branch_length_style,
+)
 from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
 
 # =========================
@@ -116,7 +120,11 @@ def support_scaler_main(tree_dict: dict, scale: str = "100") -> None:
             pbar.set_description(f"Processing {tree_id}")
             tree = read_tree(tree_path)
             scaled_tree = scale_support(tree, scale)
-            tree_str = write_tree_without_sci_notation(scaled_tree, fmt=0)
+            tree_str = serialize_tree_by_input_branch_length_style(
+                scaled_tree,
+                source_tree_path=tree_path,
+                fmt=0,
+            )
             write_tree_to_newick(tree_str, tree_id, dir_path)
         except Exception as exc:
             logger.error("Error processing %s: %s", tree_id, exc)

@@ -17,7 +17,7 @@ from phylotracer import (
     read_phylo_tree,
     rename_input_tre,
     root_tre_with_midpoint_outgroup,
-    write_tree_without_sci_notation,
+    serialize_tree_by_input_branch_length_style,
 )
 
 # ======================================================
@@ -487,7 +487,11 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, rename
                 tre_name = clade[0]
                 Phylo_t_OG_L = clade[1]
                 processed_lines.append(
-                    tre_name + "\t" + write_tree_without_sci_notation(Phylo_t_OG_L, fmt=0) + "\n"
+                    tre_name + "\t" + serialize_tree_by_input_branch_length_style(
+                        Phylo_t_OG_L,
+                        source_tree_path=tre_path,
+                        fmt=0,
+                    ) + "\n"
                 )
 
                 leaf_names = [leaf.name for leaf in Phylo_t_OG_L]

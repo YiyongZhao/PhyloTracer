@@ -11,9 +11,9 @@ import hashlib
 import os
 import random
 import shutil
+import re
 from typing import Dict, List, Optional, Set, Tuple
 
-import re
 import numpy as np
 import pandas as pd
 from ete3 import PhyloTree, Tree
@@ -51,7 +51,7 @@ __all__ = [
     "find_dup_node",
     "calculate_gd_num",
     "stable_color_for_label",
-    "write_tree_without_sci_notation",
+    "serialize_tree_by_input_branch_length_style",
 ]
 
 # Fixed qualitative palette for consistent colors across all plotting modules.
@@ -83,17 +83,95 @@ def stable_color_for_label(label: str) -> str:
     return _FIXED_COLOR_PALETTE[idx]
 
 
-def write_tree_without_sci_notation(tree: Tree, fmt: int = 0, precision: int = 15) -> str:
-    """Serialize an ete3 tree while avoiding scientific notation in branch lengths.
+def _input_tree_uses_scientific_notation(tree_path: str) -> bool:
+    """Detect whether branch lengths in an input Newick use scientific notation."""
+    try:
+        with open(tree_path, "r", encoding="utf-8") as handle:
+            raw = handle.read()
+    except OSError:
+        return False
+    # Only test branch-length tokens (numbers after ':').
+    return re.search(
+        r":[+-]?(?:\d+\.?\d*|\.\d+)[eE][+-]?\d+",
+        raw,
+    ) is not None
 
-    This function only changes output string formatting (e.g., 1e-06 -> 0.000001),
-    and does not change branch-length values used inside the tree object.
+
+def _infer_input_branch_length_format(
+    tree_path: str,
+    default_precision: int = 10,
+) -> Tuple[str, int]:
+    """Infer branch-length notation style and precision from input Newick."""
+    try:
+        with open(tree_path, "r", encoding="utf-8") as handle:
+            raw = handle.read()
+    except OSError:
+        return "decimal", default_precision
+
+    # Capture branch-length number tokens appearing after ':'.
+    num_tokens = re.findall(r":([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)", raw)
+    if not num_tokens:
+        return "decimal", default_precision
+
+    sci_tokens = [tok for tok in num_tokens if re.search(r"[eE]", tok)]
+    if sci_tokens:
+        mantissa_precisions = []
+        for tok in sci_tokens:
+            mantissa = re.split(r"[eE]", tok, maxsplit=1)[0]
+            if "." in mantissa:
+                mantissa_precisions.append(len(mantissa.split(".", 1)[1]))
+            else:
+                mantissa_precisions.append(0)
+        return "scientific", max(mantissa_precisions) if mantissa_precisions else default_precision
+
+    decimal_precisions = []
+    for tok in num_tokens:
+        if "." in tok:
+            decimal_precisions.append(len(tok.split(".", 1)[1]))
+        else:
+            decimal_precisions.append(0)
+    return "decimal", max(decimal_precisions) if decimal_precisions else default_precision
+
+
+def serialize_tree_by_input_branch_length_style(
+    tree: Tree,
+    source_tree_path: Optional[str] = None,
+    fmt: int = 0,
+    precision: int = 15,
+) -> str:
+    """Serialize tree while preserving branch-length notation style from input.
+
+    Rule:
+    - decimal input -> decimal output with input-matched precision
+    - scientific input -> scientific output with input-matched precision
     """
-    def _dist_formatter(value: float) -> str:
-        out = f"{float(value):.{precision}f}".rstrip("0").rstrip(".")
-        return out if out else "0"
+    if not source_tree_path:
+        return tree.write(format=fmt)
 
-    return tree.write(format=fmt, dist_formatter=_dist_formatter)
+    style, inferred_precision = _infer_input_branch_length_format(
+        source_tree_path,
+        default_precision=precision,
+    )
+    target_precision = inferred_precision if inferred_precision >= 0 else precision
+    dist_formatter = f"%.{target_precision}{'e' if style == 'scientific' else 'f'}"
+
+    # Prefer ete's formatter to preserve exact decimal/scientific precision.
+    try:
+        return tree.write(format=fmt, dist_formatter=dist_formatter)
+    except Exception:
+        # Fallback path if formatter is unsupported for a specific tree instance.
+        tree_str = tree.write(format=fmt)
+        token_pat = re.compile(r":([+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)")
+
+        def _fmt_token(match: re.Match) -> str:
+            value = float(match.group(1))
+            if style == "scientific":
+                formatted = f"{value:.{target_precision}e}"
+            else:
+                formatted = f"{value:.{target_precision}f}"
+            return f":{formatted}"
+
+        return token_pat.sub(_fmt_token, tree_str)
 
 # =========================
 # I/O & Mapping Utilities
