@@ -563,51 +563,10 @@ def _minmax_norm(s: pd.Series, cost: bool) -> pd.Series:
     return (1.0 - normed) if cost else normed
 
 
-def compute_entropy_weights(df_normed: pd.DataFrame) -> dict:
-    """Entropy Weight Method (EWM): data-driven objective weighting.
-
-    Assigns higher weight to metrics that vary more among candidates
-    (i.e., provide more discriminative information).
-
-    Algorithm (Entropy Weight Method):
-      1. P_ij = X_ij / sum_i(X_ij)        -- proportion of candidate i in metric j
-      2. E_j  = -1/ln(m) * sum_i(P_ij*ln(P_ij+eps))  -- entropy of metric j
-      3. D_j  = 1 - E_j                    -- information utility
-      4. W_j  = D_j / sum(D_j)             -- normalized weight
-
-    Args:
-        df_normed (pd.DataFrame): Normalized values in [0, 1], all higher = better.
-
-    Returns:
-        dict: {column_name: weight}, weights sum to 1.
-    """
-    m, n_cols = df_normed.shape
-    cols = list(df_normed.columns)
-    if m < 2:
-        return {c: 1.0 / n_cols for c in cols}
-
-    eps = 1e-10
-    D = {}
-    for col in cols:
-        col_sum = df_normed[col].sum()
-        if col_sum < eps:
-            D[col] = 0.0
-            continue
-        P = df_normed[col] / col_sum
-        E = -(1.0 / np.log(m)) * (P * np.log(P + eps)).sum()
-        D[col] = max(0.0, 1.0 - E)
-
-    total_D = sum(D.values())
-    if total_D < eps:
-        return {c: 1.0 / n_cols for c in cols}
-    return {c: d / total_D for c, d in D.items()}
-
-
 def normalize_and_score(
     df: pd.DataFrame,
     weights: dict,
     include_rf: bool = True,
-    weight_strategy: str = "empirical",
 ) -> pd.Series:
     """Direction-aware min-max normalization and weighted composite scoring.
 
@@ -628,11 +587,7 @@ def normalize_and_score(
             ``deep``, ``var``, ``GD``, ``species_overlap``, ``gd_consistency``,
             and optionally ``RF``.
         weights (dict): Prior-knowledge weights keyed by column name.
-            Used when ``weight_strategy="empirical"``.
         include_rf (bool): Whether to include the RF column in scoring.
-        weight_strategy (str): ``"empirical"`` uses the supplied ``weights``;
-            ``"entropy"`` ignores ``weights`` and applies EWM to derive
-            data-driven weights from the normalized metrics.
 
     Returns:
         pd.Series: Combined score per candidate. **Higher is better.**
@@ -651,18 +606,15 @@ def normalize_and_score(
             continue
         normed[col] = _minmax_norm(df[col], cost=(col in COST_COLS))
 
-    if weight_strategy == "entropy":
-        w = compute_entropy_weights(normed)
+    # Re-normalize empirical weights to only the active (present) columns so
+    # that dropping RF (include_rf=False) does not deflate the total score.
+    raw_w = {c: weights.get(c, 0.0) for c in normed.columns}
+    w_sum = sum(raw_w.values())
+    if w_sum > 0:
+        w = {c: v / w_sum for c, v in raw_w.items()}
     else:
-        # Re-normalize empirical weights to only the active (present) columns so
-        # that dropping RF (include_rf=False) does not deflate the total score.
-        raw_w = {c: weights.get(c, 0.0) for c in normed.columns}
-        w_sum = sum(raw_w.values())
-        if w_sum > 0:
-            w = {c: v / w_sum for c, v in raw_w.items()}
-        else:
-            n = len(normed.columns)
-            w = {c: 1.0 / n for c in normed.columns}
+        n = len(normed.columns)
+        w = {c: 1.0 / n for c in normed.columns}
 
     score = pd.Series(0.0, index=df.index)
     for col in normed.columns:
@@ -680,7 +632,6 @@ def root_main(
     new_name_to_gene: dict,
     renamed_species_tree: object,
     stage1_weights: dict = None,
-    weight_strategy: str = "empirical",
 ) -> None:
     """Root gene trees and select optimal candidates using staged scoring.
 
@@ -691,10 +642,6 @@ def root_main(
         renamed_species_tree (object): Species tree with renamed taxa.
         stage1_weights (dict, optional): Prior-knowledge weights for
             deep/var/GD/species_overlap/gd_consistency/RF.
-            Used when ``weight_strategy="empirical"``.
-        weight_strategy (str): ``"empirical"`` (default) or ``"entropy"``.
-            ``"entropy"`` applies the Entropy Weight Method to derive
-            data-driven weights from the candidate distribution.
 
     Returns:
         None
@@ -834,7 +781,7 @@ def root_main(
                 # print(rename_input_tre(tree, new_name_to_gene))
                 # print(deep, var, GD, species_overlap, gd_consistency, RF)
             current_df = pd.DataFrame(temp_stats)
-            current_df["score"] = normalize_and_score(current_df, stage1_weights, include_rf=True, weight_strategy=weight_strategy)
+            current_df["score"] = normalize_and_score(current_df, stage1_weights, include_rf=True)
             best_row = current_df.nlargest(1, "score").iloc[0]
 
             # ==========================================

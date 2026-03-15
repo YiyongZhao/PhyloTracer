@@ -85,7 +85,7 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
 ## Features
 
 - Rooting (via `Phylo_Rooter`):  
-  Automatically evaluates multiple rooting candidates and selects the most plausible root using a six-metric composite score (OD, BLV, GD, SO, GDC, MulRF) with direction-aware min-max normalization. Supports empirical or entropy (EWM) weight strategies.
+  Automatically evaluates multiple rooting candidates and selects the most plausible root using a six-metric composite score (OD, BLV, GD, SO, GDC, MulRF) with direction-aware min-max normalization and user-defined fixed weights.
 
 - Topology statistics (via `TreeTopology_Summarizer`):  
   Computes absolute and relative topology frequencies for single-copy gene trees, with optional grouped summarization by user-defined clade labels.
@@ -303,12 +303,7 @@ $$
 
 where $\widetilde{m} \in [0,1]$ is the direction-corrected normalized value of metric $m$ (higher is always better), and $w_m$ is the weight for that metric. The candidate with the **highest** composite score is selected as the optimal root.
 
-**4. Weight strategies (`--weight-strategy`)**
-
-- `empirical` (default): biologically-informed prior weights from `--weights`; recommended for small candidate sets (species < 10).
-- `entropy`: Entropy Weight Method (EWM), data-driven. Use when species >= 10, candidate roots are many/diverse, and you do not have reliable prior weights. Usually not suitable when candidate roots are very few or metric values are nearly identical.
-
-**5. Final root selection**
+**4. Final root selection**
 
 - The candidate with the **highest** composite score is selected as the optimal root.
 
@@ -316,34 +311,20 @@ where $\widetilde{m} \in [0,1]$ is the direction-corrected normalized value of m
 ```
 Description:
     Roots gene trees using a six-metric composite scoring framework (OD, BLV, GD, SO, GDC, MulRF)
-    guided by the species tree. Supports empirical (prior) or entropy (data-driven) weight strategies.
+    guided by the species tree.
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
     --weights               Weights in fixed order: OD BLV GD SO GD_consistency RF; input exactly six
-                            floats with sum = 1; used when --weight-strategy empirical
+                            floats with sum = 1
                             default = 0.30 0.10 0.30 0.10 0.10 0.10
-    --weight-strategy       Scoring weight strategy: empirical (default) or entropy
-                            empirical: biologically-informed prior weights from --weights;
-                                       recommended for small candidate sets (species < 10)
-                            entropy:   Entropy Weight Method (EWM), data-driven. Use when
-                                       species >= 10, candidate roots are many/diverse, and
-                                       reliable prior weights are unavailable; usually avoid
-                                       when candidate roots are very few or metrics are similar
-                            default = empirical
-                            note: when empirical is used and --weights is not provided,
-                                  default weights are 0.30 0.10 0.30 0.10 0.10 0.10
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
-    # Default (empirical weights)
     PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
 
     PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weights 0.30 0.10 0.30 0.10 0.10 0.10
-
-    # Entropy (data-driven) weighting
-    PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weight-strategy entropy
 ```
 ### MulRF_Distance
 ```

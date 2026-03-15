@@ -166,21 +166,6 @@ Phylo_Rooter_parser.add_argument('--input_imap', metavar='IMAP', required=True, 
 Phylo_Rooter_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 Phylo_Rooter_parser.add_argument('--weights',nargs=6,type=bounded_float(0.0, 1.0),metavar=('OD', 'BLV', 'GD', 'SO', 'GDC', 'RF'),default=[0.30, 0.10, 0.30, 0.10, 0.10, 0.10],help='Weights in fixed order: OD BLV GD SO GD_consistency RF; six values must sum to 1, default = 0.30 0.10 0.30 0.10 0.10 0.10',)
 Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
-Phylo_Rooter_parser.add_argument(
-    '--weight-strategy',
-    metavar='STRATEGY',
-    choices=['empirical', 'entropy'],
-    default='empirical',
-    dest='weight_strategy',
-    help=(
-        'Scoring weight strategy for candidate root selection. '
-        '"empirical": biologically-informed prior weights from --weights; '
-        'recommended for small candidate sets (species < 10). '
-        '"entropy": Entropy Weight Method (EWM), data-driven. Use when species >= 10, '
-        'candidate roots are many/diverse, and you do not have reliable prior weights; '
-        'it is usually less suitable when candidate roots are very few or metrics are nearly identical.'
-    ),
-)
 
 # MulRF_Distance command
 MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute copy-aware MulRF conflict in mode1 (gene-gene) or mode2 (gene-species)', formatter_class=CustomHelpFormatter, epilog='Examples:\n  PhyloTracer MulRF_Distance --mode 1 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--output mulrf_mode1.tsv]\n  PhyloTracer MulRF_Distance --mode 2 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--output mulrf_mode2.tsv]')
@@ -405,21 +390,7 @@ def handle_phylo_rooter(cli_args):
             logger.error("Phylo_Rooter: --weights requires exactly 6 values (OD BLV GD SO GD_consistency RF).")
             return
         weight_sum = sum(cli_args.weights)
-        if cli_args.weight_strategy == "entropy":
-            if abs(weight_sum - 1.0) > 1e-6:
-                logger.warning(
-                    "Phylo_Rooter: --weight-strategy entropy is active; "
-                    "--weights values will be ignored (current sum = %.6f). "
-                    "Weights will be derived automatically from the candidate distribution.",
-                    weight_sum,
-                )
-            else:
-                logger.warning(
-                    "Phylo_Rooter: --weight-strategy entropy is active; "
-                    "the supplied --weights will be ignored. "
-                    "Weights will be derived automatically from the candidate distribution."
-                )
-        elif abs(weight_sum - 1.0) > 1e-6:
+        if abs(weight_sum - 1.0) > 1e-6:
             logger.error(
                 "Phylo_Rooter: --weights must sum to 1. Current sum = %.6f. Input order: OD BLV GD SO GD_consistency RF.",
                 weight_sum,
@@ -443,7 +414,6 @@ def handle_phylo_rooter(cli_args):
             new_named_gene2gene_dic,
             renamed_sptree,
             stage1_weights=stage1_weights,
-            weight_strategy=cli_args.weight_strategy,
         )
         report_execution_time(start_time)
     else:
