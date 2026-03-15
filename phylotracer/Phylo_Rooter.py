@@ -819,7 +819,6 @@ def root_main(
                 tree.resolve_polytomy(recursive=True)
                 tree_key = f"{tree_id}_{n+1}"
                 tree_objects[tree_key] = tree
-
                 deep, var, GD, species_overlap, gd_consistency, RF = calculate_tree_statistics(
                     tree=tree,
                     species_tree=renamed_species_tree,
