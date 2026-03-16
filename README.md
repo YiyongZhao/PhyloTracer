@@ -74,7 +74,7 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
 11. **GD_Visualizer:** Displays detected duplication nodes in a species tree context.
 12. **GD_Loss_Tracker:** Tracks duplication-loss patterns following major GD bursts across species tree nodes.
 13. **GD_Loss_Visualizer:** Visualizes node/tip-specific gene loss summaries.
-14. **Ortho_Retriever:** Extracts putative single-copy orthologs by recursively splitting paralogous clades.
+14. **Ortho_Retriever:** Extracts putative phylogenetic supported single-copy orthologs by recursively splitting paralogous clades from gene trees.
 15. **Hybrid_Tracer:** Detects hybridization signals from duplicated genes using coalescent-based phylogenetic invariants.
 16. **Hybrid_Visualizer:** Highlights hybridization proportions (γ) and support values across the species tree.
 17. **HaploFinder:** Identifies ancient recombination (conversion/crossover) events by tracing subgenome haplotypes.
