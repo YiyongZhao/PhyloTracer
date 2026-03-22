@@ -1,25 +1,25 @@
 <div align="center">
-
-# <img src="logo/PhyloTracer_logo.png" width="80" height="80" align="center"> PhyloTracer </div>
+  
+# <img src="logo/PhyloTracer_logo.png" width="80" height="80" align="center"> PhyloTracer </div> 
 
 ```
 ###############################################################################################
-
- ██████╗ ██╗  ██╗██╗   ██╗██╗      ██████╗ ████████╗██████╗  █████╗  ██████╗███████╗██████╗
- ██╔══██╗██║  ██║╚██╗ ██╔╝██║     ██╔═══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗
- ██████╔╝███████║ ╚████╔╝ ██║     ██║   ██║   ██║   ██████╔╝███████║██║     █████╗  ██████╔╝
- ██╔═══╝ ██╔══██║  ╚██╔╝  ██║     ██║   ██║   ██║   ██╔══██╗██╔══██║██║     ██╔══╝  ██╔══██╗
- ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║
- ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝
-
+                                                                                             
+ ██████╗ ██╗  ██╗██╗   ██╗██╗      ██████╗ ████████╗██████╗  █████╗  ██████╗███████╗██████╗  
+ ██╔══██╗██║  ██║╚██╗ ██╔╝██║     ██╔═══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔══██╗ 
+ ██████╔╝███████║ ╚████╔╝ ██║     ██║   ██║   ██║   ██████╔╝███████║██║     █████╗  ██████╔╝ 
+ ██╔═══╝ ██╔══██║  ╚██╔╝  ██║     ██║   ██║   ██║   ██╔══██╗██╔══██║██║     ██╔══╝  ██╔══██╗ 
+ ██║     ██║  ██║   ██║   ███████╗╚██████╔╝   ██║   ██║  ██║██║  ██║╚██████╗███████╗██║  ██║ 
+ ╚═╝     ╚═╝  ╚═╝   ╚═╝   ╚══════╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚══════╝╚═╝  ╚═╝                             
+                                                                                             
    PhyloTracer: A Versatile Toolkit for Comparative Genomics and Phylogenomics Analysis.
-
-    Pypi: https://pypi.org/project/PhyloTracer
-    Github: https://github.com/YiyongZhao/PhyloTracer
-    License: MIT license
-    Release Date: 2023-7
+                                                                                             
+    Pypi: https://pypi.org/project/PhyloTracer                                               
+    Github: https://github.com/YiyongZhao/PhyloTracer                                        
+    License: MIT license                                                                     
+    Release Date: 2023-7                                                                     
     Contacts: Tao Li(l948777439@gmail.com); Yiyong Zhao(yiyong.zhao@yale.edu)
-
+                                                                         
 ###############################################################################################
 ```
 ![Version](https://img.shields.io/badge/Version-1.0.3-blue)
@@ -32,7 +32,7 @@
 ---
 # PhyloTracer
 
-An integrated phylogenomics toolkit for multi-criterion gene tree rooting, GD event detection and type classification, lineage-specific gene loss tracking, hybridization signal screening, and subgenome-aware ortholog splitting, with utilities for tree preprocessing, quality control, and publication-ready visualization.
+An integrated phylogenomics toolkit designed for comprehensive post–gene-tree analysis, addressing systematic detection, quantification, and visualization of gene duplication, loss, hybridization, and subgenome fractionation signals from large-scale gene tree collections.
 
 ---
 ## What does PhyloTracer do?
@@ -61,23 +61,23 @@ All 17 modules share a consistent data model (gene-to-species mapping, Newick tr
 
 PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, rooting, orthology refinement, duplication/loss detection, and hybridization analysis. Each module can run independently or be incorporated into larger evolutionary pipelines.
 
-1. **Phylo_Rooter:** Roots gene trees using a multi-criterion composite scoring framework. Four candidate-generation strategies (outgroup-based, GD-node-based, MAD, MinVar) are evaluated against six metrics (OD, BLV, GD, SO, GDC, MulRF) with direction-aware min-max normalization and user-configurable weights, selecting the highest-scoring candidate as the optimal root.
-2. **MulRF_Distance:** Computes species-level Robinson-Foulds topological conflict distances by projecting multi-copy gene trees onto species-level bipartitions. Supports pairwise gene-tree comparisons (mode 1) and gene-tree vs. species-tree comparisons (mode 2) for quantifying discordance across gene families.
-3. **PhyloTree_CollapseExpand:** Collapses weakly supported internal branches into polytomies based on a user-defined support threshold, and optionally re-expands collapsed topologies back to binary form for sensitivity analyses.
-4. **PhyloSupport_Scaler:** Rescales branch support values (bootstrap or posterior probability) between [0, 1] and [0, 100] ranges for cross-tool computational compatibility.
+1. **Phylo_Rooter:** Automatically finds the best root for each gene tree. Generates candidates from four strategies (outgroup-based, GD-node-based, MAD, MinVar) and scores them with six complementary metrics—covering outgroup position, branch-length balance, duplication parsimony, species overlap, GD consistency, and topological concordance—then selects the top-ranked root.
+2. **MulRF_Distance:** Measures how much a gene tree's topology conflicts with the species tree (or another gene tree). Works with both single-copy and multi-copy gene families by comparing at the species level rather than the gene level.
+3. **PhyloTree_CollapseExpand:** Transforms a phylogenetic tree into a “comb-like” structure based on a predefined support value threshold. It can also revert this `comb` structure to a fully resolved binary tree, allowing dynamic topology adjustments.
+4. **PhyloSupport_Scaler:** Recalibrates branch support values (bootstrap or posterior probability) to standardized scales ([0–1] or [1–100]) for consistent computational compatibility.
 5. **BranchLength_NumericConverter:** Standardizes branch-length representation to user-defined decimal precision while preserving the original notation style (decimal or scientific).
-6. **OrthoFilter_LB:** Prunes long-branch artifacts from gene family trees using two complementary metrics-Root Relative Branch Ratio (RRBR, global deviation) and Sister Relative Branch Ratio (SRBR, local asymmetry)-with configurable AND/OR decision logic and optional before/after visualization.
-7. **OrthoFilter_Mono:** Iteratively removes non-monophyletic outliers and paralogs using a composite ranking score integrating dominant-lineage purity, phylogenetic distance, alien coverage, and depth-variation, with configurable purity targets and removal caps.
-8. **TreeTopology_Summarizer:** Enumerates and visualizes absolute and relative topology frequencies across single-copy gene trees, with optional clade-level grouping and merged vector PDF output.
-9. **Tree_Visualizer:** Renders gene trees with multi-category tip annotations (family, order, clade), optional expression heatmap overlays, and GD-node markers; maps family-level duplication counts onto species trees. Supports rectangular and circular layouts with deterministic, label-stable coloring across all output PDFs.
-10. **GD_Detector:** Identifies gene duplication events via species-overlap reconciliation and classifies each event into evolutionary models (AABB, AXBB, AABX, Complex) based on species-set partitioning between child clades, with both relaxed and strict (depth-consistency-enforced) modes.
-11. **GD_Visualizer:** Projects detected GD events and their type distributions onto the species tree for intuitive display of duplication patterns across lineages.
-12. **GD_Loss_Tracker:** Traces post-duplication gene retention along the species tree, classifying each species at each GD node as 2→2 (both copies retained), 2→1 (one copy lost), or 2→0 (both lost). Supports target-species filtering, MRCA-restricted analyses, and configurable node-counting modes, with Excel multi-sheet report output.
+6. **OrthoFilter_LB:** Removes abnormally long branches that may cause phylogenetic artifacts (e.g., long-branch attraction). Each tip is evaluated by two ratios: one measuring deviation from the tree-wide average (RRBR), the other measuring asymmetry relative to its sister lineage (SRBR). Users can require both or either to exceed the cutoff before removal.
+7. **OrthoFilter_Mono:** Iteratively removes tips that break expected monophyly (e.g., a Brassicaceae gene nested inside Fabaceae). Candidates are ranked by how distant, how deeply inserted, and how isolated they are relative to the dominant lineage, and pruning stops once the target purity or removal cap is reached.
+8. **TreeTopology_Summarizer:** Summarizes frequencies of absolute and relative topologies across gene trees or predefined clades. Visualization outputs are vector PDFs: each topology panel is rendered at A4 width and merged in a single-column, top-to-bottom layout (no PNG rasterization).
+9. **Tree_Visualizer:** Visualizes duplication events, node labels, and gene-associated numeric profiles on gene and species trees. Tree figures are exported as vector PDFs. Category colors are assigned consistently by label across output files.
+10. **GD_Detector:** Identifies gene duplication events by reconciling gene trees with the species tree. Each duplication is further classified into a retention model—AABB (both child lineages retain genes from both sides of the species tree), AXBB/AABX (asymmetric loss on one side), or Complex—providing insight into post-duplication evolutionary fate. Supports relaxed and strict detection modes.
+11. **GD_Visualizer:** Displays detected duplication nodes in a species tree context.
+12. **GD_Loss_Tracker:** Traces what happened to duplicated gene copies across species: for each duplication event, every species is classified as retaining both copies (2→2), losing one (2→1), or losing both (2→0). Results can be filtered by target species or restricted to specific ancestral nodes, and are exported as detailed Excel reports.
 13. **GD_Loss_Visualizer:** Renders pie charts of copy-state distributions (2-2/2-1/2-0) at each species tree node for visual identification of lineage-specific gene loss patterns.
-14. **Ortho_Retriever:** Extracts phylogenetically supported single-copy orthologs by recursively splitting paralogous clades from gene family trees, using gene length as a selection criterion when paralogs co-occur within a species.
-15. **Hybrid_Tracer:** Detects hybridization signals by extracting GD-derived gene sets, constructing concatenated alignments partitioned by duplication node, and running HyDe (D-statistic / phylogenetic invariants) in node-focused or genome-wide mode, with optional MRCA restriction and batch processing.
-16. **Hybrid_Visualizer:** Displays admixture proportions (γ) and D-statistic support values on the species tree in leaf-mode or node-mode (monophyletic clade stacking) heatmaps.
-17. **HaploFinder:** In haplofinder mode, overlays GD-derived gene pairs onto chromosomal synteny dotplots to detect ancient gene conversion and crossover events between homeologous chromosomes. In split mode, partitions multi-copy gene families into subgenome-specific ortholog FASTA files based on phylogenetic labeling.
+14. **Ortho_Retriever:** Infers single-copy putative orthologs by recursively splitting paralogous clades from large-scale gene family trees. Uses gene length as a selection criterion when paralogs co-occur within a species.
+15. **Hybrid_Tracer:** Screens for hybridization (introgression) signals using genes derived from detected duplication events. For each duplication node, relevant sequences are extracted and tested with HyDe's D-statistic to distinguish incomplete lineage sorting from true hybridization. Supports node-focused or genome-wide analysis with batch processing.
+16. **Hybrid_Visualizer:** Displays admixture proportions (γ) and D-statistic support values on the species tree in leaf-mode or node-mode heatmaps.
+17. **HaploFinder:** In haplofinder mode, maps duplicated gene pairs onto chromosome-level dotplots to identify regions of ancient gene conversion and crossover between subgenomes. In split mode, assigns multi-copy genes to their respective subgenomes (A vs. B) and outputs separate FASTA files for downstream analysis of polyploid genome evolution.
 
 *Together, these modules provide a comprehensive workflow for constructing, refining, and interpreting large-scale phylogenomic data.*
 
@@ -169,7 +169,7 @@ export QT_QPA_PLATFORM=offscreen
 ---
 ## Installation
 
-> **Important: Python 3.13 is NOT supported.** PhyloTracer depends on `ete3`, which uses the `cgi` module that was removed in Python 3.13. Please use **Python 3.8-3.12**. We recommend creating a dedicated conda environment:
+> **Important: Python 3.13 is NOT supported.** PhyloTracer depends on `ete3`, which uses the `cgi` module that was removed in Python 3.13. Please use **Python 3.8–3.12**. We recommend creating a dedicated conda environment:
 > ```bash
 > conda create -n phylotracer python=3.12 -y
 > conda activate phylotracer
@@ -180,7 +180,7 @@ export QT_QPA_PLATFORM=offscreen
 
 ### Required dependencies:
 
-* Python 3.8-3.12 (Python 3.13+ is not supported due to ete3 dependency)
+* Python 3.8–3.12 (Python 3.13+ is not supported due to ete3 dependency)
 * Core modules used by PhyloTracer:
   * ete3
   * numpy
@@ -194,7 +194,7 @@ export QT_QPA_PLATFORM=offscreen
   * pillow
   * pyqt5 (for visualization modules)
   * phyde>=1.0.2 (HyDe Python interface)
-
+    
 Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](https://etetoolkit.org/) and detects species hybridization signals using ABBA-BABA test by [HyDe](https://github.com/pblischak/HyDe).
 
 ---
@@ -203,8 +203,8 @@ The following input file should have two columns and be separated by a tab key.
 ```
 Provide a two-column file in TSV format: each line contains <gene_family_IDs><TAB><file_paths>
 ------------GF_ID2path.imap-------------------------------------------------------------------------------------------------------
-OG_104001  example_data/Phylo_Rooter/OG_104001.treefile
-OG_104002  example_data/Phylo_Rooter/OG_104002.treefile
+OG_104001  example_data/Phylo_Rooter/OG_104001.treefile   
+OG_104002  example_data/Phylo_Rooter/OG_104002.treefile    
 OG_104003  example_data/Phylo_Rooter/OG_104003.treefile
 
 Provide a two-column file in TSV format: each line contains <gene_id><TAB><sequence_length>
@@ -477,8 +477,8 @@ $$
 
 **Where:**
 
-- $N_{\text{target}}$ = number of target taxa tips
-- $N_{\text{dominant tips}}$ = total tips in dominant lineage
+- $N_{\text{target}}$ = number of target taxa tips  
+- $N_{\text{dominant tips}}$ = total tips in dominant lineage 
 
 **2. Phylogenetic Distance Score**
 
@@ -515,7 +515,7 @@ $$
 **Concept:** Candidates are ranked by a multiplicative score using normalized components.
 
 * **Formula:**
-
+  
 $$
 \text{Combined}=\text{Norm}(\text{PhyloDist})\times\text{Norm}(\text{AlienDepth})\times\left(-\log_{10}\left(\text{AlienCov} + 10^{-4}\right)\right)
 $$
@@ -523,9 +523,9 @@ $$
 **6. Removal Stopping Rules**
 
 **Concept:** The iterative pruning stops as soon as the dominant-lineage purity reaches `purity_cutoff`, or when the removal cap `max_remove` is reached (including cases where removing the next candidate would exceed the cap).
-
+ 
 * **Formula:**
-
+  
 $$
 \text{max remove}=\max\left(\text{max remove fraction}\times\text{N}\_{\text{dominant tips}},1\right)
 $$
