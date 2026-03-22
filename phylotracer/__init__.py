@@ -215,9 +215,8 @@ def read_and_return_dict(filename: str, separator: str = "\t") -> Dict[str, str]
             )
         return df.set_index(0)[1].to_dict()
     except Exception as exc:
-        logging.error(f"Failed to parse mapping file {filename}: {exc}")
+        logging.error("Failed to parse mapping file %s: %s", filename, exc)
         raise
-
 
 
 def generate_sps_voucher(sps_num: int) -> List[str]:
@@ -244,7 +243,6 @@ def generate_sps_voucher(sps_num: int) -> List[str]:
         vouchers.add("".join(random.sample(characters, 3)))
 
     return sorted(vouchers)
-
 
 
 def gene_id_transfer(
@@ -287,7 +285,6 @@ def gene_id_transfer(
     new2gene = {v: k for k, v in gene2new.items()}
 
     return gene2new, new2gene, voucher2taxa, taxa2voucher
-
 
 
 def rename_input_tre(tree: Tree, gene2new: Dict[str, str]) -> Tree:
@@ -333,7 +330,6 @@ def read_tree(tree_path: str) -> Tree:
         return Tree(tree_path, format=1)
 
 
-
 def read_phylo_tree(tree_path: str) -> PhyloTree:
     """Read a Newick tree as an ete3.PhyloTree, with format fallback.
 
@@ -355,9 +351,8 @@ def read_phylo_tree(tree_path: str) -> PhyloTree:
         try:
             return PhyloTree(tree_path, format=1)
         except Exception as exc:
-            logging.error(f"Failed to read tree: {tree_path}")
+            logging.error("Failed to read tree: %s", tree_path)
             raise exc
-
 
 
 def is_rooted(tree: Tree) -> bool:
@@ -373,7 +368,6 @@ def is_rooted(tree: Tree) -> bool:
         Binary root structure is used as the criterion for rootedness.
     """
     return len(tree.get_children()) == 2
-
 
 
 def root_tre_with_midpoint_outgroup(tree: Tree) -> Tree:
@@ -402,7 +396,7 @@ def root_tre_with_midpoint_outgroup(tree: Tree) -> Tree:
         mid = tree_copy.get_midpoint_outgroup()
         tree_copy.set_outgroup(mid if not mid.is_root() else leaves[0])
     except Exception as exc:
-        logging.warning(f"Midpoint rooting failed ({exc}); using first leaf")
+        logging.warning("Midpoint rooting failed (%s); using first leaf", exc)
         tree_copy.set_outgroup(leaves[0])
 
     return tree_copy
@@ -449,7 +443,6 @@ def num_tre_node(tree: Tree) -> Tree:
     return tree
 
 
-
 def calculate_depth(node_a, node_b) -> int:
     """Compute a legacy topological distance between two nodes.
 
@@ -472,7 +465,6 @@ def calculate_depth(node_a, node_b) -> int:
         node_a.get_distance(ca, topology_only=True)
         - node_b.get_distance(ca, topology_only=True)
     )
-
 
 
 def calculate_deepvar(node_a, node_b) -> int:
@@ -521,7 +513,6 @@ def get_species_list(node) -> List[str]:
     return [leaf.name.split("_")[0] for leaf in node.iter_leaves()]
 
 
-
 def get_species_set(node) -> Set[str]:
     """Return unique species labels under a node.
 
@@ -537,7 +528,6 @@ def get_species_set(node) -> Set[str]:
     return set(get_species_list(node))
 
 
-
 def calculate_species_num(node) -> int:
     """Count unique species represented under a node.
 
@@ -548,7 +538,6 @@ def calculate_species_num(node) -> int:
         int: Number of unique species under the node.
     """
     return len(get_species_set(node))
-
 
 
 def annotate_gene_tree(gene_tree, species_tree):
@@ -664,7 +653,6 @@ def judge_support(support: float, threshold: float) -> bool:
     return support >= threshold
 
 
-
 def sps_dup_num(sps_list: List[str], unique_sps: Set[str]) -> int:
     """Count the number of duplicated species in a list of species labels.
 
@@ -687,7 +675,6 @@ def sps_dup_num(sps_list: List[str], unique_sps: Set[str]) -> int:
             duplicated.add(sps)
 
     return len(duplicated)
-
 
 
 def get_gene_pairs(gd_node) -> List[Tuple[str, str, str]]:
@@ -729,7 +716,6 @@ def get_gene_pairs(gd_node) -> List[Tuple[str, str, str]]:
 
     return pairs
 
-
 def find_tre_dup(tree: PhyloTree) -> Tuple[List[str], Set[str]]:
     """Extract duplication event pairs from reconciliation metadata.
 
@@ -758,7 +744,6 @@ def find_tre_dup(tree: PhyloTree) -> Tuple[List[str], Set[str]]:
             pairs.append(",".join(ev.in_seqs) + "<=>" + ",".join(ev.out_seqs))
 
     return pairs, leaves
-
 
 
 def map_species_set_to_node(species_tree, species_set):
@@ -797,7 +782,6 @@ def map_species_set_to_node(species_tree, species_set):
     return species_tree.get_common_ancestor(nodes)
 
 
-
 def find_dup_node(
     gene_tree: PhyloTree,
     species_tree: PhyloTree,
@@ -826,8 +810,7 @@ def find_dup_node(
 
     Assumptions:
         The gene tree has been annotated with ``map`` and ``is_gd`` features and
-        uses species labels compatible with ``species_tree``.
-    """
+        uses species labels compatible with ``species_tree``."""
     dup_nodes = []
 
     for node in gene_tree.traverse("postorder"):
@@ -894,7 +877,6 @@ def find_dup_node(
         dup_nodes.append(node)
 
     return dup_nodes
-
 
 
 def calculate_gd_num(tree: PhyloTree, species_tree: PhyloTree) -> int:

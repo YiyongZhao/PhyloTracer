@@ -82,7 +82,10 @@ def get_average_tip_root_distance(tree: object) -> float:
     -----------
     The tree contains at least one leaf and branch lengths are defined.
     """
-    return sum(tree.get_distance(leaf) for leaf in tree) / len(tree)
+    n = len(tree)
+    if n == 0:
+        return 0.0
+    return sum(tree.get_distance(leaf) for leaf in tree) / n
 
 
 def get_average_node_length(subtree: object) -> float:
@@ -106,7 +109,10 @@ def get_average_node_length(subtree: object) -> float:
     total_distance = sum(
         subtree.get_distance(leaf) for leaf in subtree
     )
-    return total_distance / len(subtree) + subtree.dist
+    n = len(subtree)
+    if n == 0:
+        return subtree.dist
+    return total_distance / n + subtree.dist
 
 
 # ======================================================

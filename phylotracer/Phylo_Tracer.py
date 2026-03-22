@@ -28,26 +28,25 @@ from phylotracer import (
     read_tree,
     rename_input_tre,
 )
-from phylotracer.BranchLength_NumericConverter import *
-from phylotracer.GD_Detector import *
-from phylotracer.GD_Loss_Tracker import *
-from phylotracer.GD_Loss_Visualizer import *
-from phylotracer.GD_Visualizer import *
-from phylotracer.HaploFinder import *
-from phylotracer.Hybrid_Tracer import *
-from phylotracer.Hybrid_Visualizer import *
-from phylotracer.Ortho_Retriever import *
-from phylotracer.OrthoFilter_LB import *
-from phylotracer.OrthoFilter_Mono import *
-from phylotracer.MulRF_Distance import *
-from phylotracer.Phylo_Rooter import *
-from phylotracer.PhyloSupport_Scaler import *
-from phylotracer.PhyloTree_CollapseExpand import *
-from phylotracer.Tree_Visualizer import *
-from phylotracer.TreeTopology_Summarizer import *
+from phylotracer.BranchLength_NumericConverter import branch_length_numeric_converter_main
+from phylotracer.GD_Detector import write_gene_duplication_results
+from phylotracer.GD_Loss_Tracker import get_path_str_num_dic, parse_text_to_excel
+from phylotracer.GD_Loss_Visualizer import visualizer_sptree
+from phylotracer.GD_Visualizer import gd_visualizer_main
+from phylotracer.HaploFinder import generate_dotplot, process_gd_result, split_sequences
+from phylotracer.Hybrid_Tracer import hyde_main
+from phylotracer.Hybrid_Visualizer import hyde_visual_leaf_main, hyde_visual_node_main
+from phylotracer.Ortho_Retriever import rename_len_dic, split_main
+from phylotracer.OrthoFilter_LB import prune_main_LB
+from phylotracer.OrthoFilter_Mono import prune_main_Mono
+from phylotracer.MulRF_Distance import mulrf_main
+from phylotracer.Phylo_Rooter import root_main
+from phylotracer.PhyloSupport_Scaler import support_scaler_main
+from phylotracer.PhyloTree_CollapseExpand import collapse_expand_main
+from phylotracer.Tree_Visualizer import mark_gene_to_sptree_main, view_main
+from phylotracer.TreeTopology_Summarizer import statistical_main
 
-# Keep CLI logger stable after wildcard imports that may export `logger`.
-logger = logging.getLogger(__name__)
+# Explicit imports above eliminate wildcard collision risk.
 
 ##################################################################
 

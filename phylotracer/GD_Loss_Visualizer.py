@@ -420,8 +420,8 @@ def visualizer_sptree(
     )
     try:
         sptree.convert_to_ultrametric()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("convert_to_ultrametric failed (non-fatal): %s", exc)
 
     for leaf in sptree.iter_leaves():
         leaf.add_face(

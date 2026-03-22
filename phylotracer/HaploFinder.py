@@ -568,6 +568,14 @@ def judge_support(support, support_value):
             return True
         else:
             return False
+    else:
+        # Fallback for unhandled ranges (e.g., threshold < 0.5 or between 1 and 50):
+        # normalize both to the same scale and compare directly.
+        if 0 < support <= 1:
+            support = support * 100
+        if 0 < support_value <= 1:
+            support_value = support_value * 100
+        return support >= support_value
 
 
 # ======================================================

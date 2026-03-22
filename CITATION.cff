@@ -3,7 +3,7 @@ message: "If you use this software, please cite it as below."
 type: software
 title: "PhyloTracer"
 abstract: "A Comprehensive and User-Friendly Toolkit for Evolutionary Genomic Analysis"
-version: "1.0.0"
+version: "1.0.3"
 license: MIT
 repository-code: "https://github.com/YiyongZhao/PhyloTracer"
 authors:

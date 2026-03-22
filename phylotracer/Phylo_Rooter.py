@@ -356,7 +356,8 @@ def _reroot_by_node_set(base_tree: object, node_list: list) -> list:
                 continue
             seen.add(sig)
             rerooted.append(tcopy)
-        except Exception:
+        except Exception as exc:
+            logger.debug("Rerooting failed for node (non-fatal): %s", exc)
             continue
     return rerooted
 
@@ -443,18 +444,18 @@ def calculate_tree_statistics(
             mapped_node = map_species_set_to_node(species_tree, clade_species)
             if mapped_node is not None:
                 return float(species_tree.get_distance(mapped_node, topology_only=True) + 1)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Species-set mapping failed (non-fatal): %s", exc)
         try:
             mapped_name = getattr(clade, "map", None)
             if mapped_name:
                 try:
                     mapped_node = species_tree & mapped_name
                     return float(species_tree.get_distance(mapped_node, topology_only=True) + 1)
-                except Exception:
-                    pass
-        except Exception:
-            pass
+                except Exception as exc:
+                    logger.debug("Named-map lookup failed (non-fatal): %s", exc)
+        except Exception as exc:
+            logger.debug("Map attribute access failed (non-fatal): %s", exc)
         fallback_depth = getattr(clade, "depth", 0)
         return float(0 if fallback_depth is None else fallback_depth)
 

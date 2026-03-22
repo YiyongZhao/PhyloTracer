@@ -18,11 +18,11 @@
     Github: https://github.com/YiyongZhao/PhyloTracer                                        
     License: MIT license                                                                     
     Release Date: 2023-7                                                                     
-    Contacts: Taoli(l948777439@163.com); Yiyong Zhao(yiyong.zhao@yale.edu)
+    Contacts: Tao Li(l948777439@gmail.com); Yiyong Zhao(yiyong.zhao@yale.edu)
                                                                          
 ###############################################################################################
 ```
-![Version](https://img.shields.io/badge/Version-1.0.0-blue)
+![Version](https://img.shields.io/badge/Version-1.0.3-blue)
 [![CI](https://github.com/YiyongZhao/PhyloTracer/actions/workflows/ci.yml/badge.svg)](https://github.com/YiyongZhao/PhyloTracer/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/phylotracer/badge/?version=latest)](https://phylotracer.readthedocs.io)
 [![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
@@ -713,6 +713,9 @@ Optional in haplofinder mode:
     --visual_chr_a          Optional chromosome list file for species A visualization subset
     --visual_chr_b          Optional chromosome list file for species B visualization subset
     --size                  Point size in dotplot rendering (positive float, default = 0.0005)
+    --gene_conv_ratio       Chromosome number ratio for gene conversion detection (integer, default = 2)
+Optional in split mode:
+    --chrs_per_subgenome    Number of chromosomes per subgenome for subgenome mapping (integer, default = 10)
 Optional in both modes:
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Mode = split required:
