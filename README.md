@@ -680,6 +680,8 @@ Optional parameter:
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
     PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB] [--split_groups 2] [--output_dir DIR]
+
+Outputs include `hyde_out.txt`, `hyde_filtered_out.txt`, and a run summary file `hyde_summary.txt`.
 ```
 ### Hybrid_Visualizer
 ```
@@ -693,6 +695,8 @@ Optional parameter:
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
     PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk [--node] [--output_dir DIR]
+
+The combined image legend uses red for the focal hybrid/clade, blue for the target internal node label in `--node` mode, yellow for γ values, and white labels for tested hybridization combinations.
 ```
 ### HaploFinder
 ```
@@ -732,6 +736,8 @@ Mode = split required:
 Usage:
     PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a arh --species_b ard --species_a_gff arh.gff --species_b_gff ard.gff --species_a_lens arh.lens --species_b_lens ard.lens [--gd_support 50] [--pair_support 50] [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001] [--output_dir DIR]
     PhyloTracer HaploFinder --mode split --input_GF_list gf.txt --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff ard.gff [--output_dir DIR]
+
+Bundled HaploFinder example data live under `example_data/17_Haplofinder/`. Optional chromosome lists `chr_a.txt` and `chr_b.txt` are included for the haplofinder-mode example. The split-mode example requires user-supplied `proteins.fa` and `cluster.tsv`.
 ```
 
 ---

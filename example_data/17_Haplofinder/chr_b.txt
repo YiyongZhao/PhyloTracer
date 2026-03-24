@@ -1,0 +1,10 @@
+chr01
+chr02
+chr03
+chr04
+chr05
+chr06
+chr07
+chr08
+chr09
+chr10

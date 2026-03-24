@@ -6,7 +6,6 @@ annotated species trees with loss statistics and legends.
 """
 
 import logging
-import os
 import re
 from collections import defaultdict
 
@@ -39,11 +38,7 @@ def identify_loss_detail(path_str):
     Returns
     -------
     list
-        List of (node, loss_type) tuples.
-
-    Assumptions
-    -----------
-    Path strings encode copy numbers in parentheses.
+        List of ``(node, loss_type)`` tuples.
     """
     if not path_str or path_str == "NA":
         return []
@@ -62,25 +57,21 @@ def identify_loss_detail(path_str):
         return []
 
     identified_losses = []
-
     for i in range(1, len(parsed_steps)):
         prev_node, prev_copy = parsed_steps[i - 1]
         curr_node, curr_copy = parsed_steps[i]
 
         if curr_copy < prev_copy:
-            l_type = None
             if prev_copy == 2 and curr_copy == 0:
-                l_type = "2-0"
+                loss_type = "2-0"
             elif prev_copy == 2 and curr_copy == 1:
-                l_type = "2-1"
+                loss_type = "2-1"
             elif prev_copy == 1 and curr_copy == 0:
-                l_type = "1-0"
+                loss_type = "1-0"
             else:
                 diff = prev_copy - curr_copy
-                l_type = "2-0" if diff >= 2 else "2-1"
-
-            if l_type:
-                identified_losses.append((curr_node, l_type))
+                loss_type = "2-0" if diff >= 2 else "2-1"
+            identified_losses.append((curr_node, loss_type))
 
     return identified_losses
 
@@ -104,30 +95,19 @@ def parse_node_loss_events(node_events_str):
 
 def get_stats_deduplicated(filepath):
     """
-    Deduplicate GD events and compute birth and loss statistics.
-
-    Parameters
-    ----------
-    filepath : str
-        Path to the loss summary file.
+    Deduplicate GD events and compute birth and cumulative loss statistics.
 
     Returns
     -------
     tuple
-        (gd_births, loss_counts) dictionaries.
-
-    Assumptions
-    -----------
-    Tree ID and GD ID together form a unique event key.
+        ``(gd_births, cumulative_losses, event_loss_counts)``.
     """
     gd_birth_sets = defaultdict(set)
-    # Path-level loss counts are occurrence-based (not event-deduplicated).
-    loss_tracker = defaultdict(lambda: {"2-0": 0, "2-1": 0, "1-0": 0})
+    cumulative_loss_tracker = defaultdict(lambda: {"2-0": 0, "2-1": 0, "1-0": 0})
     event_loss_tracker = defaultdict(lambda: {"2-0": set(), "2-1": set(), "2-2": set()})
-    # Enforce mutually exclusive event-level type by keeping the most severe type
-    # per (level, event_key): 2-0 > 2-1 > 2-2.
     event_type_priority = {"2-2": 0, "2-1": 1, "2-0": 2}
     best_event_type_by_level = defaultdict(dict)
+
     logger.info("Reading file: %s...", filepath)
     with open(filepath, "r") as f:
         header = f.readline().strip()
@@ -138,15 +118,15 @@ def get_stats_deduplicated(filepath):
             )
         header_cols = header.split("\t")
         header_idx = {name: idx for idx, name in enumerate(header_cols)}
-        loss_type_idx = header_idx.get("loss_type", None)
-        node_events_idx = header_idx.get("path_count_node_events", None)
+        loss_type_idx = header_idx.get("loss_type")
+        loss_path_idx = header_idx.get("loss_path", 7)
 
         for line in f:
             line = line.strip()
             if not line:
                 continue
             cols = line.split("\t")
-            if len(cols) < 8:
+            if len(cols) <= loss_path_idx:
                 continue
 
             tree_id = cols[0]
@@ -154,31 +134,26 @@ def get_stats_deduplicated(filepath):
             unique_key = f"{tree_id}|{gd_id_raw}"
             level_node = cols[3]
             gd_birth_sets[level_node].add(unique_key)
+
             if loss_type_idx is not None and loss_type_idx < len(cols):
                 event_loss_type = cols[loss_type_idx].strip()
                 if event_loss_type in event_type_priority:
                     prev = best_event_type_by_level[level_node].get(unique_key)
-                    if prev is None:
-                        best_event_type_by_level[level_node][unique_key] = event_loss_type
-                    elif event_type_priority[event_loss_type] > event_type_priority[prev]:
+                    if prev is None or event_type_priority[event_loss_type] > event_type_priority[prev]:
                         best_event_type_by_level[level_node][unique_key] = event_loss_type
 
-            if node_events_idx is not None and node_events_idx < len(cols):
-                all_losses = parse_node_loss_events(cols[node_events_idx].strip())
-            else:
-                loss_path = cols[7].strip()
-                all_losses = identify_loss_detail(loss_path)
-            for loss_node, loss_type in all_losses:
-                loss_tracker[loss_node][loss_type] += 1
+            for loss_node, loss_type in identify_loss_detail(cols[loss_path_idx].strip()):
+                cumulative_loss_tracker[loss_node][loss_type] += 1
 
     final_births = {k: len(v) for k, v in gd_birth_sets.items()}
-    final_losses = {}
-    for node, types in loss_tracker.items():
-        final_losses[node] = {
-            "2-0": types["2-0"],
-            "2-1": types["2-1"],
-            "1-0": types["1-0"],
+    final_cumulative_losses = {
+        node: {
+            "2-0": stats["2-0"],
+            "2-1": stats["2-1"],
+            "1-0": stats["1-0"],
         }
+        for node, stats in cumulative_loss_tracker.items()
+    }
 
     final_event_losses = {}
     for node, event_type_map in best_event_type_by_level.items():
@@ -190,16 +165,101 @@ def get_stats_deduplicated(filepath):
             "2-2": len(event_loss_tracker[node]["2-2"]),
         }
 
-    return final_births, final_losses, final_event_losses
+    return final_births, final_cumulative_losses, final_event_losses
+
+
+def _get_maximal_cover_nodes(start_node, target_species):
+    """Return maximal clades under ``start_node`` fully covered by ``target_species``."""
+    target_species = set(target_species)
+    if not target_species:
+        return []
+
+    result = []
+
+    def _walk(node):
+        leaves = set(node.get_leaf_names())
+        if not (leaves & target_species):
+            return
+        if leaves.issubset(target_species):
+            result.append(node.name)
+            return
+        for child in node.children:
+            _walk(child)
+
+    _walk(start_node)
+    return result
+
+
+def get_parsimony_loss_counts(filepath, sptree):
+    """
+    Compute simplified parsimony loss placements on the species tree.
+
+    The rule is intentionally conservative for visualization:
+    - species with final ``2-0`` are compressed to maximal shared clades and count as one
+      parsimony loss placement per clade;
+    - species with final ``2-1`` are compressed similarly, after removing leaves already
+      explained by a ``2-0`` parsimony placement.
+
+    This avoids repeated counting for situations such as A/B/C all losing in the same
+    ancestral clade, where the figure should show a single ancestral loss placement.
+    """
+    event_rows = {}
+    with open(filepath, "r") as f:
+        header = f.readline().strip().split("\t")
+        header_idx = {name: idx for idx, name in enumerate(header)}
+        loss_type_idx = header_idx.get("loss_type")
+        species_idx = header_idx.get("species", 4)
+        level_idx = header_idx.get("level", 3)
+
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            cols = line.split("\t")
+            if loss_type_idx is None or len(cols) <= loss_type_idx:
+                continue
+            event_key = (cols[0], cols[1])
+            level = cols[level_idx]
+            species = cols[species_idx]
+            loss_type = cols[loss_type_idx].strip()
+            slot = event_rows.setdefault(
+                event_key,
+                {"level": level, "loss_one_species": set(), "loss_two_species": set()},
+            )
+            if loss_type == "2-0":
+                slot["loss_two_species"].add(species)
+            elif loss_type == "2-1":
+                slot["loss_one_species"].add(species)
+
+    parsimony_counts = defaultdict(lambda: {"loss_one": 0, "loss_two": 0, "total": 0})
+    for _, event in event_rows.items():
+        level = event["level"]
+        try:
+            gd_node = sptree & level
+        except Exception:
+            continue
+
+        loss_two_cover = _get_maximal_cover_nodes(gd_node, event["loss_two_species"])
+        covered_by_two = set()
+        for node_name in loss_two_cover:
+            parsimony_counts[node_name]["loss_two"] += 1
+            parsimony_counts[node_name]["total"] += 1
+            try:
+                covered_by_two.update((sptree & node_name).get_leaf_names())
+            except Exception:
+                pass
+
+        residual_loss_one = set(event["loss_one_species"]) - covered_by_two
+        loss_one_cover = _get_maximal_cover_nodes(gd_node, residual_loss_one)
+        for node_name in loss_one_cover:
+            parsimony_counts[node_name]["loss_one"] += 1
+            parsimony_counts[node_name]["total"] += 1
+
+    return dict(parsimony_counts)
 
 
 def calculate_node_loss_score(event_loss_stats: dict, gd_birth_count: int):
-    """Compute node-level raw and normalized GD-loss severity scores.
-
-    The raw score emphasizes severe loss more than partial loss:
-    ``raw = 1*(2->0) + 0.5*(2->1)``.
-    The normalized score is ``raw / GD_birth`` when ``GD_birth > 0``.
-    """
+    """Compute node-level raw and normalized GD-loss severity scores."""
     severe = event_loss_stats.get("2-0", 0)
     partial = event_loss_stats.get("2-1", 0)
     raw_score = (1.0 * severe) + (0.5 * partial)
@@ -214,26 +274,7 @@ def calculate_node_loss_score(event_loss_stats: dict, gd_birth_count: int):
 
 
 def print_path_stats(sptree, final_losses, target_species="Arabidopsis_thaliana"):
-    """
-    Print loss statistics along the path to a target species.
-
-    Parameters
-    ----------
-    sptree : object
-        Species tree object.
-    final_losses : dict
-        Loss counts by node and type.
-    target_species : str, optional
-        Target species name for path reporting.
-
-    Returns
-    -------
-    None
-
-    Assumptions
-    -----------
-    The species name exists in the tree.
-    """
+    """Print loss statistics along the path to a target species."""
     target_nodes = sptree.search_nodes(name=target_species)
     if not target_nodes:
         logger.error("Species '%s' not found in tree", target_species)
@@ -244,7 +285,7 @@ def print_path_stats(sptree, final_losses, target_species="Arabidopsis_thaliana"
     path_nodes.reverse()
     path_nodes.append(leaf)
 
-    logger.info("\n%s Path: Root -> %s %s", '='*20, target_species, '='*20)
+    logger.info("\n%s Path: Root -> %s %s", '=' * 20, target_species, '=' * 20)
     logger.info("%-20s | %-10s | %-10s | %-10s | %s", 'Node', '2->0', '2->1', '1->0', 'Total')
     logger.info("-" * 80)
 
@@ -266,122 +307,76 @@ def print_path_stats(sptree, final_losses, target_species="Arabidopsis_thaliana"
 # ======================================================
 
 
-def visualizer_sptree(
-    filepath,
-    sptree,
-    output_file="gd_loss_pie_visualizer.PDF",
-):
-    """
-    Render GD loss statistics on a species tree.
-
-    Parameters
-    ----------
-    filepath : str
-        Path to the loss summary file.
-    sptree : object
-        Species tree object to annotate.
-    output_file : str, optional
-        Output PDF file path.
-
-    Returns
-    -------
-    None
-
-    Assumptions
-    -----------
-    Loss summary file follows the expected tabular format.
-    """
+def visualizer_sptree(filepath, sptree, output_file="gd_loss_pie_visualizer.PDF"):
+    """Render GD loss statistics on a species tree."""
     try:
         from ete3 import TreeStyle, NodeStyle
     except ImportError:
         logger.error("ete3 is required for visualization. Install with: pip install ete3")
         return
 
-    gd_births, loss_data, event_loss_data = get_stats_deduplicated(filepath)
+    gd_births, cumulative_loss_data, event_loss_data = get_stats_deduplicated(filepath)
+    parsimony_loss_data = get_parsimony_loss_counts(filepath, sptree)
 
     sptree.ladderize()
     sptree.sort_descendants("support")
 
-    colors = {
-        "2-0": "#D62728",
-        "2-1": "#FF7F0E",
-        "1-0": "#1F77B4",
-    }
-    color_list = [colors["2-0"], colors["2-1"], colors["1-0"]]
-
     logger.info(
-        "\n%-15s | %-10s | %-8s | %-8s | %-8s | %-8s | %-8s | %-8s | %-8s",
-        'Node', 'GD Birth', 'E2-0', 'E2-1', 'Path2-0', 'Path2-1', 'Path1-0', 'RawLoss', 'NormLoss'
+        "\n%-15s | %-8s | %-8s | %-8s | %-10s | %-10s | %-8s | %-8s",
+        "Node",
+        "Birth",
+        "E2-0",
+        "E2-1",
+        "CumLoss",
+        "ParsLoss",
+        "Lraw",
+        "Lnorm",
     )
-    logger.info("-" * 80)
+    logger.info("-" * 92)
 
     for node in sptree.traverse():
         nstyle = NodeStyle()
         nstyle["size"] = 0
         node.set_style(nstyle)
-
         node_name = node.name
 
         if node_name in gd_births and gd_births[node_name] > 0:
-            cnt = gd_births[node_name]
-            face = TextFace(f"{cnt}", fsize=6, fgcolor="blue")
-            node.add_face(face, column=0, position="branch-top")
+            node.add_face(TextFace(f"{gd_births[node_name]}", fsize=6, fgcolor="blue"), column=0, position="branch-top")
 
-        if node_name in loss_data or node_name in gd_births or node_name in event_loss_data:
-            stats = loss_data.get(node_name, {"2-0": 0, "2-1": 0, "1-0": 0})
-            c_2_0 = stats["2-0"]
-            c_2_1 = stats["2-1"]
-            c_1_0 = stats["1-0"]
+        if node_name in cumulative_loss_data or node_name in gd_births or node_name in event_loss_data or node_name in parsimony_loss_data:
+            cumulative_stats = cumulative_loss_data.get(node_name, {"2-0": 0, "2-1": 0, "1-0": 0})
+            c_total = cumulative_stats["2-0"] + cumulative_stats["2-1"] + cumulative_stats["1-0"]
+            parsimony_stats = parsimony_loss_data.get(node_name, {"loss_one": 0, "loss_two": 0, "total": 0})
+            p_total = parsimony_stats["total"]
             gd_birth_count = gd_births.get(node_name, 0)
             event_stats = event_loss_data.get(node_name, {"2-0": 0, "2-1": 0, "2-2": 0})
-            raw_loss_score, norm_loss_score = calculate_node_loss_score(
-                event_stats, gd_birth_count
-            )
-
-            total_loss = c_2_0 + c_2_1 + c_1_0
-            # Show event-level counts in red so they are consistent with L formula.
+            raw_loss_score, norm_loss_score = calculate_node_loss_score(event_stats, gd_birth_count)
             e_2_0 = event_stats.get("2-0", 0)
             e_2_1 = event_stats.get("2-1", 0)
             e_2_2 = event_stats.get("2-2", 0)
-            node.add_face(
-                TextFace(f"{e_2_2}/{e_2_1}/{e_2_0}", fsize=6, fgcolor="red"),
-                column=0,
-                position="branch-bottom",
-            )
-            if norm_loss_score is not None:
-                node.add_face(
-                    TextFace(f"L={norm_loss_score:.2f}", fsize=6, fgcolor="purple"),
-                    column=0,
-                    position="branch-bottom",
-                )
-            else:
-                node.add_face(
-                    TextFace(f"Lraw={raw_loss_score:.2f}", fsize=6, fgcolor="gray"),
-                    column=0,
-                    position="branch-bottom",
-                )
-            if total_loss > 0:
-                node.add_face(
-                    TextFace(f"P={c_2_0}/{c_2_1}/{c_1_0}", fsize=6, fgcolor="darkgreen"),
-                    column=0,
-                    position="branch-bottom",
-                )
-                logger.info(
-                    "%-15s | %-10d | %-8d | %-8d | %-8d | %-8d | %-8d | %-8.2f | %-8.2f",
-                    node_name, gd_births.get(node_name, 0),
-                    event_stats.get('2-0', 0), event_stats.get('2-1', 0),
-                    c_2_0, c_2_1, c_1_0,
-                    raw_loss_score,
-                    norm_loss_score if norm_loss_score is not None else float('nan')
-                )
 
-            # percents = [
-            #     (c_2_0 / total_loss) * 100,
-            #     (c_2_1 / total_loss) * 100,
-            #     (c_1_0 / total_loss) * 100,
-            # ]
-            # pie = PieChartFace(percents, width=6, height=6, colors=color_list)
-            # node.add_face(pie, column=0, position="branch-bottom")
+            node.add_face(TextFace(f"E={e_2_2}/{e_2_1}/{e_2_0}", fsize=6, fgcolor="red"), column=0, position="branch-bottom")
+            if norm_loss_score is not None:
+                node.add_face(TextFace(f"L={norm_loss_score:.2f}", fsize=6, fgcolor="purple"), column=0, position="branch-bottom")
+            else:
+                node.add_face(TextFace(f"Lraw={raw_loss_score:.2f}", fsize=6, fgcolor="gray"), column=0, position="branch-bottom")
+            if c_total > 0:
+                node.add_face(TextFace(f"C={c_total}", fsize=6, fgcolor="darkorange"), column=0, position="branch-bottom")
+            if p_total > 0:
+                node.add_face(TextFace(f"P={p_total}", fsize=6, fgcolor="darkgreen"), column=0, position="branch-bottom")
+
+            if c_total > 0 or p_total > 0 or e_2_0 > 0 or e_2_1 > 0:
+                logger.info(
+                    "%-15s | %-8d | %-8d | %-8d | %-10d | %-10d | %-8.2f | %-8.2f",
+                    node_name,
+                    gd_birth_count,
+                    e_2_0,
+                    e_2_1,
+                    c_total,
+                    p_total,
+                    raw_loss_score,
+                    norm_loss_score if norm_loss_score is not None else float("nan"),
+                )
 
     ts = TreeStyle()
     ts.scale = 40
@@ -390,43 +385,22 @@ def visualizer_sptree(
     ts.show_branch_length = False
     ts.show_border = False
     ts.extra_branch_line_type = 0
-    
-
     ts.legend_position = 1
     ts.title.add_face(TextFace("Legend:", bold=True, fsize=10), column=0)
-    ts.title.add_face(
-        TextFace("  Blue Number (Top): GD Events Generated", fsize=6, fgcolor="blue"),
-        column=0,
-    )
-    ts.title.add_face(
-        TextFace("  Red (Bottom): E(2-2)/E(2-1)/E(2-0) event-level counts", fsize=6),
-        column=0,
-    )
-    ts.title.add_face(
-        TextFace(
-            "  Purple L score (event-level): (E(2-0) + 0.5*E(2-1)) / GD_birth",
-            fsize=6,
-            fgcolor="purple",
-        ),
-        column=0,
-    )
-    ts.title.add_face(
-        TextFace("  Gray Lraw: shown when GD_birth=0 on a node", fsize=6),
-        column=0,
-    )
-    ts.title.add_face(
-        TextFace("  Green P=Path2-0/Path2-1/Path1-0 node-level path counts", fsize=6, fgcolor="darkgreen"),
-        column=0,
-    )
+    ts.title.add_face(TextFace("  Blue number (top): GD events generated on this node", fsize=6, fgcolor="blue"), column=0)
+    ts.title.add_face(TextFace("  Red E=2-2/2-1/2-0: event-level final copy-state counts", fsize=6, fgcolor="red"), column=0)
+    ts.title.add_face(TextFace("  Purple L: event-level loss score = (E2-0 + 0.5*E2-1) / GD_birth", fsize=6, fgcolor="purple"), column=0)
+    ts.title.add_face(TextFace("  Gray Lraw: shown when GD_birth=0 on a node", fsize=6, fgcolor="gray"), column=0)
+    ts.title.add_face(TextFace("  Orange C: cumulative path-loss count (all descendant paths counted)", fsize=6, fgcolor="darkorange"), column=0)
+    ts.title.add_face(TextFace("  Green P: parsimony loss count (shared descendant losses compressed to ancestor clades)", fsize=6, fgcolor="darkgreen"), column=0)
+
     try:
         sptree.convert_to_ultrametric()
     except Exception as exc:
         logger.debug("convert_to_ultrametric failed (non-fatal): %s", exc)
 
     for leaf in sptree.iter_leaves():
-        leaf.add_face(
-            TextFace(leaf.name, fsize=7, fgcolor="black", fstyle="italic"),
-            column=0)
+        leaf.add_face(TextFace(leaf.name, fsize=7, fgcolor="black", fstyle="italic"), column=0)
 
     sptree.render(output_file, w=260, units="mm", tree_style=ts)
     logger.info("Visualization saved to %s", output_file)
@@ -438,25 +412,12 @@ def visualizer_sptree(
 
 if __name__ == "__main__":
     import argparse
-
     from ete3 import Tree
 
-    parser = argparse.ArgumentParser(
-        description="Visualize gene duplication losses on a species tree.",
-    )
-    parser.add_argument(
-        "loss_summary_file",
-        help="Path to the loss summary file (tabular format).",
-    )
-    parser.add_argument(
-        "species_tree_file",
-        help="Path to the species tree file (Newick format).",
-    )
-    parser.add_argument(
-        "-o", "--output",
-        default="gd_loss_pie_visualizer.PDF",
-        help="Output PDF file path (default: gd_loss_pie_visualizer.PDF).",
-    )
+    parser = argparse.ArgumentParser(description="Visualize gene duplication losses on a species tree.")
+    parser.add_argument("loss_summary_file", help="Path to the loss summary file (tabular format).")
+    parser.add_argument("species_tree_file", help="Path to the species tree file (Newick format).")
+    parser.add_argument("-o", "--output", default="gd_loss_pie_visualizer.PDF", help="Output PDF file path (default: gd_loss_pie_visualizer.PDF).")
     args = parser.parse_args()
 
     sptree = Tree(args.species_tree_file)

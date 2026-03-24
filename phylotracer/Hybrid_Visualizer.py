@@ -382,6 +382,30 @@ def from_summary_get_hyb_to_date(summary_dic, a_hyb_to_three_tup_list, leafs):
 # ======================================================
 
 
+def save_placeholder_heatmap(filename, message):
+    """Save a placeholder heatmap when no valid HyDe summaries are available."""
+    fig = plt.figure(figsize=(8, 8))
+    ax = fig.add_subplot(111)
+    ax.axis("off")
+    ax.text(0.5, 0.5, message, ha="center", va="center", fontsize=18, wrap=True)
+    plt.savefig(filename + "_hotmap.png", dpi=200, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _average_dataframes(summary_frames):
+    """Average aligned DataFrames, returning None when the input is empty."""
+    if not summary_frames:
+        return None
+    result = pd.DataFrame(0.0, index=summary_frames[0].index, columns=summary_frames[0].columns)
+    for df in summary_frames:
+        result = result.add(df, fill_value=0)
+    return result.div(len(summary_frames))
+
+
+def _all_nan(df):
+    return df is None or df.empty or df.isna().all().all()
+
+
 def hyde_visual_cmap():
     """
     Construct a custom colormap for HyDe visualizations.
@@ -492,17 +516,6 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
     Heatmap matrices are square and indexed by leaf names.
     """
 
-    def average_dataframes(summary_tup_df):
-        tup_result_df = pd.DataFrame(
-            0,
-            index=summary_tup_df[0].index,
-            columns=summary_tup_df[0].columns,
-        )
-        for df in summary_tup_df:
-            tup_result_df += df
-        tup_result_df = tup_result_df.div(len(summary_tup_df))
-        return tup_result_df
-
     node_s = node.get_leaf_names()
     leafs = t.get_leaf_names()
     df_lst = []
@@ -521,9 +534,16 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
     summary_gamma_df = [d[1] for d in df_lst]
     summary_filter_df = [d[2] for d in df_lst]
 
-    tup_result_df = average_dataframes(summary_tup_df).astype(int)
-    gamma_result_df = average_dataframes(summary_gamma_df)
-    filter_result_df = average_dataframes(summary_filter_df)
+    tup_result_df = _average_dataframes(summary_tup_df)
+    gamma_result_df = _average_dataframes(summary_gamma_df)
+    filter_result_df = _average_dataframes(summary_filter_df)
+
+    if _all_nan(tup_result_df) or _all_nan(gamma_result_df) or _all_nan(filter_result_df):
+        logger.warning("No valid HyDe summaries for node %s; writing a placeholder panel.", node.name)
+        save_placeholder_heatmap(filename, f"No valid HyDe summaries for node {node.name}")
+        return
+
+    tup_result_df = tup_result_df.astype(int)
 
     for leaf in node_s:
         tup_result_df.loc[:, leaf] = np.nan
@@ -677,6 +697,14 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
                     gamma_df.loc[p1, p2] = np.nan
 
     nan_mask = gamma_df.isna()
+    if nan_mask.all().all():
+        hybrid_name = "unknown"
+        if a_hyb_to_three_tup_list:
+            hybrid_name = a_hyb_to_three_tup_list[0].split("-")[1]
+        logger.warning("No valid HyDe summaries for hybrid %s; writing a placeholder panel.", hybrid_name)
+        save_placeholder_heatmap(filename, f"No valid HyDe summaries for hybrid {hybrid_name}")
+        return
+
     tup_annot = tup_df.astype(str).where(~nan_mask, other="")
     gamma_annot = gamma_df.map(lambda x: f"{x:.3f}" if not np.isnan(x) else "")
     sns.heatmap(
@@ -742,7 +770,7 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
     plt.close("all")
 
 
-def combine_fig(hybrid_species):
+def combine_fig(hybrid_species, mode="leaf"):
     """
     Combine tree and heatmap images into a single figure.
 
@@ -838,23 +866,34 @@ def combine_fig(hybrid_species):
     legend_start_y = legend_end_y - (legend_spacing * 3)
 
     legend_text_width = max(
-        len("Red: hybrid"),
-        len("Yellow: y values"),
-        len("White: combinations"),
+        len("Red: focal hybrid/clade"),
+        len("Blue: target node label"),
+        len("Yellow: gamma values"),
+        len("White: tested combinations"),
     ) * (legend_font_size * 0.6)
     legend_x = max(10, min(legend_x, max_width - legend_text_width - 20))
 
     if legend_start_y > 0:
-        draw.text((legend_x, legend_start_y), "Red: hybrid", fill="red", font=font_legend)
+        first_line = "Red: focal hybrid" if mode == "leaf" else "Red: focal clade"
+        draw.text((legend_x, legend_start_y), first_line, fill="red", font=font_legend)
+        offset = 1
+        if mode == "node":
+            draw.text(
+                (legend_x, legend_start_y + legend_spacing),
+                "Blue: target node label",
+                fill="blue",
+                font=font_legend,
+            )
+            offset = 2
         draw.text(
-            (legend_x, legend_start_y + legend_spacing),
-            "Yellow: y values",
+            (legend_x, legend_start_y + legend_spacing * offset),
+            "Yellow: gamma values",
             fill="yellow",
             font=font_legend,
         )
         draw.text(
-            (legend_x, legend_start_y + legend_spacing * 2),
-            "White: number of hybridization combinations",
+            (legend_x, legend_start_y + legend_spacing * (offset + 1)),
+            "White: tested combinations",
             fill="black",
             font=font_legend,
         )
@@ -901,7 +940,7 @@ def hyde_visual_leaf_main(out_file_name, sptree, output_dir=None):
         t1 = sptree.copy()
         generate_tree_leaf(t1, k, prefix)
         create_hot_map_leaf(result1, v, t1, prefix)
-        combine_fig(prefix)
+        combine_fig(prefix, mode="leaf")
         os.remove(f"{prefix}_hotmap.png")
         os.remove(f"{prefix}_img_faces.png")
 
@@ -945,7 +984,7 @@ def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
             t1 = sptree.copy()
             generate_tree_node(t1, node, prefix)
             create_hot_map_node(result1, hybrid_dic1, node, t1, prefix)
-            combine_fig(prefix)
+            combine_fig(prefix, mode="node")
             os.remove(f"{prefix}_hotmap.png")
             os.remove(f"{prefix}_img_faces.png")
 

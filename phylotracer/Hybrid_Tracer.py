@@ -529,6 +529,27 @@ def write_out(out, triple, outfile):
 # ======================================================
 
 
+def write_summary_report(summary_path, overall_stats, per_node_stats):
+    """Write a compact run summary for Hybrid_Tracer outputs."""
+    with open(summary_path, "w") as out:
+        out.write("metric	value\n")
+        for key in [
+            "gd_nodes_detected",
+            "gd_nodes_processed",
+            "gd_events_total",
+            "gd_events_skipped_no_outgroup",
+            "hyde_triples_tested",
+            "hyde_triples_filtered",
+        ]:
+            out.write(f"{key}\t{overall_stats.get(key, 0)}\n")
+        out.write("\nnode	gd_events	skipped_no_outgroup	hyde_triples	filtered_triples\n")
+        for node_name, stats in per_node_stats.items():
+            out.write(
+                f"{node_name}\t{stats.get('gd_events', 0)}\t{stats.get('skipped_no_outgroup', 0)}\t"
+                f"{stats.get('hyde_triples', 0)}\t{stats.get('filtered_triples', 0)}\n"
+            )
+
+
 def hyde_main(
     tre_dic,
     seq_path_dic,
@@ -566,6 +587,15 @@ def hyde_main(
     HyDe results are written to ``hyde_out.txt`` and ``hyde_filtered_out.txt``.
     """
     hyde_tuple_lst = []
+    overall_stats = {
+        "gd_nodes_detected": 0,
+        "gd_nodes_processed": 0,
+        "gd_events_total": 0,
+        "gd_events_skipped_no_outgroup": 0,
+        "hyde_triples_tested": 0,
+        "hyde_triples_filtered": 0,
+    }
+    per_node_stats = {}
     gd_count_dic, gd_type_dic = get_gd_count_dic_and_gd_type_dic(
         tre_dic,
         gene2new_named_gene_dic,
@@ -573,6 +603,7 @@ def hyde_main(
     )
     data = count_elements_in_lists(gd_type_dic)
     gd_clades = get_process_gd_clade(data, gd_count_dic)
+    overall_stats["gd_nodes_detected"] = len(gd_clades)
 
     for gd in gd_clades:
         gd_name, gds = gd
@@ -582,6 +613,14 @@ def hyde_main(
         logger.info("%s is processing", gd_name)
         logger.info("Total gene duplication events in dataset: %d", len(gds))
         logger.info("Number of parallel processing groups: %d", gd_group)
+        overall_stats["gd_nodes_processed"] += 1
+        overall_stats["gd_events_total"] += len(gds)
+        per_node_stats[gd_name] = {
+            "gd_events": len(gds),
+            "skipped_no_outgroup": 0,
+            "hyde_triples": 0,
+            "filtered_triples": 0,
+        }
 
         split_gds = np.array_split(gds, gd_group)
         fixed_outgroup_species = get_outgroup_species_for_gd_node(gd_name, rename_sptree)
@@ -604,7 +643,7 @@ def hyde_main(
         for i, sub_group in enumerate(split_gds):
             logger.info("Batch %d: %d gene duplication events", i+1, len(sub_group))
         for sub_group in split_gds:
-            hyde_result_lst = process_gd_group(
+            hyde_result_lst, group_stats = process_gd_group(
                 sub_group,
                 rename_sptree,
                 gd_name,
@@ -615,6 +654,12 @@ def hyde_main(
                 fixed_outgroup_species,
             )
             hyde_tuple_lst.extend(hyde_result_lst)
+            overall_stats["gd_events_skipped_no_outgroup"] += group_stats.get("skipped_no_outgroup", 0)
+            overall_stats["hyde_triples_tested"] += len(hyde_result_lst)
+            overall_stats["hyde_triples_filtered"] += sum(1 for _, res, t_num in hyde_result_lst if is_filtered(res, t_num))
+            per_node_stats[gd_name]["skipped_no_outgroup"] += group_stats.get("skipped_no_outgroup", 0)
+            per_node_stats[gd_name]["hyde_triples"] += len(hyde_result_lst)
+            per_node_stats[gd_name]["filtered_triples"] += sum(1 for _, res, t_num in hyde_result_lst if is_filtered(res, t_num))
     header = (
         "P1\tHybrid\tP2\tZscore\tPvalue\tGamma\tAAAA\tAAAB\tAABA\tAABB\tAABC\tABAA\t"
         "ABAB\tABAC\tABBA\tBAAA\tABBC\tCABC\tBACA\tBCAA\tABCD\n"
@@ -629,6 +674,8 @@ def hyde_main(
             write_out(res, t, out_file)
             if is_filtered(res, t_num):
                 write_out(res, t, filtered_out_file)
+
+    write_summary_report("hyde_summary.txt", overall_stats, per_node_stats)
 
 
 def process_gd_group(
@@ -671,6 +718,7 @@ def process_gd_group(
     -----------
     Outgroup selection uses ``get_outgroup_gene`` heuristics.
     """
+    group_stats = {"skipped_no_outgroup": 0}
     target_node_name = target_node if target_node else gd_name
     target_clade = rename_sptree & target_node_name
     all_matrices = []
@@ -696,6 +744,7 @@ def process_gd_group(
         outgroup_gene = get_outgroup_gene(gd_clade, outgroup_species)
         if outgroup_gene is None:
             skipped_no_outgroup += 1
+            group_stats["skipped_no_outgroup"] += 1
             gd_map = rename_sptree.get_common_ancestor(get_species_set(gd_clade))
             if outgroup_species is None:
                 expected_outgroup_species = "None"
@@ -726,7 +775,7 @@ def process_gd_group(
 
     if not all_matrices:
         logger.warning("No valid matrices found for GD group %s. Returning empty result.", gd_name)
-        return []
+        return [], group_stats
 
     merged_matrix = pd.concat(all_matrices, axis=1)
     merged_matrix = merged_matrix.fillna("-")
@@ -738,7 +787,7 @@ def process_gd_group(
         voucher2taxa_dic,
         target_clade,
     )
-    return hyde_result_lst
+    return hyde_result_lst, group_stats
 
 
 def run_hyde_from_matrix_integrated(

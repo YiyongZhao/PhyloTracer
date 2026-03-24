@@ -453,6 +453,8 @@ Example:
 
         PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 1] [--output_dir DIR]
 
+    Outputs: ``hyde_out.txt``, ``hyde_filtered_out.txt``, and ``hyde_summary.txt``.
+
 
 16. Hybrid_Visualizer
 ----------------------
@@ -475,6 +477,8 @@ Example:
     .. code-block:: bash
 
         PhyloTracer Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node] [--output_dir DIR]
+
+    Combined figure legend: red = focal hybrid/clade, blue = target internal node label in ``--node`` mode, yellow = γ values, white = tested hybridization combinations.
 
 
 17. HaploFinder
