@@ -56,7 +56,7 @@ def scale_support(phylo_tree: object, scale: str = "100") -> object:
     if isinstance(scale, str) and scale.isdigit():
         scale = int(scale)
 
-    if max_support <= 1:
+    if max_support <= 1 + 1e-9:  # FIX: epsilon guard for floating-point drift
         if scale == 100:
             for node in phylo_tree.traverse():
                 if hasattr(node, "support"):

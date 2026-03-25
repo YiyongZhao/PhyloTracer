@@ -599,7 +599,7 @@ def handle_tree_visualizer(cli_args):
             elif file_extension in ('.txt', '.tsv'):
                 df = pd.read_csv(cli_args.heatmap_matrix, sep='\t', index_col=0)
             else:
-                raise ValueError("Unsupported heatmap matrix format. Use .txt/.tsv (tab-delimited, recommended), .csv, .xls, or .xlsx.")
+                logger.error("Unsupported heatmap matrix format. Use .txt/.tsv (tab-delimited, recommended), .csv, .xls, or .xlsx.")
 
         view_main(
             tre_dic,

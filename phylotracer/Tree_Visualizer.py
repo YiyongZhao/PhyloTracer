@@ -550,7 +550,7 @@ def tips_mark(
                 fstyle="italic",
             )
             gene_pos = "aligned" if str(keep_branch) != "1" else "branch-right"
-            node.add_face(gene_face, column=-1, position=gene_pos)
+            node.add_face(gene_face, column=0,  # FIX: ete3 does not support negative column index position=gene_pos)
         if species in sps_color_dict:
             color = sps_color_dict[species].split("@")[ -1]
             species_face = TextFace(

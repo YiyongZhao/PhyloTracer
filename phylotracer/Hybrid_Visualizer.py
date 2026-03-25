@@ -543,7 +543,7 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
         save_placeholder_heatmap(filename, f"No valid HyDe summaries for node {node.name}")
         return
 
-    tup_result_df = tup_result_df.astype(int)
+    tup_result_df = tup_result_df.fillna(0).astype(int)  # FIX: fillna before int cast to avoid ValueError
 
     for leaf in node_s:
         tup_result_df.loc[:, leaf] = np.nan

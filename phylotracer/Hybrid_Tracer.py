@@ -993,7 +993,9 @@ def matrix_to_phy(
 
         species_seqs, trimmed_len = trimal_matrix(species_seqs)
     else:
-        trimmed_len = len(next(iter(species_seqs.values())))
+        if not species_seqs:  # FIX: guard against empty species_seqs
+        return None
+    trimmed_len = len(next(iter(species_seqs.values())))
 
     num_species = len(species_seqs)
     with open(output_file, "w") as f:

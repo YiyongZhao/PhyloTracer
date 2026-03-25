@@ -51,10 +51,12 @@ def collapse_nodes(phylo_tree: object, node_support_value: int) -> object:
     if not hasattr(phylo_tree, "copy") or not hasattr(phylo_tree, "traverse"):
         raise AttributeError("phylo_tree must have 'copy' and 'traverse' methods.")
     phylo_tree_copy = phylo_tree.copy()
-    for node in phylo_tree_copy.traverse():
-        if not node.is_leaf() and not node.is_root():
-            if getattr(node, "support", 0) < node_support_value:
-                node.delete(preserve_branch_length=True)
+    # FIX: collect nodes first to avoid mutate-during-traverse (ete3 skips nodes)
+    nodes_to_delete = [node for node in phylo_tree_copy.traverse()
+                       if not node.is_leaf() and not node.is_root()
+                       and getattr(node, "support", 0) < node_support_value]
+    for node in nodes_to_delete:
+        node.delete(preserve_branch_length=True)
     return phylo_tree_copy
 
 

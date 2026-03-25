@@ -1238,9 +1238,9 @@ if __name__ == "__main__":
     target_chr2 = sys.argv[13]
     size = float(sys.argv[14])
 
-    # TODO: user will supplement process_blastp_result and parse_synteny_file
-    process_blastp_pairs = process_blastp_result(blastp_pairs, num)
-    alignments, alignment_scores = parse_synteny_file(synteny_pairs)
+    # FIX: stub functions — these must be implemented with project-specific parsing logic
+    process_blastp_pairs = _process_blastp_result_stub(blastp_pairs, num)
+    alignments, alignment_scores = _parse_synteny_file_stub(synteny_pairs)
     process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
     input_sps_tree = sys.argv[15]
     process_gd_pairs = process_gd_result(gf, imap, input_sps_tree, spe1, spe2, 50, 50)
@@ -1250,6 +1250,47 @@ if __name__ == "__main__":
     logger.info("-" * 30)
     generate_dotplot(gff1, gff2, lens1, lens2, process_gd_pairs, spe1, spe2, "gd_pairs", target_chr1, target_chr2, size)
     total_pairs = [process_blastp_pairs, process_synteny_pairs, process_gd_pairs]
-    # TODO: user will supplement process_total_color_list
-    total_lst = process_total_color_list(total_pairs)
+    # FIX: stub function — must be implemented with project-specific merging logic
+    total_lst = _process_total_color_list_stub(total_pairs)
     generate_dotplot(gff1, gff2, lens1, lens2, total_lst, spe1, spe2, "total_pairs", target_chr1, target_chr2, size)
+
+
+# ============================================================
+# Stub functions (CRITICAL: must be implemented)
+# ============================================================
+
+def _process_blastp_result_stub(blastp_pairs, num):
+    """Stub: parse blastp output into gene pairs with coordinates.
+    
+    Must be implemented to return a list of tuples:
+    [(chr1, start1, end1, chr2, start2, end2, color), ...]
+    """
+    raise NotImplementedError(
+        "process_blastp_result is not yet implemented. "
+        "Please provide a function that parses blastp pairwise results "
+        "into coordinate-annotated gene pairs for dotplot visualization."
+    )
+
+
+def _parse_synteny_file_stub(synteny_pairs):
+    """Stub: parse synteny block file into alignments and scores.
+    
+    Must be implemented to return (alignments_dict, scores_dict).
+    """
+    raise NotImplementedError(
+        "parse_synteny_file is not yet implemented. "
+        "Please provide a function that parses synteny block files "
+        "(e.g., MCScanX or JCVI output) into alignment and score dictionaries."
+    )
+
+
+def _process_total_color_list_stub(total_pairs):
+    """Stub: merge multiple dotplot pair lists with color priority.
+    
+    Must be implemented to return a merged list with color-priority resolution.
+    """
+    raise NotImplementedError(
+        "process_total_color_list is not yet implemented. "
+        "Please provide a function that merges blastp, synteny, and GD pairs "
+        "with appropriate color priority for the combined dotplot."
+    )

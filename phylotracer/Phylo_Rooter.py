@@ -429,7 +429,7 @@ def calculate_tree_statistics(
         The tree is bifurcating at the root.
     """
     if len(tree.children) < 2:
-        return 0, 0, 0, 0, 0, 100
+        return 0, 0, 0, 0, 0, 1.0  # FIX: RF fallback was 100, but normal range is [0,1]
     up_clade = tree.children[1]
     down_clade = tree.children[0]
 
@@ -615,6 +615,8 @@ def normalize_and_score(
         w = {c: v / w_sum for c, v in raw_w.items()}
     else:
         n = len(normed.columns)
+        if n == 0:  # FIX: guard against empty columns
+            return df
         w = {c: 1.0 / n for c in normed.columns}
 
     score = pd.Series(0.0, index=df.index)

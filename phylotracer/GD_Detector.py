@@ -150,6 +150,9 @@ def write_gene_duplication_results(
 
                 mapped_parent = species_tree & clade.map
                 
+                if mapped_parent.is_leaf():  # FIX: check is_leaf BEFORE get_model to avoid crash
+                    continue
+
                 if gdtype_mode == "strict":
                     raw_model = get_model_strict(
                         clade,
@@ -159,9 +162,6 @@ def write_gene_duplication_results(
                 else:
                     raw_model = get_model(clade, species_tree)
                 gd_type_for_output = normalize_model(raw_model)
-                
-                if mapped_parent.is_leaf():
-                    continue
 
                 # Keep numerator/denominator consistent with `gd_clade_count`
                 # by excluding leaf-level mappings from GD ratio counting.
