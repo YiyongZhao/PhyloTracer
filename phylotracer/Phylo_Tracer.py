@@ -1006,7 +1006,7 @@ def main():
     global CURRENT_COMMAND
     if sys.version_info.major == 2:
         print('You are using Python 2. Please upgrade to Python 3. PhyloTracer quit now...')
-        sys.exit(1)  # FIX: exit with error code on Python 2
+        sys.exit(1)  # exit with error code on Python 2
     print(BANNER)
     logging.basicConfig(
         level=logging.INFO,

@@ -215,7 +215,7 @@ def mark_sptree(
                 percentages = [round(v / total * 100, 1) for v in values]
                 diff = 100.0 - sum(percentages)
                 if percentages:
-                    percentages[0] = max(0, percentages[0] + diff)  # FIX: clamp to prevent negative percentage
+                    percentages[0] = max(0, percentages[0] + diff)  # clamp to prevent negative percentage
                 pie_face = PieChartFace(percentages, width=6, height=6, colors=colors)
 
         gd_text_face = None

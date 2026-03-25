@@ -429,7 +429,7 @@ def calculate_tree_statistics(
         The tree is bifurcating at the root.
     """
     if len(tree.children) < 2:
-        return 0, 0, 0, 0, 0, 1.0  # FIX: RF fallback was 100, but normal range is [0,1]
+        return 0, 0, 0, 0, 0, 1.0  # RF fallback was 100, but normal range is [0,1]
     up_clade = tree.children[1]
     down_clade = tree.children[0]
 
@@ -558,7 +558,7 @@ def _minmax_norm(s: pd.Series, cost: bool) -> pd.Series:
             When max == min (no discriminative power), returns 0.5 (neutral).
     """
     lo, hi = s.min(), s.max()
-    if pd.isna(lo) or pd.isna(hi):  # FIX: guard against NaN in normalization
+    if pd.isna(lo) or pd.isna(hi):  # guard against NaN in normalization
         return s
     if hi == lo:
         return pd.Series(0.5, index=s.index)
@@ -617,7 +617,7 @@ def normalize_and_score(
         w = {c: v / w_sum for c, v in raw_w.items()}
     else:
         n = len(normed.columns)
-        if n == 0:  # FIX: guard against empty columns
+        if n == 0:  # guard against empty columns
             return df
         w = {c: 1.0 / n for c in normed.columns}
 
@@ -815,7 +815,7 @@ def root_main(
             stat_df["tree_id"] = stat_df["Tree"].apply(lambda x: "_".join(x.split("_")[:-1]))
             cols = ["Tree", "score", "deep", "var", "GD", "species_overlap", "gd_consistency", "RF"]
             stat_df = stat_df.sort_values(by=["tree_id", "score"], ascending=[True, False])[cols]
-            stat_df.to_csv(os.path.join(dir_path, "stat_matrix.csv"), index=False)  # FIX: save to dir_path not CWD
+            stat_df.to_csv(os.path.join(dir_path, "stat_matrix.csv"), index=False)  # save to dir_path not CWD
 
     finally:
         pbar.close()

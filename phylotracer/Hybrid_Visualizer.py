@@ -543,7 +543,7 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
         save_placeholder_heatmap(filename, f"No valid HyDe summaries for node {node.name}")
         return
 
-    tup_result_df = tup_result_df.fillna(0).astype(int)  # FIX: fillna before int cast to avoid ValueError
+    tup_result_df = tup_result_df.fillna(0).astype(int)  # fillna before int cast to avoid ValueError
 
     for leaf in node_s:
         tup_result_df.loc[:, leaf] = np.nan
@@ -941,8 +941,8 @@ def hyde_visual_leaf_main(out_file_name, sptree, output_dir=None):
         generate_tree_leaf(t1, k, prefix)
         create_hot_map_leaf(result1, v, t1, prefix)
         combine_fig(prefix, mode="leaf")
-        if os.path.exists(f"{prefix}_hotmap.png"): os.remove(f"{prefix}_hotmap.png")  # FIX: guard
-        if os.path.exists(f"{prefix}_img_faces.png"): os.remove(f"{prefix}_img_faces.png")  # FIX: guard
+        if os.path.exists(f"{prefix}_hotmap.png"): os.remove(f"{prefix}_hotmap.png")  # guard
+        if os.path.exists(f"{prefix}_img_faces.png"): os.remove(f"{prefix}_img_faces.png")  # guard
 
 
 def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
@@ -985,8 +985,8 @@ def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
             generate_tree_node(t1, node, prefix)
             create_hot_map_node(result1, hybrid_dic1, node, t1, prefix)
             combine_fig(prefix, mode="node")
-            if os.path.exists(f"{prefix}_hotmap.png"): os.remove(f"{prefix}_hotmap.png")  # FIX: guard
-            if os.path.exists(f"{prefix}_img_faces.png"): os.remove(f"{prefix}_img_faces.png")  # FIX: guard
+            if os.path.exists(f"{prefix}_hotmap.png"): os.remove(f"{prefix}_hotmap.png")  # guard
+            if os.path.exists(f"{prefix}_img_faces.png"): os.remove(f"{prefix}_img_faces.png")  # guard
 
 
 # ======================================================

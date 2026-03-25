@@ -318,7 +318,7 @@ def remove_long_branches(
             if sister.is_leaf():
                 sister_avg = pruned_tree.get_distance(sister)
             else:
-                sister_avg = get_average_node_length(sister) + pruned_tree.get_distance(sister) - sister.dist  # FIX: subtract sister.dist to avoid double-counting
+                sister_avg = get_average_node_length(sister) + pruned_tree.get_distance(sister) - sister.dist  # subtract sister.dist to avoid double-counting
 
             # SRBR is also defined on root-to-tip distances.
             if sister_avg < 1e-10:

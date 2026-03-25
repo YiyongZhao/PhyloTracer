@@ -240,7 +240,7 @@ def generate_sps_voucher(sps_num: int) -> List[str]:
 
     vouchers: Set[str] = set()
     max_possible = len(characters) * (len(characters) - 1) * (len(characters) - 2)
-    if sps_num > max_possible:  # FIX: prevent infinite loop
+    if sps_num > max_possible:  # prevent infinite loop
         raise ValueError(f"Cannot generate {sps_num} unique vouchers from {len(characters)} characters (max={max_possible})")
     while len(vouchers) < sps_num:
         vouchers.add("".join(random.sample(characters, 3)))
@@ -833,7 +833,7 @@ def find_dup_node(
         if not hasattr(node, 'map') or node.map == "unknown":
             continue
 
-        try:  # FIX: guard against TreeError when node.map not in species_tree
+        try:  # guard against TreeError when node.map not in species_tree
             species_set = get_species_set(species_tree&node.map)
         except Exception:
             continue

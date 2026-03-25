@@ -150,7 +150,7 @@ def write_gene_duplication_results(
 
                 mapped_parent = species_tree & clade.map
                 
-                if mapped_parent.is_leaf():  # FIX: check is_leaf BEFORE get_model to avoid crash
+                if mapped_parent.is_leaf():  # check is_leaf BEFORE get_model to avoid crash
                     continue
 
                 if gdtype_mode == "strict":
