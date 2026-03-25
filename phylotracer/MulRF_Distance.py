@@ -28,7 +28,7 @@ def infer_species_from_name(gene_name: str, separator: str = "_", position: str 
         parts = gene_name.rsplit(separator, 1)
         return parts[0] if len(parts) > 1 else gene_name
     parts = gene_name.split(separator, 1)
-    return parts[1] if len(parts) > 1 else gene_name
+    return parts[0] if len(parts) > 1 else gene_name  # FIX: position=first should return prefix, not suffix
 
 
 def build_species_map(

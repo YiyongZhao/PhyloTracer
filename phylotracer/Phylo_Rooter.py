@@ -558,6 +558,8 @@ def _minmax_norm(s: pd.Series, cost: bool) -> pd.Series:
             When max == min (no discriminative power), returns 0.5 (neutral).
     """
     lo, hi = s.min(), s.max()
+    if pd.isna(lo) or pd.isna(hi):  # FIX: guard against NaN in normalization
+        return s
     if hi == lo:
         return pd.Series(0.5, index=s.index)
     normed = (s - lo) / (hi - lo)
@@ -813,7 +815,7 @@ def root_main(
             stat_df["tree_id"] = stat_df["Tree"].apply(lambda x: "_".join(x.split("_")[:-1]))
             cols = ["Tree", "score", "deep", "var", "GD", "species_overlap", "gd_consistency", "RF"]
             stat_df = stat_df.sort_values(by=["tree_id", "score"], ascending=[True, False])[cols]
-            stat_df.to_csv("stat_matrix.csv", index=False)
+            stat_df.to_csv(os.path.join(dir_path, "stat_matrix.csv"), index=False)  # FIX: save to dir_path not CWD
 
     finally:
         pbar.close()

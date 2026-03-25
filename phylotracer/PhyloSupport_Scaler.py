@@ -53,7 +53,7 @@ def scale_support(phylo_tree: object, scale: str = "100") -> object:
     except Exception as exc:
         raise RuntimeError(f"Failed to get support values: {exc}")
 
-    if isinstance(scale, str) and scale.isdigit():
+    if isinstance(scale, str) and scale.replace(".", "", 1).isdigit():  # FIX: accept decimal strings like "0.5"
         scale = int(scale)
 
     if max_support <= 1 + 1e-9:  # FIX: epsilon guard for floating-point drift

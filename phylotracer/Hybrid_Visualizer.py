@@ -941,8 +941,8 @@ def hyde_visual_leaf_main(out_file_name, sptree, output_dir=None):
         generate_tree_leaf(t1, k, prefix)
         create_hot_map_leaf(result1, v, t1, prefix)
         combine_fig(prefix, mode="leaf")
-        os.remove(f"{prefix}_hotmap.png")
-        os.remove(f"{prefix}_img_faces.png")
+        if os.path.exists(f"{prefix}_hotmap.png"): os.remove(f"{prefix}_hotmap.png")  # FIX: guard
+        if os.path.exists(f"{prefix}_img_faces.png"): os.remove(f"{prefix}_img_faces.png")  # FIX: guard
 
 
 def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
@@ -985,8 +985,8 @@ def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
             generate_tree_node(t1, node, prefix)
             create_hot_map_node(result1, hybrid_dic1, node, t1, prefix)
             combine_fig(prefix, mode="node")
-            os.remove(f"{prefix}_hotmap.png")
-            os.remove(f"{prefix}_img_faces.png")
+            if os.path.exists(f"{prefix}_hotmap.png"): os.remove(f"{prefix}_hotmap.png")  # FIX: guard
+            if os.path.exists(f"{prefix}_img_faces.png"): os.remove(f"{prefix}_img_faces.png")  # FIX: guard
 
 
 # ======================================================

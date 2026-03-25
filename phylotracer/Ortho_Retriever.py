@@ -127,6 +127,8 @@ def offcut_tre(Phylo_t: object, renamed_len_dic: dict) -> list:
     offcut_ev_seqs_L0 = []
     for ev_seqs in tre_ParaL:
         fd = ev_seqs.strip().split("<=>")
+        if len(fd) != 2:  # FIX: guard against malformed input without <=> separator
+            continue
         ev_seqs1, ev_seqs2 = set(fd[0].split(",")), set(fd[1].split(","))
         if None in ev_seqs1 or None in ev_seqs2:
             continue

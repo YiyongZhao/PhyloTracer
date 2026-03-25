@@ -803,7 +803,7 @@ def tips_mark(
     for node in Phylo_t1.traverse():
         if node.is_leaf():
             gene = new_named_gene2gene_dic[node.name]
-            species = voucher2taxa_dic[node.name.split("_")[0]]
+            species = voucher2taxa_dic.get(node.name.split("_")[0], node.name.split("_")[0])  # FIX: guard against missing voucher
             rename_species = node.name.split("_")[0]
             add_species_face(node, gene, rename_species, sps_color_dict)
             column = 1
@@ -818,7 +818,7 @@ def tips_mark(
                 add_face_to_node(node, face_placeholder, column, position="aligned")
             column += 1
     if df is not None:
-        add_heat_map_to_node(Phylo_t1, df, new_named_gene2gene_dic, column)
+        add_heat_map_to_node(Phylo_t1, df, new_named_gene2gene_dic, column if "column" in dir() else 1)  # FIX: guard against unbound column
         add_header_to_tree(ts, df, column)
         add_color_bar(ts)
 
@@ -1154,7 +1154,7 @@ def mark_gene_to_sptree(
                         position = (
                             "branch-top" if n == 1 or index < n / 2 else "branch-bottom"
                         )
-                        column = index if n == 1 or index < n / 2 else index - n / 2
+                        column = int(index if n == 1 or index < n / 2 else index - n / 2)  # FIX: ete3 expects int column
 
                         entry = sorted_dict.get(value)
                         if entry is not None:

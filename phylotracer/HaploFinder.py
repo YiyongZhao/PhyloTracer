@@ -727,8 +727,7 @@ def find_gene_conversion(dict_gd, dict_gff1, dict_gff2, lens_1, lens_2, gene_con
 
 def find_gene_pair_info(gene_conversion_list, dict_gd, dict_gff1, dict_gff2, gd_pairs):
     sort_lst = []
-    with open(f"gene_conversion_{gd_pairs}.txt", "w") as f:
-        for block in gene_conversion_list:
+    for block in gene_conversion_list:  # FIX: removed redundant file open that truncated output
             chr_a = block["chr_a"]
             chr_b = block["chr_b"]
 

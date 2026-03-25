@@ -290,9 +290,9 @@ def get_maptree_node_count_dic(sp_list, map_clade):
         if i in sp_dic:
             sp_dic[i] += 1
 
-    tips = set([j for j in sp_dic.keys() if not j.startswith("S")])
+    tips = set([j for j in sp_dic.keys() if not (j.startswith("S") and j[1:].isdigit())])  # FIX: only match S+digits as internal nodes, not species like Solanum
     for k, v in sp_dic.items():
-        if k.startswith("S"):
+        if k.startswith("S") and k[1:].isdigit():  # FIX: match S+digits only
             if v == 0:
                 t = map_clade & k
                 sp = get_species_set(t)

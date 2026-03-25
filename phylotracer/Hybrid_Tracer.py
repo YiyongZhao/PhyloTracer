@@ -843,7 +843,7 @@ def run_hyde_from_matrix_integrated(
     imap = {}
     with open(tmp_imap_path, "w") as imap_file:
         for species in clean_matrix.index:
-            sp_0 = voucher2taxa_dic[species]
+            sp_0 = voucher2taxa_dic.get(species, species)  # FIX: guard against missing voucher
             if species not in target_sps:
                 imap[sp_0] = "out"
                 imap_file.write(f"{sp_0}\tout\n")
@@ -945,7 +945,7 @@ def matrix_to_phy(
 
     for col in clean_matrix.columns:
         for species, gene_id in clean_matrix[col].items():
-            sp = voucher2taxa_dic[species]
+            sp = voucher2taxa_dic.get(species, species)  # FIX: guard against missing voucher
             if gene_id != "-" and gene_id in seq_dic:
                 seq = seq_dic[gene_id]
             else:
@@ -1060,7 +1060,7 @@ def process_one_gd(gd_clade: object, outgroup_gene: str):
         for species in all_species:
             genes_in_species = [gene for gene in triple if gene.split("_")[0] == species]
             if genes_in_species:
-                column_data.append(";".join(genes_in_species))
+                column_data.append(genes_in_species[0])  # FIX: pick first gene for multi-copy species (was ";".join which fails seq_dic lookup)
             else:
                 column_data.append("-")
         matrix_data.append(column_data)
