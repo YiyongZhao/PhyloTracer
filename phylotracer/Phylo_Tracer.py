@@ -30,7 +30,7 @@ from phylotracer import (
 )
 from phylotracer.BranchLength_NumericConverter import branch_length_numeric_converter_main
 from phylotracer.GD_Detector import write_gene_duplication_results
-from phylotracer.GD_Loss_Tracker import get_path_str_num_dic, parse_text_to_excel
+from phylotracer.GD_Loss_Tracker import get_path_str_num_dic, parse_text_to_csv
 from phylotracer.GD_Loss_Visualizer import visualizer_sptree
 from phylotracer.GD_Visualizer import gd_visualizer_main
 from phylotracer.HaploFinder import generate_dotplot, process_gd_result, split_sequences
@@ -714,7 +714,11 @@ def handle_gd_loss_tracker(cli_args):
             include_unobserved_species=cli_args.include_unobserved_species,
             node_count_mode=cli_args.node_count_mode,
         )
-        parse_text_to_excel('gd_loss_count_summary.txt')
+        parse_text_to_csv('gd_loss_count_summary.txt', 'gd_loss.csv')
+        if os.path.exists('gd_loss_count_summary.txt'):
+            os.remove('gd_loss_count_summary.txt')
+        if os.path.exists('gd_loss.xlsx'):
+            os.remove('gd_loss.xlsx')
         report_execution_time(start_time)
     else:
         logger.error("Required arguments for GD_Loss_Tracker command are missing.")

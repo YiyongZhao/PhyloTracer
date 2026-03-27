@@ -127,7 +127,7 @@ run_cmd m09 1 Tree_Visualizer \
   --dup_species_num 2 \
   --deepvar 1
 
-run_cmd m10 1 GD_Detector \
+run_cmd m10_relaxed 1 GD_Detector \
   --input_GF_list "${SCRIPT_DIR}/10_GD_Detector/GF_ID2path.imap" \
   --input_imap "${SCRIPT_DIR}/10_GD_Detector/gene2sps.imap" \
   --input_sps_tree "${SCRIPT_DIR}/10_GD_Detector/sptree.nwk" \
@@ -137,10 +137,28 @@ run_cmd m10 1 GD_Detector \
   --dup_species_num 2 \
   --deepvar 1
 
-run_cmd m11 1 GD_Visualizer \
-  --input_sps_tree "${SCRIPT_DIR}/11_GD_Visualizer/numed_sptree.nwk" \
-  --gd_result "${SCRIPT_DIR}/11_GD_Visualizer/gd_result_relaxed.txt" \
-  --input_imap "${SCRIPT_DIR}/11_GD_Visualizer/gene2sps.imap"
+run_cmd m10_strict 1 GD_Detector \
+  --input_GF_list "${SCRIPT_DIR}/10_GD_Detector/GF_ID2path.imap" \
+  --input_imap "${SCRIPT_DIR}/10_GD_Detector/gene2sps.imap" \
+  --input_sps_tree "${SCRIPT_DIR}/10_GD_Detector/sptree.nwk" \
+  --gd_support 50 \
+  --subclade_support 50 \
+  --dup_species_proportion 0 \
+  --dup_species_num 2 \
+  --deepvar 1 \
+  --gdtype_mode strict
+
+run_cmd m11_relaxed 0 GD_Visualizer \
+  --input_sps_tree "${BASE_OUT}/m10_relaxed/numed_sptree.nwk" \
+  --gd_result "${BASE_OUT}/m10_relaxed/gd_result_relaxed.txt" \
+  --input_imap "${SCRIPT_DIR}/11_GD_Visualizer/gene2sps.imap" \
+  --output "${BASE_OUT}/m11_relaxed/gd_result_relaxed.pdf"
+
+run_cmd m11_strict 0 GD_Visualizer \
+  --input_sps_tree "${BASE_OUT}/m10_strict/numed_sptree.nwk" \
+  --gd_result "${BASE_OUT}/m10_strict/gd_result_strict.txt" \
+  --input_imap "${SCRIPT_DIR}/11_GD_Visualizer/gene2sps.imap" \
+  --output "${BASE_OUT}/m11_strict/gd_result_strict.pdf"
 
 run_cmd m12 1 GD_Loss_Tracker \
   --input_GF_list "${SCRIPT_DIR}/12_GD_Loss_Tracker/GF_ID2path.imap" \
