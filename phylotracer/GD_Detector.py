@@ -374,7 +374,7 @@ if __name__ == "__main__":
     parser.add_argument("--input_sps_tree", required=True, help="Species tree file")
     parser.add_argument("--gd_support", type=int, default=50, help="Duplication support threshold")
     parser.add_argument("--subclade_support", type=int, default=0, help="Subclade support threshold")
-    parser.add_argument("--dup_species_proportion", type=float, default=0.2, help="Duplicated species percentage threshold")
+    parser.add_argument("--dup_species_proportion", type=float, default=0, help="Duplicated species percentage threshold")
     parser.add_argument("--dup_species_num", type=int, default=2, help="Duplicated species count threshold")
     parser.add_argument("--deepvar", type=int, default=1, help="Maximum topology distance")
     parser.add_argument("--gdtype_mode", default="relaxed", help="GD type mode (relaxed or strict)")

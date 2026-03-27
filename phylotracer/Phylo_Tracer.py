@@ -212,7 +212,7 @@ Tree_Visualizer_parser = subparsers.add_parser(
            '--gene_categories Family.imap Order.imap Clade.imap '
            '--input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt '
            '--keep_branch 1 --tree_style r --visual_gd --gd_support 50 --subclade_support 0 '
-           '--dup_species_proportion 0.2 --dup_species_num 2 --deepvar 1'
+           '--dup_species_proportion 0 --dup_species_num 2 --deepvar 1'
 )
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Tree_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
@@ -229,7 +229,7 @@ Tree_Visualizer_parser.add_argument('--heatmap_matrix', metavar='MATRIX_FILE', h
 Tree_Visualizer_parser.add_argument('--visual_gd', action='store_true', help='If set, overlay predicted GD nodes on gene-tree figures, default = False')
 Tree_Visualizer_parser.add_argument('--gd_support', metavar='INT', type=bounded_int(0, 100), default=50, help='Minimum support of a GD candidate node used by --visual_gd (accepted range: 0-100), default = 50')
 Tree_Visualizer_parser.add_argument('--subclade_support', metavar='INT', type=bounded_int(0, 100), default=0, help='Minimum support required in GD child subclades used by --visual_gd (accepted range: 0-100), default = 0')
-Tree_Visualizer_parser.add_argument('--dup_species_proportion', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0.2, help='Minimum overlap ratio of duplicated species between GD child clades used by --visual_gd (range: 0-1), default = 0.2')
+Tree_Visualizer_parser.add_argument('--dup_species_proportion', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0, help='Minimum overlap ratio of duplicated species between GD child clades used by --visual_gd (range: 0-1), default = 0')
 Tree_Visualizer_parser.add_argument('--dup_species_num', metavar='INT', type=bounded_int(1), default=2, help='Minimum number of overlapping duplicated species under a GD node used by --visual_gd, default = 2')
 Tree_Visualizer_parser.add_argument('--deepvar', metavar='INT', type=bounded_int(0), default=1, help='Maximum tolerated depth-variance score used by --visual_gd, default = 1')
 Tree_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
@@ -240,7 +240,7 @@ GD_Detector_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', req
 GD_Detector_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 GD_Detector_parser.add_argument('--gd_support', metavar='INT', type=bounded_int(0, 100), required=True, default=50, help='Minimum support of a GD candidate node (accepted range: 0-100; typical: 50-100), default = 50')
 GD_Detector_parser.add_argument('--subclade_support', metavar='INT', type=bounded_int(0, 100), required=True, default=0, help='Minimum support required in GD child subclades (accepted range: 0-100), default = 0')
-GD_Detector_parser.add_argument('--dup_species_proportion', metavar='FLOAT', type=bounded_float(0.0, 1.0), required=True, default=0.2, help='Minimum overlap ratio of duplicated species between the two GD child clades (range: 0-1), default = 0.2')
+GD_Detector_parser.add_argument('--dup_species_proportion', metavar='FLOAT', type=bounded_float(0.0, 1.0), required=True, default=0, help='Minimum overlap ratio of duplicated species between the two GD child clades (range: 0-1), default = 0')
 GD_Detector_parser.add_argument('--dup_species_num', metavar='INT', type=bounded_int(1), required=True, default=2, help='Minimum number of overlapping duplicated species under a GD node, default = 2')
 GD_Detector_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 GD_Detector_parser.add_argument('--deepvar', metavar='INT', type=bounded_int(0), required=True, default=1, help='Maximum tolerated depth-variance score for GD screening, default = 1')
@@ -266,12 +266,12 @@ GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='IMAP', required=Tru
 GD_Loss_Tracker_parser.add_argument('--target_species', metavar='SP', action='append', default=None, help='Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.')
 GD_Loss_Tracker_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.')
 GD_Loss_Tracker_parser.add_argument('--include_unobserved_species', action='store_true', help='Classification policy for species absent from the current gene family, default = False. If set, treat unobserved species as classifiable (2-2/2-1/2-0) based on left/right presence; if not set, label them as missing_data. This flag does not change loss_path copy-state values (0/1/2) or GD event detection.')
-GD_Loss_Tracker_parser.add_argument('--node_count_mode', choices=['nonaccumulate', 'accumulate'], default='nonaccumulate', help='Node counting mode for path_count_* transition statistics, default = nonaccumulate. nonaccumulate: within one GD event, repeated transitions on the same internal node are counted once; accumulate: keep all repeated transitions. This flag does not change the (0/1/2) copy-state numbers shown in loss_path.')
+GD_Loss_Tracker_parser.add_argument('--node_count_mode', choices=['parsimony', 'accumulate'], default='parsimony', help='Node counting mode for path_count_* transition statistics, default = parsimony. parsimony: if multiple descendant species share one ancestral loss, count it once at the shared ancestor; accumulate: count all descendant loss-path events. This flag does not change the (0/1/2) copy-state numbers shown in loss_path.')
 GD_Loss_Tracker_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # GD_Loss_Visualizer command
 GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='Visualize GD-loss summary results on species tree topology', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_result gd_loss_summary.txt [--output gd_loss_pie_visualizer.PDF]')
-GD_Loss_Visualizer_parser.add_argument('--gd_loss_result', metavar='GD_LOSS_RESULT', required=True, help='Detailed table generated by GD_Loss_Tracker (gd_loss_summary.txt)')
+GD_Loss_Visualizer_parser.add_argument('--gd_loss_result', metavar='GD_LOSS_RESULT', required=True, help='Detailed table generated by GD_Loss_Tracker. The visualizer renders that tracker output directly; by default it interprets the summary with parsimony semantics unless the input path explicitly indicates accumulate output.')
 GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format (required for species tree layout)')
 GD_Loss_Visualizer_parser.add_argument('--output', metavar='PDF', default='gd_loss_pie_visualizer.PDF', help='Output PDF path, default = gd_loss_pie_visualizer.PDF')
 
@@ -570,6 +570,7 @@ def handle_tree_visualizer(cli_args):
 
         if cli_args.input_sps_tree:
             sptree = Tree(cli_args.input_sps_tree)
+            num_sptree(sptree)
             sptree1 = rename_input_tre(sptree, taxa2voucher_dic)
 
         # Use the first category map as family-level input only for species-tree
@@ -680,6 +681,8 @@ def handle_gd_loss_tracker(cli_args):
         gene2new_named_gene_dic, new_named_gene2gene_dic, voucher2taxa_dic, taxa2voucher_dic = gene_id_transfer(cli_args.input_imap)
         sptree = PhyloTree(cli_args.input_sps_tree)
         num_sptree(sptree)
+        sptree.write(format=1, outfile="numed_sptree.nwk", format_root_node=True)
+        logger.info("Numbered species tree saved to numed_sptree.nwk")
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
 
         allowed_gd_species_sets = set()
@@ -721,7 +724,11 @@ def handle_gd_loss_visualizer(cli_args):
     if cli_args.input_sps_tree and cli_args.gd_loss_result:
         start_time = time.time()
         sptree = Tree(cli_args.input_sps_tree, format=1)
-        visualizer_sptree(cli_args.gd_loss_result, sptree, output_file=cli_args.output)
+        visualizer_sptree(
+            cli_args.gd_loss_result,
+            sptree,
+            output_file=cli_args.output,
+        )
         report_execution_time(start_time)
     else:
         logger.error("Required arguments for GD_Loss_Visualizer command are missing.")

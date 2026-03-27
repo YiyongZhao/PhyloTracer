@@ -847,10 +847,6 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support)
             Phylo_t1,
             renamed_sptree,
             gd_support=support,
-            clade_support=support,
-            dup_species_num=1,
-            dup_species_percent=0,
-            max_topology_distance=10**9,
         )
         dup_node_list = [
             node for node in dup_node_list_all

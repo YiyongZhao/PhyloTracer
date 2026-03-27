@@ -50,7 +50,7 @@ def dup_nodeids_from_numbered_gfs(
     gd_support: int = 50,
     subclade_support: int = 0,
     dup_species_num: int = 2,
-    dup_species_proportion: float = 0.2,
+    dup_species_proportion: float = 0,
     deepvar: int = 1,
 ) -> tuple:
     """
@@ -168,7 +168,6 @@ def set_node_style(
     Species labels can be extracted by ``get_species_list``.
     """
     nstyle = NodeStyle()
-    splist = set(get_species_list(node))
     nstyle["vt_line_width"] = 1
     nstyle["hz_line_width"] = 1
     nstyle["vt_line_type"] = 0
@@ -202,7 +201,7 @@ def get_treestyle(
     gd_support: int = 50,
     subclade_support: int = 0,
     dup_species_num: int = 2,
-    dup_species_proportion: float = 0.2,
+    dup_species_proportion: float = 0,
     deepvar: int = 1,
 ) -> object:
     """
@@ -1234,7 +1233,7 @@ def view_main(
     gd_support: int = 50,
     subclade_support: int = 0,
     dup_species_num: int = 2,
-    dup_species_proportion: float = 0.2,
+    dup_species_proportion: float = 0,
     deepvar: int = 1,
 ):
     """
@@ -1416,7 +1415,7 @@ if __name__ == "__main__":
     parser.add_argument("--gd_support", type=int, default=50, help="GD node support threshold")
     parser.add_argument("--subclade_support", type=int, default=0, help="Subclade support threshold")
     parser.add_argument("--dup_species_num", type=int, default=2, help="Minimum duplicated species count")
-    parser.add_argument("--dup_species_proportion", type=float, default=0.2, help="Duplicated species proportion threshold")
+    parser.add_argument("--dup_species_proportion", type=float, default=0, help="Duplicated species proportion threshold")
     parser.add_argument("--deepvar", type=int, default=1, help="Maximum depth variance")
     args = parser.parse_args()
 
