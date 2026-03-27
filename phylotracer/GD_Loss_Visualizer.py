@@ -300,7 +300,11 @@ def visualizer_sptree(
         node_name = node.name
 
         if node_name in gd_births and gd_births[node_name] > 0:
-            node.add_face(TextFace(f"{gd_births[node_name]}", fsize=6, fgcolor='blue'), column=0, position='branch-top')
+            node.add_face(
+                TextFace(f"B={gd_births[node_name]}", fsize=6, fgcolor='blue'),
+                column=0,
+                position='branch-top',
+            )
 
         if node_name in gd_births or node_name in event_loss_data or node_name in node_loss_counts:
             event_stats = event_loss_data.get(node_name, {'2-0': 0, '2-1': 0, '2-2': 0})
@@ -341,12 +345,13 @@ def visualizer_sptree(
     ts.extra_branch_line_type = 0
     ts.legend_position = 1
     ts.title.add_face(TextFace('Legend:', bold=True, fsize=10), column=0)
-    ts.title.add_face(TextFace('  Blue number: GD events count', fsize=6, fgcolor='blue'), column=0)
-    ts.title.add_face(TextFace('  Red E=2-2/2-1/2-0: event-level final copy-state counts', fsize=6, fgcolor='red'), column=0)
-    ts.title.add_face(TextFace('  Purple L: event-level loss score = (E2-0 + 0.5*E2-1) / GD number', fsize=6, fgcolor='purple'), column=0)
-    ts.title.add_face(TextFace('  Gray Lraw: shown when GD_birth=0 on a node', fsize=6, fgcolor='gray'), column=0)
+    ts.title.add_face(TextFace('  B=Birth: GD events originating at this node', fsize=6, fgcolor='blue'), column=0)
+    ts.title.add_face(TextFace('  Red E=2-2/2-1/2-0: final event-level copy-state counts', fsize=6, fgcolor='red'), column=0)
+    ts.title.add_face(TextFace('  Purple L: event-level loss score = (E2-0 + 0.5*E2-1) / Birth', fsize=6, fgcolor='purple'), column=0)
+    ts.title.add_face(TextFace('  Gray Lraw: shown when Birth=0 on a node', fsize=6, fgcolor='gray'), column=0)
     ts.title.add_face(TextFace(f'  {loss_label}: {loss_desc}', fsize=6, fgcolor=face_color), column=0)
     ts.title.add_face(TextFace(f'  {loss_label}20/21/10: node-loss breakdown by 2-0, 2-1, and 1-0 counts', fsize=6, fgcolor=face_color), column=0)
+    ts.title.add_face(TextFace(f'  Note: Birth and {loss_label} quantify different processes and are not expected to match', fsize=6, fgcolor='black'), column=0)
 
     try:
         sptree.convert_to_ultrametric()
