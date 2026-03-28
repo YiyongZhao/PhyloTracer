@@ -32,7 +32,7 @@ except ImportError:
     _MISSING_DEPS.append("ete3")
 
 try:
-    import numpy as np
+    import numpy as np  # noqa: F401
 except ImportError:
     _MISSING_DEPS.append("numpy")
 

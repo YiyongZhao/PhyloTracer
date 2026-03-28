@@ -10,7 +10,7 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 try:
-    from ete3 import PhyloTree, Tree
+    from ete3 import PhyloTree, Tree  # noqa: F401
     HAS_ETE3 = True
 except ImportError:
     HAS_ETE3 = False
