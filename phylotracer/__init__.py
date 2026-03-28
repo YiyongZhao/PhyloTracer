@@ -52,6 +52,8 @@ __all__ = [
     "calculate_gd_num",
     "stable_color_for_label",
     "serialize_tree_by_input_branch_length_style",
+    "realign_branch_length",
+    "get_max_deepth",
 ]
 
 # Fixed qualitative palette for consistent colors across all plotting modules.
@@ -629,6 +631,54 @@ def compute_tip_to_root_branch_length_variance(tree: Tree) -> float:
     """
     distances = [tree.get_distance(leaf) for leaf in tree.iter_leaves()]
     return float(np.var(distances)) if len(distances) > 1 else 0.0
+
+
+def realign_branch_length(tree: Tree) -> Tree:
+    """Re-scale branch lengths so every tip is equidistant from the root.
+
+    A copy of the input tree is returned with each leaf's branch length
+    adjusted so that the root-to-tip distance equals the maximum observed
+    root-to-tip distance in the original tree.
+
+    Args:
+        tree (Tree): ete3 Tree with branch lengths.
+
+    Returns:
+        Tree: A new tree with adjusted branch lengths.
+
+    Assumptions:
+        Branch lengths are defined and non-negative.
+    """
+    t = tree.copy()
+    max_dist = max((t.get_distance(leaf) for leaf in t.iter_leaves()), default=0.0)
+    for leaf in t.iter_leaves():
+        current = t.get_distance(leaf)
+        leaf.dist += max_dist - current
+    return t
+
+
+def get_max_deepth(tree) -> int:
+    """Return the maximum topological depth (number of nodes from root to deepest leaf).
+
+    Args:
+        tree: ete3 Tree, or ``None``.
+
+    Returns:
+        int: Maximum depth.  Returns 0 when *tree* is ``None``.
+    """
+    if tree is None:
+        return 0
+    max_depth = 0
+    for node in tree.traverse():
+        depth = 0
+        current = node
+        while current.up is not None:
+            depth += 1
+            current = current.up
+        if depth > max_depth:
+            max_depth = depth
+    # Add 1 to count the root itself
+    return max_depth + 1 if max_depth > 0 else (1 if tree is not None else 0)
 
 
 # =========================

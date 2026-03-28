@@ -307,9 +307,12 @@ def get_maptree_internal_node_name_set(node, sptree):
 
 
 def get_two_subclade_maptree_node_name_lst(max_clade, sptree):
-    clade_up = max_clade.get_children()[0]
+    children = max_clade.get_children()
+    if len(children) < 2:
+        return []
+    clade_up = children[0]
     clade_up_set = get_maptree_internal_node_name_set(clade_up, sptree)
-    clade_down = max_clade.get_children()[1]
+    clade_down = children[1]
     clade_down_set = get_maptree_internal_node_name_set(clade_down, sptree)
     up_down_lst = list(clade_up_set) + list(clade_down_set)
     return up_down_lst
@@ -345,11 +348,12 @@ def get_maptree_name(sptree, sps_set):
 def get_two_nodes_path_str(start_node, end_node):
     nodes = []
     current_node = start_node
-    while current_node != end_node:
+    while current_node is not None and current_node != end_node:
         nodes.append(current_node.name)
         current_node = current_node.up
-        if current_node is None:
-            break
+    if current_node is None:
+        # end_node was not an ancestor of start_node; return empty path
+        return []
     nodes.append(end_node.name)
     re_nodes = list(reversed(nodes))
 
