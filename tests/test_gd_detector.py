@@ -4,26 +4,24 @@ Tests for phylotracer.GD_Detector module.
 
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 try:
-    from ete3 import Tree, PhyloTree
+    from ete3 import PhyloTree, Tree
     HAS_ETE3 = True
 except ImportError:
     HAS_ETE3 = False
 
-from phylotracer.GD_Detector import normalize_model, get_model, order_children_by_name
-
 # Import shared utilities needed for annotation
 from phylotracer import (
     annotate_gene_tree,
-    num_tre_node,
-    get_species_set,
     find_dup_node,
+    num_tre_node,
 )
-
+from phylotracer.GD_Detector import get_model, normalize_model, order_children_by_name
 
 # =============================================
 # normalize_model tests

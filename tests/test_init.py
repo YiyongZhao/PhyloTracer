@@ -4,36 +4,36 @@ Tests for phylotracer.__init__ utility functions.
 
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 try:
-    from ete3 import Tree, PhyloTree
+    from ete3 import PhyloTree, Tree
     HAS_ETE3 = True
 except ImportError:
     HAS_ETE3 = False
 
 from phylotracer import (
-    is_rooted,
-    get_species_set,
-    get_species_list,
     calculate_species_num,
+    compute_tip_to_root_branch_length_variance,
+    find_tre_dup,
+    generate_sps_voucher,
+    get_gene_pairs,
+    get_max_deepth,
+    get_species_list,
+    get_species_set,
+    is_rooted,
+    judge_support,
+    map_species_set_to_node,
     num_tre_node,
     read_and_return_dict,
-    rename_input_tre,
     realign_branch_length,
-    get_max_deepth,
-    judge_support,
-    sps_dup_num,
-    get_gene_pairs,
-    generate_sps_voucher,
+    rename_input_tre,
     root_tre_with_midpoint_outgroup,
-    compute_tip_to_root_branch_length_variance,
-    map_species_set_to_node,
-    find_tre_dup,
+    sps_dup_num,
 )
-
 
 # =============================================
 # is_rooted tests

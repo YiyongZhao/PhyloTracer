@@ -5,25 +5,25 @@ This module centralizes mapping, tree-processing, and duplication-detection
 helpers used across the project to improve reproducibility and traceability.
 """
 
-import logging
-logger = logging.getLogger(__name__)
 import hashlib
+import logging
 import os
 import random
-import shutil
 import re
 from typing import Dict, List, Optional, Set, Tuple
 
 import numpy as np
 import pandas as pd
 from ete3 import PhyloTree, Tree
+
 try:
     from ete3 import NodeStyle, TextFace, TreeStyle
 except ImportError:
     NodeStyle = None
     TextFace = None
     TreeStyle = None
-from tqdm import tqdm
+
+logger = logging.getLogger(__name__)
 
 __all__ = [
     "read_and_return_dict",
@@ -868,10 +868,10 @@ def find_dup_node(
     for node in gene_tree.traverse("postorder"):
         if node.is_leaf() or not getattr(node, "is_gd", False):
             continue
-        
+
         if not judge_support(node.support, gd_support):
             continue
-        
+
         children = node.get_children()
         if len(children) != 2:
             continue
@@ -888,7 +888,7 @@ def find_dup_node(
             continue
         if not species_set:
             continue
-        
+
 
         # if len(species_set) == 1:
         #     dup_nodes.append(node)
@@ -897,7 +897,7 @@ def find_dup_node(
         # if len(species_set) == 2:
         #     sps_tree_lca = species_tree.get_common_ancestor(list(species_set))
         #     s_tree_leaves = set(sps_tree_lca.get_leaf_names())
-            
+
         #     if species_set == s_tree_leaves:
         #         dup_nodes.append(node)
         #         continue
@@ -907,7 +907,7 @@ def find_dup_node(
         sps_b = get_species_set(children[1])
         overlap_sps = sps_a & sps_b
         overlap_num = len(overlap_sps)
-        
+
         # Exclude small-scale duplications by enforcing a minimum overlap.
         if overlap_num < dup_species_num:
             continue

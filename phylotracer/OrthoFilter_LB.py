@@ -11,6 +11,7 @@ import shutil
 from typing import Dict, Optional, TextIO
 
 from ete3 import Tree
+
 try:
     from ete3 import NodeStyle, TextFace, TreeStyle
 except ImportError:

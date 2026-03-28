@@ -132,9 +132,9 @@ def get_bipartitions_species_level(gene_tree: Tree, sp_map: Dict[str, str], shar
         if node.is_leaf() or node.is_root():
             continue
         clade_species = frozenset(
-            sp_map[l.name]
-            for l in node.get_leaves()
-            if sp_map.get(l.name) in shared_species
+            sp_map[leaf.name]
+            for leaf in node.get_leaves()
+            if sp_map.get(leaf.name) in shared_species
         )
         if 0 < len(clade_species) < len(all_sp):
             bipartitions.add(clade_species)
@@ -149,7 +149,7 @@ def get_bipartitions_species_tree(sp_tree: Tree, shared_species: set) -> set:
         if node.is_leaf() or node.is_root():
             continue
         clade_species = frozenset(
-            l.name for l in node.get_leaves() if l.name in shared_species
+            leaf.name for leaf in node.get_leaves() if leaf.name in shared_species
         )
         if 0 < len(clade_species) < len(all_sp):
             bipartitions.add(clade_species)

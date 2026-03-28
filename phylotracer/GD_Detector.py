@@ -11,24 +11,24 @@ import logging
 import re
 from collections import Counter
 
-logger = logging.getLogger(__name__)
-
 import pandas as pd
 from ete3 import PhyloTree
 from tqdm import tqdm
 
 from phylotracer import (
-    read_phylo_tree,
-    rename_input_tre,
-    num_tre_node,
-    num_sptree,
     annotate_gene_tree,
     find_dup_node,
-    get_species_set,
-    get_gene_pairs,
     gene_id_transfer,
+    get_gene_pairs,
+    get_species_set,
+    num_sptree,
+    num_tre_node,
     read_and_return_dict,
+    read_phylo_tree,
+    rename_input_tre,
 )
+
+logger = logging.getLogger(__name__)
 
 # ======================================================
 # Section 1: Duplication Detection and Reporting
@@ -112,14 +112,14 @@ def write_gene_duplication_results(
             pbar.set_description(f"Processing {tree_id}")
             gene_tree = read_phylo_tree(tree_path)
             gene_tree = rename_input_tre(gene_tree, gene_to_new_name)
-            
+
             if len(gene_tree.children) != 2:
                 logger.warning("[Skip] %s is not a binary tree", tree_id)
                 continue
 
             num_tre_node(gene_tree)
             annotate_gene_tree(gene_tree, species_tree)
-            
+
             dup_node_list = find_dup_node(
                 gene_tree,
                 species_tree,
@@ -149,7 +149,7 @@ def write_gene_duplication_results(
                 dup_ratio = dup_species_count / len(species_set) if species_set else 0
 
                 mapped_parent = species_tree & clade.map
-                
+
                 if mapped_parent.is_leaf():  # check is_leaf BEFORE get_model to avoid crash
                     continue
 
@@ -169,7 +169,7 @@ def write_gene_duplication_results(
                     voucher_to_taxa.get(clade.map, clade.map),
                     set(),
                 ).add(clade)
-                
+
 
                 gd_type_dict.setdefault(
                     voucher_to_taxa.get(clade.map, clade.map),
@@ -336,12 +336,12 @@ def get_model_strict(clade: object, species_tree: object, deepvar: int) -> str:
 
     left_a, left_b = order_children_by_name(left_child)
     right_a, right_b = order_children_by_name(right_child)
-    
+
     if abs(left_a.depth - map_node_a.depth) <= deepvar:
         type1='A'
     else:
         type1='X'
-    
+
     if abs(right_a.depth - map_node_a.depth) <= deepvar:
         type2='A'
     else:
@@ -350,14 +350,14 @@ def get_model_strict(clade: object, species_tree: object, deepvar: int) -> str:
         type3='B'
     else:
         type3='X'
-    
+
     if abs(right_b.depth - map_node_b.depth) <= deepvar:
         type4='B'
     else:
         type4='X'
-    
+
     gdtype=type1+type2+type3+type4
-    
+
     return gdtype
 
 

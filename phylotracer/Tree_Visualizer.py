@@ -15,6 +15,7 @@ import string
 import numpy as np
 import pandas as pd
 from ete3 import PhyloTree, Tree
+
 try:
     from ete3 import NodeStyle, RectFace, TextFace, TreeStyle
 except ImportError:
@@ -28,16 +29,15 @@ from phylotracer import (
     annotate_gene_tree,
     find_dup_node,
     gene_id_transfer,
+    get_species_list,
     is_rooted,
     num_tre_node,
     read_and_return_dict,
     read_phylo_tree,
     rename_input_tre,
     root_tre_with_midpoint_outgroup,
-    get_species_list,
     stable_color_for_label,
 )
-
 
 # ======================================================
 # Section 2: Duplication and TreeStyle Utilities
@@ -582,11 +582,9 @@ def tips_mark(
         -----------
         ``gene_color_dict`` uses ``label@hexcolor`` values.
         """
-        matched_key = None
         matched_value = None
         for key in gene_color_dict:
             if fuzzy_match(key, gene):
-                matched_key = key
                 matched_value = gene_color_dict.get(key)
                 break
         if matched_value:
@@ -803,7 +801,6 @@ def tips_mark(
     for node in Phylo_t1.traverse():
         if node.is_leaf():
             gene = new_named_gene2gene_dic[node.name]
-            species = voucher2taxa_dic.get(node.name.split("_")[0], node.name.split("_")[0])  # guard against missing voucher
             rename_species = node.name.split("_")[0]
             add_species_face(node, gene, rename_species, sps_color_dict)
             column = 1

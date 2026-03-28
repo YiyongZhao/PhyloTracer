@@ -3,8 +3,9 @@ Tests for phylotracer.Phylo_Tracer CLI entry point.
 """
 
 import os
-import sys
 import subprocess
+import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -88,7 +89,6 @@ class TestCLIHelp:
 class TestInvalidCommand:
     def test_no_command_prints_usage(self):
         """Running without a subcommand should print usage and exit."""
-        from phylotracer.Phylo_Tracer import main
         # main() with no args prints usage and returns None
         # We test indirectly: _parser.parse_args([]) should set command=None
         from phylotracer.Phylo_Tracer import _parser
@@ -121,15 +121,17 @@ class TestBoundedValidators:
         assert validator("50") == 50
 
     def test_bounded_int_too_low(self):
-        from phylotracer.Phylo_Tracer import bounded_int
         import argparse
+
+        from phylotracer.Phylo_Tracer import bounded_int
         validator = bounded_int(0, 100)
         with pytest.raises(argparse.ArgumentTypeError):
             validator("-1")
 
     def test_bounded_int_too_high(self):
-        from phylotracer.Phylo_Tracer import bounded_int
         import argparse
+
+        from phylotracer.Phylo_Tracer import bounded_int
         validator = bounded_int(0, 100)
         with pytest.raises(argparse.ArgumentTypeError):
             validator("101")
@@ -140,15 +142,17 @@ class TestBoundedValidators:
         assert validator("0.5") == pytest.approx(0.5)
 
     def test_bounded_float_too_low(self):
-        from phylotracer.Phylo_Tracer import bounded_float
         import argparse
+
+        from phylotracer.Phylo_Tracer import bounded_float
         validator = bounded_float(0.0, 1.0)
         with pytest.raises(argparse.ArgumentTypeError):
             validator("-0.1")
 
     def test_bounded_float_too_high(self):
-        from phylotracer.Phylo_Tracer import bounded_float
         import argparse
+
+        from phylotracer.Phylo_Tracer import bounded_float
         validator = bounded_float(0.0, 1.0)
         with pytest.raises(argparse.ArgumentTypeError):
             validator("1.5")

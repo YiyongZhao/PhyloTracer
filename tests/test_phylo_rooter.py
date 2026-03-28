@@ -4,23 +4,23 @@ Tests for phylotracer.Phylo_Rooter module.
 
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 try:
-    from ete3 import Tree, PhyloTree
+    from ete3 import PhyloTree, Tree
     HAS_ETE3 = True
 except ImportError:
     HAS_ETE3 = False
 
 from phylotracer.Phylo_Rooter import (
+    annotate_mapped_depths,
+    get_dynamic_basal_set,
     get_species_map_and_depth,
     get_species_tree_basal_set,
-    get_dynamic_basal_set,
-    annotate_mapped_depths,
 )
-
 
 # =============================================
 # get_species_map_and_depth tests

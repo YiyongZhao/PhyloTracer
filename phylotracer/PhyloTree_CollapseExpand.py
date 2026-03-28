@@ -9,8 +9,6 @@ import logging
 import os
 import shutil
 
-logger = logging.getLogger(__name__)
-
 from tqdm import tqdm
 
 from phylotracer import (
@@ -19,6 +17,8 @@ from phylotracer import (
     serialize_tree_by_input_branch_length_style,
 )
 from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
+
+logger = logging.getLogger(__name__)
 
 # =========================
 # Low-Level Tree Utilities

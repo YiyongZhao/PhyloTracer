@@ -7,10 +7,7 @@ nodes, and renders annotated species trees with duplication summaries.
 
 import logging
 import os
-import re
 from collections import defaultdict
-
-logger = logging.getLogger(__name__)
 
 try:
     from ete3 import CircleFace, NodeStyle, PieChartFace, TextFace, TreeStyle
@@ -22,9 +19,11 @@ except ImportError:
     TreeStyle = None
 
 from phylotracer import (
-    read_phylo_tree,
     read_and_return_dict,
+    read_phylo_tree,
 )
+
+logger = logging.getLogger(__name__)
 
 # ======================================================
 # Section 1: GD Result Parsing and Aggregation
@@ -136,7 +135,7 @@ def mark_sptree(
     Species tree node names match those used in duplication summaries.
     """
     try:
-        from ete3 import TreeStyle, NodeStyle, TextFace, CircleFace, PieChartFace
+        from ete3 import CircleFace, NodeStyle, PieChartFace, TextFace, TreeStyle
     except ImportError:
         logger.error("ete3 is required. Install with: pip install ete3")
         return

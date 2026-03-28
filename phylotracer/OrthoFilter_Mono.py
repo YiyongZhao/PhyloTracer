@@ -15,6 +15,7 @@ from collections import Counter
 
 import numpy as np
 from ete3 import PhyloTree, Tree
+
 try:
     from ete3 import NodeStyle, TextFace, TreeStyle
 except ImportError:
@@ -659,7 +660,7 @@ def prune_one_clade_in_tree(
     dominant_roots = collect_dominant_lineages(
         t, leaf_to_clade, target_clade, dominant_purity
     )
-    
+
     removal_set = set()
     for dominant_root in dominant_roots:
         candidates = collect_alien_lineage_candidates(
@@ -699,7 +700,6 @@ def prune_one_clade_in_tree(
 
         # Record deletion rows only (one row per removed tip) without changing pruning behavior.
         for item in scores:
-            candidate_node = item["node"]
             candidate_leaf_names = item["leaf_names"]
 
             candidate_leaf_set = set(candidate_leaf_names)
@@ -948,6 +948,7 @@ def prune_main_Mono(
 
 if __name__ == "__main__":
     import argparse
+
     from phylotracer import gene_id_transfer, read_and_return_dict
 
     parser = argparse.ArgumentParser(description="Mono-copy ortholog pruning filter")

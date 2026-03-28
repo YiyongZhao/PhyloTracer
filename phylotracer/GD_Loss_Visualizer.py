@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import re
 from collections import defaultdict
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -257,7 +258,7 @@ def visualizer_sptree(
     input path explicitly indicates accumulate output.
     """
     try:
-        from ete3 import TreeStyle, NodeStyle, TextFace
+        from ete3 import NodeStyle, TextFace, TreeStyle
     except ImportError:
         logger.error('ete3 is required for visualization. Install with: pip install ete3')
         return
@@ -367,6 +368,7 @@ def visualizer_sptree(
 
 if __name__ == '__main__':
     import argparse
+
     from ete3 import Tree
 
     parser = argparse.ArgumentParser(description='Visualize gene duplication losses on a species tree.')

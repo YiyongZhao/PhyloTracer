@@ -9,11 +9,11 @@ import logging
 import os
 import shutil
 
-logger = logging.getLogger(__name__)
-
 from tqdm import tqdm
 
-from phylotracer import read_tree, read_and_return_dict
+from phylotracer import read_and_return_dict, read_tree
+
+logger = logging.getLogger(__name__)
 
 # =========================
 # Low-Level Tree Utilities

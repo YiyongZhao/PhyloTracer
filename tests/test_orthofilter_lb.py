@@ -5,6 +5,7 @@ Tests for phylotracer.OrthoFilter_LB module.
 import io
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -16,12 +17,11 @@ except ImportError:
     HAS_ETE3 = False
 
 from phylotracer.OrthoFilter_LB import (
-    has_multiple_copies,
-    get_average_tip_root_distance,
     get_average_node_length,
+    get_average_tip_root_distance,
+    has_multiple_copies,
     remove_long_branches,
 )
-
 
 # =============================================
 # has_multiple_copies tests

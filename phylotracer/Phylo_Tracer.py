@@ -14,11 +14,8 @@ import tempfile
 import textwrap
 import time
 
-logger = logging.getLogger(__name__)
-
 import pandas as pd
 from ete3 import PhyloTree, Tree
-from tqdm import tqdm
 
 from phylotracer import (
     gene_id_transfer,
@@ -36,15 +33,17 @@ from phylotracer.GD_Visualizer import gd_visualizer_main
 from phylotracer.HaploFinder import generate_dotplot, process_gd_result, split_sequences
 from phylotracer.Hybrid_Tracer import hyde_main
 from phylotracer.Hybrid_Visualizer import hyde_visual_leaf_main, hyde_visual_node_main
+from phylotracer.MulRF_Distance import mulrf_main
 from phylotracer.Ortho_Retriever import rename_len_dic, split_main
 from phylotracer.OrthoFilter_LB import prune_main_LB
 from phylotracer.OrthoFilter_Mono import prune_main_Mono
-from phylotracer.MulRF_Distance import mulrf_main
 from phylotracer.Phylo_Rooter import root_main
 from phylotracer.PhyloSupport_Scaler import support_scaler_main
 from phylotracer.PhyloTree_CollapseExpand import collapse_expand_main
 from phylotracer.Tree_Visualizer import mark_gene_to_sptree_main, view_main
 from phylotracer.TreeTopology_Summarizer import statistical_main
+
+logger = logging.getLogger(__name__)
 
 # Explicit imports above eliminate wildcard collision risk.
 

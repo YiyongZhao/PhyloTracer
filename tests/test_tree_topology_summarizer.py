@@ -4,6 +4,7 @@ Tests for phylotracer.TreeTopology_Summarizer module.
 
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -15,12 +16,11 @@ except ImportError:
     HAS_ETE3 = False
 
 from phylotracer.TreeTopology_Summarizer import (
-    get_only_sps_tree,
     get_max_tree,
+    get_only_sps_tree,
     group_trees_by_topology_with_ids,
     process_tree_with_ids,
 )
-
 
 # =============================================
 # get_only_sps_tree tests

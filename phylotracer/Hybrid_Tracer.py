@@ -7,36 +7,29 @@ runs HyDe analyses, and writes filtered hybridization results.
 
 import logging
 import os
-import subprocess
-import time
-
-logger = logging.getLogger(__name__)
 from collections import Counter, defaultdict
-from signal import SIGUSR2
 
 import numpy as np
 import pandas as pd
+
 try:
     import phyde as hd
 except ImportError:
     hd = None
 from Bio import SeqIO
-from ete3 import PhyloTree
-from tqdm import tqdm
 
 from phylotracer import (
     annotate_gene_tree,
     find_dup_node,
-    gene_id_transfer,
     get_species_list,
     get_species_set,
-    num_sptree,
-    num_tre_node,
-    read_and_return_dict,
     read_phylo_tree,
     rename_input_tre,
 )
-from phylotracer.GD_Detector import get_model as detector_get_model, normalize_model
+from phylotracer.GD_Detector import get_model as detector_get_model
+from phylotracer.GD_Detector import normalize_model
+
+logger = logging.getLogger(__name__)
 
 # ======================================================
 # Section 1: Species Tree and Sequence Utilities
