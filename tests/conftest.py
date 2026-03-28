@@ -4,13 +4,14 @@ Shared pytest fixtures for the PhyloTracer test suite.
 
 import os
 import sys
+
 import pytest
 
 # Ensure the project root is on the import path.
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 try:
-    from ete3 import Tree, PhyloTree
+    from ete3 import PhyloTree, Tree
     HAS_ETE3 = True
 except ImportError:
     HAS_ETE3 = False

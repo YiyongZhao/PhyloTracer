@@ -14,14 +14,10 @@ import os
 import re
 import sys
 import time
-
-logger = logging.getLogger(__name__)
-from collections import Counter, defaultdict
+from collections import defaultdict
 
 import matplotlib
 import matplotlib.patches as mpatches
-from ete3 import PhyloTree
-from tqdm import tqdm
 
 from phylotracer import (
     annotate_gene_tree,
@@ -39,6 +35,8 @@ from phylotracer.Ortho_Retriever import (
     offcut_tre,
     rename_OGs_tre_name,
 )
+
+logger = logging.getLogger(__name__)
 
 matplotlib.use("Agg")
 plt = importlib.import_module("matplotlib.pyplot")
@@ -419,7 +417,6 @@ def generate_dotplot(
     """
     plt.figure(figsize=(10, 10))
     root = plt.axes([0, 0, 1, 1])
-    align = dict(family="Arial", style="normal", horizontalalignment="center", verticalalignment="center")
     t1 = time.time()
     logger.info("Dotplot of %s are ready to begin", file_name)
     gff_1, dict_gff1 = read_gff(gff1)
@@ -773,14 +770,14 @@ def find_conversion_zones_with_ids_to_file(data, dict_gff1, dict_gff2, output_fi
 
             while i < n and data[i][2] == "blue" and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
                 i += 1
-            end_red1 = i - 1
+            _end_red1 = i - 1
 
             if i < n and data[i][2] == "red" and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
-                start_blue = i
+                _start_blue = i
 
                 while i < n and data[i][2] == "red" and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
                     i += 1
-                end_blue = i - 1
+                _end_blue = i - 1
 
                 if i < n and data[i][2] == "blue" and dict_gff1[data[i][0]][0] == chrom1 and dict_gff2[data[i][1]][0] == chrom2:
                     start_red2 = i
@@ -987,8 +984,6 @@ def get_single_copy_tree(tree, tree_id, tree_path, gene2new_named_gene_dic, rena
 
 
 def assign_hybrid_subgenome(tree, hybrid_prefix, diploid_tags):
-    distance_threshold = len(diploid_tags)
-
     result = {}
     subgenome_labels = [chr(ord("A") + i) for i in range(len(diploid_tags))]
 
@@ -1215,6 +1210,48 @@ def get_chromosome_subgenome(chr_name, chrs_per_subgenome=10):
     return None
 
 
+# ============================================================
+# Stub functions (must be implemented)
+# ============================================================
+
+
+def _process_blastp_result_stub(blastp_pairs, num):
+    """Stub: parse blastp output into gene pairs with coordinates.
+
+    Must be implemented to return a list of tuples:
+    [(chr1, start1, end1, chr2, start2, end2, color), ...]
+    """
+    raise NotImplementedError(
+        "process_blastp_result is not yet implemented. "
+        "Please provide a function that parses blastp pairwise results "
+        "into coordinate-annotated gene pairs for dotplot visualization."
+    )
+
+
+def _parse_synteny_file_stub(synteny_pairs):
+    """Stub: parse synteny block file into alignments and scores.
+
+    Must be implemented to return (alignments_dict, scores_dict).
+    """
+    raise NotImplementedError(
+        "parse_synteny_file is not yet implemented. "
+        "Please provide a function that parses synteny block files "
+        "(e.g., MCScanX or JCVI output) into alignment and score dictionaries."
+    )
+
+
+def _process_total_color_list_stub(total_pairs):
+    """Stub: merge multiple dotplot pair lists with color priority.
+
+    Must be implemented to return a merged list with color-priority resolution.
+    """
+    raise NotImplementedError(
+        "process_total_color_list is not yet implemented. "
+        "Please provide a function that merges blastp, synteny, and GD pairs "
+        "with appropriate color priority for the combined dotplot."
+    )
+
+
 # ======================================================
 # Section 12: CLI Entry Point
 # ======================================================
@@ -1250,44 +1287,3 @@ if __name__ == "__main__":
     # stub function — must be implemented with project-specific merging logic
     total_lst = _process_total_color_list_stub(total_pairs)
     generate_dotplot(gff1, gff2, lens1, lens2, total_lst, spe1, spe2, "total_pairs", target_chr1, target_chr2, size)
-
-
-# ============================================================
-# Stub functions (must be implemented)
-# ============================================================
-
-def _process_blastp_result_stub(blastp_pairs, num):
-    """Stub: parse blastp output into gene pairs with coordinates.
-    
-    Must be implemented to return a list of tuples:
-    [(chr1, start1, end1, chr2, start2, end2, color), ...]
-    """
-    raise NotImplementedError(
-        "process_blastp_result is not yet implemented. "
-        "Please provide a function that parses blastp pairwise results "
-        "into coordinate-annotated gene pairs for dotplot visualization."
-    )
-
-
-def _parse_synteny_file_stub(synteny_pairs):
-    """Stub: parse synteny block file into alignments and scores.
-    
-    Must be implemented to return (alignments_dict, scores_dict).
-    """
-    raise NotImplementedError(
-        "parse_synteny_file is not yet implemented. "
-        "Please provide a function that parses synteny block files "
-        "(e.g., MCScanX or JCVI output) into alignment and score dictionaries."
-    )
-
-
-def _process_total_color_list_stub(total_pairs):
-    """Stub: merge multiple dotplot pair lists with color priority.
-    
-    Must be implemented to return a merged list with color-priority resolution.
-    """
-    raise NotImplementedError(
-        "process_total_color_list is not yet implemented. "
-        "Please provide a function that merges blastp, synteny, and GD pairs "
-        "with appropriate color priority for the combined dotplot."
-    )

@@ -1,4 +1,3 @@
-import pytest
 
 from phylotracer.GD_Loss_Tracker import classify_species_copy_state
 

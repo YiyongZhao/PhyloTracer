@@ -6,27 +6,25 @@ loss paths, and generates tabular reports for downstream analyses.
 """
 
 import logging
+import os
 import re
 from typing import Optional
-
-import os
-
-logger = logging.getLogger(__name__)
 
 import pandas as pd
 from ete3 import PhyloTree
 
 from phylotracer import (
-    rename_input_tre,
+    annotate_gene_tree,
+    find_dup_node,
+    gene_id_transfer,
     get_species_set,
+    map_species_set_to_node,
     num_sptree,
     read_and_return_dict,
-    find_dup_node,
-    num_tre_node,
-    annotate_gene_tree,
-    gene_id_transfer,
-    map_species_set_to_node,
+    rename_input_tre,
 )
+
+logger = logging.getLogger(__name__)
 
 # ======================================================
 # Section 1: Duplication Loss Validation
@@ -447,7 +445,7 @@ def get_path_str_with_count_num_lst(
         sp = get_species_set(dup_node)
 
         max_clade2sp = map_species_set_to_node(renamed_sptree,sp)
-        
+
         gd_node_name = max_clade2sp.name
 
         voucher_to_pretty_path = {}
@@ -695,7 +693,7 @@ def get_path_str_num_dic(
 
     for tre_id, tre_path in tre_dic.items():
         t = PhyloTree(tre_path)
-        
+
         if len(t.children) != 2:
             logger.warning("%s is not a binary tree, skipping.", tre_id)
             continue

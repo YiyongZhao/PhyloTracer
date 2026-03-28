@@ -9,14 +9,12 @@ import logging
 import os
 from collections import defaultdict
 
-logger = logging.getLogger(__name__)
-
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from ete3 import Tree
+
 try:
     from ete3 import NodeStyle, TextFace, TreeStyle
 except ImportError:
@@ -30,6 +28,8 @@ from PIL import Image, ImageDraw, ImageFont
 from phylotracer import (
     num_tre_node,
 )
+
+logger = logging.getLogger(__name__)
 
 # ======================================================
 # Section 1: HyDe Output Parsing
@@ -839,11 +839,9 @@ def combine_fig(hybrid_species, mode="leaf"):
             _loaded_font = None
 
     if _loaded_font:
-        font_base = ImageFont.truetype(_loaded_font, base_font_size)
         font_title = ImageFont.truetype(_loaded_font, title_font_size)
         font_legend = ImageFont.truetype(_loaded_font, legend_font_size)
     else:
-        font_base = ImageFont.load_default()
         font_title = ImageFont.load_default()
         font_legend = ImageFont.load_default()
 
@@ -941,8 +939,10 @@ def hyde_visual_leaf_main(out_file_name, sptree, output_dir=None):
         generate_tree_leaf(t1, k, prefix)
         create_hot_map_leaf(result1, v, t1, prefix)
         combine_fig(prefix, mode="leaf")
-        if os.path.exists(f"{prefix}_hotmap.png"): os.remove(f"{prefix}_hotmap.png")  # guard
-        if os.path.exists(f"{prefix}_img_faces.png"): os.remove(f"{prefix}_img_faces.png")  # guard
+        if os.path.exists(f"{prefix}_hotmap.png"):
+            os.remove(f"{prefix}_hotmap.png")  # guard
+        if os.path.exists(f"{prefix}_img_faces.png"):
+            os.remove(f"{prefix}_img_faces.png")  # guard
 
 
 def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
@@ -985,8 +985,10 @@ def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
             generate_tree_node(t1, node, prefix)
             create_hot_map_node(result1, hybrid_dic1, node, t1, prefix)
             combine_fig(prefix, mode="node")
-            if os.path.exists(f"{prefix}_hotmap.png"): os.remove(f"{prefix}_hotmap.png")  # guard
-            if os.path.exists(f"{prefix}_img_faces.png"): os.remove(f"{prefix}_img_faces.png")  # guard
+            if os.path.exists(f"{prefix}_hotmap.png"):
+                os.remove(f"{prefix}_hotmap.png")  # guard
+            if os.path.exists(f"{prefix}_img_faces.png"):
+                os.remove(f"{prefix}_img_faces.png")  # guard
 
 
 # ======================================================

@@ -9,13 +9,11 @@ duplication statistics, and selects optimal roots with RF-based refinement.
 import logging
 import os
 import shutil
-
-logger = logging.getLogger(__name__)
 from itertools import combinations
 
 import numpy as np
 import pandas as pd
-from ete3 import PhyloTree, Tree
+from ete3 import PhyloTree
 from tqdm import tqdm
 
 from phylotracer import (
@@ -30,8 +28,10 @@ from phylotracer import (
     root_tre_with_midpoint_outgroup,
     serialize_tree_by_input_branch_length_style,
 )
-from phylotracer.MulRF_Distance import compute_mulrf
 from phylotracer.BranchLength_NumericConverter import write_tree_to_newick
+from phylotracer.MulRF_Distance import compute_mulrf
+
+logger = logging.getLogger(__name__)
 
 # --------------------------
 # 1. Helper Functions
@@ -69,7 +69,7 @@ def rename_output_tre(
         fmt=0,
     )
     write_tree_to_newick(tree_str, tree_id, output_dir)
-    
+
 
 def get_species_tree_basal_set(species_tree_obj: object) -> set:
     """Select a basal species set from the species tree.
@@ -657,8 +657,7 @@ def normalize_and_score(
     Returns:
         pd.Series: Combined score per candidate. **Higher is better.**
     """
-    COST_COLS    = ["deep", "var", "GD", "RF"]
-    BENEFIT_COLS = ["species_overlap", "gd_consistency"]
+    COST_COLS = ["deep", "var", "GD", "RF"]
 
     active_cols = ["deep", "var", "GD", "species_overlap", "gd_consistency"]
     if include_rf and "RF" in df.columns:

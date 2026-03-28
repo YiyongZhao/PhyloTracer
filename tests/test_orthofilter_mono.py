@@ -4,6 +4,7 @@ Tests for phylotracer.OrthoFilter_Mono module.
 
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -15,16 +16,15 @@ except ImportError:
     HAS_ETE3 = False
 
 from phylotracer.OrthoFilter_Mono import (
-    parse_leaf_components,
-    get_leaf_clade,
-    get_leaf_voucher,
     build_leaf_annotations,
     compute_gene_tree_depths,
     compute_species_tree_depths,
     count_clade_leaves,
+    get_leaf_clade,
+    get_leaf_voucher,
+    parse_leaf_components,
     rename_input_single_tre,
 )
-
 
 # =============================================
 # parse_leaf_components tests

@@ -11,15 +11,15 @@ import math
 import os
 import shutil
 import tempfile
+
 try:
     import matplotlib as mpl
     mpl.rcParams["pdf.fonttype"] = 42
 except Exception:
     mpl = None
 
-logger = logging.getLogger(__name__)
-
 from ete3 import Tree
+
 try:
     from ete3 import NodeStyle, TextFace, TreeStyle
 except ImportError:
@@ -31,8 +31,7 @@ try:
 except ImportError:
     fitz = None
 try:
-    from pypdf import PdfReader, PdfWriter
-    from pypdf import Transformation
+    from pypdf import PdfReader, PdfWriter, Transformation
 except ImportError:
     PdfReader = None
     PdfWriter = None
@@ -45,6 +44,8 @@ from phylotracer import (
     read_tree,
     rename_input_tre,
 )
+
+logger = logging.getLogger(__name__)
 
 # ======================================================
 # Section 1: Tree Simplification and Grouping Utilities

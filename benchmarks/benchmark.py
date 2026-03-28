@@ -27,12 +27,12 @@ from contextlib import contextmanager
 _MISSING_DEPS = []
 
 try:
-    from ete3 import Tree, PhyloTree
+    from ete3 import PhyloTree, Tree
 except ImportError:
     _MISSING_DEPS.append("ete3")
 
 try:
-    import numpy as np
+    import numpy as np  # noqa: F401
 except ImportError:
     _MISSING_DEPS.append("numpy")
 
@@ -52,12 +52,12 @@ if _MISSING_DEPS:
 # package is not installed.
 try:
     from phylotracer import (
-        get_species_set,
-        get_species_list,
         annotate_gene_tree,
         find_dup_node,
-        root_tre_with_midpoint_outgroup,
+        get_species_list,
+        get_species_set,
         is_rooted,
+        root_tre_with_midpoint_outgroup,
     )
     _PHYLOTRACER_AVAILABLE = True
 except ImportError:

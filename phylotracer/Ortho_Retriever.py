@@ -5,9 +5,7 @@ This module identifies offcut paralogous clades, separates ortholog groups,
 extracts single-copy subtrees, and writes summary tables for downstream use.
 """
 
-import os
 
-from ete3 import PhyloTree
 
 from phylotracer import (
     find_tre_dup,
