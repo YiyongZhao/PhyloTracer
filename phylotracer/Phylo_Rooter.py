@@ -211,7 +211,7 @@ def annotate_mapped_depths(gene_tree, species_tree):
             else:
                 sp_node = species_tree.get_common_ancestor(list(mapped_species))
             node.add_feature("mapped_depth", depth_map.get(sp_node, 0))
-        except Exception:
+        except (ValueError, KeyError):
             node.add_feature("mapped_depth", 0)
 
     return gene_tree

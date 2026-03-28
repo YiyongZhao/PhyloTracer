@@ -658,7 +658,10 @@ def realign_branch_length(tree: Tree) -> Tree:
 
 
 def get_max_deepth(tree) -> int:
-    """Return the maximum topological depth (number of nodes from root to deepest leaf).
+    """Return the maximum topological depth of a tree.
+
+    Depth is counted as the number of levels from root to deepest leaf,
+    inclusive (root counts as level 1, its children as level 2, etc.).
 
     Args:
         tree: ete3 Tree, or ``None``.
@@ -668,17 +671,13 @@ def get_max_deepth(tree) -> int:
     """
     if tree is None:
         return 0
-    max_depth = 0
-    for node in tree.traverse():
-        depth = 0
-        current = node
-        while current.up is not None:
-            depth += 1
-            current = current.up
-        if depth > max_depth:
-            max_depth = depth
-    # Add 1 to count the root itself
-    return max_depth + 1 if max_depth > 0 else (1 if tree is not None else 0)
+    depths = {}
+    for node in tree.traverse("levelorder"):
+        if node.is_root():
+            depths[node] = 1
+        else:
+            depths[node] = depths[node.up] + 1
+    return max(depths.values()) if depths else 0
 
 
 # =========================
