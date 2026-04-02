@@ -267,6 +267,8 @@ GD_Loss_Tracker_parser.add_argument('--target_species', metavar='SP', action='ap
 GD_Loss_Tracker_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.')
 GD_Loss_Tracker_parser.add_argument('--include_unobserved_species', action='store_true', help='Classification policy for species absent from the current gene family, default = False. If set, treat unobserved species as classifiable (2-2/2-1/2-0) based on left/right presence; if not set, label them as missing_data. This flag does not change loss_path copy-state values (0/1/2) or GD event detection.')
 GD_Loss_Tracker_parser.add_argument('--node_count_mode', choices=['parsimony', 'accumulate'], default='parsimony', help='Node counting mode for path_count_* transition statistics, default = parsimony. parsimony: if multiple descendant species share one ancestral loss, count it once at the shared ancestor; accumulate: count all descendant loss-path events. This flag does not change the (0/1/2) copy-state numbers shown in loss_path.')
+GD_Loss_Tracker_parser.add_argument('--parsimony_min_support_ratio', type=float, default=0.5, help='Minimum descendant-species support ratio required to collapse a loss to one shared parsimony node, default = 0.5. The ratio is evaluated against all species under the current GD event node.')
+GD_Loss_Tracker_parser.add_argument('--parsimony_min_support_species', type=int, default=2, help='Minimum descendant-species support required to collapse a loss to one shared parsimony node, default = 2.')
 GD_Loss_Tracker_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # GD_Loss_Visualizer command
@@ -276,10 +278,11 @@ GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE'
 GD_Loss_Visualizer_parser.add_argument('--output', metavar='PDF', default='gd_loss_pie_visualizer.PDF', help='Output PDF path, default = gd_loss_pie_visualizer.PDF')
 
 # Ortho_Retriever command
-Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Retrieve ortholog sets from rooted gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap')
+Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Retrieve ortholog sets from rooted gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap [--input_synteny_blocks collinearity]')
 Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Ortho_Retriever_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
+Ortho_Retriever_parser.add_argument('--input_synteny_blocks', metavar='SYNTENY_BLOCKS', default=None, help='Optional raw synteny block file. Each block starts with "#" and each non-comment line contains one gene pair.')
 Ortho_Retriever_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # Hybrid_Tracer
@@ -713,6 +716,8 @@ def handle_gd_loss_tracker(cli_args):
             allowed_gd_species_sets=allowed_gd_species_sets,
             include_unobserved_species=cli_args.include_unobserved_species,
             node_count_mode=cli_args.node_count_mode,
+            parsimony_min_support_ratio=cli_args.parsimony_min_support_ratio,
+            parsimony_min_support_species=cli_args.parsimony_min_support_species,
         )
         parse_text_to_csv('gd_loss_count_summary.txt', 'gd_loss.csv')
         if os.path.exists('gd_loss_count_summary.txt'):
@@ -745,7 +750,13 @@ def handle_ortho_retriever(cli_args):
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
         len_dic = read_and_return_dict(cli_args.input_gene_length)
         renamed_len_dic = rename_len_dic(len_dic, gene2new_named_gene_dic)
-        split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, renamed_len_dic)
+        split_main(
+            tre_dic,
+            gene2new_named_gene_dic,
+            new_named_gene2gene_dic,
+            renamed_len_dic,
+            synteny_blocks_path=cli_args.input_synteny_blocks,
+        )
         report_execution_time(start_time)
     else:
         logger.error("Required arguments for Ortho_Retriever command are missing.")
@@ -975,6 +986,7 @@ def _normalize_input_paths(args):
     path_args = [
         "input_imap",
         "input_gene_length",
+        "input_synteny_blocks",
         "input_taxa",
         "input_sps_tree",
         "gd_result",

@@ -97,7 +97,7 @@ def infer_visualizer_mode(filepath: str) -> str:
 
 
 def get_event_stats(filepath: str):
-    """Compute GD births and event-level 2-2/2-1/2-0 counts by GD birth node."""
+    """Compute GD event counts and event-level 2-2/2-1/2-0 counts by GD node."""
     gd_birth_sets = defaultdict(set)
     best_event_type_by_level = defaultdict(dict)
     priority = {"2-2": 0, "2-1": 1, "2-0": 2}
@@ -225,13 +225,13 @@ def get_fallback_parsimony_counts(filepath: str, sptree):
     return dict(parsimony_counts)
 
 
-def calculate_node_loss_score(event_loss_stats: dict, gd_birth_count: int):
-    severe = event_loss_stats.get('2-0', 0)
-    partial = event_loss_stats.get('2-1', 0)
-    raw_score = (1.0 * severe) + (0.5 * partial)
-    if gd_birth_count > 0:
-        return raw_score, raw_score / gd_birth_count
-    return raw_score, None
+def format_event_birth_summary(gd_birth_count: int, event_stats: dict) -> str:
+    return (
+        f"B={gd_birth_count} "
+        f"E22/21/20={event_stats.get('2-2', 0)}/"
+        f"{event_stats.get('2-1', 0)}/"
+        f"{event_stats.get('2-0', 0)}"
+    )
 
 
 def format_node_loss_breakdown(node_stats: dict, loss_label: str) -> str:
@@ -288,10 +288,10 @@ def visualizer_sptree(
     sptree.sort_descendants('support')
 
     logger.info(
-        '\n%-15s | %-8s | %-8s | %-8s | %-10s | %-10s | %-8s | %-8s',
-        'Node', 'Birth', 'E2-0', 'E2-1', 'NodeLoss', 'Label', 'Lraw', 'Lnorm'
+        '\n%-15s | %-8s | %-8s | %-8s | %-10s | %-10s',
+        'Node', 'GDcount', 'E2-0', 'E2-1', 'NodeLoss', 'Label'
     )
-    logger.info('-' * 92)
+    logger.info('-' * 72)
 
     for node in sptree.traverse():
         nstyle = NodeStyle()
@@ -299,28 +299,21 @@ def visualizer_sptree(
         node.set_style(nstyle)
         node_name = node.name
 
-        if node_name in gd_births and gd_births[node_name] > 0:
-            node.add_face(
-                TextFace(f"B={gd_births[node_name]}", fsize=6, fgcolor='blue'),
-                column=0,
-                position='branch-top',
-            )
-
         if node_name in gd_births or node_name in event_loss_data or node_name in node_loss_counts:
             event_stats = event_loss_data.get(node_name, {'2-0': 0, '2-1': 0, '2-2': 0})
             node_stats = node_loss_counts.get(node_name, {'2-0': 0, '2-1': 0, '1-0': 0, 'total': 0})
             gd_birth_count = gd_births.get(node_name, 0)
-            raw_loss_score, norm_loss_score = calculate_node_loss_score(event_stats, gd_birth_count)
             e_2_0 = event_stats.get('2-0', 0)
             e_2_1 = event_stats.get('2-1', 0)
             e_2_2 = event_stats.get('2-2', 0)
             node_total = node_stats.get('total', 0)
 
-            node.add_face(TextFace(f"E={e_2_2}/{e_2_1}/{e_2_0}", fsize=6, fgcolor='red'), column=0, position='branch-bottom')
-            if norm_loss_score is not None:
-                node.add_face(TextFace(f"L={norm_loss_score:.2f}", fsize=6, fgcolor='purple'), column=0, position='branch-bottom')
-            else:
-                node.add_face(TextFace(f"Lraw={raw_loss_score:.2f}", fsize=6, fgcolor='gray'), column=0, position='branch-bottom')
+            if gd_birth_count > 0 or e_2_0 > 0 or e_2_1 > 0 or e_2_2 > 0:
+                node.add_face(
+                    TextFace(format_event_birth_summary(gd_birth_count, event_stats), fsize=6, fgcolor='blue'),
+                    column=0,
+                    position='branch-top',
+                )
             if node_total > 0:
                 node.add_face(TextFace(f"{loss_label}={node_total}", fsize=6, fgcolor=face_color), column=0, position='branch-bottom')
                 node.add_face(
@@ -329,11 +322,10 @@ def visualizer_sptree(
                     position='branch-bottom',
                 )
 
-            if node_total > 0 or e_2_0 > 0 or e_2_1 > 0:
+            if node_total > 0 or e_2_0 > 0 or e_2_1 > 0 or e_2_2 > 0:
                 logger.info(
-                    '%-15s | %-8d | %-8d | %-8d | %-10d | %-10s | %-8.2f | %-8.2f',
-                    node_name, gd_birth_count, e_2_0, e_2_1, node_total, loss_label,
-                    raw_loss_score, norm_loss_score if norm_loss_score is not None else float('nan')
+                    '%-15s | %-8d | %-8d | %-8d | %-10d | %-10s',
+                    node_name, gd_birth_count, e_2_0, e_2_1, node_total, loss_label
                 )
 
     ts = TreeStyle()
@@ -345,13 +337,9 @@ def visualizer_sptree(
     ts.extra_branch_line_type = 0
     ts.legend_position = 1
     ts.title.add_face(TextFace('Legend:', bold=True, fsize=10), column=0)
-    ts.title.add_face(TextFace('  B=Birth: GD events originating at this node', fsize=6, fgcolor='blue'), column=0)
-    ts.title.add_face(TextFace('  Red E=2-2/2-1/2-0: final event-level copy-state counts', fsize=6, fgcolor='red'), column=0)
-    ts.title.add_face(TextFace('  Purple L: event-level loss score = (E2-0 + 0.5*E2-1) / Birth', fsize=6, fgcolor='purple'), column=0)
-    ts.title.add_face(TextFace('  Gray Lraw: shown when Birth=0 on a node', fsize=6, fgcolor='gray'), column=0)
+    ts.title.add_face(TextFace('  B=GD event counts; E22/21/20=final event-level 2-2/2-1/2-0 counts', fsize=6, fgcolor='blue'), column=0)
     ts.title.add_face(TextFace(f'  {loss_label}: {loss_desc}', fsize=6, fgcolor=face_color), column=0)
     ts.title.add_face(TextFace(f'  {loss_label}20/21/10: node-loss breakdown by 2-0, 2-1, and 1-0 counts', fsize=6, fgcolor=face_color), column=0)
-    ts.title.add_face(TextFace(f'  Note: Birth and {loss_label} quantify different processes and are not expected to match', fsize=6, fgcolor='black'), column=0)
 
     try:
         sptree.convert_to_ultrametric()

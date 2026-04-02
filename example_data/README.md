@@ -49,7 +49,7 @@ PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_resul
 
 # 13_Ortho_Retriever
 cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/13_Ortho_Retriever
-PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
+PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_synteny_blocks collinearity
 
 # 14_Hybrid_Tracer
 cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/14_Hybrid_Tracer

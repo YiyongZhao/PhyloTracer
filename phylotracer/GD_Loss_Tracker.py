@@ -225,7 +225,13 @@ def get_path_node_order(path_str: str) -> dict:
     return order
 
 
-def infer_parsimony_transition_keys(rows, mapped_clade, voucher2taxa_dic):
+def infer_parsimony_transition_keys(
+    rows,
+    mapped_clade,
+    voucher2taxa_dic,
+    min_support_ratio: float = 0.5,
+    min_support_species: int = 2,
+):
     """Infer minimal ancestor-level loss events for one GD event.
 
     The rule is clade-cover based: if all descendant species of a species-tree node
@@ -234,6 +240,7 @@ def infer_parsimony_transition_keys(rows, mapped_clade, voucher2taxa_dic):
     """
     transition_types = ("2-0", "2-1", "1-0")
     assigned = {row["species_voucher"]: [] for row in rows}
+    total_gd_species = len(set(mapped_clade.get_leaf_names()))
 
     def cover_nodes(node, affected_species, out_nodes):
         leaves = set(node.get_leaf_names())
@@ -265,6 +272,13 @@ def infer_parsimony_transition_keys(rows, mapped_clade, voucher2taxa_dic):
             desc = set(node.get_leaf_names()) & affected_species
             if not desc:
                 continue
+            support_species = len(desc)
+            support_ratio = (support_species / total_gd_species) if total_gd_species else 0.0
+            if not node.is_leaf():
+                if support_species < min_support_species:
+                    continue
+                if support_ratio < min_support_ratio:
+                    continue
             rep_species = sorted(desc)[0]
             if node.is_leaf():
                 raw_nodes = [n for n, t in row_by_species[rep_species]["raw_transition_keys"] if t == trans_type]
@@ -405,6 +419,8 @@ def get_path_str_with_count_num_lst(
     voucher2taxa_dic,
     include_unobserved_species=False,
     node_count_mode: str = "parsimony",
+    parsimony_min_support_ratio: float = 0.5,
+    parsimony_min_support_species: int = 2,
 ):
     """
     Process duplication nodes and record gene pairs and loss paths.
@@ -563,7 +579,13 @@ def get_path_str_with_count_num_lst(
             )
 
         if mode_normalized == "parsimony":
-            pending_rows = infer_parsimony_transition_keys(pending_rows, max_clade2sp, voucher2taxa_dic)
+            pending_rows = infer_parsimony_transition_keys(
+                pending_rows,
+                max_clade2sp,
+                voucher2taxa_dic,
+                min_support_ratio=parsimony_min_support_ratio,
+                min_support_species=parsimony_min_support_species,
+            )
         else:
             for row in pending_rows:
                 row["effective_transition_keys"] = list(row["raw_transition_keys"])
@@ -649,6 +671,8 @@ def get_path_str_num_dic(
     allowed_gd_species_sets=None,
     include_unobserved_species=False,
     node_count_mode: str = "parsimony",
+    parsimony_min_support_ratio: float = 0.5,
+    parsimony_min_support_species: int = 2,
 ):
     """
     Aggregate loss-path statistics with optional filtering constraints.
@@ -706,6 +730,8 @@ def get_path_str_num_dic(
             voucher2taxa_dic,
             include_unobserved_species=include_unobserved_species,
             node_count_mode=node_count_mode,
+            parsimony_min_support_ratio=parsimony_min_support_ratio,
+            parsimony_min_support_species=parsimony_min_support_species,
         )
         global_gd_id = new_gd_id
 
@@ -832,10 +858,10 @@ def parse_text_to_csv(file_path, output_file="gd_loss.csv"):
     """
     Parse loss summary text and write a single CSV report.
 
-    The exported table contains one row per aggregated loss path. All numbered
-    internal nodes and all species tips are expanded into dedicated columns.
-    Nodes/tips not present on a given path are filled with the literal string
-    ``NA`` so reviewers can inspect every path in one table.
+    The exported table contains one row per GD event / loss path combination.
+    All numbered internal nodes and all species tips are expanded into dedicated
+    columns. Nodes/tips not present on a given path are filled with the literal
+    string ``NA`` so reviewers can inspect every path in one table.
     """
     if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
         logger.warning("Summary file is missing or empty. Creating placeholder CSV.")
@@ -877,7 +903,7 @@ def parse_text_to_csv(file_path, output_file="gd_loss.csv"):
                     "parsed_steps": parsed_steps,
                     "start_node": parsed_steps[0][0],
                     "end_species": parsed_steps[-1][0],
-                    "end_copy_number": parsed_steps[-1][1],
+                    "final_copy_number": parsed_steps[-1][1],
                 }
             )
 
@@ -892,36 +918,25 @@ def parse_text_to_csv(file_path, output_file="gd_loss.csv"):
             if "loss_path" in detail_df.columns:
                 detail_df = detail_df.fillna("NA")
 
-                def _unique_join(series, keep_na=False):
-                    values = []
-                    seen = set()
-                    for value in series.astype(str):
-                        value = value.strip()
-                        if not value:
-                            continue
-                        if not keep_na and value == "NA":
-                            continue
-                        if value not in seen:
-                            seen.add(value)
-                            values.append(value)
-                    if not values:
-                        return "NA"
-                    return ";".join(values)
-
                 for loss_path, group in detail_df.groupby("loss_path", sort=False):
-                    tree_gd_pairs = []
+                    event_rows = []
                     seen_pairs = set()
                     for _, row in group.iterrows():
-                        pair = f"{row['tree_ID']}-{row['gd_ID']}"
+                        pair = (str(row['tree_ID']).strip(), str(row['gd_ID']).strip())
                         if pair not in seen_pairs:
                             seen_pairs.add(pair)
-                            tree_gd_pairs.append(pair)
+                            event_rows.append(
+                                {
+                                    "tree_id": pair[0] or "NA",
+                                    "gd_id": pair[1] or "NA",
+                                    "gene1": str(row.get("gene1", "NA")).strip() or "NA",
+                                    "gene2": str(row.get("gene2", "NA")).strip() or "NA",
+                                }
+                            )
 
                     detail_by_path[loss_path] = {
-                        "gd_event_count": len(tree_gd_pairs),
-                        "tree_gd_IDs": ";".join(tree_gd_pairs) if tree_gd_pairs else "NA",
-                        "gene1_IDs": _unique_join(group["gene1"]),
-                        "gene2_IDs": _unique_join(group["gene2"]),
+                        "gd_event_count": len(seen_pairs),
+                        "event_rows": event_rows,
                     }
         except Exception as exc:
             logger.warning("Failed to parse gd_loss_summary.txt for CSV detail columns: %s", exc)
@@ -975,30 +990,35 @@ def parse_text_to_csv(file_path, output_file="gd_loss.csv"):
     for row in path_rows:
         step_map = {name: count for name, count in row["parsed_steps"]}
         loss_summary = "No duplicate lost"
-        first_loss_after_node = "NA"
-        for idx, (name, count) in enumerate(row["parsed_steps"]):
+        for idx, (_, count) in enumerate(row["parsed_steps"]):
             if idx == 0:
                 continue
             if count != "2":
-                first_loss_after_node = row["parsed_steps"][idx - 1][0]
-                loss_summary = f"Lost after {first_loss_after_node}"
+                loss_summary = f"Lost after {row['parsed_steps'][idx - 1][0]}"
                 break
 
-        out_row = {
-            "start_node": row["start_node"],
-            "end_species": row["end_species"],
-            "loss_summary": loss_summary,
-            "first_loss_after_node": first_loss_after_node,
-            "gd_count": detail_by_path.get(row["path_string"], {}).get("gd_event_count", int(row["gf_count"])),
-            "tree_gd_IDs": detail_by_path.get(row["path_string"], {}).get("tree_gd_IDs", "NA"),
-            "gene1_IDs": detail_by_path.get(row["path_string"], {}).get("gene1_IDs", "NA"),
-            "gene2_IDs": detail_by_path.get(row["path_string"], {}).get("gene2_IDs", "NA"),
-            "path_string": row["path_string"],
-            "end_copy_number": row["end_copy_number"],
-        }
-        for col in all_path_columns:
-            out_row[col] = step_map.get(col, "NA")
-        output_rows.append(out_row)
+        detail_entry = detail_by_path.get(row["path_string"], {})
+        event_rows = detail_entry.get("event_rows") or [
+            {"tree_id": "NA", "gd_id": "NA", "gene1": "NA", "gene2": "NA"}
+        ]
+        gd_subclade_count = detail_entry.get("gd_event_count", int(row["gf_count"]))
+
+        for event in event_rows:
+            out_row = {
+                "GD Event Node": row["start_node"],
+                "GD Subclade Count": gd_subclade_count,
+                "GD Subclade A": event["gene1"],
+                "GD Subclade B": event["gene2"],
+                "Tree ID": event["tree_id"],
+                "GD ID": event["gd_id"],
+                "End Species": row["end_species"],
+                "Final Copy Number": row["final_copy_number"],
+                "Loss Summary": loss_summary,
+                "GD Loss Path": row["path_string"],
+            }
+            for col in all_path_columns:
+                out_row[col] = step_map.get(col, "NA")
+            output_rows.append(out_row)
 
     output_df = pd.DataFrame(output_rows)
 
@@ -1007,34 +1027,32 @@ def parse_text_to_csv(file_path, output_file="gd_loss.csv"):
             return -int(name[1:])
         return 10**9
 
-    output_df["_end_species_sort"] = output_df["end_species"].astype(str)
-    output_df["_start_node_sort"] = output_df["start_node"].map(_node_rank)
-    output_df["_loss_presence_sort"] = output_df["loss_summary"].eq("No duplicate lost").astype(int)
-    output_df["_first_loss_sort"] = output_df["first_loss_after_node"].map(_node_rank)
+    output_df["_end_species_sort"] = output_df["End Species"].astype(str)
+    output_df["_start_node_sort"] = output_df["GD Event Node"].map(_node_rank)
+    output_df["_loss_presence_sort"] = output_df["Loss Summary"].eq("No duplicate lost").astype(int)
     output_df = output_df.sort_values(
         by=[
             "_end_species_sort",
             "_start_node_sort",
             "_loss_presence_sort",
-            "_first_loss_sort",
-            "gd_count",
-            "path_string",
+            "GD Subclade Count",
+            "GD Loss Path",
         ],
-        ascending=[True, True, True, True, False, True],
+        ascending=[True, True, True, False, True],
         kind="stable",
     ).reset_index(drop=True)
 
     ordered_columns = [
-        "start_node",
-        "end_species",
-        "loss_summary",
-        "first_loss_after_node",
-        "gd_count",
-        "tree_gd_IDs",
-        "gene1_IDs",
-        "gene2_IDs",
-        "path_string",
-        "end_copy_number",
+        "GD Event Node",
+        "GD Subclade Count",
+        "GD Subclade A",
+        "GD Subclade B",
+        "Tree ID",
+        "GD ID",
+        "End Species",
+        "Final Copy Number",
+        "Loss Summary",
+        "GD Loss Path",
     ] + all_path_columns
     output_df = output_df[ordered_columns]
 

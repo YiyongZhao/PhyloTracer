@@ -55,17 +55,30 @@ def parse_hyde_out(filename):
     HyDe outputs are tab-delimited with a header beginning with 'P1'.
     """
     lst = []
+    header_map = None
     with open(filename, "r") as f:
         for i in f:
             i1 = i.strip().split("\t")
             if len(i1) < 6:
                 continue
-            if i1[0] == "P1":
+            if i1[0] in {"P1", "Outgroup"}:
+                header_map = {name: idx for idx, name in enumerate(i1)}
                 continue
-            elif i1[5] == "nan":
+
+            if header_map and "Outgroup" in header_map:
+                p1 = i1[header_map["P1"]]
+                hybrid = i1[header_map["Hybrid"]]
+                p2 = i1[header_map["P2"]]
+                pvalue = i1[header_map["Pvalue"]]
+                gamma = i1[header_map["Gamma"]]
+            else:
+                p1, hybrid, p2 = i1[0], i1[1], i1[2]
+                pvalue, gamma = i1[4], i1[5]
+
+            if gamma == "nan":
                 continue
-            elif 0 < float(i1[5]) < 1:
-                tup = [i1[0], i1[1], i1[2], i1[4], i1[5]]
+            elif 0 < float(gamma) < 1:
+                tup = [p1, hybrid, p2, pvalue, gamma]
                 lst.append(tup)
     return lst
 
@@ -691,10 +704,14 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
 
                 if np.isnan(pvalue_p1_p2) and np.isnan(pvalue_p2_p1):
                     continue
-                elif np.isnan(pvalue_p1_p2) or pvalue_p1_p2 > pvalue_p2_p1:
-                    gamma_df.loc[p2, p1] = np.nan
-                else:
+                elif np.isnan(pvalue_p1_p2):
                     gamma_df.loc[p1, p2] = np.nan
+                elif np.isnan(pvalue_p2_p1):
+                    gamma_df.loc[p2, p1] = np.nan
+                elif pvalue_p1_p2 > pvalue_p2_p1:
+                    gamma_df.loc[p1, p2] = np.nan
+                else:
+                    gamma_df.loc[p2, p1] = np.nan
 
     nan_mask = gamma_df.isna()
     if nan_mask.all().all():
@@ -704,40 +721,6 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
         logger.warning("No valid HyDe summaries for hybrid %s; writing a placeholder panel.", hybrid_name)
         save_placeholder_heatmap(filename, f"No valid HyDe summaries for hybrid {hybrid_name}")
         return
-
-    tup_annot = tup_df.astype(str).where(~nan_mask, other="")
-    gamma_annot = gamma_df.map(lambda x: f"{x:.3f}" if not np.isnan(x) else "")
-    sns.heatmap(
-        tup_df,
-        annot=tup_annot,
-        fmt="",
-        cmap="Greys",
-        mask=nan_mask,
-        ax=ax,
-        annot_kws={"color": "#FFFFFF", "va": "top"},
-        xticklabels=False,
-        yticklabels=False,
-        cbar=False,
-        linewidths=1.5,
-        linecolor="black",
-        square=True,
-    )
-
-    sns.heatmap(
-        gamma_df,
-        annot=gamma_annot,
-        fmt="",
-        cmap="Greys",
-        mask=nan_mask,
-        ax=ax,
-        annot_kws={"color": "#F5EF70", "va": "bottom"},
-        xticklabels=False,
-        yticklabels=False,
-        cbar=False,
-        linewidths=1.5,
-        linecolor="black",
-        square=True,
-    )
 
     newcmp = hyde_visual_cmap()
 
@@ -758,8 +741,42 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
         square=True,
     )
 
-    gamma_masked = np.ma.masked_invalid(gamma_df.values)
-    m = ax.imshow(gamma_masked, norm=colors.Normalize(vmin=0, vmax=1), cmap=newcmp)
+    # Keep the original white/yellow text semantics, but separate the two
+    # labels vertically so they stay readable in small cells.
+    count_font_size = max(10, int(300 / max(len(sp), 1)))
+    gamma_font_size = max(9, int(270 / max(len(sp), 1)))
+    for row_idx, p1 in enumerate(sp):
+        for col_idx, p2 in enumerate(sp):
+            if nan_mask.loc[p1, p2]:
+                continue
+            count_val = tup_df.loc[p1, p2]
+            gamma_val = gamma_df.loc[p1, p2]
+            if np.isnan(count_val) or np.isnan(gamma_val):
+                continue
+            ax.text(
+                col_idx + 0.50,
+                row_idx + 0.30,
+                f"{int(count_val)}",
+                ha="center",
+                va="center",
+                fontsize=count_font_size,
+                fontweight="bold",
+                color="#FFFFFF",
+            )
+            ax.text(
+                col_idx + 0.50,
+                row_idx + 0.74,
+                f"{gamma_val:.3f}",
+                ha="center",
+                va="center",
+                fontsize=gamma_font_size,
+                fontweight="bold",
+                color="#F5EF70",
+            )
+
+    norm = colors.Normalize(vmin=0, vmax=1)
+    m = plt.cm.ScalarMappable(norm=norm, cmap=newcmp)
+    m.set_array([])
     position = fig.add_axes([0.9, 0.2, 0.05, 0.7])
     cbar = plt.colorbar(m, cax=position)
     cbar.ax.tick_params(labelsize=40)
@@ -770,14 +787,14 @@ def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
     plt.close("all")
 
 
-def combine_fig(hybrid_species, mode="leaf"):
+def combine_fig(prefix, mode="leaf"):
     """
     Combine tree and heatmap images into a single figure.
 
     Parameters
     ----------
-    hybrid_species : str
-        Hybrid species identifier used for file naming.
+    prefix : str
+        Output file prefix including directory and basename.
 
     Returns
     -------
@@ -787,7 +804,7 @@ def combine_fig(hybrid_species, mode="leaf"):
     -----------
     Required image files exist and can be loaded by PIL.
     """
-    treepic = Image.open(f"{hybrid_species}_img_faces.png")
+    treepic = Image.open(f"{prefix}_img_faces.png")
     treepic_size = treepic.size
 
     treepic_rotate = treepic.rotate(90, expand=1)
@@ -811,7 +828,7 @@ def combine_fig(hybrid_species, mode="leaf"):
     rotate_y = min(treepic_size[1] + 20, combine_fig_size - rotate_size[1] - 20)
     combine.paste(treepic_rotate, (rotate_x, rotate_y))
 
-    hotpic = Image.open(f"{hybrid_species}_hotmap.png")
+    hotpic = Image.open(f"{prefix}_hotmap.png")
     hotpic.thumbnail((treepic_size[1], treepic_size[1]))
     hotmap_x = min(treepic_size[0] + 20, combine_fig_size - hotpic.size[0] - 20)
     hotmap_y = 40
@@ -856,51 +873,39 @@ def combine_fig(hybrid_species, mode="leaf"):
     draw.text((y_text_x, y_text_y), y_text, fill="black", font=font_title)
 
     oney_text = "1-y (complement)"
-    text_width_estimate = len(oney_text) * (title_font_size * 0.6)
-    oney_text_x = max(10, min(rotate_x + 10, max_width - text_width_estimate - 20))
-    oney_text_y = min(rotate_y + treepic_rotate.size[1] + 5, max_height - title_font_size - 10)
-
-    legend_x = oney_text_x
     legend_spacing = max(18, int(legend_font_size * 1.3))
-    legend_end_y = oney_text_y - 15
-    legend_start_y = legend_end_y - (legend_spacing * 3)
+    legend_lines = [
+        "Red: focal hybrid" if mode == "leaf" else "Red: focal clade",
+        "Yellow: gamma values",
+        "White: tested combinations",
+    ]
+    if mode == "node":
+        legend_lines.insert(1, "Blue: target node label")
 
-    legend_text_width = max(
-        len("Red: focal hybrid/clade"),
-        len("Blue: target node label"),
-        len("Yellow: gamma values"),
-        len("White: tested combinations"),
-    ) * (legend_font_size * 0.6)
-    legend_x = max(10, min(legend_x, max_width - legend_text_width - 20))
+    legend_text_width = int(
+        max(len(oney_text) * (title_font_size * 0.6),
+            max(len(line) for line in legend_lines) * (legend_font_size * 0.62))
+    )
+    legend_box_width = legend_text_width + 28
+    legend_box_height = int((len(legend_lines) + 1) * legend_spacing + 24)
+    legend_x = 24
+    legend_y = max_height - legend_box_height - 24
 
-    if legend_start_y > 0:
-        first_line = "Red: focal hybrid" if mode == "leaf" else "Red: focal clade"
-        draw.text((legend_x, legend_start_y), first_line, fill="red", font=font_legend)
-        offset = 1
-        if mode == "node":
-            draw.text(
-                (legend_x, legend_start_y + legend_spacing),
-                "Blue: target node label",
-                fill="blue",
-                font=font_legend,
-            )
-            offset = 2
-        draw.text(
-            (legend_x, legend_start_y + legend_spacing * offset),
-            "Yellow: gamma values",
-            fill="yellow",
-            font=font_legend,
-        )
-        draw.text(
-            (legend_x, legend_start_y + legend_spacing * (offset + 1)),
-            "White: tested combinations",
-            fill="black",
-            font=font_legend,
-        )
+    draw.text((legend_x + 14, legend_y + 10), oney_text, fill="black", font=font_title)
 
-    draw.text((oney_text_x, oney_text_y), oney_text, fill="black", font=font_title)
+    line_y = legend_y + 10 + legend_spacing * 1.4
+    for line in legend_lines:
+        color = "black"
+        if line.startswith("Red:"):
+            color = "red"
+        elif line.startswith("Blue:"):
+            color = "blue"
+        elif line.startswith("Yellow:"):
+            color = "yellow"
+        draw.text((legend_x + 14, line_y), line, fill=color, font=font_legend)
+        line_y += legend_spacing
 
-    combine.save(hybrid_species + ".png")
+    combine.save(prefix + ".png")
 
 
 # ======================================================

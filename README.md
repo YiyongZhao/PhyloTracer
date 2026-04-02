@@ -661,9 +661,10 @@ Required parameter:
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_gene_length     Two-column mapping file (gene_id<TAB>gene_length)
 Optional parameter:
+    --input_synteny_blocks  Optional raw synteny block file. Each block starts with "#" and each non-comment line contains one gene pair
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
-    PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap [--output_dir DIR]
+    PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap [--input_synteny_blocks collinearity] [--output_dir DIR]
 ```
 ### Hybrid_Tracer
 ```
@@ -681,7 +682,9 @@ Optional parameter:
 Usage:
     PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB] [--split_groups 2] [--output_dir DIR]
 
-Outputs include `hyde_out.txt`, `hyde_filtered_out.txt`, and a run summary file `hyde_summary.txt`.
+Hybrid_Tracer keeps one outgroup species per HyDe matrix. For a GD node, candidate outgroup species are searched on the sister branch in topological-distance order; GD events are then grouped by the first candidate species that has a valid outgroup gene, and each outgroup-specific group is analyzed separately.
+
+Outputs include `hyde_out.txt`, `hyde_filtered_out.txt`, and a run summary file `hyde_summary.txt`. The HyDe tables include an `Outgroup` column indicating which outgroup species was used for each tested batch.
 ```
 ### Hybrid_Visualizer
 ```

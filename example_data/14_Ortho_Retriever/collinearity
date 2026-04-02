@@ -1,0 +1,1217 @@
+#	Alignment	1:	score=299	pvalue=0.0001	N=6	ARD.A09&ARH.19	minus
+ardaradu.V14167.gnm1.Aradu.A09g03327	1	arharahy.Tifrunner.gnm1.Arahy.19g03446	6	-1
+ardaradu.V14167.gnm1.Aradu.A03g04571	2	arharahy.Tifrunner.gnm1.Arahy.13g04700	5	-1
+ardaradu.V14167.gnm1.Aradu.A05g00314	3	arharahy.Tifrunner.gnm1.Arahy.05g00348	4	-1
+ardaradu.V14167.gnm1.Aradu.A08g00258	4	arharahy.Tifrunner.gnm1.Arahy.08g00256	3	-1
+ardaradu.V14167.gnm1.Aradu.A01g00788	5	arharahy.Tifrunner.gnm1.Arahy.01g00987	2	-1
+ardaradu.V14167.gnm1.Aradu.A04g01481	6	arharahy.Tifrunner.gnm1.Arahy.04g01974	1	-1
+#	Alignment	2:	score=219	pvalue=0.001	N=4	ARD.A09&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A09g03327	1	LOC107619373	4	-1
+ardaradu.V14167.gnm1.Aradu.A03g04571	2	LOC107631511	3	-1
+ardaradu.V14167.gnm1.Aradu.A05g00314	3	LOC107641626	2	-1
+ardaradu.V14167.gnm1.Aradu.A08g00258	4	LOC107609632	1	-1
+#	Alignment	3:	score=339	pvalue=0.0001	N=7	ARH.19&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.19g03446	1	LOC107619373	7	-1
+arharahy.Tifrunner.gnm1.Arahy.13g04700	2	LOC107631511	6	-1
+arharahy.Tifrunner.gnm1.Arahy.14g02158	3	LOC107639536	5	-1
+arharahy.Tifrunner.gnm1.Arahy.20g00092	4	LOC107622460	4	-1
+arharahy.Tifrunner.gnm1.Arahy.05g00348	5	LOC107641626	3	-1
+arharahy.Tifrunner.gnm1.Arahy.08g00256	6	LOC107609632	2	-1
+arharahy.Tifrunner.gnm1.Arahy.19g03447	7	LOC107619374	1	-1
+#	Alignment	4:	score=299	pvalue=0.0001	N=6	BRA.BRA&ORY.ORY	minus
+BRA_0051014	1	ORY_0002729	6	-1
+BRA_0035210	2	ORY_0016453	5	-1
+BRA_0011993	3	ORY_0028906	4	-1
+BRA_0017726	4	ORY_0027410	3	-1
+BRA_0056533	5	ORY_0023195	2	-1
+BRA_0029697	6	ORY_0005236	1	-1
+#	Alignment	5:	score=259	pvalue=0.001	N=5	GLY.GLY&PHA.PHA	minus
+GLY_0071875	1	PHA_0024310	5	-1
+GLY_0016021	2	PHA_0036717	4	-1
+GLY_0001430	3	PHA_0000496	3	-1
+GLY_0011095	4	PHA_0010091	2	-1
+GLY_0033335	5	PHA_0003786	1	-1
+#	Alignment	6:	score=219	pvalue=0.001	N=4	POP.POP&PRU.PRU	minus
+POP_0004022	1	PRU_0043513	4	-1
+POP_0034211	2	PRU_0021512	3	-1
+POP_0045175	3	PRU_0003336	2	-1
+POP_0042447	4	PRU_0026476	1	-1
+#	Alignment	7:	score=259	pvalue=0.001	N=5	ACT.ACT&VIT.VIT	minus
+ACT_0023101	1	VIT_0020106	5	-1
+ACT_0037100	2	VIT_0020057	4	-1
+ACT_0004080	3	VIT_0019526	3	-1
+ACT_0029280	4	VIT_0027565	2	-1
+ACT_0022072	5	VIT_0011530	1	-1
+#	Alignment	8:	score=219	pvalue=0.001	N=4	CIN.CIN&LIR.LIR	minus
+CIN_0014370	1	LIR_0011521	4	-1
+CIN_0024981	2	LIR_0036186	3	-1
+CIN_0014522	3	LIR_0027560	2	-1
+CIN_0017325	4	LIR_0014679	1	-1
+#	Alignment	9:	score=259	pvalue=0.001	N=5	AMB.AMB&NYM.NYM	minus
+AMB_0015029	1	NYM_0031460	5	-1
+AMB_0002630	2	NYM_0015949	4	-1
+AMB_0014267	3	NYM_0002200	3	-1
+AMB_0015608	4	NYM_0011350	2	-1
+AMB_0013109	5	NYM_0039904	1	-1
+#	Alignment	10:	score=379	pvalue=0.0001	N=8	ARD.A09&ARH.09	minus
+ardaradu.V14167.gnm1.Aradu.A09g00591	1	arharahy.Tifrunner.gnm1.Arahy.09g00611	8	-1
+ardaradu.V14167.gnm1.Aradu.A02g03006	2	arharahy.Tifrunner.gnm1.Arahy.12g03356	7	-1
+ardaradu.V14167.gnm1.Aradu.A06g02019	3	arharahy.Tifrunner.gnm1.Arahy.06g01993	6	-1
+ardaradu.V14167.gnm1.Aradu.A06g03409	4	arharahy.Tifrunner.gnm1.Arahy.06g03112	5	-1
+ardaradu.V14167.gnm1.Aradu.A09g00668	5	arharahy.Tifrunner.gnm1.Arahy.09g00681	4	-1
+ardaradu.V14167.gnm1.Aradu.A08g01173	6	arharahy.Tifrunner.gnm1.Arahy.08g01196	3	-1
+ardaradu.V14167.gnm1.Aradu.A08g01002	7	arharahy.Tifrunner.gnm1.Arahy.08g01009	2	-1
+ardaradu.V14167.gnm1.Aradu.A06g03407	8	arharahy.Tifrunner.gnm1.Arahy.06g03109	1	-1
+#	Alignment	11:	score=379	pvalue=0.0001	N=8	ARH.16&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.16g02177	1	LOC107647031	8	-1
+arharahy.Tifrunner.gnm1.Arahy.09g00611	2	LOC107618360	7	-1
+arharahy.Tifrunner.gnm1.Arahy.16g03794	3	LOC107605494	6	-1
+arharahy.Tifrunner.gnm1.Arahy.12g03356	4	LOC107628609	5	-1
+arharahy.Tifrunner.gnm1.Arahy.18g00245	5	LOC107614361	4	-1
+arharahy.Tifrunner.gnm1.Arahy.19g00794	6	LOC107619609	3	-1
+arharahy.Tifrunner.gnm1.Arahy.17g03513	7	LOC107606310	2	-1
+arharahy.Tifrunner.gnm1.Arahy.16g03791	8	LOC107605492	1	-1
+#	Alignment	12:	score=339	pvalue=0.0001	N=7	BRA.BRA&ORY.ORY	minus
+BRA_0045448	1	ORY_0024258	7	-1
+BRA_0032676	2	ORY_0013425	6	-1
+BRA_0028228	3	ORY_0005275	5	-1
+BRA_0030563	4	ORY_0025712	4	-1
+BRA_0024912	5	ORY_0007525	3	-1
+BRA_0026471	6	ORY_0007609	2	-1
+BRA_0005690	7	ORY_0020018	1	-1
+#	Alignment	13:	score=339	pvalue=0.0001	N=7	GLY.GLY&PHA.PHA	minus
+GLY_0070991	1	PHA_0025988	7	-1
+GLY_0022230	2	PHA_0001104	6	-1
+GLY_0059346	3	PHA_0026700	5	-1
+GLY_0035575	4	PHA_0024998	4	-1
+GLY_0053850	5	PHA_0011071	3	-1
+GLY_0051843	6	PHA_0029094	2	-1
+GLY_0062951	7	PHA_0025640	1	-1
+#	Alignment	14:	score=179	pvalue=0.001	N=3	ACT.ACT&VIT.VIT	minus
+ACT_0000331	1	VIT_0003816	3	-1
+ACT_0017530	2	VIT_0029570	2	-1
+ACT_0008049	3	VIT_0028197	1	-1
+#	Alignment	15:	score=419	pvalue=0.0001	N=9	ARD.A09&ARH.19	minus
+ardaradu.V14167.gnm1.Aradu.A09g02781	1	arharahy.Tifrunner.gnm1.Arahy.19g04046	9	-1
+ardaradu.V14167.gnm1.Aradu.A04g00360	2	arharahy.Tifrunner.gnm1.Arahy.14g00514	8	-1
+ardaradu.V14167.gnm1.Aradu.A07g01339	3	arharahy.Tifrunner.gnm1.Arahy.07g01299	7	-1
+ardaradu.V14167.gnm1.Aradu.A03g03588	4	arharahy.Tifrunner.gnm1.Arahy.03g03565	6	-1
+ardaradu.V14167.gnm1.Aradu.A08g00045	5	arharahy.Tifrunner.gnm1.Arahy.08g00044	5	-1
+ardaradu.V14167.gnm1.Aradu.A07g02642	6	arharahy.Tifrunner.gnm1.Arahy.07g02419	4	-1
+ardaradu.V14167.gnm1.Aradu.A05g03675	7	arharahy.Tifrunner.gnm1.Arahy.05g03557	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g01167	8	arharahy.Tifrunner.gnm1.Arahy.06g01234	2	-1
+ardaradu.V14167.gnm1.Aradu.A01g02915	9	arharahy.Tifrunner.gnm1.Arahy.01g02850	1	-1
+#	Alignment	16:	score=419	pvalue=0.0001	N=9	ARH.17&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.17g01500	1	LOC107609322	9	-1
+arharahy.Tifrunner.gnm1.Arahy.12g03210	2	LOC107626264	8	-1
+arharahy.Tifrunner.gnm1.Arahy.17g02662	3	LOC107610131	7	-1
+arharahy.Tifrunner.gnm1.Arahy.19g04046	4	LOC107616090	6	-1
+arharahy.Tifrunner.gnm1.Arahy.13g03005	5	LOC107634525	5	-1
+arharahy.Tifrunner.gnm1.Arahy.16g00292	6	LOC107645353	4	-1
+arharahy.Tifrunner.gnm1.Arahy.14g00514	7	LOC107637528	3	-1
+arharahy.Tifrunner.gnm1.Arahy.15g03956	8	LOC107642231	2	-1
+arharahy.Tifrunner.gnm1.Arahy.11g02743	9	LOC107637622	1	-1
+#	Alignment	17:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0034611	1	ORY_0033786	3	-1
+BRA_0001838	2	ORY_0019897	2	-1
+BRA_0016578	3	ORY_0017534	1	-1
+#	Alignment	18:	score=379	pvalue=0.0001	N=8	GLY.GLY&PHA.PHA	minus
+GLY_0060194	1	PHA_0006280	8	-1
+GLY_0024660	2	PHA_0034388	7	-1
+GLY_0011317	3	PHA_0006531	6	-1
+GLY_0032494	4	PHA_0020503	5	-1
+GLY_0032492	5	PHA_0020969	4	-1
+GLY_0069111	6	PHA_0027830	3	-1
+GLY_0054935	7	PHA_0029287	2	-1
+GLY_0048829	8	PHA_0030796	1	-1
+#	Alignment	19:	score=179	pvalue=0.001	N=3	POP.POP&PRU.PRU	minus
+POP_0035739	1	PRU_0046012	3	-1
+POP_0001526	2	PRU_0010526	2	-1
+POP_0000258	3	PRU_0044245	1	-1
+#	Alignment	20:	score=179	pvalue=0.001	N=3	ACT.ACT&VIT.VIT	minus
+ACT_0028888	1	VIT_0017063	3	-1
+ACT_0029166	2	VIT_0009728	2	-1
+ACT_0013920	3	VIT_0007626	1	-1
+#	Alignment	21:	score=219	pvalue=0.001	N=4	CIN.CIN&LIR.LIR	minus
+CIN_0003084	1	LIR_0007521	4	-1
+CIN_0020976	2	LIR_0020124	3	-1
+CIN_0021277	3	LIR_0022753	2	-1
+CIN_0006889	4	LIR_0006404	1	-1
+#	Alignment	22:	score=219	pvalue=0.001	N=4	COF.COF&SOL.SOL	minus
+COF_0002484	1	SOL_0011126	4	-1
+COF_0013186	2	SOL_0031282	3	-1
+COF_0007638	3	SOL_0025516	2	-1
+COF_0009911	4	SOL_0024306	1	-1
+#	Alignment	23:	score=219	pvalue=0.001	N=4	ARD.A03&ARH.13	minus
+ardaradu.V14167.gnm1.Aradu.A03g03319	1	arharahy.Tifrunner.gnm1.Arahy.13g03512	4	-1
+ardaradu.V14167.gnm1.Aradu.A01g03406	2	arharahy.Tifrunner.gnm1.Arahy.11g02150	3	-1
+ardaradu.V14167.gnm1.Aradu.A10g02624	3	arharahy.Tifrunner.gnm1.Arahy.10g02367	2	-1
+ardaradu.V14167.gnm1.Aradu.A10g02107	4	arharahy.Tifrunner.gnm1.Arahy.10g01949	1	-1
+#	Alignment	24:	score=219	pvalue=0.001	N=4	ARH.13&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.13g03512	1	LOC107630983	4	-1
+arharahy.Tifrunner.gnm1.Arahy.20g02825	2	LOC107622644	3	-1
+arharahy.Tifrunner.gnm1.Arahy.11g02150	3	LOC107633879	2	-1
+arharahy.Tifrunner.gnm1.Arahy.20g02315	4	LOC107622775	1	-1
+#	Alignment	25:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0020616	1	PHA_0006796	3	-1
+GLY_0048612	2	PHA_0029311	2	-1
+GLY_0019897	3	PHA_0008461	1	-1
+#	Alignment	26:	score=179	pvalue=0.001	N=3	POP.POP&PRU.PRU	minus
+POP_0041975	1	PRU_0010739	3	-1
+POP_0006015	2	PRU_0023739	2	-1
+POP_0019428	3	PRU_0021059	1	-1
+#	Alignment	27:	score=219	pvalue=0.001	N=4	ACT.ACT&VIT.VIT	minus
+ACT_0024353	1	VIT_0028016	4	-1
+ACT_0014040	2	VIT_0020408	3	-1
+ACT_0036379	3	VIT_0011442	2	-1
+ACT_0023292	4	VIT_0005824	1	-1
+#	Alignment	28:	score=179	pvalue=0.001	N=3	CIN.CIN&LIR.LIR	minus
+CIN_0010569	1	LIR_0022053	3	-1
+CIN_0020578	2	LIR_0042685	2	-1
+CIN_0016464	3	LIR_0029148	1	-1
+#	Alignment	29:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0022637	1	SOL_0024131	3	-1
+COF_0006970	2	SOL_0028959	2	-1
+COF_0024630	3	SOL_0011030	1	-1
+#	Alignment	30:	score=219	pvalue=0.001	N=4	ARD.A04&ARH.14	minus
+ardaradu.V14167.gnm1.Aradu.A04g00659	1	arharahy.Tifrunner.gnm1.Arahy.14g00806	4	-1
+ardaradu.V14167.gnm1.Aradu.A02g00150	2	arharahy.Tifrunner.gnm1.Arahy.02g00169	3	-1
+ardaradu.V14167.gnm1.Aradu.A04g02967	3	arharahy.Tifrunner.gnm1.Arahy.04g02686	2	-1
+ardaradu.V14167.gnm1.Aradu.A07g01009	4	arharahy.Tifrunner.gnm1.Arahy.07g00989	1	-1
+#	Alignment	31:	score=219	pvalue=0.001	N=4	ARH.14&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.14g00806	1	LOC107638776	4	-1
+arharahy.Tifrunner.gnm1.Arahy.17g01170	2	LOC107609299	3	-1
+arharahy.Tifrunner.gnm1.Arahy.12g00173	3	LOC107628103	2	-1
+arharahy.Tifrunner.gnm1.Arahy.14g02955	4	LOC107635065	1	-1
+#	Alignment	32:	score=299	pvalue=0.0001	N=6	GLY.GLY&PHA.PHA	minus
+GLY_0031131	1	PHA_0029724	6	-1
+GLY_0023090	2	PHA_0001065	5	-1
+GLY_0061079	3	PHA_0004364	4	-1
+GLY_0037755	4	PHA_0025398	3	-1
+GLY_0037757	5	PHA_0023362	2	-1
+GLY_0066313	6	PHA_0019435	1	-1
+#	Alignment	33:	score=259	pvalue=0.001	N=5	POP.POP&PRU.PRU	minus
+POP_0025944	1	PRU_0043945	5	-1
+POP_0000333	2	PRU_0005183	4	-1
+POP_0020505	3	PRU_0022911	3	-1
+POP_0033830	4	PRU_0004465	2	-1
+POP_0033010	5	PRU_0003588	1	-1
+#	Alignment	34:	score=219	pvalue=0.001	N=4	ACT.ACT&VIT.VIT	minus
+ACT_0008296	1	VIT_0013333	4	-1
+ACT_0007358	2	VIT_0012636	3	-1
+ACT_0037173	3	VIT_0005618	2	-1
+ACT_0014742	4	VIT_0007855	1	-1
+#	Alignment	35:	score=299	pvalue=0.0001	N=6	CIN.CIN&LIR.LIR	minus
+CIN_0013617	1	LIR_0014636	6	-1
+CIN_0013100	2	LIR_0005072	5	-1
+CIN_0015048	3	LIR_0002512	4	-1
+CIN_0005923	4	LIR_0045675	3	-1
+CIN_0012908	5	LIR_0014441	2	-1
+CIN_0023138	6	LIR_0014562	1	-1
+#	Alignment	36:	score=219	pvalue=0.001	N=4	COF.COF&SOL.SOL	minus
+COF_0009281	1	SOL_0024697	4	-1
+COF_0009443	2	SOL_0025426	3	-1
+COF_0012406	3	SOL_0031291	2	-1
+COF_0009442	4	SOL_0026199	1	-1
+#	Alignment	37:	score=259	pvalue=0.001	N=5	ARD.A06&ARH.14	minus
+ardaradu.V14167.gnm1.Aradu.A06g03030	1	arharahy.Tifrunner.gnm1.Arahy.14g02104	5	-1
+ardaradu.V14167.gnm1.Aradu.A06g01558	2	arharahy.Tifrunner.gnm1.Arahy.20g02804	4	-1
+ardaradu.V14167.gnm1.Aradu.A04g03643	3	arharahy.Tifrunner.gnm1.Arahy.14g03686	3	-1
+ardaradu.V14167.gnm1.Aradu.A08g00765	4	arharahy.Tifrunner.gnm1.Arahy.08g00778	2	-1
+ardaradu.V14167.gnm1.Aradu.A04g00646	5	arharahy.Tifrunner.gnm1.Arahy.04g00679	1	-1
+#	Alignment	38:	score=179	pvalue=0.001	N=3	ARD.A06&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A06g03030	1	LOC110271140	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g01558	2	LOC107631102	2	-1
+ardaradu.V14167.gnm1.Aradu.A04g03643	3	LOC107635616	1	-1
+#	Alignment	39:	score=259	pvalue=0.001	N=5	ARH.17&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.17g03269	1	LOC107606131	5	-1
+arharahy.Tifrunner.gnm1.Arahy.14g02104	2	LOC110271140	4	-1
+arharahy.Tifrunner.gnm1.Arahy.14g00792	3	LOC107638763	3	-1
+arharahy.Tifrunner.gnm1.Arahy.20g02804	4	LOC107631102	2	-1
+arharahy.Tifrunner.gnm1.Arahy.14g03686	5	LOC107635616	1	-1
+#	Alignment	40:	score=259	pvalue=0.001	N=5	BRA.BRA&ORY.ORY	minus
+BRA_0011320	1	ORY_0021138	5	-1
+BRA_0051199	2	ORY_0003277	4	-1
+BRA_0015812	3	ORY_0020395	3	-1
+BRA_0007623	4	ORY_0029042	2	-1
+BRA_0056664	5	ORY_0003348	1	-1
+#	Alignment	41:	score=299	pvalue=0.0001	N=6	GLY.GLY&PHA.PHA	minus
+GLY_0012372	1	PHA_0012170	6	-1
+GLY_0012293	2	PHA_0009271	5	-1
+GLY_0066921	3	PHA_0016566	4	-1
+GLY_0055143	4	PHA_0030906	3	-1
+GLY_0031345	5	PHA_0031778	2	-1
+GLY_0025747	6	PHA_0004586	1	-1
+#	Alignment	42:	score=179	pvalue=0.001	N=3	POP.POP&PRU.PRU	minus
+POP_0019094	1	PRU_0011811	3	-1
+POP_0041409	2	PRU_0043431	2	-1
+POP_0016906	3	PRU_0040580	1	-1
+#	Alignment	43:	score=179	pvalue=0.001	N=3	ACT.ACT&VIT.VIT	minus
+ACT_0027552	1	VIT_0023226	3	-1
+ACT_0032877	2	VIT_0010756	2	-1
+ACT_0012224	3	VIT_0031045	1	-1
+#	Alignment	44:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0014531	1	SOL_0001781	3	-1
+COF_0002945	2	SOL_0011652	2	-1
+COF_0010675	3	SOL_0009220	1	-1
+#	Alignment	45:	score=299	pvalue=0.0001	N=6	ARD.A05&ARH.05	minus
+ardaradu.V14167.gnm1.Aradu.A05g02942	1	arharahy.Tifrunner.gnm1.Arahy.05g02793	6	-1
+ardaradu.V14167.gnm1.Aradu.A09g00370	2	arharahy.Tifrunner.gnm1.Arahy.09g00376	5	-1
+ardaradu.V14167.gnm1.Aradu.A04g00933	3	arharahy.Tifrunner.gnm1.Arahy.14g01087	4	-1
+ardaradu.V14167.gnm1.Aradu.A08g00963	4	arharahy.Tifrunner.gnm1.Arahy.17g03473	3	-1
+ardaradu.V14167.gnm1.Aradu.A03g01003	5	arharahy.Tifrunner.gnm1.Arahy.03g01143	2	-1
+ardaradu.V14167.gnm1.Aradu.A03g04306	6	arharahy.Tifrunner.gnm1.Arahy.03g04291	1	-1
+#	Alignment	46:	score=179	pvalue=0.001	N=3	ARD.A05&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A05g02942	1	LOC107644247	3	-1
+ardaradu.V14167.gnm1.Aradu.A09g00370	2	LOC107617331	2	-1
+ardaradu.V14167.gnm1.Aradu.A04g00933	3	LOC107638965	1	-1
+#	Alignment	47:	score=259	pvalue=0.001	N=5	ARH.05&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.05g02793	1	LOC107644247	5	-1
+arharahy.Tifrunner.gnm1.Arahy.09g00376	2	LOC107617331	4	-1
+arharahy.Tifrunner.gnm1.Arahy.08g00966	3	LOC107606280	3	-1
+arharahy.Tifrunner.gnm1.Arahy.14g01087	4	LOC107638965	2	-1
+arharahy.Tifrunner.gnm1.Arahy.13g04389	5	LOC107631779	1	-1
+#	Alignment	48:	score=299	pvalue=0.0001	N=6	BRA.BRA&ORY.ORY	minus
+BRA_0052948	1	ORY_0029135	6	-1
+BRA_0005508	2	ORY_0018822	5	-1
+BRA_0028890	3	ORY_0005668	4	-1
+BRA_0000197	4	ORY_0028019	3	-1
+BRA_0052599	5	ORY_0021889	2	-1
+BRA_0014884	6	ORY_0011580	1	-1
+#	Alignment	49:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0023519	1	PHA_0021671	4	-1
+GLY_0022322	2	PHA_0001031	3	-1
+GLY_0018985	3	PHA_0009635	2	-1
+GLY_0026521	4	PHA_0034055	1	-1
+#	Alignment	50:	score=179	pvalue=0.001	N=3	ACT.ACT&VIT.VIT	minus
+ACT_0037052	1	VIT_0029131	3	-1
+ACT_0036544	2	VIT_0030763	2	-1
+ACT_0037935	3	VIT_0004599	1	-1
+#	Alignment	51:	score=179	pvalue=0.001	N=3	CIN.CIN&LIR.LIR	minus
+CIN_0017357	1	LIR_0013957	3	-1
+CIN_0026517	2	LIR_0041790	2	-1
+CIN_0010612	3	LIR_0000004	1	-1
+#	Alignment	52:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0011485	1	SOL_0023409	3	-1
+COF_0009662	2	SOL_0026783	2	-1
+COF_0004786	3	SOL_0004285	1	-1
+#	Alignment	53:	score=379	pvalue=0.0001	N=8	ARD.A08&ARH.18	minus
+ardaradu.V14167.gnm1.Aradu.A08g01542	1	arharahy.Tifrunner.gnm1.Arahy.18g00660	8	-1
+ardaradu.V14167.gnm1.Aradu.A09g00358	2	arharahy.Tifrunner.gnm1.Arahy.19g00453	7	-1
+ardaradu.V14167.gnm1.Aradu.A02g00101	3	arharahy.Tifrunner.gnm1.Arahy.02g00109	6	-1
+ardaradu.V14167.gnm1.Aradu.A06g00411	4	arharahy.Tifrunner.gnm1.Arahy.06g00438	5	-1
+ardaradu.V14167.gnm1.Aradu.A04g00313	5	arharahy.Tifrunner.gnm1.Arahy.04g00342	4	-1
+ardaradu.V14167.gnm1.Aradu.A08g00970	6	arharahy.Tifrunner.gnm1.Arahy.08g00976	3	-1
+ardaradu.V14167.gnm1.Aradu.A07g02412	7	arharahy.Tifrunner.gnm1.Arahy.18g00063	2	-1
+ardaradu.V14167.gnm1.Aradu.A02g02770	8	arharahy.Tifrunner.gnm1.Arahy.02g02651	1	-1
+#	Alignment	54:	score=259	pvalue=0.001	N=5	ARD.A09&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A09g00358	1	LOC107614810	5	-1
+ardaradu.V14167.gnm1.Aradu.A02g00101	2	LOC107616883	4	-1
+ardaradu.V14167.gnm1.Aradu.A06g00411	3	LOC107648004	3	-1
+ardaradu.V14167.gnm1.Aradu.A04g00313	4	LOC107638536	2	-1
+ardaradu.V14167.gnm1.Aradu.A07g02412	5	LOC107617208	1	-1
+#	Alignment	55:	score=299	pvalue=0.0001	N=6	ARH.19&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.19g00453	1	LOC107614810	6	-1
+arharahy.Tifrunner.gnm1.Arahy.02g00109	2	LOC107616883	5	-1
+arharahy.Tifrunner.gnm1.Arahy.12g02967	3	LOC107627923	4	-1
+arharahy.Tifrunner.gnm1.Arahy.06g00438	4	LOC107648004	3	-1
+arharahy.Tifrunner.gnm1.Arahy.04g00342	5	LOC107638536	2	-1
+arharahy.Tifrunner.gnm1.Arahy.18g00063	6	LOC107617208	1	-1
+#	Alignment	56:	score=259	pvalue=0.001	N=5	BRA.BRA&ORY.ORY	minus
+BRA_0034384	1	ORY_0003161	5	-1
+BRA_0035707	2	ORY_0036138	4	-1
+BRA_0021956	3	ORY_0026033	3	-1
+BRA_0040345	4	ORY_0033965	2	-1
+BRA_0033476	5	ORY_0012981	1	-1
+#	Alignment	57:	score=459	pvalue=0.0001	N=10	GLY.GLY&PHA.PHA	minus
+GLY_0049679	1	PHA_0010970	10	-1
+GLY_0028633	2	PHA_0000083	9	-1
+GLY_0053621	3	PHA_0012011	8	-1
+GLY_0034878	4	PHA_0023473	7	-1
+GLY_0048261	5	PHA_0029402	6	-1
+GLY_0018978	6	PHA_0008125	5	-1
+GLY_0050218	7	PHA_0011090	4	-1
+GLY_0073679	8	PHA_0022139	3	-1
+GLY_0025499	9	PHA_0003074	2	-1
+GLY_0022553	10	PHA_0000957	1	-1
+#	Alignment	58:	score=259	pvalue=0.001	N=5	POP.POP&PRU.PRU	minus
+POP_0029856	1	PRU_0032393	5	-1
+POP_0022892	2	PRU_0034853	4	-1
+POP_0008442	3	PRU_0007954	3	-1
+POP_0043155	4	PRU_0015329	2	-1
+POP_0006957	5	PRU_0038805	1	-1
+#	Alignment	59:	score=259	pvalue=0.001	N=5	ACT.ACT&VIT.VIT	minus
+ACT_0016521	1	VIT_0029799	5	-1
+ACT_0033681	2	VIT_0021388	4	-1
+ACT_0004640	3	VIT_0000788	3	-1
+ACT_0005877	4	VIT_0030643	2	-1
+ACT_0016263	5	VIT_0027326	1	-1
+#	Alignment	60:	score=219	pvalue=0.001	N=4	CIN.CIN&LIR.LIR	minus
+CIN_0027468	1	LIR_0007640	4	-1
+CIN_0020810	2	LIR_0040970	3	-1
+CIN_0010654	3	LIR_0044319	2	-1
+CIN_0008919	4	LIR_0007251	1	-1
+#	Alignment	61:	score=259	pvalue=0.001	N=5	COF.COF&SOL.SOL	minus
+COF_0011673	1	SOL_0031656	5	-1
+COF_0001994	2	SOL_0022913	4	-1
+COF_0008846	3	SOL_0025630	3	-1
+COF_0009867	4	SOL_0027653	2	-1
+COF_0020148	5	SOL_0006136	1	-1
+#	Alignment	62:	score=219	pvalue=0.001	N=4	AMB.AMB&NYM.NYM	minus
+AMB_0000453	1	NYM_0003286	4	-1
+AMB_0009764	2	NYM_0001731	3	-1
+AMB_0009250	3	NYM_0002989	2	-1
+AMB_0019190	4	NYM_0040321	1	-1
+#	Alignment	63:	score=219	pvalue=0.001	N=4	ARD.A08&ARH.09	minus
+ardaradu.V14167.gnm1.Aradu.A08g01354	1	arharahy.Tifrunner.gnm1.Arahy.09g01987	4	-1
+ardaradu.V14167.gnm1.Aradu.A04g01107	2	arharahy.Tifrunner.gnm1.Arahy.14g01243	3	-1
+ardaradu.V14167.gnm1.Aradu.A02g02839	3	arharahy.Tifrunner.gnm1.Arahy.02g02740	2	-1
+ardaradu.V14167.gnm1.Aradu.A02g01253	4	arharahy.Tifrunner.gnm1.Arahy.02g01259	1	-1
+#	Alignment	64:	score=179	pvalue=0.001	N=3	ARD.A08&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A08g01354	1	LOC107613469	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g01489	2	LOC107648706	2	-1
+ardaradu.V14167.gnm1.Aradu.A04g01107	3	LOC107637642	1	-1
+#	Alignment	65:	score=219	pvalue=0.001	N=4	ARH.09&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.09g01987	1	LOC107613469	4	-1
+arharahy.Tifrunner.gnm1.Arahy.12g03072	2	LOC107626160	3	-1
+arharahy.Tifrunner.gnm1.Arahy.14g01243	3	LOC107637642	2	-1
+arharahy.Tifrunner.gnm1.Arahy.12g01454	4	LOC107625212	1	-1
+#	Alignment	66:	score=259	pvalue=0.001	N=5	BRA.BRA&ORY.ORY	minus
+BRA_0001130	1	ORY_0019841	5	-1
+BRA_0007440	2	ORY_0018443	4	-1
+BRA_0041141	3	ORY_0035869	3	-1
+BRA_0031905	4	ORY_0012226	2	-1
+BRA_0042934	5	ORY_0015372	1	-1
+#	Alignment	67:	score=339	pvalue=0.0001	N=7	GLY.GLY&PHA.PHA	minus
+GLY_0040506	1	PHA_0013567	7	-1
+GLY_0047195	2	PHA_0036995	6	-1
+GLY_0034813	3	PHA_0025484	5	-1
+GLY_0025418	4	PHA_0002599	4	-1
+GLY_0040501	5	PHA_0015391	3	-1
+GLY_0054083	6	PHA_0036958	2	-1
+GLY_0010132	7	PHA_0027628	1	-1
+#	Alignment	68:	score=219	pvalue=0.001	N=4	POP.POP&PRU.PRU	minus
+POP_0026327	1	PRU_0012477	4	-1
+POP_0005448	2	PRU_0013122	3	-1
+POP_0015739	3	PRU_0006945	2	-1
+POP_0035901	4	PRU_0004027	1	-1
+#	Alignment	69:	score=179	pvalue=0.001	N=3	ACT.ACT&VIT.VIT	minus
+ACT_0036067	1	VIT_0024116	3	-1
+ACT_0030351	2	VIT_0003295	2	-1
+ACT_0025385	3	VIT_0019948	1	-1
+#	Alignment	70:	score=259	pvalue=0.001	N=5	COF.COF&SOL.SOL	minus
+COF_0001258	1	SOL_0005322	5	-1
+COF_0014939	2	SOL_0008227	4	-1
+COF_0006412	3	SOL_0010831	3	-1
+COF_0009776	4	SOL_0030680	2	-1
+COF_0002083	5	SOL_0009054	1	-1
+#	Alignment	71:	score=259	pvalue=0.001	N=5	ARD.A09&ARH.19	minus
+ardaradu.V14167.gnm1.Aradu.A09g01986	1	arharahy.Tifrunner.gnm1.Arahy.19g02140	5	-1
+ardaradu.V14167.gnm1.Aradu.A08g01623	2	arharahy.Tifrunner.gnm1.Arahy.08g01658	4	-1
+ardaradu.V14167.gnm1.Aradu.A06g02120	3	arharahy.Tifrunner.gnm1.Arahy.06g02062	3	-1
+ardaradu.V14167.gnm1.Aradu.A10g02934	4	arharahy.Tifrunner.gnm1.Arahy.10g02692	2	-1
+ardaradu.V14167.gnm1.Aradu.A03g01157	5	arharahy.Tifrunner.gnm1.Arahy.03g01282	1	-1
+#	Alignment	72:	score=259	pvalue=0.001	N=5	ARH.18&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.18g00763	1	LOC107613170	5	-1
+arharahy.Tifrunner.gnm1.Arahy.19g02140	2	LOC107618026	4	-1
+arharahy.Tifrunner.gnm1.Arahy.16g02278	3	LOC107604659	3	-1
+arharahy.Tifrunner.gnm1.Arahy.20g03142	4	LOC107623190	2	-1
+arharahy.Tifrunner.gnm1.Arahy.13g01570	5	LOC107630000	1	-1
+#	Alignment	73:	score=219	pvalue=0.001	N=4	BRA.BRA&ORY.ORY	minus
+BRA_0006955	1	ORY_0025681	4	-1
+BRA_0044081	2	ORY_0000149	3	-1
+BRA_0021903	3	ORY_0038478	2	-1
+BRA_0020954	4	ORY_0031085	1	-1
+#	Alignment	74:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0044785	1	PHA_0010639	4	-1
+GLY_0073473	2	PHA_0021888	3	-1
+GLY_0008907	3	PHA_0026646	2	-1
+GLY_0009988	4	PHA_0027129	1	-1
+#	Alignment	75:	score=219	pvalue=0.001	N=4	POP.POP&PRU.PRU	minus
+POP_0031343	1	PRU_0015207	4	-1
+POP_0018561	2	PRU_0024458	3	-1
+POP_0047168	3	PRU_0029285	2	-1
+POP_0004825	4	PRU_0030178	1	-1
+#	Alignment	76:	score=219	pvalue=0.001	N=4	ACT.ACT&VIT.VIT	minus
+ACT_0028526	1	VIT_0025358	4	-1
+ACT_0034931	2	VIT_0015389	3	-1
+ACT_0003600	3	VIT_0016825	2	-1
+ACT_0036771	4	VIT_0002881	1	-1
+#	Alignment	77:	score=179	pvalue=0.001	N=3	CIN.CIN&LIR.LIR	minus
+CIN_0001117	1	LIR_0005180	3	-1
+CIN_0000187	2	LIR_0033300	2	-1
+CIN_0014259	3	LIR_0047162	1	-1
+#	Alignment	78:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0000785	1	SOL_0024058	3	-1
+COF_0020854	2	SOL_0020620	2	-1
+COF_0001577	3	SOL_0008484	1	-1
+#	Alignment	79:	score=179	pvalue=0.001	N=3	AMB.AMB&NYM.NYM	minus
+AMB_0003052	1	NYM_0014934	3	-1
+AMB_0016667	2	NYM_0033780	2	-1
+AMB_0017444	3	NYM_0014059	1	-1
+#	Alignment	80:	score=339	pvalue=0.0001	N=7	ARD.A10&ARH.10	minus
+ardaradu.V14167.gnm1.Aradu.A10g01839	1	arharahy.Tifrunner.gnm1.Arahy.10g01738	7	-1
+ardaradu.V14167.gnm1.Aradu.A09g00439	2	arharahy.Tifrunner.gnm1.Arahy.09g00446	6	-1
+ardaradu.V14167.gnm1.Aradu.A03g04094	3	arharahy.Tifrunner.gnm1.Arahy.13g04174	5	-1
+ardaradu.V14167.gnm1.Aradu.A07g01963	4	arharahy.Tifrunner.gnm1.Arahy.18g00210	4	-1
+ardaradu.V14167.gnm1.Aradu.A09g00434	5	arharahy.Tifrunner.gnm1.Arahy.09g00444	3	-1
+ardaradu.V14167.gnm1.Aradu.A09g00440	6	arharahy.Tifrunner.gnm1.Arahy.09g00448	2	-1
+ardaradu.V14167.gnm1.Aradu.A08g00663	7	arharahy.Tifrunner.gnm1.Arahy.08g00658	1	-1
+#	Alignment	81:	score=179	pvalue=0.001	N=3	ARD.A10&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A10g01839	1	LOC107623443	3	-1
+ardaradu.V14167.gnm1.Aradu.A03g04094	2	LOC107631435	2	-1
+ardaradu.V14167.gnm1.Aradu.A07g01963	3	LOC107612802	1	-1
+#	Alignment	82:	score=339	pvalue=0.0001	N=7	ARH.10&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.10g01738	1	LOC107623443	7	-1
+arharahy.Tifrunner.gnm1.Arahy.17g03147	2	LOC107606039	6	-1
+arharahy.Tifrunner.gnm1.Arahy.13g04174	3	LOC107631435	5	-1
+arharahy.Tifrunner.gnm1.Arahy.18g00210	4	LOC107612802	4	-1
+arharahy.Tifrunner.gnm1.Arahy.19g00543	5	LOC107617300	3	-1
+arharahy.Tifrunner.gnm1.Arahy.19g00547	6	LOC107617295	2	-1
+arharahy.Tifrunner.gnm1.Arahy.19g00546	7	LOC107617297	1	-1
+#	Alignment	83:	score=339	pvalue=0.0001	N=7	BRA.BRA&ORY.ORY	minus
+BRA_0005583	1	ORY_0009958	7	-1
+BRA_0030535	2	ORY_0007166	6	-1
+BRA_0007408	3	ORY_0030031	5	-1
+BRA_0035334	4	ORY_0012387	4	-1
+BRA_0033206	5	ORY_0012086	3	-1
+BRA_0015300	6	ORY_0009678	2	-1
+BRA_0006775	7	ORY_0016958	1	-1
+#	Alignment	84:	score=299	pvalue=0.0001	N=6	GLY.GLY&PHA.PHA	minus
+GLY_0013868	1	PHA_0006652	6	-1
+GLY_0014182	2	PHA_0006938	5	-1
+GLY_0022301	3	PHA_0000417	4	-1
+GLY_0065046	4	PHA_0003096	3	-1
+GLY_0050181	5	PHA_0010873	2	-1
+GLY_0028579	6	PHA_0001392	1	-1
+#	Alignment	85:	score=299	pvalue=0.0001	N=6	POP.POP&PRU.PRU	minus
+POP_0013824	1	PRU_0002270	6	-1
+POP_0042701	2	PRU_0046873	5	-1
+POP_0022705	3	PRU_0035180	4	-1
+POP_0037313	4	PRU_0042909	3	-1
+POP_0047035	5	PRU_0027364	2	-1
+POP_0006316	6	PRU_0028827	1	-1
+#	Alignment	86:	score=259	pvalue=0.001	N=5	ACT.ACT&VIT.VIT	minus
+ACT_0022493	1	VIT_0010012	5	-1
+ACT_0005135	2	VIT_0029666	4	-1
+ACT_0006597	3	VIT_0004630	3	-1
+ACT_0033809	4	VIT_0026712	2	-1
+ACT_0037589	5	VIT_0003601	1	-1
+#	Alignment	87:	score=219	pvalue=0.001	N=4	CIN.CIN&LIR.LIR	minus
+CIN_0001922	1	LIR_0045774	4	-1
+CIN_0004726	2	LIR_0029157	3	-1
+CIN_0024675	3	LIR_0018865	2	-1
+CIN_0010419	4	LIR_0041250	1	-1
+#	Alignment	88:	score=299	pvalue=0.0001	N=6	COF.COF&SOL.SOL	minus
+COF_0005675	1	SOL_0023382	6	-1
+COF_0003401	2	SOL_0018402	5	-1
+COF_0011465	3	SOL_0031823	4	-1
+COF_0005270	4	SOL_0004302	3	-1
+COF_0015254	5	SOL_0028156	2	-1
+COF_0015714	6	SOL_0028526	1	-1
+#	Alignment	89:	score=219	pvalue=0.001	N=4	AMB.AMB&NYM.NYM	minus
+AMB_0014969	1	NYM_0034032	4	-1
+AMB_0005908	2	NYM_0020489	3	-1
+AMB_0000456	3	NYM_0031829	2	-1
+AMB_0009662	4	NYM_0002101	1	-1
+#	Alignment	90:	score=459	pvalue=0.0001	N=10	ARD.A10&ARH.10	minus
+ardaradu.V14167.gnm1.Aradu.A10g02401	1	arharahy.Tifrunner.gnm1.Arahy.10g02178	10	-1
+ardaradu.V14167.gnm1.Aradu.A08g02092	2	arharahy.Tifrunner.gnm1.Arahy.18g01417	9	-1
+ardaradu.V14167.gnm1.Aradu.A10g00310	3	arharahy.Tifrunner.gnm1.Arahy.10g00323	8	-1
+ardaradu.V14167.gnm1.Aradu.A04g00392	4	arharahy.Tifrunner.gnm1.Arahy.04g00418	7	-1
+ardaradu.V14167.gnm1.Aradu.A01g02927	5	arharahy.Tifrunner.gnm1.Arahy.01g02857	6	-1
+ardaradu.V14167.gnm1.Aradu.A07g01485	6	arharahy.Tifrunner.gnm1.Arahy.07g01487	5	-1
+ardaradu.V14167.gnm1.Aradu.A09g02897	7	arharahy.Tifrunner.gnm1.Arahy.09g02693	4	-1
+ardaradu.V14167.gnm1.Aradu.A03g01716	8	arharahy.Tifrunner.gnm1.Arahy.03g01876	3	-1
+ardaradu.V14167.gnm1.Aradu.A03g03703	9	arharahy.Tifrunner.gnm1.Arahy.03g03681	2	-1
+ardaradu.V14167.gnm1.Adur2305g00002	10	arharahy.Tifrunner.gnm1.Arahy.10g00336	1	-1
+#	Alignment	91:	score=499	pvalue=0.0001	N=11	ARH.20&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.20g00526	1	LOC107623790	11	-1
+arharahy.Tifrunner.gnm1.Arahy.11g02731	2	LOC107637527	10	-1
+arharahy.Tifrunner.gnm1.Arahy.18g01417	3	LOC107613682	9	-1
+arharahy.Tifrunner.gnm1.Arahy.04g00418	4	LOC107638600	8	-1
+arharahy.Tifrunner.gnm1.Arahy.13g03760	5	LOC107634638	7	-1
+arharahy.Tifrunner.gnm1.Arahy.12g02611	6	LOC107627767	6	-1
+arharahy.Tifrunner.gnm1.Arahy.20g02850	7	LOC107621489	5	-1
+arharahy.Tifrunner.gnm1.Arahy.16g00847	8	LOC107615793	4	-1
+arharahy.Tifrunner.gnm1.Arahy.19g03946	9	LOC107617152	3	-1
+arharahy.Tifrunner.gnm1.Arahy.19g02052	10	LOC107615574	2	-1
+arharahy.Tifrunner.gnm1.Arahy.13g02082	11	LOC107630086	1	-1
+#	Alignment	92:	score=219	pvalue=0.001	N=4	BRA.BRA&ORY.ORY	minus
+BRA_0029360	1	ORY_0008346	4	-1
+BRA_0017701	2	ORY_0031143	3	-1
+BRA_0001082	3	ORY_0016885	2	-1
+BRA_0005599	4	ORY_0020851	1	-1
+#	Alignment	93:	score=299	pvalue=0.0001	N=6	GLY.GLY&PHA.PHA	minus
+GLY_0054525	1	PHA_0031416	6	-1
+GLY_0060181	2	PHA_0004974	5	-1
+GLY_0037911	3	PHA_0022496	4	-1
+GLY_0049200	4	PHA_0010206	3	-1
+GLY_0054537	5	PHA_0030190	2	-1
+GLY_0048192	6	PHA_0030652	1	-1
+#	Alignment	94:	score=219	pvalue=0.001	N=4	POP.POP&PRU.PRU	minus
+POP_0018241	1	PRU_0017413	4	-1
+POP_0044946	2	PRU_0039539	3	-1
+POP_0035118	3	PRU_0036626	2	-1
+POP_0019705	4	PRU_0017224	1	-1
+#	Alignment	95:	score=179	pvalue=0.001	N=3	ACT.ACT&VIT.VIT	minus
+ACT_0017640	1	VIT_0017560	3	-1
+ACT_0026969	2	VIT_0030708	2	-1
+ACT_0024186	3	VIT_0030249	1	-1
+#	Alignment	96:	score=179	pvalue=0.001	N=3	CIN.CIN&LIR.LIR	minus
+CIN_0003305	1	LIR_0000936	3	-1
+CIN_0002650	2	LIR_0000123	2	-1
+CIN_0014058	3	LIR_0047222	1	-1
+#	Alignment	97:	score=219	pvalue=0.001	N=4	COF.COF&SOL.SOL	minus
+COF_0006915	1	SOL_0015392	4	-1
+COF_0002728	2	SOL_0024925	3	-1
+COF_0010038	3	SOL_0007994	2	-1
+COF_0014197	4	SOL_0028921	1	-1
+#	Alignment	98:	score=179	pvalue=0.001	N=3	AMB.AMB&NYM.NYM	minus
+AMB_0004131	1	NYM_0006960	3	-1
+AMB_0020628	2	NYM_0027824	2	-1
+AMB_0002279	3	NYM_0016723	1	-1
+#	Alignment	99:	score=179	pvalue=0.001	N=3	ARD.A07&ARH.07	minus
+ardaradu.V14167.gnm1.Aradu.A07g00947	1	arharahy.Tifrunner.gnm1.Arahy.07g00928	3	-1
+ardaradu.V14167.gnm1.Aradu.A02g02121	2	arharahy.Tifrunner.gnm1.Arahy.02g02020	2	-1
+ardaradu.V14167.gnm1.Aradu.A07g00825	3	arharahy.Tifrunner.gnm1.Arahy.07g00801	1	-1
+#	Alignment	100:	score=179	pvalue=0.001	N=3	ARD.A07&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A07g00947	1	LOC107610013	3	-1
+ardaradu.V14167.gnm1.Aradu.A08g00384	2	LOC107610198	2	-1
+ardaradu.V14167.gnm1.Aradu.A02g00439	3	LOC107616177	1	-1
+#	Alignment	101:	score=219	pvalue=0.001	N=4	ARH.12&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.12g02265	1	LOC107625651	4	-1
+arharahy.Tifrunner.gnm1.Arahy.17g01003	2	LOC107609346	3	-1
+arharahy.Tifrunner.gnm1.Arahy.07g00928	3	LOC107610013	2	-1
+arharahy.Tifrunner.gnm1.Arahy.05g00674	4	LOC107642741	1	-1
+#	Alignment	102:	score=339	pvalue=0.0001	N=7	BRA.BRA&ORY.ORY	minus
+BRA_0037737	1	ORY_0012874	7	-1
+BRA_0034943	2	ORY_0034484	6	-1
+BRA_0016002	3	ORY_0017470	5	-1
+BRA_0053126	4	ORY_0004286	4	-1
+BRA_0048440	5	ORY_0022874	3	-1
+BRA_0019384	6	ORY_0026512	2	-1
+BRA_0003501	7	ORY_0027653	1	-1
+#	Alignment	103:	score=379	pvalue=0.0001	N=8	GLY.GLY&PHA.PHA	minus
+GLY_0008344	1	PHA_0001227	8	-1
+GLY_0051255	2	PHA_0016859	7	-1
+GLY_0063197	3	PHA_0027084	6	-1
+GLY_0002383	4	PHA_0033972	5	-1
+GLY_0051697	5	PHA_0028574	4	-1
+GLY_0018278	6	PHA_0008237	3	-1
+GLY_0015652	7	PHA_0002408	2	-1
+GLY_0011454	8	PHA_0007598	1	-1
+#	Alignment	104:	score=259	pvalue=0.001	N=5	POP.POP&PRU.PRU	minus
+POP_0045040	1	PRU_0001121	5	-1
+POP_0001955	2	PRU_0039067	4	-1
+POP_0037655	3	PRU_0005749	3	-1
+POP_0040489	4	PRU_0008192	2	-1
+POP_0000160	5	PRU_0043188	1	-1
+#	Alignment	105:	score=259	pvalue=0.001	N=5	ACT.ACT&VIT.VIT	minus
+ACT_0038291	1	VIT_0003316	5	-1
+ACT_0017052	2	VIT_0019586	4	-1
+ACT_0006197	3	VIT_0019379	3	-1
+ACT_0023010	4	VIT_0009186	2	-1
+ACT_0005654	5	VIT_0011474	1	-1
+#	Alignment	106:	score=219	pvalue=0.001	N=4	CIN.CIN&LIR.LIR	minus
+CIN_0016417	1	LIR_0030549	4	-1
+CIN_0012776	2	LIR_0028667	3	-1
+CIN_0005538	3	LIR_0029672	2	-1
+CIN_0027348	4	LIR_0020955	1	-1
+#	Alignment	107:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0017658	1	SOL_0010388	3	-1
+COF_0014813	2	SOL_0008010	2	-1
+COF_0006313	3	SOL_0004363	1	-1
+#	Alignment	108:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0037495	1	PHA_0023774	3	-1
+GLY_0015838	2	PHA_0019821	2	-1
+GLY_0015434	3	PHA_0020842	1	-1
+#	Alignment	109:	score=179	pvalue=0.001	N=3	ARD.A08&ARH.08	minus
+ardaradu.V14167.gnm1.Aradu.A08g01946	1	arharahy.Tifrunner.gnm1.Arahy.08g01962	3	-1
+ardaradu.V14167.gnm1.Aradu.A03g03597	2	arharahy.Tifrunner.gnm1.Arahy.03g03576	2	-1
+ardaradu.V14167.gnm1.Aradu.A03g01614	3	arharahy.Tifrunner.gnm1.Arahy.03g01765	1	-1
+#	Alignment	110:	score=179	pvalue=0.001	N=3	ARH.18&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.18g01161	1	LOC107613520	3	-1
+arharahy.Tifrunner.gnm1.Arahy.12g03203	2	LOC107626254	2	-1
+arharahy.Tifrunner.gnm1.Arahy.13g01991	3	LOC107630136	1	-1
+#	Alignment	111:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0049276	1	PHA_0011971	4	-1
+GLY_0026685	2	PHA_0035968	3	-1
+GLY_0044052	3	PHA_0013280	2	-1
+GLY_0054391	4	PHA_0031266	1	-1
+#	Alignment	112:	score=179	pvalue=0.001	N=3	ARH.19&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.19g01998	1	LOC107616854	3	-1
+arharahy.Tifrunner.gnm1.Arahy.05g00089	2	LOC107642320	2	-1
+arharahy.Tifrunner.gnm1.Arahy.12g01651	3	LOC107627297	1	-1
+#	Alignment	113:	score=219	pvalue=0.001	N=4	ARD.A10&ARH.10	minus
+ardaradu.V14167.gnm1.Aradu.A10g00024	1	arharahy.Tifrunner.gnm1.Arahy.10g00023	4	-1
+ardaradu.V14167.gnm1.Aradu.A01g02750	2	arharahy.Tifrunner.gnm1.Arahy.01g02670	3	-1
+ardaradu.V14167.gnm1.Aradu.A01g00837	3	arharahy.Tifrunner.gnm1.Arahy.01g00937	2	-1
+ardaradu.V14167.gnm1.Aradu.A04g00957	4	arharahy.Tifrunner.gnm1.Arahy.04g00973	1	-1
+#	Alignment	114:	score=259	pvalue=0.001	N=5	ARH.11&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.11g00002	1	LOC107604630	5	-1
+arharahy.Tifrunner.gnm1.Arahy.05g02903	2	LOC107644121	4	-1
+arharahy.Tifrunner.gnm1.Arahy.14g01102	3	LOC107638974	3	-1
+arharahy.Tifrunner.gnm1.Arahy.11g02933	4	LOC107639238	2	-1
+arharahy.Tifrunner.gnm1.Arahy.15g02880	5	LOC107644137	1	-1
+#	Alignment	115:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0060372	1	PHA_0005441	3	-1
+GLY_0002705	2	PHA_0032471	2	-1
+GLY_0031358	3	PHA_0030302	1	-1
+#	Alignment	116:	score=219	pvalue=0.001	N=4	ARD.A02&ARH.02	minus
+ardaradu.V14167.gnm1.Aradu.A02g00372	1	arharahy.Tifrunner.gnm1.Arahy.02g00403	4	-1
+ardaradu.V14167.gnm1.Aradu.A06g03091	2	arharahy.Tifrunner.gnm1.Arahy.16g03452	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g03087	3	arharahy.Tifrunner.gnm1.Arahy.16g03449	2	-1
+ardaradu.V14167.gnm1.Aradu.A06g00167	4	arharahy.Tifrunner.gnm1.Arahy.06g00183	1	-1
+#	Alignment	117:	score=219	pvalue=0.001	N=4	ARH.02&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.02g00403	1	LOC107624247	4	-1
+arharahy.Tifrunner.gnm1.Arahy.16g03283	2	LOC107605190	3	-1
+arharahy.Tifrunner.gnm1.Arahy.16g01384	3	LOC107648068	2	-1
+arharahy.Tifrunner.gnm1.Arahy.16g03286	4	LOC107605189	1	-1
+#	Alignment	118:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0055324	1	ORY_0003253	3	-1
+BRA_0002113	2	ORY_0013757	2	-1
+BRA_0016358	3	ORY_0017544	1	-1
+#	Alignment	119:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0057384	1	PHA_0001742	4	-1
+GLY_0062489	2	PHA_0028929	3	-1
+GLY_0070536	3	PHA_0006749	2	-1
+GLY_0070537	4	PHA_0008392	1	-1
+#	Alignment	120:	score=259	pvalue=0.001	N=5	ARD.A09&ARH.09	minus
+ardaradu.V14167.gnm1.Aradu.A09g03076	1	arharahy.Tifrunner.gnm1.Arahy.09g02895	5	-1
+ardaradu.V14167.gnm1.Aradu.A05g00741	2	arharahy.Tifrunner.gnm1.Arahy.15g00767	4	-1
+ardaradu.V14167.gnm1.Aradu.A08g00153	3	arharahy.Tifrunner.gnm1.Arahy.08g00154	3	-1
+ardaradu.V14167.gnm1.Aradu.A10g02766	4	arharahy.Tifrunner.gnm1.Arahy.10g02522	2	-1
+ardaradu.V14167.gnm1.Aradu.A02g02167	5	arharahy.Tifrunner.gnm1.Arahy.02g02060	1	-1
+#	Alignment	121:	score=219	pvalue=0.001	N=4	ARH.17&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.17g02542	1	LOC107609950	4	-1
+arharahy.Tifrunner.gnm1.Arahy.09g02895	2	LOC107619387	3	-1
+arharahy.Tifrunner.gnm1.Arahy.12g02306	3	LOC107628457	2	-1
+arharahy.Tifrunner.gnm1.Arahy.15g00767	4	LOC107642802	1	-1
+#	Alignment	122:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0046183	1	PHA_0019933	4	-1
+GLY_0072250	2	PHA_0022159	3	-1
+GLY_0008383	3	PHA_0001206	2	-1
+GLY_0039459	4	PHA_0034515	1	-1
+#	Alignment	123:	score=219	pvalue=0.001	N=4	POP.POP&PRU.PRU	minus
+POP_0011249	1	PRU_0001609	4	-1
+POP_0010446	2	PRU_0006968	3	-1
+POP_0048113	3	PRU_0011607	2	-1
+POP_0003727	4	PRU_0027228	1	-1
+#	Alignment	124:	score=219	pvalue=0.001	N=4	ACT.ACT&VIT.VIT	minus
+ACT_0039718	1	VIT_0019510	4	-1
+ACT_0004827	2	VIT_0008569	3	-1
+ACT_0006766	3	VIT_0002793	2	-1
+ACT_0019684	4	VIT_0016773	1	-1
+#	Alignment	125:	score=179	pvalue=0.001	N=3	CIN.CIN&LIR.LIR	minus
+CIN_0015476	1	LIR_0010712	3	-1
+CIN_0010968	2	LIR_0020829	2	-1
+CIN_0026388	3	LIR_0027370	1	-1
+#	Alignment	126:	score=219	pvalue=0.001	N=4	COF.COF&SOL.SOL	minus
+COF_0006148	1	SOL_0023624	4	-1
+COF_0011211	2	SOL_0024836	3	-1
+COF_0014799	3	SOL_0008615	2	-1
+COF_0010418	4	SOL_0015097	1	-1
+#	Alignment	127:	score=219	pvalue=0.001	N=4	AMB.AMB&NYM.NYM	minus
+AMB_0014091	1	NYM_0043277	4	-1
+AMB_0012136	2	NYM_0032307	3	-1
+AMB_0014235	3	NYM_0002092	2	-1
+AMB_0013023	4	NYM_0037876	1	-1
+#	Alignment	128:	score=219	pvalue=0.001	N=4	ARD.A06&ARH.06	minus
+ardaradu.V14167.gnm1.Aradu.A06g03665	1	arharahy.Tifrunner.gnm1.Arahy.06g03415	4	-1
+ardaradu.V14167.gnm1.Aradu.A07g01200	2	arharahy.Tifrunner.gnm1.Arahy.07g01185	3	-1
+ardaradu.V14167.gnm1.Aradu.A01g00677	3	arharahy.Tifrunner.gnm1.Arahy.01g00686	2	-1
+ardaradu.V14167.gnm1.Aradu.A05g00807	4	arharahy.Tifrunner.gnm1.Arahy.05g00813	1	-1
+#	Alignment	129:	score=219	pvalue=0.001	N=4	ARH.06&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.06g03415	1	LOC107648584	4	-1
+arharahy.Tifrunner.gnm1.Arahy.17g01390	2	LOC107608332	3	-1
+arharahy.Tifrunner.gnm1.Arahy.15g00837	3	LOC107642841	2	-1
+arharahy.Tifrunner.gnm1.Arahy.11g00248	4	LOC107637248	1	-1
+#	Alignment	130:	score=219	pvalue=0.001	N=4	BRA.BRA&ORY.ORY	minus
+BRA_0044694	1	ORY_0001597	4	-1
+BRA_0024826	2	ORY_0036992	3	-1
+BRA_0013939	3	ORY_0018020	2	-1
+BRA_0041571	4	ORY_0013754	1	-1
+#	Alignment	131:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0063227	1	PHA_0029068	4	-1
+GLY_0006399	2	PHA_0015586	3	-1
+GLY_0003931	3	PHA_0005516	2	-1
+GLY_0041459	4	PHA_0030514	1	-1
+#	Alignment	132:	score=219	pvalue=0.001	N=4	COF.COF&SOL.SOL	minus
+COF_0022102	1	SOL_0010268	4	-1
+COF_0001562	2	SOL_0022838	3	-1
+COF_0017527	3	SOL_0032116	2	-1
+COF_0017526	4	SOL_0014575	1	-1
+#	Alignment	133:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0016482	1	ORY_0029943	3	-1
+BRA_0035767	2	ORY_0016264	2	-1
+BRA_0046733	3	ORY_0021094	1	-1
+#	Alignment	134:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0022281	1	PHA_0001684	3	-1
+GLY_0013281	2	PHA_0009068	2	-1
+GLY_0050172	3	PHA_0011160	1	-1
+#	Alignment	135:	score=179	pvalue=0.001	N=3	POP.POP&PRU.PRU	minus
+POP_0023427	1	PRU_0036431	3	-1
+POP_0013660	2	PRU_0022357	2	-1
+POP_0038305	3	PRU_0037239	1	-1
+#	Alignment	136:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0019036	1	ORY_0017345	3	-1
+BRA_0039412	2	ORY_0015138	2	-1
+BRA_0038323	3	ORY_0014127	1	-1
+#	Alignment	137:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0042124	1	PHA_0027066	3	-1
+GLY_0032041	2	PHA_0007094	2	-1
+GLY_0012570	3	PHA_0016837	1	-1
+#	Alignment	138:	score=259	pvalue=0.001	N=5	ARD.A03&ARH.14	minus
+ardaradu.V14167.gnm1.Aradu.A03g02727	1	arharahy.Tifrunner.gnm1.Arahy.14g00595	5	-1
+ardaradu.V14167.gnm1.Aradu.A05g00235	2	arharahy.Tifrunner.gnm1.Arahy.05g00267	4	-1
+ardaradu.V14167.gnm1.Aradu.A05g00237	3	arharahy.Tifrunner.gnm1.Arahy.05g00268	3	-1
+ardaradu.V14167.gnm1.Aradu.A01g00720	4	arharahy.Tifrunner.gnm1.Arahy.01g01063	2	-1
+ardaradu.V14167.gnm1.Aradu.A08g00744	5	arharahy.Tifrunner.gnm1.Arahy.08g00755	1	-1
+#	Alignment	139:	score=179	pvalue=0.001	N=3	ARD.A03&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A03g02727	1	LOC107638629	3	-1
+ardaradu.V14167.gnm1.Aradu.A05g00235	2	LOC107642443	2	-1
+ardaradu.V14167.gnm1.Aradu.A05g00237	3	LOC107642448	1	-1
+#	Alignment	140:	score=219	pvalue=0.001	N=4	ARH.14&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.14g00595	1	LOC107638629	4	-1
+arharahy.Tifrunner.gnm1.Arahy.05g00267	2	LOC107642443	3	-1
+arharahy.Tifrunner.gnm1.Arahy.17g03246	3	LOC107606112	2	-1
+arharahy.Tifrunner.gnm1.Arahy.05g00268	4	LOC107642448	1	-1
+#	Alignment	141:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0044717	1	ORY_0023995	3	-1
+BRA_0028625	2	ORY_0005710	2	-1
+BRA_0051320	3	ORY_0022274	1	-1
+#	Alignment	142:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0058539	1	PHA_0004821	4	-1
+GLY_0033602	2	PHA_0033921	3	-1
+GLY_0019235	3	PHA_0009851	2	-1
+GLY_0033606	4	PHA_0036670	1	-1
+#	Alignment	143:	score=179	pvalue=0.001	N=3	AMB.AMB&NYM.NYM	minus
+AMB_0005742	1	NYM_0011156	3	-1
+AMB_0002246	2	NYM_0036664	2	-1
+AMB_0006616	3	NYM_0023218	1	-1
+#	Alignment	144:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0022103	1	PHA_0001570	3	-1
+GLY_0067734	2	PHA_0005257	2	-1
+GLY_0053514	3	PHA_0011434	1	-1
+#	Alignment	145:	score=179	pvalue=0.001	N=3	ACT.ACT&VIT.VIT	minus
+ACT_0015019	1	VIT_0028904	3	-1
+ACT_0007990	2	VIT_0002200	2	-1
+ACT_0017988	3	VIT_0015072	1	-1
+#	Alignment	146:	score=219	pvalue=0.001	N=4	ARD.A03&ARH.03	minus
+ardaradu.V14167.gnm1.Aradu.A03g04252	1	arharahy.Tifrunner.gnm1.Arahy.03g04233	4	-1
+ardaradu.V14167.gnm1.Aradu.A09g01854	2	arharahy.Tifrunner.gnm1.Arahy.09g01752	3	-1
+ardaradu.V14167.gnm1.Aradu.A02g00769	3	arharahy.Tifrunner.gnm1.Arahy.02g00813	2	-1
+ardaradu.V14167.gnm1.Aradu.A06g01289	4	arharahy.Tifrunner.gnm1.Arahy.06g01388	1	-1
+#	Alignment	147:	score=219	pvalue=0.001	N=4	ARH.13&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.13g04340	1	LOC107631822	4	-1
+arharahy.Tifrunner.gnm1.Arahy.19g02045	2	LOC107618461	3	-1
+arharahy.Tifrunner.gnm1.Arahy.13g00660	3	LOC107632314	2	-1
+arharahy.Tifrunner.gnm1.Arahy.16g00169	4	LOC107645251	1	-1
+#	Alignment	148:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0002099	1	PHA_0035248	4	-1
+GLY_0073584	2	PHA_0023237	3	-1
+GLY_0005069	3	PHA_0024962	2	-1
+GLY_0003331	4	PHA_0024808	1	-1
+#	Alignment	149:	score=219	pvalue=0.001	N=4	ACT.ACT&VIT.VIT	minus
+ACT_0001719	1	VIT_0028630	4	-1
+ACT_0017664	2	VIT_0021441	3	-1
+ACT_0025210	3	VIT_0021722	2	-1
+ACT_0017044	4	VIT_0031722	1	-1
+#	Alignment	150:	score=219	pvalue=0.001	N=4	ARD.A05&ARH.15	minus
+ardaradu.V14167.gnm1.Aradu.A05g02242	1	arharahy.Tifrunner.gnm1.Arahy.15g03743	4	-1
+ardaradu.V14167.gnm1.Aradu.A06g01882	2	arharahy.Tifrunner.gnm1.Arahy.06g01865	3	-1
+ardaradu.V14167.gnm1.Aradu.A07g00109	3	arharahy.Tifrunner.gnm1.Arahy.07g00074	2	-1
+ardaradu.V14167.gnm1.Aradu.A10g02578	4	arharahy.Tifrunner.gnm1.Arahy.10g02334	1	-1
+#	Alignment	151:	score=219	pvalue=0.001	N=4	ARH.16&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.16g02028	1	LOC107648785	4	-1
+arharahy.Tifrunner.gnm1.Arahy.17g00190	2	LOC107609024	3	-1
+arharahy.Tifrunner.gnm1.Arahy.20g02782	3	LOC107623189	2	-1
+arharahy.Tifrunner.gnm1.Arahy.15g03743	4	LOC107644723	1	-1
+#	Alignment	152:	score=259	pvalue=0.001	N=5	BRA.BRA&ORY.ORY	minus
+BRA_0006609	1	ORY_0020876	5	-1
+BRA_0018728	2	ORY_0025355	4	-1
+BRA_0006709	3	ORY_0028249	3	-1
+BRA_0048576	4	ORY_0002045	2	-1
+BRA_0002558	5	ORY_0017241	1	-1
+#	Alignment	153:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0069611	1	PHA_0027306	4	-1
+GLY_0007264	2	PHA_0017335	3	-1
+GLY_0012740	3	PHA_0007345	2	-1
+GLY_0032775	4	PHA_0019837	1	-1
+#	Alignment	154:	score=219	pvalue=0.001	N=4	POP.POP&PRU.PRU	minus
+POP_0005802	1	PRU_0027409	4	-1
+POP_0009245	2	PRU_0016407	3	-1
+POP_0022119	3	PRU_0025798	2	-1
+POP_0014352	4	PRU_0001884	1	-1
+#	Alignment	155:	score=219	pvalue=0.001	N=4	ACT.ACT&VIT.VIT	minus
+ACT_0019116	1	VIT_0002974	4	-1
+ACT_0013551	2	VIT_0025024	3	-1
+ACT_0024602	3	VIT_0006017	2	-1
+ACT_0017904	4	VIT_0007721	1	-1
+#	Alignment	156:	score=179	pvalue=0.001	N=3	CIN.CIN&LIR.LIR	minus
+CIN_0016993	1	LIR_0029597	3	-1
+CIN_0018131	2	LIR_0027161	2	-1
+CIN_0001893	3	LIR_0004953	1	-1
+#	Alignment	157:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0015139	1	SOL_0008973	3	-1
+COF_0001369	2	SOL_0023092	2	-1
+COF_0012020	3	SOL_0033079	1	-1
+#	Alignment	158:	score=179	pvalue=0.001	N=3	ARD.A05&ARH.05	minus
+ardaradu.V14167.gnm1.Aradu.A05g00042	1	arharahy.Tifrunner.gnm1.Arahy.05g00043	3	-1
+ardaradu.V14167.gnm1.Aradu.A07g02842	2	arharahy.Tifrunner.gnm1.Arahy.07g02246	2	-1
+ardaradu.V14167.gnm1.Aradu.A09g01500	3	arharahy.Tifrunner.gnm1.Arahy.09g01490	1	-1
+#	Alignment	159:	score=219	pvalue=0.001	N=4	ARH.18&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.18g01920	1	LOC107613305	4	-1
+arharahy.Tifrunner.gnm1.Arahy.05g00043	2	LOC107642289	3	-1
+arharahy.Tifrunner.gnm1.Arahy.19g01755	3	LOC107615517	2	-1
+arharahy.Tifrunner.gnm1.Arahy.12g00124	4	LOC107607890	1	-1
+#	Alignment	160:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0024302	1	ORY_0031759	3	-1
+BRA_0000808	2	ORY_0017522	2	-1
+BRA_0040145	3	ORY_0033425	1	-1
+#	Alignment	161:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0028254	1	PHA_0011826	3	-1
+GLY_0033370	2	PHA_0034073	2	-1
+GLY_0036661	3	PHA_0023608	1	-1
+#	Alignment	162:	score=179	pvalue=0.001	N=3	POP.POP&PRU.PRU	minus
+POP_0029760	1	PRU_0018999	3	-1
+POP_0041140	2	PRU_0012589	2	-1
+POP_0016959	3	PRU_0044148	1	-1
+#	Alignment	163:	score=219	pvalue=0.001	N=4	ACT.ACT&VIT.VIT	minus
+ACT_0036280	1	VIT_0022650	4	-1
+ACT_0026542	2	VIT_0016150	3	-1
+ACT_0035590	3	VIT_0001059	2	-1
+ACT_0037143	4	VIT_0009676	1	-1
+#	Alignment	164:	score=179	pvalue=0.001	N=3	CIN.CIN&LIR.LIR	minus
+CIN_0016802	1	LIR_0043434	3	-1
+CIN_0019272	2	LIR_0022206	2	-1
+CIN_0008164	3	LIR_0007499	1	-1
+#	Alignment	165:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0013966	1	SOL_0028938	3	-1
+COF_0018395	2	SOL_0006889	2	-1
+COF_0004205	3	SOL_0025287	1	-1
+#	Alignment	166:	score=539	pvalue=0.0001	N=12	ARD.A01&ARH.01	minus
+ardaradu.V14167.gnm1.Aradu.A01g02418	1	arharahy.Tifrunner.gnm1.Arahy.01g02275	12	-1
+ardaradu.V14167.gnm1.Aradu.A04g02434	2	arharahy.Tifrunner.gnm1.Arahy.18g02570	11	-1
+ardaradu.V14167.gnm1.Aradu.A01g00197	3	arharahy.Tifrunner.gnm1.Arahy.01g00216	10	-1
+ardaradu.V14167.gnm1.Aradu.A01g00192	4	arharahy.Tifrunner.gnm1.Arahy.01g00212	9	-1
+ardaradu.V14167.gnm1.Aradu.A01g00195	5	arharahy.Tifrunner.gnm1.Arahy.11g00762	8	-1
+ardaradu.V14167.gnm1.Aradu.A08g02275	6	arharahy.Tifrunner.gnm1.Arahy.08g02304	7	-1
+ardaradu.V14167.gnm1.Aradu.A08g02273	7	arharahy.Tifrunner.gnm1.Arahy.08g02303	6	-1
+ardaradu.V14167.gnm1.Aradu.A08g02279	8	arharahy.Tifrunner.gnm1.Arahy.08g02305	5	-1
+ardaradu.V14167.gnm1.Aradu.A08g02386	9	arharahy.Tifrunner.gnm1.Arahy.08g02407	4	-1
+ardaradu.V14167.gnm1.Aradu.A08g02270	10	arharahy.Tifrunner.gnm1.Arahy.08g02302	3	-1
+ardaradu.V14167.gnm1.Aradu.A04g02435	11	arharahy.Tifrunner.gnm1.Arahy.04g02205	2	-1
+ardaradu.V14167.gnm1.Aradu.A08g02269	12	arharahy.Tifrunner.gnm1.Arahy.08g02301	1	-1
+#	Alignment	167:	score=419	pvalue=0.0001	N=9	ARH.11&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.11g03321	1	LOC107642500	9	-1
+arharahy.Tifrunner.gnm1.Arahy.18g02574	2	LOC107613081	8	-1
+arharahy.Tifrunner.gnm1.Arahy.11g00761	3	LOC107624847	7	-1
+arharahy.Tifrunner.gnm1.Arahy.11g00765	4	LOC107646191	6	-1
+arharahy.Tifrunner.gnm1.Arahy.18g02582	5	LOC107613595	5	-1
+arharahy.Tifrunner.gnm1.Arahy.18g02583	6	LOC107613594	4	-1
+arharahy.Tifrunner.gnm1.Arahy.18g02588	7	LOC107614405	3	-1
+arharahy.Tifrunner.gnm1.Arahy.18g02753	8	LOC107614303	2	-1
+arharahy.Tifrunner.gnm1.Arahy.18g02580	9	LOC107611433	1	-1
+#	Alignment	168:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0035527	1	PHA_0025333	3	-1
+GLY_0046606	2	PHA_0005885	2	-1
+GLY_0001642	3	PHA_0001868	1	-1
+#	Alignment	169:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0039648	1	ORY_0013051	3	-1
+BRA_0022096	2	ORY_0026084	2	-1
+BRA_0035581	3	ORY_0016125	1	-1
+#	Alignment	170:	score=299	pvalue=0.0001	N=6	ARD.A08&ARH.18	minus
+ardaradu.V14167.gnm1.Aradu.A08g01360	1	arharahy.Tifrunner.gnm1.Arahy.18g00440	6	-1
+ardaradu.V14167.gnm1.Aradu.A09g03340	2	arharahy.Tifrunner.gnm1.Arahy.19g03431	5	-1
+ardaradu.V14167.gnm1.Aradu.A03g00259	3	arharahy.Tifrunner.gnm1.Arahy.03g00316	4	-1
+ardaradu.V14167.gnm1.Aradu.A04g03675	4	arharahy.Tifrunner.gnm1.Arahy.14g03725	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g01942	5	arharahy.Tifrunner.gnm1.Arahy.06g01804	2	-1
+ardaradu.V14167.gnm1.Aradu.A06g01461	6	arharahy.Tifrunner.gnm1.Arahy.06g01562	1	-1
+#	Alignment	171:	score=179	pvalue=0.001	N=3	ARD.A08&ARI.LOC	minus
+ardaradu.V14167.gnm1.Aradu.A08g01360	1	LOC107613519	3	-1
+ardaradu.V14167.gnm1.Aradu.A09g03340	2	LOC107618028	2	-1
+ardaradu.V14167.gnm1.Aradu.A03g00259	3	LOC107632348	1	-1
+#	Alignment	172:	score=259	pvalue=0.001	N=5	ARH.18&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.18g00440	1	LOC107613519	5	-1
+arharahy.Tifrunner.gnm1.Arahy.19g03431	2	LOC107618028	4	-1
+arharahy.Tifrunner.gnm1.Arahy.16g01656	3	LOC107648216	3	-1
+arharahy.Tifrunner.gnm1.Arahy.16g01946	4	LOC107648739	2	-1
+arharahy.Tifrunner.gnm1.Arahy.03g00316	5	LOC107632348	1	-1
+#	Alignment	173:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0031985	1	ORY_0033844	3	-1
+BRA_0013900	2	ORY_0010746	2	-1
+BRA_0002633	3	ORY_0016861	1	-1
+#	Alignment	174:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0054092	1	PHA_0036974	4	-1
+GLY_0071857	2	PHA_0024152	3	-1
+GLY_0043145	3	PHA_0014588	2	-1
+GLY_0004438	4	PHA_0019170	1	-1
+#	Alignment	175:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0001237	1	SOL_0006836	3	-1
+COF_0006429	2	SOL_0011613	2	-1
+COF_0014926	3	SOL_0008133	1	-1
+#	Alignment	176:	score=179	pvalue=0.001	N=3	ARD.A03&ARH.03	minus
+ardaradu.V14167.gnm1.Aradu.A03g02564	1	arharahy.Tifrunner.gnm1.Arahy.03g02693	3	-1
+ardaradu.V14167.gnm1.Aradu.A03g01703	2	arharahy.Tifrunner.gnm1.Arahy.03g01851	2	-1
+ardaradu.V14167.gnm1.Aradu.A09g03305	3	arharahy.Tifrunner.gnm1.Arahy.09g03142	1	-1
+#	Alignment	177:	score=219	pvalue=0.001	N=4	ARH.19&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.19g03473	1	LOC107617134	4	-1
+arharahy.Tifrunner.gnm1.Arahy.18g01536	2	LOC107612107	3	-1
+arharahy.Tifrunner.gnm1.Arahy.18g01370	3	LOC107613854	2	-1
+arharahy.Tifrunner.gnm1.Arahy.13g02065	4	LOC107630096	1	-1
+#	Alignment	178:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0045153	1	PHA_0012056	4	-1
+GLY_0071904	2	PHA_0023356	3	-1
+GLY_0021151	3	PHA_0013357	2	-1
+GLY_0070640	4	PHA_0002920	1	-1
+#	Alignment	179:	score=339	pvalue=0.0001	N=7	ARD.A01&ARH.01	minus
+ardaradu.V14167.gnm1.Aradu.A01g01621	1	arharahy.Tifrunner.gnm1.Arahy.01g01599	7	-1
+ardaradu.V14167.gnm1.Aradu.A08g01018	2	arharahy.Tifrunner.gnm1.Arahy.08g01025	6	-1
+ardaradu.V14167.gnm1.Aradu.A06g02813	3	arharahy.Tifrunner.gnm1.Arahy.06g02680	5	-1
+ardaradu.V14167.gnm1.Aradu.A06g02808	4	arharahy.Tifrunner.gnm1.Arahy.06g02676	4	-1
+ardaradu.V14167.gnm1.Aradu.A06g02820	5	arharahy.Tifrunner.gnm1.Arahy.06g02683	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g03442	6	arharahy.Tifrunner.gnm1.Arahy.06g03145	2	-1
+ardaradu.V14167.gnm1.Aradu.A05g01040	7	arharahy.Tifrunner.gnm1.Arahy.05g01046	1	-1
+#	Alignment	180:	score=299	pvalue=0.0001	N=6	ARH.11&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.11g01540	1	LOC107630361	6	-1
+arharahy.Tifrunner.gnm1.Arahy.17g03537	2	LOC107606332	5	-1
+arharahy.Tifrunner.gnm1.Arahy.16g03012	3	LOC107648431	4	-1
+arharahy.Tifrunner.gnm1.Arahy.16g03860	4	LOC107605552	3	-1
+arharahy.Tifrunner.gnm1.Arahy.16g03005	5	LOC107647457	2	-1
+arharahy.Tifrunner.gnm1.Arahy.15g01066	6	LOC107643026	1	-1
+#	Alignment	181:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0044886	1	ORY_0021611	3	-1
+BRA_0032998	2	ORY_0015051	2	-1
+BRA_0026873	3	ORY_0006285	1	-1
+#	Alignment	182:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0015047	1	PHA_0005832	3	-1
+GLY_0011553	2	PHA_0008802	2	-1
+GLY_0051802	3	PHA_0028918	1	-1
+#	Alignment	183:	score=179	pvalue=0.001	N=3	POP.POP&PRU.PRU	minus
+POP_0024181	1	PRU_0022289	3	-1
+POP_0006202	2	PRU_0036806	2	-1
+POP_0045080	3	PRU_0034434	1	-1
+#	Alignment	184:	score=179	pvalue=0.001	N=3	ARD.A01&ARH.11	minus
+ardaradu.V14167.gnm1.Aradu.A01g00300	1	arharahy.Tifrunner.gnm1.Arahy.11g00635	3	-1
+ardaradu.V14167.gnm1.Aradu.A08g02824	2	arharahy.Tifrunner.gnm1.Arahy.08g02955	2	-1
+ardaradu.V14167.gnm1.Aradu.A03g03100	3	arharahy.Tifrunner.gnm1.Arahy.03g03066	1	-1
+#	Alignment	185:	score=179	pvalue=0.001	N=3	ARH.11&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.11g00635	1	LOC107617270	3	-1
+arharahy.Tifrunner.gnm1.Arahy.18g03355	2	LOC107613245	2	-1
+arharahy.Tifrunner.gnm1.Arahy.13g03303	3	LOC107630835	1	-1
+#	Alignment	186:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0030350	1	PHA_0030083	3	-1
+GLY_0020135	2	PHA_0007307	2	-1
+GLY_0017070	3	PHA_0033068	1	-1
+#	Alignment	187:	score=179	pvalue=0.001	N=3	ARD.A06&ARH.06	minus
+ardaradu.V14167.gnm1.Aradu.A06g02768	1	arharahy.Tifrunner.gnm1.Arahy.06g02631	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g02984	2	arharahy.Tifrunner.gnm1.Arahy.06g02848	2	-1
+ardaradu.V14167.gnm1.Aradu.A04g03101	3	arharahy.Tifrunner.gnm1.Arahy.04g02806	1	-1
+#	Alignment	188:	score=179	pvalue=0.001	N=3	ARH.14&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.14g03100	1	LOC107635187	3	-1
+arharahy.Tifrunner.gnm1.Arahy.06g02848	2	LOC107605260	2	-1
+arharahy.Tifrunner.gnm1.Arahy.16g02960	3	LOC107605039	1	-1
+#	Alignment	189:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0030439	1	ORY_0008186	3	-1
+BRA_0038021	2	ORY_0015562	2	-1
+BRA_0045025	3	ORY_0002430	1	-1
+#	Alignment	190:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0068253	1	PHA_0028874	3	-1
+GLY_0034000	2	PHA_0018309	2	-1
+GLY_0027956	3	PHA_0011621	1	-1
+#	Alignment	191:	score=179	pvalue=0.001	N=3	POP.POP&PRU.PRU	minus
+POP_0050637	1	PRU_0036410	3	-1
+POP_0045936	2	PRU_0014128	2	-1
+POP_0029042	3	PRU_0005364	1	-1
+#	Alignment	192:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0017072	1	SOL_0015018	3	-1
+COF_0021297	2	SOL_0006500	2	-1
+COF_0008342	3	SOL_0014181	1	-1
+#	Alignment	193:	score=179	pvalue=0.001	N=3	AMB.AMB&NYM.NYM	minus
+AMB_0018447	1	NYM_0037243	3	-1
+AMB_0018136	2	NYM_0038348	2	-1
+AMB_0012928	3	NYM_0004984	1	-1
+#	Alignment	194:	score=259	pvalue=0.001	N=5	ARD.A06&ARH.06	minus
+ardaradu.V14167.gnm1.Aradu.A06g00400	1	arharahy.Tifrunner.gnm1.Arahy.06g00426	5	-1
+ardaradu.V14167.gnm1.Aradu.A08g02809	2	arharahy.Tifrunner.gnm1.Arahy.08g02935	4	-1
+ardaradu.V14167.gnm1.Aradu.A08g01527	3	arharahy.Tifrunner.gnm1.Arahy.15g01978	3	-1
+ardaradu.V14167.gnm1.Aradu.A09g03450	4	arharahy.Tifrunner.gnm1.Arahy.09g03317	2	-1
+ardaradu.V14167.gnm1.Aradu.A03g03134	5	arharahy.Tifrunner.gnm1.Arahy.03g03091	1	-1
+#	Alignment	195:	score=219	pvalue=0.001	N=4	ARH.16&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.16g01122	1	LOC107646482	4	-1
+arharahy.Tifrunner.gnm1.Arahy.18g03337	2	LOC107613325	3	-1
+arharahy.Tifrunner.gnm1.Arahy.19g02796	3	LOC107617814	2	-1
+arharahy.Tifrunner.gnm1.Arahy.13g03329	4	LOC107633517	1	-1
+#	Alignment	196:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0019157	1	ORY_0038649	3	-1
+BRA_0038789	2	ORY_0034253	2	-1
+BRA_0036938	3	ORY_0016359	1	-1
+#	Alignment	197:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0010519	1	PHA_0031482	3	-1
+GLY_0013487	2	PHA_0006611	2	-1
+GLY_0073961	3	PHA_0022241	1	-1
+#	Alignment	198:	score=179	pvalue=0.001	N=3	POP.POP&PRU.PRU	minus
+POP_0040729	1	PRU_0013280	3	-1
+POP_0012799	2	PRU_0022291	2	-1
+POP_0027778	3	PRU_0036743	1	-1
+#	Alignment	199:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0008831	1	SOL_0017045	3	-1
+COF_0011831	2	SOL_0031894	2	-1
+COF_0005366	3	SOL_0003782	1	-1
+#	Alignment	200:	score=179	pvalue=0.001	N=3	ARD.A07&ARH.05	minus
+ardaradu.V14167.gnm1.Aradu.A07g01807	1	arharahy.Tifrunner.gnm1.Arahy.05g00699	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g00681	2	arharahy.Tifrunner.gnm1.Arahy.06g00726	2	-1
+ardaradu.V14167.gnm1.Aradu.A09g01123	3	arharahy.Tifrunner.gnm1.Arahy.09g01122	1	-1
+#	Alignment	201:	score=179	pvalue=0.001	N=3	ARH.16&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.16g00821	1	LOC107646072	3	-1
+arharahy.Tifrunner.gnm1.Arahy.05g00699	2	LOC107642760	2	-1
+arharahy.Tifrunner.gnm1.Arahy.19g01339	3	LOC107617664	1	-1
+#	Alignment	202:	score=219	pvalue=0.001	N=4	GLY.GLY&PHA.PHA	minus
+GLY_0039557	1	PHA_0032301	4	-1
+GLY_0002350	2	PHA_0035474	3	-1
+GLY_0034755	3	PHA_0023500	2	-1
+GLY_0069982	4	PHA_0028599	1	-1
+#	Alignment	203:	score=179	pvalue=0.001	N=3	ARD.A00&ARH.08	minus
+ardaradu.V14167.gnm1.Adur2704g00001	1	arharahy.Tifrunner.gnm1.Arahy.08g02065	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g00556	2	arharahy.Tifrunner.gnm1.Arahy.06g00598	2	-1
+ardaradu.V14167.gnm1.Aradu.A02g02363	3	arharahy.Tifrunner.gnm1.Arahy.02g02243	1	-1
+#	Alignment	204:	score=179	pvalue=0.001	N=3	ARH.00&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.scaffold_301g00001	1	LOC107645984	3	-1
+arharahy.Tifrunner.gnm1.Arahy.13g02555	2	LOC107630415	2	-1
+arharahy.Tifrunner.gnm1.Arahy.18g01349	3	LOC107612912	1	-1
+#	Alignment	205:	score=179	pvalue=0.001	N=3	ARD.A06&ARH.06	minus
+ardaradu.V14167.gnm1.Aradu.A06g03239	1	arharahy.Tifrunner.gnm1.Arahy.06g02949	3	-1
+ardaradu.V14167.gnm1.Aradu.A01g00769	2	arharahy.Tifrunner.gnm1.Arahy.01g01005	2	-1
+ardaradu.V14167.gnm1.Aradu.A05g00300	3	arharahy.Tifrunner.gnm1.Arahy.05g00333	1	-1
+#	Alignment	206:	score=179	pvalue=0.001	N=3	ARH.14&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.14g01374	1	LOC107639121	3	-1
+arharahy.Tifrunner.gnm1.Arahy.04g03005	2	LOC107635334	2	-1
+arharahy.Tifrunner.gnm1.Arahy.13g04715	3	LOC107631498	1	-1
+#	Alignment	207:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0031558	1	PHA_0009089	3	-1
+GLY_0066609	2	PHA_0017357	2	-1
+GLY_0027029	3	PHA_0034797	1	-1
+#	Alignment	208:	score=179	pvalue=0.001	N=3	ARD.A05&ARH.04	minus
+ardaradu.V14167.gnm1.Aradu.A05g01846	1	arharahy.Tifrunner.gnm1.Arahy.04g01653	3	-1
+ardaradu.V14167.gnm1.Aradu.A07g00326	2	arharahy.Tifrunner.gnm1.Arahy.17g00460	2	-1
+ardaradu.V14167.gnm1.Aradu.A01g02272	3	arharahy.Tifrunner.gnm1.Arahy.01g02138	1	-1
+#	Alignment	209:	score=179	pvalue=0.001	N=3	ARH.17&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.17g00460	1	LOC107606541	3	-1
+arharahy.Tifrunner.gnm1.Arahy.11g03452	2	LOC107643561	2	-1
+arharahy.Tifrunner.gnm1.Arahy.01g02137	3	LOC107647862	1	-1
+#	Alignment	210:	score=219	pvalue=0.001	N=4	ARD.A04&ARH.14	minus
+ardaradu.V14167.gnm1.Aradu.A04g02653	1	arharahy.Tifrunner.gnm1.Arahy.14g02654	4	-1
+ardaradu.V14167.gnm1.Aradu.A05g02948	2	arharahy.Tifrunner.gnm1.Arahy.05g02800	3	-1
+ardaradu.V14167.gnm1.Aradu.A07g01557	3	arharahy.Tifrunner.gnm1.Arahy.07g01419	2	-1
+ardaradu.V14167.gnm1.Aradu.A04g02647	4	arharahy.Tifrunner.gnm1.Arahy.04g02392	1	-1
+#	Alignment	211:	score=219	pvalue=0.001	N=4	ARH.15&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.15g03009	1	LOC107641168	4	-1
+arharahy.Tifrunner.gnm1.Arahy.17g01742	2	LOC107609458	3	-1
+arharahy.Tifrunner.gnm1.Arahy.14g02654	3	LOC107637012	2	-1
+arharahy.Tifrunner.gnm1.Arahy.14g02645	4	LOC107637010	1	-1
+#	Alignment	212:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0066146	1	PHA_0017701	3	-1
+GLY_0023318	2	PHA_0002157	2	-1
+GLY_0066142	3	PHA_0017407	1	-1
+#	Alignment	213:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0007164	1	ORY_0005964	3	-1
+BRA_0012410	2	ORY_0016791	2	-1
+BRA_0016683	3	ORY_0022028	1	-1
+#	Alignment	214:	score=219	pvalue=0.001	N=4	ARD.A02&ARH.02	minus
+ardaradu.V14167.gnm1.Aradu.A02g02676	1	arharahy.Tifrunner.gnm1.Arahy.02g02555	4	-1
+ardaradu.V14167.gnm1.Aradu.A10g03379	2	arharahy.Tifrunner.gnm1.Arahy.10g03191	3	-1
+ardaradu.V14167.gnm1.Aradu.A08g00743	3	arharahy.Tifrunner.gnm1.Arahy.08g00754	2	-1
+ardaradu.V14167.gnm1.Aradu.A08g01139	4	arharahy.Tifrunner.gnm1.Arahy.08g01146	1	-1
+#	Alignment	215:	score=179	pvalue=0.001	N=3	ARH.17&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.17g03244	1	LOC107606111	3	-1
+arharahy.Tifrunner.gnm1.Arahy.17g02284	2	LOC107607381	2	-1
+arharahy.Tifrunner.gnm1.Arahy.12g02864	3	LOC107627879	1	-1
+#	Alignment	216:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0007631	1	PHA_0001188	3	-1
+GLY_0019236	2	PHA_0008416	2	-1
+GLY_0034443	3	PHA_0005159	1	-1
+#	Alignment	217:	score=179	pvalue=0.001	N=3	ARD.A07&ARH.16	minus
+ardaradu.V14167.gnm1.Aradu.A07g00736	1	arharahy.Tifrunner.gnm1.Arahy.16g02218	3	-1
+ardaradu.V14167.gnm1.Aradu.A09g03050	2	arharahy.Tifrunner.gnm1.Arahy.19g03781	2	-1
+ardaradu.V14167.gnm1.Aradu.A07g00738	3	arharahy.Tifrunner.gnm1.Arahy.07g00716	1	-1
+#	Alignment	218:	score=219	pvalue=0.001	N=4	ARH.16&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.16g02218	1	LOC107648300	4	-1
+arharahy.Tifrunner.gnm1.Arahy.19g03781	2	LOC107619086	3	-1
+arharahy.Tifrunner.gnm1.Arahy.17g00911	3	LOC107608030	2	-1
+arharahy.Tifrunner.gnm1.Arahy.17g02290	4	LOC107610059	1	-1
+#	Alignment	219:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0018736	1	ORY_0026418	3	-1
+BRA_0028166	2	ORY_0008019	2	-1
+BRA_0016872	3	ORY_0025389	1	-1
+#	Alignment	220:	score=179	pvalue=0.001	N=3	ARD.A02&ARH.19	minus
+ardaradu.V14167.gnm1.Aradu.A02g00123	1	arharahy.Tifrunner.gnm1.Arahy.19g00919	3	-1
+ardaradu.V14167.gnm1.Aradu.A03g02926	2	arharahy.Tifrunner.gnm1.Arahy.03g02906	2	-1
+ardaradu.V14167.gnm1.Aradu.A03g00523	3	arharahy.Tifrunner.gnm1.Arahy.03g00813	1	-1
+#	Alignment	221:	score=179	pvalue=0.001	N=3	ARH.13&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.13g03139	1	LOC107630732	3	-1
+arharahy.Tifrunner.gnm1.Arahy.13g00893	2	LOC107632281	2	-1
+arharahy.Tifrunner.gnm1.Arahy.19g00919	3	LOC107618688	1	-1
+#	Alignment	222:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0036992	1	ORY_0014433	3	-1
+BRA_0040096	2	ORY_0035123	2	-1
+BRA_0032359	3	ORY_0012316	1	-1
+#	Alignment	223:	score=179	pvalue=0.001	N=3	ARD.A05&ARH.05	minus
+ardaradu.V14167.gnm1.Aradu.A05g02757	1	arharahy.Tifrunner.gnm1.Arahy.05g02625	3	-1
+ardaradu.V14167.gnm1.Aradu.A06g02038	2	arharahy.Tifrunner.gnm1.Arahy.06g01999	2	-1
+ardaradu.V14167.gnm1.Aradu.A05g00480	3	arharahy.Tifrunner.gnm1.Arahy.05g00517	1	-1
+#	Alignment	224:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0069708	1	PHA_0026555	3	-1
+GLY_0002514	2	PHA_0034932	2	-1
+GLY_0061959	3	PHA_0002746	1	-1
+#	Alignment	225:	score=179	pvalue=0.001	N=3	ARD.A05&ARH.05	minus
+ardaradu.V14167.gnm1.Aradu.A05g02316	1	arharahy.Tifrunner.gnm1.Arahy.05g02207	3	-1
+ardaradu.V14167.gnm1.Aradu.A05g02264	2	arharahy.Tifrunner.gnm1.Arahy.05g02157	2	-1
+ardaradu.V14167.gnm1.Aradu.A09g02029	3	arharahy.Tifrunner.gnm1.Arahy.09g01885	1	-1
+#	Alignment	226:	score=219	pvalue=0.001	N=4	ARH.15&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.15g03720	1	LOC107644704	4	-1
+arharahy.Tifrunner.gnm1.Arahy.19g02172	2	LOC107618123	3	-1
+arharahy.Tifrunner.gnm1.Arahy.05g02207	3	LOC107644659	2	-1
+arharahy.Tifrunner.gnm1.Arahy.15g03726	4	LOC110272166	1	-1
+#	Alignment	227:	score=179	pvalue=0.001	N=3	ARH.13&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.13g02635	1	LOC107630471	3	-1
+arharahy.Tifrunner.gnm1.Arahy.01g02131	2	LOC107643656	2	-1
+arharahy.Tifrunner.gnm1.Arahy.11g03459	3	LOC107643631	1	-1
+#	Alignment	228:	score=179	pvalue=0.001	N=3	GLY.GLY&PHA.PHA	minus
+GLY_0055826	1	PHA_0009154	3	-1
+GLY_0046842	2	PHA_0004742	2	-1
+GLY_0027858	3	PHA_0004816	1	-1
+#	Alignment	229:	score=179	pvalue=0.001	N=3	COF.COF&SOL.SOL	minus
+COF_0015836	1	SOL_0003954	3	-1
+COF_0015837	2	SOL_0001802	2	-1
+COF_0000674	3	SOL_0029780	1	-1
+#	Alignment	230:	score=179	pvalue=0.001	N=3	AMB.AMB&NYM.NYM	minus
+AMB_0005807	1	NYM_0022171	3	-1
+AMB_0021648	2	NYM_0007555	2	-1
+AMB_0005161	3	NYM_0022162	1	-1
+#	Alignment	231:	score=179	pvalue=0.001	N=3	BRA.BRA&ORY.ORY	minus
+BRA_0045179	1	ORY_0000675	3	-1
+BRA_0017957	2	ORY_0026819	2	-1
+BRA_0029512	3	ORY_0005736	1	-1
+#	Alignment	232:	score=219	pvalue=0.001	N=4	ARD.A01&ARH.01	minus
+ardaradu.V14167.gnm1.Aradu.A01g02308	1	arharahy.Tifrunner.gnm1.Arahy.01g02175	4	-1
+ardaradu.V14167.gnm1.Aradu.A01g01724	2	arharahy.Tifrunner.gnm1.Arahy.01g01680	3	-1
+ardaradu.V14167.gnm1.Aradu.A08g01581	3	arharahy.Tifrunner.gnm1.Arahy.08g01608	2	-1
+ardaradu.V14167.gnm1.Aradu.A05g00978	4	arharahy.Tifrunner.gnm1.Arahy.05g00973	1	-1
+#	Alignment	233:	score=179	pvalue=0.001	N=3	ARH.19&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.19g00780	1	LOC107618535	3	-1
+arharahy.Tifrunner.gnm1.Arahy.13g03385	2	LOC107633544	2	-1
+arharahy.Tifrunner.gnm1.Arahy.17g01970	3	LOC107609165	1	-1
+#	Alignment	234:	score=179	pvalue=0.001	N=3	ARH.10&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.10g03133	1	LOC107622226	3	-1
+arharahy.Tifrunner.gnm1.Arahy.06g02094	2	LOC107604707	2	-1
+arharahy.Tifrunner.gnm1.Arahy.20g03578	3	LOC107623999	1	-1
+#	Alignment	235:	score=179	pvalue=0.001	N=3	ARD.A06&ARH.12	minus
+ardaradu.V14167.gnm1.Aradu.A06g03299	1	arharahy.Tifrunner.gnm1.Arahy.12g01931	3	-1
+ardaradu.V14167.gnm1.Aradu.A01g00116	2	arharahy.Tifrunner.gnm1.Arahy.01g00127	2	-1
+ardaradu.V14167.gnm1.Aradu.A02g01748	3	arharahy.Tifrunner.gnm1.Arahy.02g01681	1	-1
+#	Alignment	236:	score=179	pvalue=0.001	N=3	ARH.16&ARI.LOC	minus
+arharahy.Tifrunner.gnm1.Arahy.16g00752	1	LOC107645657	3	-1
+arharahy.Tifrunner.gnm1.Arahy.16g00897	2	LOC107646021	2	-1
+arharahy.Tifrunner.gnm1.Arahy.16g00896	3	LOC110263152	1	-1

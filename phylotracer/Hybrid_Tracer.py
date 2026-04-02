@@ -268,9 +268,9 @@ def get_target_gene(sisters, sps):
     return None
 
 
-def get_outgroup_species_for_gd_node(gd_node_name, sptree):
+def get_outgroup_species_candidates_for_gd_node(gd_node_name, sptree):
     """
-    Select the nearest sister-branch species as fixed outgroup for a GD node.
+    Return sister-branch outgroup species candidates ordered by proximity.
 
     Parameters
     ----------
@@ -281,17 +281,17 @@ def get_outgroup_species_for_gd_node(gd_node_name, sptree):
 
     Returns
     -------
-    str or None
-        Selected outgroup species name, or None if unavailable.
+    list
+        Candidate outgroup species ordered by topological distance.
     """
     map_t = sptree & gd_node_name
     sister_nodes = map_t.get_sisters()
     if not sister_nodes:
-        return None
+        return []
 
     sister_species = sister_nodes[0].get_leaf_names()
     if not sister_species:
-        return None
+        return []
 
     species_distances = []
     for species in sister_species:
@@ -300,7 +300,7 @@ def get_outgroup_species_for_gd_node(gd_node_name, sptree):
         species_distances.append((distance, species))
 
     species_distances.sort(key=lambda x: (x[0], x[1]))
-    return species_distances[0][1]
+    return [species for _, species in species_distances]
 
 
 def get_outgroup_gene(gd_clade, outgroup_species):
@@ -482,7 +482,7 @@ def get_process_gd_clade(gd_type_dic, gd_count_dic):
 # ======================================================
 
 
-def write_out(out, triple, outfile):
+def write_out(out, triple, outfile, outgroup_species=None):
     """
     Write a HyDe result record to an output file.
 
@@ -503,6 +503,8 @@ def write_out(out, triple, outfile):
     -----------
     HyDe output dictionary contains required keys.
     """
+    if outgroup_species is not None:
+        print(outgroup_species, "\t", sep="", end="", file=outfile)
     print(triple[0], "\t", triple[1], "\t", triple[2], "\t", sep="", end="", file=outfile)
     print(out["Zscore"], "\t", sep="", end="", file=outfile)
     print(out["Pvalue"], "\t", sep="", end="", file=outfile)
@@ -548,6 +550,14 @@ def write_summary_report(summary_path, overall_stats, per_node_stats):
                 f"{node_name}\t{stats.get('gd_events', 0)}\t{stats.get('skipped_no_outgroup', 0)}\t"
                 f"{stats.get('hyde_triples', 0)}\t{stats.get('filtered_triples', 0)}\n"
             )
+
+
+def write_event_assignment_report(assignments_path, event_assignments):
+    """Write per-event outgroup assignment details for traceability."""
+    with open(assignments_path, "w") as out:
+        out.write("gd_node\tgd_event_id\ttree_id\tstatus\toutgroup\tcandidates\n")
+        for row in event_assignments:
+            out.write("\t".join(row) + "\n")
 
 
 def hyde_main(
@@ -596,6 +606,7 @@ def hyde_main(
         "hyde_triples_filtered": 0,
     }
     per_node_stats = {}
+    event_assignments = []
     gd_count_dic, gd_type_dic = get_gd_count_dic_and_gd_type_dic(
         tre_dic,
         gene2new_named_gene_dic,
@@ -623,27 +634,28 @@ def hyde_main(
         }
 
         split_gds = np.array_split(gds, gd_group)
-        fixed_outgroup_species = get_outgroup_species_for_gd_node(gd_name, rename_sptree)
-        if fixed_outgroup_species is None:
+        outgroup_species_candidates = get_outgroup_species_candidates_for_gd_node(gd_name, rename_sptree)
+        if not outgroup_species_candidates:
             logger.warning(
                 "[Hybrid_Tracer][Skip] GD node %s has no sister-branch "
                 "outgroup candidates. All events are skipped.", gd_name
             )
             continue
         fixed_outgroup_original = voucher2taxa_dic.get(
-            fixed_outgroup_species,
-            fixed_outgroup_species,
+            outgroup_species_candidates[0],
+            outgroup_species_candidates[0],
         )
         logger.info(
-            "[Hybrid_Tracer] GD node %s uses fixed outgroup species: %s",
-            gd_name, fixed_outgroup_original
+            "[Hybrid_Tracer] GD node %s outgroup candidates (nearest first): %s",
+            gd_name,
+            ", ".join(voucher2taxa_dic.get(species, species) for species in outgroup_species_candidates[:10]),
         )
 
         logger.info("Gene duplication events partitioned into %d processing batches", len(split_gds))
         for i, sub_group in enumerate(split_gds):
             logger.info("Batch %d: %d gene duplication events", i+1, len(sub_group))
         for sub_group in split_gds:
-            hyde_result_lst, group_stats = process_gd_group(
+            hyde_result_lst, group_stats, group_event_assignments = process_gd_group(
                 sub_group,
                 rename_sptree,
                 gd_name,
@@ -651,17 +663,22 @@ def hyde_main(
                 gene2new_named_gene_dic,
                 voucher2taxa_dic,
                 target_node,
-                fixed_outgroup_species,
+                outgroup_species_candidates,
             )
             hyde_tuple_lst.extend(hyde_result_lst)
+            event_assignments.extend(group_event_assignments)
             overall_stats["gd_events_skipped_no_outgroup"] += group_stats.get("skipped_no_outgroup", 0)
             overall_stats["hyde_triples_tested"] += len(hyde_result_lst)
-            overall_stats["hyde_triples_filtered"] += sum(1 for _, res, t_num in hyde_result_lst if is_filtered(res, t_num))
+            overall_stats["hyde_triples_filtered"] += sum(
+                1 for _, _, res, t_num in hyde_result_lst if is_filtered(res, t_num)
+            )
             per_node_stats[gd_name]["skipped_no_outgroup"] += group_stats.get("skipped_no_outgroup", 0)
             per_node_stats[gd_name]["hyde_triples"] += len(hyde_result_lst)
-            per_node_stats[gd_name]["filtered_triples"] += sum(1 for _, res, t_num in hyde_result_lst if is_filtered(res, t_num))
+            per_node_stats[gd_name]["filtered_triples"] += sum(
+                1 for _, _, res, t_num in hyde_result_lst if is_filtered(res, t_num)
+            )
     header = (
-        "P1\tHybrid\tP2\tZscore\tPvalue\tGamma\tAAAA\tAAAB\tAABA\tAABB\tAABC\tABAA\t"
+        "Outgroup\tP1\tHybrid\tP2\tZscore\tPvalue\tGamma\tAAAA\tAAAB\tAABA\tAABB\tAABC\tABAA\t"
         "ABAB\tABAC\tABBA\tBAAA\tABBC\tCABC\tBACA\tBCAA\tABCD\n"
     )
     with open("hyde_out.txt", "w") as out_file, open(
@@ -670,12 +687,13 @@ def hyde_main(
         print(header, end="", file=out_file)
         print(header, end="", file=filtered_out_file)
 
-        for t, res, t_num in hyde_tuple_lst:
-            write_out(res, t, out_file)
+        for outgroup_species, t, res, t_num in hyde_tuple_lst:
+            write_out(res, t, out_file, outgroup_species=outgroup_species)
             if is_filtered(res, t_num):
-                write_out(res, t, filtered_out_file)
+                write_out(res, t, filtered_out_file, outgroup_species=outgroup_species)
 
     write_summary_report("hyde_summary.txt", overall_stats, per_node_stats)
+    write_event_assignment_report("hyde_event_assignments.tsv", event_assignments)
 
 
 def process_gd_group(
@@ -686,7 +704,7 @@ def process_gd_group(
     gene2new_named_gene_dic,
     voucher2taxa_dic,
     target_node,
-    fixed_outgroup_species=None,
+    outgroup_species_candidates=None,
 ):
     """
     Process a subset of GD events for HyDe analysis.
@@ -707,8 +725,8 @@ def process_gd_group(
         Mapping from voucher identifiers to taxa labels.
     target_node : object
         Target species-tree node used for filtering.
-    fixed_outgroup_species : str, optional
-        Fixed outgroup species used in strict mode.
+    outgroup_species_candidates : list, optional
+        Ordered outgroup species candidates from the sister branch.
     Returns
     -------
     list
@@ -719,11 +737,12 @@ def process_gd_group(
     Outgroup selection uses ``get_outgroup_gene`` heuristics.
     """
     group_stats = {"skipped_no_outgroup": 0}
+    event_assignments = []
     target_node_name = target_node if target_node else gd_name
     target_clade = rename_sptree & target_node_name
-    all_matrices = []
-    col_counter = 1
-    seq_dic_all = {}
+    bucket_matrices = defaultdict(list)
+    bucket_seq_dic = defaultdict(dict)
+    bucket_col_counter = defaultdict(lambda: 1)
     skipped_no_outgroup = 0
 
     for gd_clade_set in gds:
@@ -735,37 +754,60 @@ def process_gd_group(
 
         try:
             seq_dic = create_fasta_dict(seq_path_dic[tre_id1], gene2new_named_gene_dic)
-            seq_dic_all.update(seq_dic)
         except KeyError as e:
             logger.warning("KeyError encountered for GD %s: %s. Skipping this GD.", gdid, e)
             continue
 
-        outgroup_species = fixed_outgroup_species
-        outgroup_gene = get_outgroup_gene(gd_clade, outgroup_species)
-        if outgroup_gene is None:
+        selected_outgroup_species = None
+        outgroup_gene = None
+        for outgroup_species in outgroup_species_candidates or []:
+            outgroup_gene = get_outgroup_gene(gd_clade, outgroup_species)
+            if outgroup_gene is not None:
+                selected_outgroup_species = outgroup_species
+                break
+        if outgroup_gene is None or selected_outgroup_species is None:
             skipped_no_outgroup += 1
             group_stats["skipped_no_outgroup"] += 1
             gd_map = rename_sptree.get_common_ancestor(get_species_set(gd_clade))
-            if outgroup_species is None:
-                expected_outgroup_species = "None"
-            else:
-                expected_outgroup_species = voucher2taxa_dic.get(
-                    outgroup_species,
-                    outgroup_species,
-                )
+            expected_outgroup_species = ",".join(
+                voucher2taxa_dic.get(species, species)
+                for species in (outgroup_species_candidates or [])
+            ) or "None"
             logger.warning(
                 "[Hybrid_Tracer][Skip] GD event %s (map=%s) has no valid outgroup gene "
-                "from expected outgroup species %s.", gdid, gd_map.name, expected_outgroup_species
+                "from candidate outgroup species %s.", gdid, gd_map.name, expected_outgroup_species
+            )
+            event_assignments.append(
+                (
+                    gd_name,
+                    gdid,
+                    tre_id1,
+                    "skipped_no_outgroup",
+                    "",
+                    expected_outgroup_species,
+                )
             )
             continue
         one_gd_matrix = process_one_gd(gd_clade, outgroup_gene)
         num_cols = one_gd_matrix.shape[1]
+        col_counter = bucket_col_counter[selected_outgroup_species]
         new_col_names = [f"col{col_counter + i}" for i in range(num_cols)]
         one_gd_matrix.columns = new_col_names
 
-        col_counter += num_cols
+        bucket_col_counter[selected_outgroup_species] += num_cols
 
-        all_matrices.append(one_gd_matrix)
+        bucket_matrices[selected_outgroup_species].append(one_gd_matrix)
+        bucket_seq_dic[selected_outgroup_species].update(seq_dic)
+        event_assignments.append(
+            (
+                gd_name,
+                gdid,
+                tre_id1,
+                "used",
+                voucher2taxa_dic.get(selected_outgroup_species, selected_outgroup_species),
+                ",".join(voucher2taxa_dic.get(species, species) for species in (outgroup_species_candidates or [])),
+            )
+        )
 
     if skipped_no_outgroup > 0:
         logger.info(
@@ -773,21 +815,32 @@ def process_gd_group(
             "due to missing valid outgroup genes.", gd_name, skipped_no_outgroup
         )
 
-    if not all_matrices:
+    if not bucket_matrices:
         logger.warning("No valid matrices found for GD group %s. Returning empty result.", gd_name)
-        return [], group_stats
+        return [], group_stats, event_assignments
 
-    merged_matrix = pd.concat(all_matrices, axis=1)
-    merged_matrix = merged_matrix.fillna("-")
-
-    clean_matrix = clean_matrix_by_dash_count(merged_matrix)
-    hyde_result_lst = run_hyde_from_matrix_integrated(
-        clean_matrix,
-        seq_dic_all,
-        voucher2taxa_dic,
-        target_clade,
-    )
-    return hyde_result_lst, group_stats
+    hyde_result_lst = []
+    for outgroup_species, matrices in bucket_matrices.items():
+        merged_matrix = pd.concat(matrices, axis=1)
+        merged_matrix = merged_matrix.fillna("-")
+        clean_matrix = clean_matrix_by_dash_count(merged_matrix)
+        outgroup_original = voucher2taxa_dic.get(outgroup_species, outgroup_species)
+        logger.info(
+            "[Hybrid_Tracer] GD node %s: running HyDe with outgroup species %s across %d GD events",
+            gd_name,
+            outgroup_original,
+            len(matrices),
+        )
+        hyde_result_lst.extend(
+            run_hyde_from_matrix_integrated(
+                clean_matrix,
+                bucket_seq_dic[outgroup_species],
+                voucher2taxa_dic,
+                target_clade,
+                outgroup_species=outgroup_original,
+            )
+        )
+    return hyde_result_lst, group_stats, event_assignments
 
 
 def run_hyde_from_matrix_integrated(
@@ -795,6 +848,7 @@ def run_hyde_from_matrix_integrated(
     seq_dic: dict,
     voucher2taxa_dic: dict,
     clade: object,
+    outgroup_species: str | None = None,
     trim: bool = True,
 ):
     """
@@ -872,7 +926,7 @@ def run_hyde_from_matrix_integrated(
         for t in res:
             p1, hyb, p2 = t
             result = dat.test_triple(p1, hyb, p2)
-            combined_element = (t, result, len(res))
+            combined_element = (outgroup_species, t, result, len(res))
             hyde_result_lst.append(combined_element)
     finally:
         os.remove(tmp_phy_path)

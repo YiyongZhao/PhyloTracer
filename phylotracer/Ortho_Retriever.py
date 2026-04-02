@@ -6,6 +6,7 @@ extracts single-copy subtrees, and writes summary tables for downstream use.
 """
 
 import os
+from collections import defaultdict
 
 from ete3 import PhyloTree
 
@@ -429,12 +430,151 @@ def get_single_copy_trees(
     return trees
 
 
+def parse_synteny_blocks(synteny_blocks_path: str) -> dict:
+    """
+    Parse a raw synteny block file into a gene-to-block mapping.
+
+    Parameters
+    ----------
+    synteny_blocks_path : str
+        Path to a raw block file where ``#`` starts a new block and each
+        non-comment line stores a gene pair.
+
+    Returns
+    -------
+    dict
+        Mapping from gene identifier to a set of block IDs.
+
+    Assumptions
+    -----------
+    Each non-comment line contains either:
+    1. a simplified two-column gene pair, or
+    2. a WGDI-style row where the first and third columns are gene IDs.
+    """
+    gene_to_blocks = defaultdict(set)
+    current_block = None
+    block_index = 0
+
+    with open(synteny_blocks_path, "r", encoding="utf-8") as handle:
+        for raw_line in handle:
+            line = raw_line.strip()
+            if not line:
+                continue
+            if line.startswith("#"):
+                block_index += 1
+                header = line.lstrip("#").strip()
+                block_label = ""
+                if header:
+                    parts = header.split()
+                    if len(parts) >= 2 and parts[0] == "Alignment":
+                        block_label = f"{parts[0]}_{parts[1].rstrip(':')}"
+                    else:
+                        block_label = parts[0]
+                current_block = block_label or f"block_{block_index}"
+                continue
+
+            if current_block is None:
+                block_index += 1
+                current_block = f"block_{block_index}"
+
+            parts = line.split()
+            if len(parts) < 2:
+                continue
+            gene1 = parts[0]
+            gene2 = parts[1]
+
+            # Support WGDI-like rows such as:
+            # gene1  order1  gene2  order2  strand
+            # while keeping the original two-column format unchanged.
+            if len(parts) >= 3 and parts[1].lstrip("-").isdigit():
+                gene2 = parts[2]
+
+            gene_to_blocks[gene1].add(current_block)
+            gene_to_blocks[gene2].add(current_block)
+
+    return gene_to_blocks
+
+
+def filter_trees_by_synteny(trees: list, gene_to_blocks: dict) -> tuple[list, list]:
+    """
+    Filter candidate ortholog trees by raw synteny block support.
+
+    Parameters
+    ----------
+    trees : list
+        List of ``(tree_name, tree_object)`` tuples.
+    gene_to_blocks : dict
+        Mapping from gene identifier to a set of synteny block IDs.
+
+    Returns
+    -------
+    tuple[list, list]
+        Filtered trees and per-tree synteny report rows.
+
+    Assumptions
+    -----------
+    A candidate passes if at least two genes have synteny support and the most
+    supported block covers at least half of the synteny-supported genes.
+    """
+    filtered_trees = []
+    report_rows = []
+
+    for tree_name, phylo_tree in trees:
+        leaf_names = [leaf.name for leaf in phylo_tree]
+        block_gene_counts = defaultdict(set)
+        supported_genes = 0
+
+        for gene in leaf_names:
+            blocks = gene_to_blocks.get(gene, set())
+            if not blocks:
+                continue
+            supported_genes += 1
+            for block_id in blocks:
+                block_gene_counts[block_id].add(gene)
+
+        best_block = ""
+        best_block_gene_count = 0
+        if block_gene_counts:
+            best_block, best_genes = max(
+                block_gene_counts.items(),
+                key=lambda item: (len(item[1]), item[0]),
+            )
+            best_block_gene_count = len(best_genes)
+
+        support_ratio = (
+            best_block_gene_count / supported_genes if supported_genes else 0.0
+        )
+        passes = supported_genes >= 2 and support_ratio >= 0.5
+        if passes:
+            filtered_trees.append((tree_name, phylo_tree))
+
+        report_rows.append(
+            (
+                tree_name,
+                str(len(leaf_names)),
+                str(supported_genes),
+                best_block,
+                str(best_block_gene_count),
+                f"{support_ratio:.4f}",
+                "pass" if passes else "fail",
+            )
+        )
+
+    return filtered_trees, report_rows
+
+
 # ======================================================
 # Section 4: Main Pipeline (Orchestration)
 # ======================================================
 
 
-def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, renamed_len_dic):
+def split_main(
+    tre_dic,
+    gene2new_named_gene_dic,
+    new_named_gene2gene_dic,
+    renamed_len_dic,
+    synteny_blocks_path: str | None = None,
+):
     """
     Split gene family trees into single-copy ortholog trees and write outputs.
 
@@ -459,11 +599,16 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, rename
     """
     import csv
 
+    gene_to_blocks = {}
+    if synteny_blocks_path:
+        gene_to_blocks = parse_synteny_blocks(synteny_blocks_path)
+
     with open("ortho_retriever_summary.txt", "w") as o:
         o.write("tre_name" + "\t" + "single_copy_tree" + "\n")
 
         processed_lines = []
         tsv_data = {}
+        synteny_report_rows = []
 
         for tre_ID, tre_path in tre_dic.items():
             Phylo_t0 = read_phylo_tree(tre_path)
@@ -483,6 +628,9 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, rename
                 tre_path,
                 tre_ID,
             )
+            if synteny_blocks_path:
+                trees, tree_report_rows = filter_trees_by_synteny(trees, gene_to_blocks)
+                synteny_report_rows.extend((tre_ID,) + row for row in tree_report_rows)
 
             tree_ortholog_trees = []
             for clade in trees:
@@ -505,6 +653,15 @@ def split_main(tre_dic, gene2new_named_gene_dic, new_named_gene2gene_dic, rename
         sorted_lines = sorted(processed_lines, key=lambda x: len(x.split("\t")[1]), reverse=True)
         for line in sorted_lines:
             o.write(line)
+
+    if synteny_blocks_path:
+        with open("ortholog_synteny_report.tsv", "w", encoding="utf-8") as out:
+            out.write(
+                "tre_ID\ttre_name\tnum_genes\tsynteny_supported_genes\tbest_block\t"
+                "best_block_gene_count\tsupport_ratio\tsynteny_filter\n"
+            )
+            for row in synteny_report_rows:
+                out.write("\t".join(row) + "\n")
 
     if tsv_data:
         max_cols = max(len(trees) for trees in tsv_data.values())
