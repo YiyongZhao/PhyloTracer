@@ -74,7 +74,7 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
 11. **GD_Visualizer:** Displays detected duplication nodes in a species tree context.
 12. **GD_Loss_Tracker:** Traces what happened to duplicated gene copies across species: for each duplication event, every species is classified as retaining both copies (2→2), losing one (2→1), or losing both (2→0). Results can be filtered by target species or restricted to specific ancestral nodes, and are exported as detailed Excel reports.
 13. **GD_Loss_Visualizer:** Renders pie charts of copy-state distributions (2-2/2-1/2-0) at each species tree node for visual identification of lineage-specific gene loss patterns.
-14. **Ortho_Retriever:** Infers phylogenetically supported single-copy putative orthologs by recursively splitting paralogous clades from gene family trees, using gene length as a selection criterion when paralogs co-occur within a species.
+14. **Ortho_Retriever:** Infers phylogenetically supported single-copy putative orthologs by recursively splitting paralogous clades from gene family trees, using gene length to resolve within-species paralog conflicts and optionally refining candidate ortholog sets with synteny block support.
 15. **Hybrid_Tracer:** Screens for hybridization (introgression) signals using genes derived from detected duplication events. For each duplication node, relevant sequences are extracted and tested with HyDe's D-statistic to distinguish incomplete lineage sorting from true hybridization. Supports node-focused or genome-wide analysis with batch processing.
 16. **Hybrid_Visualizer:** Displays admixture proportions (γ) and D-statistic support values on the species tree in leaf-mode or node-mode heatmaps.
 17. **HaploFinder:** In haplofinder mode, maps duplicated gene pairs onto chromosome-level dotplots to identify regions of ancient gene conversion and crossover between subgenomes. In split mode, assigns multi-copy genes to their respective subgenomes (A vs. B) and outputs separate FASTA files for downstream analysis of polyploid genome evolution.
@@ -655,7 +655,7 @@ Usage:
 ### Ortho_Retriever
 ```
 Description:
-    To infer single-copy putative orthologs by splitting paralogs from large-scale gene family trees for multiple species
+    To infer single-copy putative orthologs by splitting paralogs from large-scale gene family trees for multiple species, using gene length to resolve within-species paralog conflicts and optional synteny blocks to further refine candidate ortholog sets
 Required parameter:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
