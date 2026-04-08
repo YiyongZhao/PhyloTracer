@@ -71,6 +71,8 @@ def read_gff(fn):
         data, data_dict = [], {}
         for line in f.readlines():
             a = line.strip().split("\t")
+            if len(a) < 6:
+                continue
             data_dict[a[1]] = [a[0], a[2], a[3], a[4], a[5]]
             data.append(a)
     return data, data_dict

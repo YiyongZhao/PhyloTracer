@@ -17,7 +17,7 @@ except ImportError:
 
 from phylotracer.OrthoFilter_LB import (
     has_multiple_copies,
-    get_average_tip_length,
+    get_average_tip_root_distance,
     get_average_node_length,
     remove_long_branches,
 )
@@ -47,30 +47,33 @@ class TestHasMultipleCopies:
 
 
 # =============================================
-# get_average_tip_length tests
+# get_average_tip_root_distance tests
 # =============================================
 
 @pytest.mark.skipif(not HAS_ETE3, reason="ete3 not installed")
-class TestGetAverageTipLength:
+class TestGetAverageTipRootDistance:
     def test_uniform_branch_lengths(self):
         tree = Tree("((A:2,B:2):1,(C:2,D:2):1);")
-        avg = get_average_tip_length(tree)
-        assert avg == pytest.approx(2.0)
+        avg = get_average_tip_root_distance(tree)
+        # root-to-tip distance: each leaf is 2+1=3 from root
+        assert avg == pytest.approx(3.0)
 
     def test_varied_branch_lengths(self):
         tree = Tree("((A:1,B:3):1,(C:2,D:4):1);")
-        avg = get_average_tip_length(tree)
-        assert avg == pytest.approx(2.5)
+        avg = get_average_tip_root_distance(tree)
+        # root-to-tip: A=1+1=2, B=3+1=4, C=2+1=3, D=4+1=5 => mean=3.5
+        assert avg == pytest.approx(3.5)
 
     def test_zero_branch_lengths(self):
         tree = Tree("((A:0,B:0):0,(C:0,D:0):0);")
-        avg = get_average_tip_length(tree)
+        avg = get_average_tip_root_distance(tree)
         assert avg == pytest.approx(0.0)
 
     def test_single_leaf(self):
         tree = Tree("A:5;")
-        avg = get_average_tip_length(tree)
-        assert avg == pytest.approx(5.0)
+        avg = get_average_tip_root_distance(tree)
+        # Single leaf IS the root, so distance is 0
+        assert avg == pytest.approx(0.0)
 
 
 # =============================================
@@ -109,45 +112,47 @@ class TestRemoveLongBranches:
     def test_no_removal_when_branches_normal(self):
         tree = Tree("((A_1:1,B_1:1):1,(C_1:1,D_1:1):1);")
         log = self._make_log()
-        result = remove_long_branches(tree, 5, 2.5, log, "test_tree", {})
+        result = remove_long_branches(tree, 5, 2.5, "or", log, "test_tree", {})
         assert set(result.get_leaf_names()) == {"A_1", "B_1", "C_1", "D_1"}
 
     def test_removes_very_long_branch(self):
         tree = Tree("((A_1:1,B_1:100):1,(C_1:1,D_1:1):1);")
         log = self._make_log()
-        result = remove_long_branches(tree, 2, 1, log, "test_tree", {})
+        result = remove_long_branches(tree, 2, 1, "or", log, "test_tree", {})
         # B_1 should be removed due to extremely long branch
         assert "B_1" not in result.get_leaf_names()
 
     def test_preserves_original_tree(self):
         tree = Tree("((A_1:1,B_1:100):1,(C_1:1,D_1:1):1);")
         log = self._make_log()
-        remove_long_branches(tree, 2, 1, log, "test_tree", {})
+        remove_long_branches(tree, 2, 1, "or", log, "test_tree", {})
         assert "B_1" in tree.get_leaf_names()
 
     def test_log_records_pruning(self):
         tree = Tree("((A_1:1,B_1:100):1,(C_1:1,D_1:1):1);")
         log = self._make_log()
-        remove_long_branches(tree, 2, 1, log, "tree1", {"B_1": "Gene_B"})
+        remove_long_branches(tree, 2, 1, "or", log, "tree1", {"B_1": "Gene_B"})
         log_content = log.getvalue()
         assert "tree1" in log_content
 
     def test_zero_dist_leaf_not_removed(self):
         tree = Tree("((A_1:0,B_1:1):1,(C_1:1,D_1:1):1);")
         log = self._make_log()
-        result = remove_long_branches(tree, 5, 2.5, log, "test", {})
+        result = remove_long_branches(tree, 5, 2.5, "or", log, "test", {})
         assert "A_1" in result.get_leaf_names()
 
     def test_uses_gene_name_mapping_in_log(self):
-        tree = Tree("((A_1:1,B_1:1):1,(C_1:1,D_1:1):1);")
+        # Use a tree with an outlier branch so pruning actually fires
+        tree = Tree("((A_1:1,B_1:100):1,(C_1:1,D_1:1):1);")
         log = self._make_log()
         mapping = {"A_1": "OrigA", "B_1": "OrigB"}
-        remove_long_branches(tree, 5, 2.5, log, "t1", mapping)
+        remove_long_branches(tree, 2, 1, "or", log, "t1", mapping)
         log_content = log.getvalue()
-        assert "OrigA" in log_content or "OrigB" in log_content
+        # B_1 should be pruned and logged with its original name
+        assert "OrigB" in log_content
 
     def test_all_equal_no_removal(self):
         tree = Tree("((A_1:2,B_1:2):1,(C_1:2,D_1:2):1);")
         log = self._make_log()
-        result = remove_long_branches(tree, 5, 2.5, log, "t1", {})
+        result = remove_long_branches(tree, 5, 2.5, "or", log, "t1", {})
         assert len(result.get_leaves()) == 4

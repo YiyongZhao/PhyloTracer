@@ -231,6 +231,34 @@ def compute_mulrf(
     }
 
 
+def compute_mulrf_gene_vs_species(
+    gene_tree: Tree,
+    sp_tree: Tree,
+    gene2sp_map: Optional[Dict[str, str]] = None,
+    separator: str = "_",
+    position: str = "last",
+) -> Dict[str, object]:
+    """Compute MulRF distance between a gene tree and a species tree.
+
+    This is a convenience wrapper around :func:`compute_mulrf` that returns
+    results using keys consistent with :func:`compute_mulrf_between_gene_trees`.
+    """
+    res = compute_mulrf(gene_tree, sp_tree, gene2sp_map, separator, position)
+    mulrf_dist = res.get("mulrf")
+    return {
+        "gene_tree_leaf_count": res.get("n_leaves"),
+        "gene_tree_species_count": res.get("n_species"),
+        "shared_species_count": res.get("n_shared_species"),
+        "mulrf_distance": mulrf_dist,
+        "maximum_possible_mulrf_distance": res.get("max_rf"),
+        "normalized_mulrf_distance": res.get("normalized_mulrf"),
+        "shared_bipartitions": res.get("shared_bipartitions"),
+        "only_in_gene": res.get("only_in_gene"),
+        "only_in_sp": res.get("only_in_sp"),
+        "error": res.get("error", ""),
+    }
+
+
 def compute_mulrf_between_gene_trees(
     gene_tree_1: Optional[Tree],
     gene_tree_2: Optional[Tree],

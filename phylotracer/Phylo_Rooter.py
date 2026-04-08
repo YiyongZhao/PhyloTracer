@@ -157,6 +157,66 @@ def get_dynamic_basal_set(gene_tree_species_set: set, species_tree_root: object)
     return set()
 
 
+def get_species_map_and_depth(species_tree: object) -> dict:
+    """Compute topological depth for every node in a species tree.
+
+    Args:
+        species_tree (object): ETE species tree.
+
+    Returns:
+        dict: Mapping from each tree node to its topological depth
+        (root = 0, children of root = 1, …).
+    """
+    depths = {}
+    for node in species_tree.traverse("levelorder"):
+        if node.is_root():
+            depths[node] = 0
+        else:
+            depths[node] = depths[node.up] + 1
+    return depths
+
+
+def annotate_mapped_depths(gene_tree, species_tree):
+    """Annotate every gene-tree node with its mapped species-tree depth.
+
+    Each node receives a ``mapped_depth`` feature equal to the topological
+    depth of the corresponding species-tree node (determined via the
+    species prefix of its descendant leaves).
+
+    Args:
+        gene_tree: ETE gene tree, or ``None``.
+        species_tree: ETE species tree, or ``None``.
+
+    Returns:
+        The annotated gene tree, ``None`` when *gene_tree* is ``None``,
+        or the original *gene_tree* unchanged when *species_tree* is ``None``.
+    """
+    if gene_tree is None:
+        return None
+    if species_tree is None:
+        return gene_tree
+
+    depth_map = get_species_map_and_depth(species_tree)
+    sp_leaves = set(species_tree.get_leaf_names())
+
+    for node in gene_tree.traverse():
+        species = get_species_set(node)
+        mapped_species = species & sp_leaves
+        if not mapped_species:
+            node.add_feature("mapped_depth", 0)
+            continue
+        try:
+            if len(mapped_species) == 1:
+                sp_node = species_tree & list(mapped_species)[0]
+            else:
+                sp_node = species_tree.get_common_ancestor(list(mapped_species))
+            node.add_feature("mapped_depth", depth_map.get(sp_node, 0))
+        except (ValueError, KeyError):
+            node.add_feature("mapped_depth", 0)
+
+    return gene_tree
+
+
 def get_all_rerooted_trees_filtered(tree: object, basal_species_set: set, newid2oldid: dict) -> list:
     """Generate candidate rerooted trees using basal taxa and MRCA strategies.
 
@@ -491,6 +551,8 @@ def calculate_species_overlap_gd_num(gene_tree: object, species_tree: object) ->
     if not dup_nodes:
         return 0.0, 0, 0.0
     largest_tree = max(dup_nodes, key=lambda node: len(node.get_leaves()))
+    if len(largest_tree.children) < 2:
+        return 0.0, len(dup_nodes), 0.0
     up_clade = largest_tree.children[1]
     down_clade = largest_tree.children[0]
     species_list_a = get_species_list(up_clade)
