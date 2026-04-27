@@ -1,9 +1,13 @@
 metric	value
-gd_nodes_detected	0
-gd_nodes_processed	0
-gd_events_total	0
+gd_nodes_detected	4
+gd_nodes_processed	4
+gd_events_total	348
 gd_events_skipped_no_outgroup	0
-hyde_triples_tested	0
+hyde_triples_tested	63
 hyde_triples_filtered	0
 
 node	gd_events	skipped_no_outgroup	hyde_triples	filtered_triples
+S14	47	0	60	0
+S13	272	0	3	0
+S15	19	0	0	0
+S25	10	0	0	0

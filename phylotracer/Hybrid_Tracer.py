@@ -341,6 +341,36 @@ def get_outgroup_gene(gd_clade, outgroup_species):
     return best_gene
 
 
+def normalize_requested_outgroup_species(requested_outgroup_species, voucher2taxa_dic):
+    """
+    Resolve a user-specified outgroup species to the internal voucher name.
+
+    Parameters
+    ----------
+    requested_outgroup_species : str or None
+        User-provided species label, either original taxon name or voucher name.
+    voucher2taxa_dic : dict
+        Mapping from voucher identifiers to taxa labels.
+
+    Returns
+    -------
+    str or None
+        Voucher-form species name used internally, or None if not provided.
+    """
+    if not requested_outgroup_species:
+        return None
+
+    requested = requested_outgroup_species.strip()
+    if not requested:
+        return None
+
+    if requested in voucher2taxa_dic:
+        return requested
+
+    taxa2voucher_dic = {taxa: voucher for voucher, taxa in voucher2taxa_dic.items()}
+    return taxa2voucher_dic.get(requested, requested)
+
+
 # ======================================================
 # Section 2: Duplication Model Assignment
 # ======================================================
@@ -503,27 +533,18 @@ def write_out(out, triple, outfile, outgroup_species=None):
     -----------
     HyDe output dictionary contains required keys.
     """
+    row_values = []
     if outgroup_species is not None:
-        print(outgroup_species, "\t", sep="", end="", file=outfile)
-    print(triple[0], "\t", triple[1], "\t", triple[2], "\t", sep="", end="", file=outfile)
-    print(out["Zscore"], "\t", sep="", end="", file=outfile)
-    print(out["Pvalue"], "\t", sep="", end="", file=outfile)
-    print(out["Gamma"], "\t", sep="", end="", file=outfile)
-    print(out["AAAA"], "\t", sep="", end="", file=outfile)
-    print(out["AAAB"], "\t", sep="", end="", file=outfile)
-    print(out["AABA"], "\t", sep="", end="", file=outfile)
-    print(out["AABB"], "\t", sep="", end="", file=outfile)
-    print(out["AABC"], "\t", sep="", end="", file=outfile)
-    print(out["ABAA"], "\t", sep="", end="", file=outfile)
-    print(out["ABAB"], "\t", sep="", end="", file=outfile)
-    print(out["ABAC"], "\t", sep="", end="", file=outfile)
-    print(out["ABBA"], "\t", sep="", end="", file=outfile)
-    print(out["BAAA"], "\t", sep="", end="", file=outfile)
-    print(out["ABBC"], "\t", sep="", end="", file=outfile)
-    print(out["CABC"], "\t", sep="", end="", file=outfile)
-    print(out["BACA"], "\t", sep="", end="", file=outfile)
-    print(out["BCAA"], "\t", sep="", end="", file=outfile)
-    print(out["ABCD"], "\n", sep="", end="", file=outfile)
+        row_values.append(str(outgroup_species))
+
+    row_values.extend([str(triple[0]), str(triple[1]), str(triple[2])])
+    row_values.extend(
+        str(out[key]) for key in [
+            "Zscore", "Pvalue", "Gamma", "AAAA", "AAAB", "AABA", "AABB", "AABC",
+            "ABAA", "ABAB", "ABAC", "ABBA", "BAAA", "ABBC", "CABC", "BACA", "BCAA", "ABCD",
+        ]
+    )
+    outfile.write("\t".join(row_values) + "\n")
 
 
 # ======================================================
@@ -568,6 +589,7 @@ def hyde_main(
     voucher2taxa_dic,
     target_node=None,
     gd_group: int = 1,
+    requested_outgroup_species: str | None = None,
 ):
     """
     Run HyDe analyses on filtered duplication clades.
@@ -588,6 +610,8 @@ def hyde_main(
         Specific species-tree node to focus on.
     gd_group : int, optional
         Number of parallel processing groups.
+    requested_outgroup_species : str, optional
+        Explicit outgroup species requested by the user.
     Returns
     -------
     None
@@ -612,6 +636,15 @@ def hyde_main(
         gene2new_named_gene_dic,
         rename_sptree,
     )
+    requested_outgroup_voucher = normalize_requested_outgroup_species(
+        requested_outgroup_species,
+        voucher2taxa_dic,
+    )
+    if requested_outgroup_voucher:
+        logger.info(
+            "[Hybrid_Tracer] Requested outgroup species resolved to %s",
+            voucher2taxa_dic.get(requested_outgroup_voucher, requested_outgroup_voucher),
+        )
     data = count_elements_in_lists(gd_type_dic)
     gd_clades = get_process_gd_clade(data, gd_count_dic)
     overall_stats["gd_nodes_detected"] = len(gd_clades)
@@ -635,16 +668,14 @@ def hyde_main(
 
         split_gds = np.array_split(gds, gd_group)
         outgroup_species_candidates = get_outgroup_species_candidates_for_gd_node(gd_name, rename_sptree)
+        if target_node and requested_outgroup_voucher:
+            outgroup_species_candidates = [requested_outgroup_voucher]
         if not outgroup_species_candidates:
             logger.warning(
                 "[Hybrid_Tracer][Skip] GD node %s has no sister-branch "
                 "outgroup candidates. All events are skipped.", gd_name
             )
             continue
-        fixed_outgroup_original = voucher2taxa_dic.get(
-            outgroup_species_candidates[0],
-            outgroup_species_candidates[0],
-        )
         logger.info(
             "[Hybrid_Tracer] GD node %s outgroup candidates (nearest first): %s",
             gd_name,

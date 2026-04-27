@@ -1,0 +1,1 @@
+# zone_id	contig1	contig2	gene1	start1	end1	gene2	start2	end2	color

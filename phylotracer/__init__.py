@@ -52,6 +52,9 @@ __all__ = [
     "calculate_gd_num",
     "stable_color_for_label",
     "serialize_tree_by_input_branch_length_style",
+    "parse_loss_path",
+    "is_internal_node",
+    "parse_node_number",
 ]
 
 # Fixed qualitative palette for consistent colors across all plotting modules.
@@ -900,3 +903,58 @@ def calculate_gd_num(tree: PhyloTree, species_tree: PhyloTree) -> int:
     """
     gd_nodes = find_dup_node(tree, species_tree)
     return len(gd_nodes)
+
+
+def parse_loss_path(path_str: str) -> List[Tuple[str, int]]:
+    """Parse loss path string into list of (node_name, copy_number) tuples.
+
+    Args:
+        path_str: Path string like "S0(2)->S1(1)->S2(0)" or "NA"
+
+    Returns:
+        List of (node_name, copy_number) tuples. Empty list for invalid/NA paths.
+
+    Example:
+        >>> parse_loss_path("S0(2)->S1(1)->S2(0)")
+        [('S0', 2), ('S1', 1), ('S2', 0)]
+    """
+    if not path_str or path_str == "NA":
+        return []
+    parsed = []
+    for step in str(path_str).split("->"):
+        match = re.search(r"(.+?)\((\d+)\)$", step.strip())
+        if match:
+            parsed.append((match.group(1).strip(), int(match.group(2))))
+    return parsed
+
+
+def is_internal_node(name: str) -> bool:
+    """Check if node name is an S-numbered internal node.
+
+    Args:
+        name: Node name to check
+
+    Returns:
+        True if name matches pattern S0, S1, S2, etc.
+    """
+    return isinstance(name, str) and bool(re.fullmatch(r"S\d+", name))
+
+
+def parse_node_number(name: str) -> Optional[int]:
+    """Extract numeric ID from S-numbered internal node.
+
+    Args:
+        name: Node name like "S0", "S1", etc.
+
+    Returns:
+        Integer ID or None if not an internal node.
+
+    Example:
+        >>> parse_node_number("S42")
+        42
+        >>> parse_node_number("Species_A")
+        None
+    """
+    if is_internal_node(name):
+        return int(name[1:])
+    return None

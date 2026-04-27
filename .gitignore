@@ -24,12 +24,50 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+.AppleDouble
 
 # Test / coverage
 .coverage
 .pytest_cache/
 htmlcov/
 .tox/
+.mypy_cache/
+.ruff_cache/
 
 # Jupyter
 .ipynb_checkpoints/
+
+# Local tooling
+.claude/
+
+# Python runtime caches
+__pycache__/
+*.pyc
+
+# Local backups
+*.backup
+*.bak
+
+# Example/demo runtime outputs
+example_data/_example_runs/
+example_data/**/stdout.log
+example_data/**/stderr.log
+example_data/**/mplcache/
+
+# Local run artifacts
+local_test_runs/
+
+# Packaging / install leftovers
+pip-wheel-metadata/
+PhyloTracer.egg-info/
+
+# Private planning / review notes
+EFFICIENCY_REVIEW.md
+EVALUATION_REPORT_*.md
+HAPLOFINDER_ANALYSIS.md
+HAPLOFINDER_OPTIMIZATIONS.md
+POLISH_PRIORITY_*.md
+SIMPLIFY_REVIEW_REPORT.md
+STRATEGIC_BATTLE_PLAN.md
+test_report_*.md
+VALIDATION_README.md

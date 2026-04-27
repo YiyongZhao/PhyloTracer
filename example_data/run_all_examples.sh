@@ -160,14 +160,26 @@ run_cmd m11_strict 0 GD_Visualizer \
   --input_imap "${SCRIPT_DIR}/11_GD_Visualizer/gene2sps.imap" \
   --output "${BASE_OUT}/m11_strict/gd_result_strict.pdf"
 
-run_cmd m12 1 GD_Loss_Tracker \
+run_cmd m12_parsimony 1 GD_Loss_Tracker \
   --input_GF_list "${SCRIPT_DIR}/12_GD_Loss_Tracker/GF_ID2path.imap" \
   --input_sps_tree "${SCRIPT_DIR}/12_GD_Loss_Tracker/sptree.nwk" \
   --input_imap "${SCRIPT_DIR}/12_GD_Loss_Tracker/gene2sps.imap"
 
-run_cmd m13 1 GD_Loss_Visualizer \
-  --gd_loss_result "${SCRIPT_DIR}/13_GD_Loss_Visualizer/gd_loss_summary.txt" \
-  --input_sps_tree "${SCRIPT_DIR}/13_GD_Loss_Visualizer/numed_sptree.nwk"
+run_cmd m12_accumulate 1 GD_Loss_Tracker \
+  --input_GF_list "${SCRIPT_DIR}/12_GD_Loss_Tracker/GF_ID2path.imap" \
+  --input_sps_tree "${SCRIPT_DIR}/12_GD_Loss_Tracker/sptree.nwk" \
+  --input_imap "${SCRIPT_DIR}/12_GD_Loss_Tracker/gene2sps.imap" \
+  --node_count_mode accumulate
+
+run_cmd m13_parsimony 0 GD_Loss_Visualizer \
+  --gd_loss_result "${SCRIPT_DIR}/12_GD_Loss_Tracker/gd_loss_tracker/parsimony/gd_loss.csv" \
+  --input_sps_tree "${SCRIPT_DIR}/12_GD_Loss_Tracker/gd_loss_tracker/parsimony/numed_sptree.nwk" \
+  --output "${BASE_OUT}/m13_parsimony/gd_loss_pie_visualizer.PDF"
+
+run_cmd m13_accumulate 0 GD_Loss_Visualizer \
+  --gd_loss_result "${SCRIPT_DIR}/12_GD_Loss_Tracker/gd_loss_tracker/accumulate/gd_loss.csv" \
+  --input_sps_tree "${SCRIPT_DIR}/12_GD_Loss_Tracker/gd_loss_tracker/accumulate/numed_sptree.nwk" \
+  --output "${BASE_OUT}/m13_accumulate/gd_loss_pie_visualizer.PDF"
 
 run_cmd m14 1 Ortho_Retriever \
   --input_GF_list "${SCRIPT_DIR}/14_Ortho_Retriever/GF_ID2path.imap" \

@@ -103,6 +103,30 @@ def get_count_dic(gene_duplications: list) -> dict:
     return dict(level_type_count)
 
 
+def get_present_gd_types(count_dic: dict, type_order: list | None = None) -> list:
+    """
+    Return GD types that actually occur in the current result set.
+
+    Parameters
+    ----------
+    count_dic : dict
+        Nested dictionary mapping level to GD-type counts.
+    type_order : list | None
+        Optional preferred display order.
+
+    Returns
+    -------
+    list
+        Ordered list of GD types with at least one non-zero count.
+    """
+    ordered_types = type_order or ["AABB", "AXBB", "AABX", "Complex"]
+    present_types = []
+    for gd_type in ordered_types:
+        if any(level_counts.get(gd_type, 0) > 0 for level_counts in count_dic.values()):
+            present_types.append(gd_type)
+    return present_types
+
+
 # ======================================================
 # Section 2: Species Tree Annotation and Rendering
 # ======================================================
@@ -181,16 +205,14 @@ def mark_sptree(
         "Complex": "#d62728",
     }
     type_order = ["AABB", "AXBB", "AABX", "Complex"]
+    visible_types = get_present_gd_types(count_dic, type_order=type_order)
 
     ts.title.add_face(TextFace(" GD Events Distribution ", fsize=6, ftype="Arial"), column=0)
-    ts.title.add_face(CircleFace(4, type_colors["AABB"]), column=1)
-    ts.title.add_face(TextFace(" AABB", fsize=6, ftype="Arial"), column=2)
-    ts.title.add_face(CircleFace(4, type_colors["AXBB"]), column=3)
-    ts.title.add_face(TextFace(" AXBB", fsize=6), column=4)
-    ts.title.add_face(CircleFace(4, type_colors["AABX"]), column=5)
-    ts.title.add_face(TextFace(" AABX", fsize=6, ftype="Arial"), column=6)
-    ts.title.add_face(CircleFace(4, type_colors["Complex"]), column=7)
-    ts.title.add_face(TextFace(" Complex", fsize=6, ftype="Arial"), column=8)
+    title_column = 1
+    for gd_type in visible_types:
+        ts.title.add_face(CircleFace(4, type_colors[gd_type]), column=title_column)
+        ts.title.add_face(TextFace(f" {gd_type}", fsize=6, ftype="Arial"), column=title_column + 1)
+        title_column += 2
 
 
 
@@ -207,9 +229,9 @@ def mark_sptree(
 
         pie_face = None
         if node_name in count_dic:
-            counts = {t: count_dic[node_name].get(t, 0) for t in type_order}
-            values = [counts[t] for t in type_order]
-            colors = [type_colors[t] for t in type_order]
+            counts = {t: count_dic[node_name].get(t, 0) for t in visible_types}
+            values = [counts[t] for t in visible_types]
+            colors = [type_colors[t] for t in visible_types]
             total = sum(values)
             if total > 0:
                 percentages = [round(v / total * 100, 1) for v in values]

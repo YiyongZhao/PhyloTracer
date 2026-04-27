@@ -6,6 +6,7 @@ extracts single-copy subtrees, and writes summary tables for downstream use.
 """
 
 import os
+import re
 from collections import defaultdict
 
 from ete3 import PhyloTree
@@ -567,6 +568,134 @@ def filter_trees_by_synteny(trees: list, gene_to_blocks: dict) -> tuple[list, li
 # Section 4: Main Pipeline (Orchestration)
 # ======================================================
 
+TREE_NAME_PATTERN = re.compile(r"^(?P<gf_id>.+)_T\d+_\d+$")
+
+
+def parse_original_tree_id(tree_name: str) -> str:
+    """Extract the original gene-family ID from an Ortho_Retriever tree name."""
+    match = TREE_NAME_PATTERN.match(tree_name.strip())
+    if not match:
+        raise ValueError(f"Cannot parse original tree ID from tree name: {tree_name}")
+    return match.group("gf_id")
+
+
+def choose_strict_single_copy_outgroup_genes(
+    candidate_genes: list[str],
+    gene_to_species: dict[str, str],
+    ingroup_species: set[str],
+) -> list[str]:
+    """
+    Keep only strict outgroup genes from species absent from the ingroup.
+
+    A species is retained only when it contributes exactly one gene in the
+    candidate sister clade. Multi-copy candidate species are rejected rather
+    than collapsed to an arbitrary representative.
+    """
+    genes_by_species: dict[str, list[str]] = {}
+    for gene in candidate_genes:
+        species = gene_to_species.get(gene)
+        if species is None or species in ingroup_species:
+            continue
+        genes_by_species.setdefault(species, []).append(gene)
+
+    selected = []
+    for species in sorted(genes_by_species):
+        species_genes = genes_by_species[species]
+        if len(species_genes) == 1:
+            selected.append(species_genes[0])
+    return sorted(selected)
+
+
+def get_preferred_sister_subclade(mrca_node) -> object | None:
+    """Return the largest child clade on the sister side of the ingroup MRCA."""
+    parent = mrca_node.up
+    if parent is None:
+        return None
+
+    sister_nodes = [child for child in parent.children if child is not mrca_node]
+    if not sister_nodes:
+        return None
+
+    sister = max(
+        sister_nodes,
+        key=lambda node: (len(node.get_leaf_names()), node.name),
+    )
+    if sister.is_leaf():
+        return sister
+
+    child_clades = list(sister.children)
+    if not child_clades:
+        return sister
+
+    return max(
+        child_clades,
+        key=lambda node: (len(node.get_leaf_names()), node.name),
+    )
+
+
+def select_outgroup_genes(
+    ingroup_genes: list[str],
+    original_tree,
+    gene_to_species: dict[str, str],
+) -> list[str]:
+    """
+    Select strict outgroup genes for one ortholog group.
+
+    The outgroup must come from the sister side of the ingroup MRCA, must not
+    share species with the ingroup, and each retained outgroup species must be
+    single-copy within the candidate sister clade.
+    """
+    if not ingroup_genes:
+        return []
+
+    if len(ingroup_genes) == 1:
+        mrca_node = original_tree & ingroup_genes[0]
+    else:
+        mrca_node = original_tree.get_common_ancestor(ingroup_genes)
+
+    if mrca_node.is_root():
+        return []
+
+    sister_clade = get_preferred_sister_subclade(mrca_node)
+    if sister_clade is None:
+        return []
+
+    if sister_clade.is_leaf():
+        candidate_genes = [sister_clade.name]
+    else:
+        candidate_genes = sister_clade.get_leaf_names()
+
+    ingroup_gene_set = set(ingroup_genes)
+    candidate_genes = [gene for gene in candidate_genes if gene not in ingroup_gene_set]
+    if not candidate_genes:
+        return []
+
+    ingroup_species = {
+        gene_to_species[gene]
+        for gene in ingroup_genes
+        if gene in gene_to_species
+    }
+    return choose_strict_single_copy_outgroup_genes(
+        candidate_genes,
+        gene_to_species,
+        ingroup_species,
+    )
+
+
+def build_rooted_combined_tree(original_tree, ingroup_genes: list[str], outgroup_genes: list[str]):
+    """Prune the original tree to ingroup + outgroup genes and reroot by outgroup."""
+    combined = original_tree.copy("newick")
+    keep_genes = list(dict.fromkeys(ingroup_genes + outgroup_genes))
+    combined.prune(keep_genes)
+
+    if outgroup_genes:
+        if len(outgroup_genes) == 1:
+            outgroup_node = combined & outgroup_genes[0]
+        else:
+            outgroup_node = combined.get_common_ancestor(outgroup_genes)
+        combined.set_outgroup(outgroup_node)
+    return combined
+
 
 def split_main(
     tre_dic,
@@ -574,6 +703,8 @@ def split_main(
     new_named_gene2gene_dic,
     renamed_len_dic,
     synteny_blocks_path: str | None = None,
+    add_outgroup: bool = False,
+    gene_to_species: dict[str, str] | None = None,
 ):
     """
     Split gene family trees into single-copy ortholog trees and write outputs.
@@ -602,6 +733,8 @@ def split_main(
     gene_to_blocks = {}
     if synteny_blocks_path:
         gene_to_blocks = parse_synteny_blocks(synteny_blocks_path)
+
+    outgroup_report_rows = []
 
     with open("ortho_retriever_summary.txt", "w") as o:
         o.write("tre_name" + "\t" + "single_copy_tree" + "\n")
@@ -636,9 +769,40 @@ def split_main(
             for clade in trees:
                 tre_name = clade[0]
                 Phylo_t_OG_L = clade[1]
+                tree_to_write = Phylo_t_OG_L
+                if add_outgroup and gene_to_species is not None:
+                    original_tree = read_phylo_tree(tre_path)
+                    if not is_rooted(original_tree):
+                        original_tree = root_tre_with_midpoint_outgroup(original_tree)
+                    ingroup_genes = [leaf.name for leaf in Phylo_t_OG_L]
+                    outgroup_genes = select_outgroup_genes(
+                        ingroup_genes,
+                        original_tree,
+                        gene_to_species,
+                    )
+                    if outgroup_genes:
+                        tree_to_write = build_rooted_combined_tree(
+                            original_tree,
+                            ingroup_genes,
+                            outgroup_genes,
+                        )
+                        outgroup_status = "ok"
+                    else:
+                        outgroup_status = "skip_no_valid_outgroup"
+                    outgroup_report_rows.append(
+                        (
+                            tre_name,
+                            parse_original_tree_id(tre_name),
+                            str(len(ingroup_genes)),
+                            str(len(outgroup_genes)),
+                            ",".join(outgroup_genes),
+                            outgroup_status,
+                        )
+                    )
+
                 processed_lines.append(
                     tre_name + "\t" + serialize_tree_by_input_branch_length_style(
-                        Phylo_t_OG_L,
+                        tree_to_write,
                         source_tree_path=tre_path,
                         fmt=0,
                     ) + "\n"
@@ -661,6 +825,12 @@ def split_main(
                 "best_block_gene_count\tsupport_ratio\tsynteny_filter\n"
             )
             for row in synteny_report_rows:
+                out.write("\t".join(row) + "\n")
+
+    if add_outgroup and outgroup_report_rows:
+        with open("ortholog_outgroup_report.tsv", "w", encoding="utf-8") as out:
+            out.write("tre_name\tgf_id\tnum_ingroup\tnum_outgroup\toutgroup_genes\tstatus\n")
+            for row in outgroup_report_rows:
                 out.write("\t".join(row) + "\n")
 
     if tsv_data:

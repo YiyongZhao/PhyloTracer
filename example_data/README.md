@@ -1,64 +1,79 @@
-# 2) 依次跑 1-16 模块（示例数据）
-# 1_Phylo_Rooter
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/1_Phylo_Rooter
-PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_sps_tree sptree.nwk
+# Example Data
 
-# 2_PhyloTree_CollapseExpand
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/2_PhyloTree_CollapseExpand
-PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50
+This directory contains runnable example inputs for the PhyloTracer modules.
+Each numbered subdirectory corresponds to one command-line workflow and includes
+the minimal files needed to reproduce the example.
 
-# 3_PhyloSupport_Scaler
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/3_PhyloSupport_Scaler
-PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1
+## Quick Start
 
-# 4_BranchLength_NumericConverter
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/4_BranchLength_NumericConverter
-PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap --decimal_place 10
+Run the full example suite from the repository root:
 
-# 5_OrthoFilter_LB
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/5_OrthoFilter_LB
-PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 --visual
+```bash
+bash example_data/run_all_examples.sh
+```
 
-# 6_OrthoFilter_Mono
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/6_OrthoFilter_Mono
-PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa Clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --purity_cutoff 0.95 --max_remove_fraction 0.5 --visual
+The script writes timestamped outputs under `example_data/_example_runs/`. Those
+runtime outputs are local artifacts and are excluded from version control.
 
-# 7_TreeTopology_Summarizer
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/7_TreeTopology_Summarizer
-PhyloTracer TreeTopology_Summarizer --input_GF_list gf.txt --input_imap imap --visual_top 10
+## Running Individual Examples
 
-# 8_Tree_Visualizer（我实际跑的是20棵代表树）
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/8_Tree_Visualizer
-PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap --gene_categories Family.imap Order.imap Clade.imap --keep_branch 1 --tree_style r --input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt --visual_gd
+Use paths relative to the repository root so the commands work on any machine.
+`12_GD_Loss_Tracker/gd_loss_tracker/` and `13_GD_Loss_Visualizer/` separate
+`parsimony/` and `accumulate/` outputs so the two node-counting modes can be
+compared directly.
 
-# 9_GD_Detector
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/9_GD_Detector
-PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 --gdtype_mode relaxed
+### 01. `Phylo_Rooter`
 
-# 10_GD_Visualizer
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/10_GD_Visualizer
-PhyloTracer GD_Visualizer --input_sps_tree sptree.nwk --gd_result gd_result.txt --input_imap /Users/apple/Documents/GitHub/PhyloTracer/example_data/9_GD_Detector/gene2sps.imap
+```bash
+python -m phylotracer.Phylo_Tracer Phylo_Rooter \
+  --input_GF_list example_data/01_Phylo_Rooter/GF_ID2path.imap \
+  --input_imap example_data/01_Phylo_Rooter/gene2sps.imap \
+  --input_sps_tree example_data/01_Phylo_Rooter/sptree.nwk
+```
 
-# 11_GD_Loss_Tracker
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/11_GD_Loss_Tracker
-PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap --node_count_mode nonaccumulate
+### 02. `MulRF_Distance`
 
-# 12_GD_Loss_Visualizer
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/12_GD_Loss_Visualizer
-PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_result gd_loss_summary.txt
+```bash
+python -m phylotracer.Phylo_Tracer MulRF_Distance \
+  --mode 1 \
+  --input_GF_list example_data/02_MulRF_Distance/GF_ID2path.imap \
+  --input_imap example_data/02_MulRF_Distance/gene2sps.imap \
+  --output example_data/02_MulRF_Distance/mulrf_mode1.tsv
+```
 
-# 13_Ortho_Retriever
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/13_Ortho_Retriever
-PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap --input_synteny_blocks collinearity
+```bash
+python -m phylotracer.Phylo_Tracer MulRF_Distance \
+  --mode 2 \
+  --input_GF_list example_data/02_MulRF_Distance/GF_ID2path.imap \
+  --input_imap example_data/02_MulRF_Distance/gene2sps.imap \
+  --input_sps_tree example_data/02_MulRF_Distance/sptree.nwk \
+  --output example_data/02_MulRF_Distance/mulrf_mode2.tsv
+```
 
-# 14_Hybrid_Tracer
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/14_Hybrid_Tracer
-PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap imap.list --split_groups 2
+### 03-17. Remaining Modules
 
-# 15_Hybrid_Visualizer（新接口，不用 --hyde_filtered_out）
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/15_Hybrid_Visualizer
-PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk --node
+For the remaining examples, use `example_data/run_all_examples.sh` as the
+canonical reference. It provides portable commands for:
 
-# 16_HaploFinder
-cd /Users/apple/Documents/GitHub/PhyloTracer/example_data/16_Haplofinder
-PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.txt --input_imap imap.txt --input_sps_tree sptree.nwk --species_a ard --species_b ari --species_a_gff ard.gff --species_b_gff arh.gff --species_a_lens ard.lens --species_b_lens arh.lens --gd_support 50 --pair_support 50
+- `PhyloTree_CollapseExpand`
+- `PhyloSupport_Scaler`
+- `BranchLength_NumericConverter`
+- `OrthoFilter_LB`
+- `OrthoFilter_Mono`
+- `TreeTopology_Summarizer`
+- `Tree_Visualizer`
+- `GD_Detector`
+- `GD_Visualizer`
+- `GD_Loss_Tracker`
+- `GD_Loss_Visualizer`
+- `Ortho_Retriever`
+  Supports default ortholog splitting, optional synteny refinement, and optional strict outgroup attachment via `--add_outgroup`. When enabled, the run also produces `ortholog_outgroup_report.tsv`.
+- `Hybrid_Tracer`
+- `Hybrid_Visualizer`
+- `HaploFinder`
+
+## Notes
+
+- Some example directories include generated outputs for demonstration.
+- Large temporary outputs should be written to `example_data/_example_runs/`.
+- If you want a clean rerun, delete or archive previous output directories first.
