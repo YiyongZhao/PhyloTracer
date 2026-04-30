@@ -77,7 +77,7 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
 14. **Ortho_Retriever:** Infers phylogenetically supported single-copy putative orthologs by recursively splitting paralogous clades from gene family trees, using gene length to resolve within-species paralog conflicts, optionally refining candidate ortholog sets with synteny block support, and optionally attaching strict sister-clade outgroup genes to the written trees.
 15. **Hybrid_Tracer:** Screens for hybridization (introgression) signals using genes derived from detected duplication events. For each duplication node, relevant sequences are extracted and tested with HyDe's D-statistic to distinguish incomplete lineage sorting from true hybridization. Supports node-focused or genome-wide analysis with batch processing.
 16. **Hybrid_Visualizer:** Displays admixture proportions (γ) and D-statistic support values on the species tree in leaf-mode or node-mode heatmaps.
-17. **HaploFinder:** In haplofinder mode, maps duplicated gene pairs onto chromosome-level dotplots to identify regions of ancient gene conversion and crossover between subgenomes. In split mode, assigns multi-copy genes to their respective subgenomes (A vs. B) and outputs separate FASTA files for downstream analysis of polyploid genome evolution.
+17. **HaploFinder:** In haplofinder mode, maps duplicated gene pairs onto chromosome-level dotplots to identify regions of ancient gene conversion and crossover between subgenomes. In split mode, consumes `color_label.txt`, summarizes pair-level red/blue evidence into gene-level subgenome assignments, and outputs separate FASTA files for downstream analysis of polyploid genome evolution.
 
 *Together, these modules provide a comprehensive workflow for constructing, refining, and interpreting large-scale phylogenomic data.*
 
@@ -100,7 +100,7 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
   Extracts duplication-derived gene sets, constructs node-partitioned concatenated alignments, and runs HyDe (D-statistic) to detect introgression and hybrid speciation signals.
 
 - **Haplotype analysis & subgenome splitting** (via `HaploFinder`):  
-  Overlays GD pairs onto chromosomal synteny dotplots to detect gene conversion and crossover events; split mode partitions gene families into subgenome-specific ortholog FASTA files.
+  Overlays GD pairs onto chromosomal synteny dotplots to detect gene conversion and crossover events; split mode reads `color_label.txt`, converts pair-level red/blue evidence into gene-level assignments, and writes subgenome-specific ortholog FASTA files.
 
 ---
 ## Getting started with PhyloTracer
@@ -636,6 +636,8 @@ Optional parameter:
     --mrca_node             Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.
     --include_unobserved_species  Classification policy for species absent from the current gene family, default = False. If set, unobserved species are still assigned 2-2/2-1/2-0 by left/right presence; if not set, they are labeled as missing_data. This affects classification labels only.
     --node_count_mode       Node counting mode for path_count_* transition statistics, default = parsimony. Choices: parsimony|accumulate.
+    --parsimony_min_support_ratio  Minimum descendant-species support ratio required to collapse a loss to one shared parsimony node, default = 0.5. The ratio is evaluated against all species under the current GD event node.
+    --parsimony_min_support_species  Minimum descendant-species support required to collapse a loss to one shared parsimony node, default = 2.
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
     PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_species Arabidopsis_thaliana] [--mrca_node SpeciesA,SpeciesB] [--include_unobserved_species] [--node_count_mode parsimony] [--output_dir DIR]
@@ -685,14 +687,21 @@ Required parameter:
     --input_sps_tree        Species tree file in Newick format
 Optional parameter:
     --mrca_node             Restrict Hybrid_Tracer to the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). If multiple are provided, only the first valid pair is used.
+    --outgroup_species      Explicit outgroup species to use for outgroup-gene selection. When used with --mrca_node, Hybrid_Tracer will only use genes from this species.
     --split_groups          Number of partitions for HYDE batch processing, default = 1
+    --min_gd_count          Minimum number of classified GD events required to keep a species-tree node for HyDe processing, default = 10
+    --min_asymmetric_ratio  Minimum fraction of asymmetric GD models (AXBB + AABX) required to keep a species-tree node for HyDe processing (accepted range: 0.0-1.0), default = 0.1
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
-    PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB] [--split_groups 2] [--output_dir DIR]
+    PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB] [--outgroup_species SpeciesX] [--split_groups 2] [--min_gd_count 10] [--min_asymmetric_ratio 0.1] [--output_dir DIR]
 
-Hybrid_Tracer keeps one outgroup species per HyDe matrix. For a GD node, candidate outgroup species are searched on the sister branch in topological-distance order; GD events are then grouped by the first candidate species that has a valid outgroup gene, and each outgroup-specific group is analyzed separately.
+Hybrid_Tracer keeps one outgroup species per HyDe matrix. For a GD node, candidate outgroup species are searched on the sister branch in topological-distance order; GD events are then grouped by the first candidate species that has a valid outgroup gene, and each outgroup-specific group is analyzed separately. Within a HyDe run, only the target-clade species plus the selected outgroup species are retained in the matrix.
 
-Outputs include `hyde_out.txt`, `hyde_filtered_out.txt`, and a run summary file `hyde_summary.txt`. The HyDe tables include an `Outgroup` column indicating which outgroup species was used for each tested batch.
+Hybrid_Tracer filters candidate species-tree nodes before HyDe using two configurable heuristics: a minimum number of classified GD events (`--min_gd_count`) and a minimum fraction of asymmetric GD models (`--min_asymmetric_ratio`).
+
+Matrix columns with excessive missing data are removed before HyDe. By default, a column is retained when at least 3 taxa have non-gap entries.
+
+Outputs include `hyde_out.txt`, `hyde_filtered_out.txt`, a run summary file `hyde_summary.txt`, and `hyde_event_assignments.tsv`. The HyDe tables include an `Outgroup` column indicating which outgroup species was used for each tested batch.
 ```
 ### Hybrid_Visualizer
 ```
@@ -731,24 +740,28 @@ Optional in haplofinder mode:
     --visual_chr_a          Optional chromosome list file for species A visualization subset
     --visual_chr_b          Optional chromosome list file for species B visualization subset
     --size                  Point size in dotplot rendering (positive float, default = 0.0005)
-    --gene_conv_ratio       Chromosome number ratio for gene conversion detection (integer, default = 2)
-Optional in split mode:
-    --chrs_per_subgenome    Number of chromosomes per subgenome for subgenome mapping (integer, default = 10)
-Optional in both modes:
+    --min_shared_pairs      Minimum gene pairs required between two chromosomes to infer a homolog pair by collinear coverage (default = 5). Increase for noisy datasets.
+    --min_conv_pairs        Minimum gene pairs on a chromosome pair to attempt gene conversion detection (default = 10).
+    --n_permutations        Number of permutations for the gene conversion permutation test (default = 1000).
+    --p_threshold           Significance threshold applied to both binomial and permutation tests for gene conversion detection (default = 0.05).
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Mode = split required:
-    --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); required in haplofinder mode
     --input_imap            Two-column mapping file (gene_id<TAB>species_name); required in both haplofinder and split modes
     --input_fasta           Input FASTA file (.fa/.fasta), required in split mode
-    --cluster_file          Split-mode cluster metadata file (legacy compatibility field; currently required by CLI checks)
-    --hyb_sps               Hybrid species name used for subgenome assignment (required in split mode)
-    --parental_sps          Parental species names used for split-mode assignment; provide as a single quoted, space-separated string
-    --species_b_gff         Genome annotation file for species B in GFF/GTF-compatible format
+    --color_label_file      Pair-level color label file from haplofinder mode, usually color_label.txt
+    --hyb_sps               Hybrid species name whose genes will be split by majority color
+    --species_b_gff         Genome annotation file of the hybrid species used to report chromosome coordinates in split mode
+Optional in split mode:
+    --red_subgenome         Subgenome label assigned when red_count > blue_count (default = A)
+    --blue_subgenome        Subgenome label assigned when blue_count > red_count (default = B)
+    --cluster_file          Split-mode cluster metadata file (legacy compatibility field; optional and used only for logging)
+    --chrs_per_subgenome    Legacy compatibility parameter; primary split assignment now comes from color-label majority vote
+    --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
     PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a arh --species_b ard --species_a_gff arh.gff --species_b_gff ard.gff --species_a_lens arh.lens --species_b_lens ard.lens [--gd_support 50] [--pair_support 50] [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001] [--output_dir DIR]
-    PhyloTracer HaploFinder --mode split --input_GF_list gf.txt --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff ard.gff [--output_dir DIR]
+    PhyloTracer HaploFinder --mode split --input_imap gene2sps.imap --input_fasta proteins.fa --color_label_file color_label.txt --hyb_sps Hybrid --species_b_gff hybrid.gff [--red_subgenome A --blue_subgenome B] [--output_dir DIR]
 
-Bundled HaploFinder example data live under `example_data/17_Haplofinder/`. Optional chromosome lists `chr_a.txt` and `chr_b.txt` are included for the haplofinder-mode example. The split-mode example requires user-supplied `proteins.fa` and `cluster.tsv`.
+Bundled HaploFinder example data live under `example_data/17_Haplofinder/`. Optional chromosome lists `chr_a.txt` and `chr_b.txt` are included for the haplofinder-mode example. In split mode, `split_assignment.tsv` reports `red_count`, `blue_count`, and `status` (`ok`, `tie`, `no_color`) for each hybrid gene before FASTA partitioning.
 ```
 
 ---
