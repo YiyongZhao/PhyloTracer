@@ -313,14 +313,13 @@ where $\widetilde{m} \in [0,1]$ is the direction-corrected normalized value of m
 ### Phylo_Rooter
 ```
 Description:
-    Roots gene trees using a six-metric composite scoring framework (OD, BLV, GD, SO, GDC, MulRF)
-    guided by the species tree.
+    Roots gene trees using a six-metric composite scoring framework (OD, BLV, GD, SO, GDC, MulRF) guided by the species tree.
 Required parameters:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_sps_tree        Species tree file in Newick format
 Optional parameters:
-    --weights               Weights for the six scoring metrics, in fixed order:OD  BLV  GD  SO  GDC  MulRF. Enter exactly six floats that sum to 1.0.Default: 0.30 0.10 0.30 0.10 0.10 0.10. The high default weights for OD and GD reflect a preference, for roots with a basal outgroup position and minimal inferred duplications. If outgroup taxa are unavailable, consider reducing OD and increasing GDC or MulRF accordingly.
+    --weights               Weights for the six scoring metrics, in fixed order:OD  BLV  GD  SO  GDC  MulRF. Enter exactly six floats that sum to 1.0.Default: 0.30 0.10 0.30 0.10 0.10 0.10. The high default weights for OD and GD reflect a preference, for roots with a basal outgroup position and minimal inferred duplications. If outgroup taxa are unavailable, consider reducing OD and increasing GDC or MulRF accordingly
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
     PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
@@ -330,15 +329,11 @@ Usage:
 ### MulRF_Distance
 ```
 Description:
-    Computes species-level MulRF topological conflict distances between gene trees,
-    or between gene trees and a species tree.
-    Note: this is a topology-distance metric, not a sequence or genetic distance.
+    Computes species-level MulRF topological conflict distances between gene trees, or between gene trees and a species tree. Note: this is a topology-distance metric, not a sequence or genetic distance.
     See "MulRF" and "bipartition" in the Glossary for definitions.
-
     Supported modes:
       Mode 1 — Gene Tree vs Gene Tree: pairwise within one GF list (self-comparisons excluded)
       Mode 2 — Gene Tree vs Species Tree
-
     Practical uses:
       1) Quantify gene-tree/species-tree conflict intensity
          (higher distance = stronger discordance or more complex evolutionary history)
@@ -375,8 +370,7 @@ Description:
     To transform a phylogenetic tree in Newick format into a 'comb' structure based on a predefined support value threshold. It can also revert this `comb` structure to a fully resolved binary tree, allowing dynamic topology adjustments
 Required parameters:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
-    --support_value         Support value threshold for collapsing branches.
-                            Branches with support BELOW this value are collapsed.Use the same scale as your tree files:bootstrap percentage → e.g., 50 (for 0-100 scale), posterior probability → e.g., 0.5 (for 0-1 scale), Default = 50
+    --support_value         Support value threshold for collapsing branches.Branches with support BELOW this value are collapsed.Use the same scale as your tree files:bootstrap percentage → e.g., 50 (for 0-100 scale), posterior probability → e.g., 0.5 (for 0-1 scale), Default = 50
 Optional parameters:
     --revert                If set, expand previously collapsed comb structures back to binary form, default = False
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
@@ -399,7 +393,6 @@ Usage:
 ```
 Description:
     Standardizes branch-length representation to a user-defined decimal precision.Some phylogenetic software outputs branch lengths in scientific notation (e.g., 1.23e-05) or with inconsistent decimal places, which can cause parsing errors in downstream tools. This module normalizes branch lengths while preserving the original notation style (decimal or scientific).
-
 Required parameters:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
 Optional parameters:
@@ -455,7 +448,7 @@ Description:
 Required parameters:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-    --rrbr_cutoff           RRBR threshold for flagging outlier tips. Default = 5 (tip must deviate >500% from the tree-wide mean) For datasets with high divergence between lineages, consider relaxing to 8-10. For conserved gene families, tighten to 3.
+    --rrbr_cutoff           RRBR threshold for flagging outlier tips. Default = 5 (tip must deviate >500% from the tree-wide mean) For datasets with high divergence between lineages, consider relaxing to 8-10. For conserved gene families, tighten to 3
     --srbr_cutoff           SRBR threshold for flagging locally asymmetric tips. Default = 2.5 (tip must be >250% longer than its sister subtree)
 Optional parameters:
     --lb_mode              Long-branch decision mode: or|and, default = or
@@ -554,8 +547,7 @@ Usage:
 ### TreeTopology_Summarizer
 ```
 Description:
-    To enumerate and visualize the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades
-    Visualization outputs are vector PDFs: each topology panel is rendered at A4 width and merged in a single-column, top-to-bottom layout (no PNG rasterization).
+    To enumerate and visualize the frequency of both absolute and relative topologies for single-copy gene trees or interested predefined clades. Visualization outputs are vector PDFs: each topology panel is rendered at A4 width and merged in a single-column, top-to-bottom layout (no PNG rasterization).
 Required parameters:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
@@ -580,7 +572,7 @@ Optional parameters:
                             Format: each line is "gene_id<TAB>label" (no header required)
                             Optional header naming rule: first line can be "gene_id<TAB>HeaderName";
                             HeaderName is used as the displayed column title (recommended: Family, Order, Clade; avoid spaces/special chars)
-                            Meaning: each file is one categorical layer (e.g., family/order/clade)
+                            Meaning: each file is one categorical layer (family/order/clade)
                             Example files in 09_Tree_Visualizer: Family.imap, Order.imap, Clade.imap
                             Note: for species-tree family-duplication mapping, the first file in --gene_categories is used as the family map
     --input_sps_tree        Species tree file in Newick format
@@ -638,16 +630,16 @@ Required parameters:
     --input_sps_tree        Species tree file in Newick format
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
 Optional parameters:
-    --target_species        Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.
-    --mrca_node             Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.
+    --target_species        Only count loss paths ending in this species (Arabidopsis_thaliana). Can be used multiple times
+    --mrca_node             Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times
     --include_unobserved_species
-                            Policy for species absent from the current gene family tree.
+                            Policy for species absent from the current gene family tree
                             If set: absent species are still assigned 2→2/2→1/2→0 labels
-                              based on the presence/absence pattern in the left/right child clades.
-                            If not set (default): absent species are labeled "missing_data".
+                              based on the presence/absence pattern in the gd suclade A/gd suclade B
+                            If not set (default): absent species are labeled "missing_data"
                             Note: this flag only affects classification labels; it does not
                             change aggregate count statistics.
-    --node_count_mode       How to count loss paths for path_count_* transition statistics.
+    --node_count_mode       How to count loss paths for path_count_* transition statistics
                             Default: parsimony. Choices: parsimony | accumulate
                               parsimony  — if multiple species lost a gene in the same ancestor,
                                            that is counted as one shared loss event (reduces
@@ -777,7 +769,7 @@ Usage:
     PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a arh --species_b ard --species_a_gff arh.gff --species_b_gff ard.gff --species_a_lens arh.lens --species_b_lens ard.lens [--gd_support 50] [--pair_support 50] [--visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001] [--output_dir DIR]
     PhyloTracer HaploFinder --mode split --input_GF_list gf.txt --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff ard.gff [--output_dir DIR]
 
-Bundled HaploFinder example data live under `example_data/17_Haplofinder/`. Optional chromosome lists `chr_a.txt` and `chr_b.txt` are included for the haplofinder-mode example. The split-mode example requires user-supplied `proteins.fa` and `cluster.tsv`.
+Bundled HaploFinder example data live under `example_data/17_Haplofinder/`. Optional chromosome lists `chr_a.txt` and `chr_b.txt` are included for the haplofinder-mode example. The split-mode example requires user-supplied `proteins.fa` and `cluster.tsv`
 ```
 
 ---
