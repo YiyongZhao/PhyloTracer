@@ -685,7 +685,7 @@ Required parameters:
     --input_gene_length     Two-column mapping file (gene_id<TAB>gene_length)
 Optional parameters:
     --input_synteny_blocks  Optional raw synteny block file. Each block starts with "#" and each non-comment line contains one gene pair
-    --add_outgroup          Attach strict sister-clade outgroup genes to output trees. Outgroup species must not overlap with ingroup species and must be single-copy within the candidate sister clade
+    --add_outgroup          Attach closest sister-clade outgroup genes to output trees. Outgroup species must not overlap with ingroup species and must be single-copy within the candidate sister clade
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
     PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap [--input_synteny_blocks collinearity] [--add_outgroup] [--output_dir DIR]
