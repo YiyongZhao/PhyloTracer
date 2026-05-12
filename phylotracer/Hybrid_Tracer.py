@@ -725,6 +725,13 @@ def hyde_main(
         logger.info("%s is processing", gd_name)
         logger.info("Total gene duplication events in dataset: %d", len(gds))
         logger.info("Number of parallel processing groups: %d", gd_group)
+
+        # Calculate target clade size for adaptive matrix filtering
+        target_node_obj = rename_sptree & (target_node if target_node else gd_name)
+        target_clade_sz = len(target_node_obj.get_leaf_names())
+        # min species per column = target clade species + outgroup(s)
+        min_spp_col = max(target_clade_sz + 1, 4)
+
         overall_stats["gd_nodes_processed"] += 1
         overall_stats["gd_events_total"] += len(gds)
         per_node_stats[gd_name] = {
@@ -763,6 +770,7 @@ def hyde_main(
                 voucher2taxa_dic,
                 target_node,
                 outgroup_species_candidates,
+                min_species_per_column=min_spp_col,
             )
             hyde_tuple_lst.extend(hyde_result_lst)
             event_assignments.extend(group_event_assignments)
@@ -809,6 +817,7 @@ def process_gd_group(
     voucher2taxa_dic,
     target_node,
     outgroup_species_candidates=None,
+    min_species_per_column=4,
 ):
     """
     Process a subset of GD events for HyDe analysis.
@@ -938,7 +947,7 @@ def process_gd_group(
     for outgroup_species, matrices in bucket_matrices.items():
         merged_matrix = pd.concat(matrices, axis=1)
         merged_matrix = merged_matrix.fillna("-")
-        clean_matrix = clean_matrix_by_dash_count(merged_matrix)
+        clean_matrix = clean_matrix_by_dash_count(merged_matrix, min_species_per_column=min_species_per_column)
         outgroup_original = voucher2taxa_dic.get(outgroup_species, outgroup_species)
         logger.info(
             "[Hybrid_Tracer] GD node %s: running HyDe with outgroup species %s across %d GD events",
@@ -1050,7 +1059,7 @@ def run_hyde_from_matrix_integrated(
     return hyde_result_lst
 
 
-def clean_matrix_by_dash_count(matrix: pd.DataFrame, max_allowed_dashes: int = 1):
+def clean_matrix_by_dash_count(matrix: pd.DataFrame, min_species_per_column: int = 4):
     """
     Remove duplicate columns and columns with excessive missing data.
 
@@ -1058,8 +1067,9 @@ def clean_matrix_by_dash_count(matrix: pd.DataFrame, max_allowed_dashes: int = 1
     ----------
     matrix : pd.DataFrame
         Input gene matrix.
-    max_allowed_dashes : int, optional
-        Maximum allowed dashes per column.
+    min_species_per_column : int, optional
+        Minimum number of non-dash species required per column.
+        Default 4 (keeps columns with ≥4 species present).
 
     Returns
     -------
@@ -1071,6 +1081,10 @@ def clean_matrix_by_dash_count(matrix: pd.DataFrame, max_allowed_dashes: int = 1
     Dash characters represent missing data.
     """
     matrix = matrix.T.drop_duplicates().T
+    n_species = matrix.shape[0]
+    max_allowed_dashes = n_species - min_species_per_column
+    if max_allowed_dashes < 0:
+        max_allowed_dashes = n_species - 1
     dash_counts = (matrix == "-").sum(axis=0)
     matrix = matrix.loc[:, dash_counts <= max_allowed_dashes]
 
