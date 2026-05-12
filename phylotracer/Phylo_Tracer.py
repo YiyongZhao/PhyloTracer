@@ -149,7 +149,7 @@ subparsers = parser.add_subparsers(dest='command', help='Available subcommands')
 
 
 # PhyloTree_CollapseExpand command
-PhyloTree_CollapseExpand_parser = subparsers.add_parser('PhyloTree_CollapseExpand', help='Collapse low-support branches or restore resolved binary trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap --support_value 50')
+PhyloTree_CollapseExpand_parser = subparsers.add_parser('PhyloTree_CollapseExpand', help='Collapse low-support branches or restore resolved binary trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap')
 PhyloTree_CollapseExpand_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 PhyloTree_CollapseExpand_parser.add_argument('--support_value', metavar='INT', type=bounded_int(0, 100), default=50, help='Node support cutoff used for collapsing internal branches (default=50)')
 PhyloTree_CollapseExpand_parser.add_argument('--revert', action='store_true', help='If set, expand previously collapsed comb structures back to binary form, default = False')
@@ -176,7 +176,7 @@ Phylo_Rooter_parser.add_argument('--weights',nargs=6,type=bounded_float(0.0, 1.0
 Phylo_Rooter_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # MulRF_Distance command
-MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute copy-aware MulRF conflict in mode1 (gene-gene) or mode2 (gene-species)', formatter_class=CustomHelpFormatter, epilog='Examples:\n  PhyloTracer MulRF_Distance --mode 1 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--output mulrf_mode1.tsv]\n  PhyloTracer MulRF_Distance --mode 2 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--output mulrf_mode2.tsv]')
+MulRF_Distance_parser = subparsers.add_parser('MulRF_Distance', help='Compute copy-aware MulRF conflict in mode1 (gene-gene) or mode2 (gene-species)', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer MulRF_Distance --mode 1 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap')
 MulRF_Distance_parser.add_argument('--mode', choices=['1', '2'], required=True, help='Comparison mode: 1=Gene Tree vs Gene Tree, 2=Gene Tree vs Species Tree')
 MulRF_Distance_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 MulRF_Distance_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
@@ -184,7 +184,7 @@ MulRF_Distance_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', re
 MulRF_Distance_parser.add_argument('--output', metavar='TSV', default='mulrf_distance.tsv', help='Output TSV filename, default = mulrf_distance.tsv')
 
 # OrthoFilter_LB command
-OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 --lb_mode or')
+OrthoFilter_LB_parser = subparsers.add_parser('OrthoFilter_LB', help='Remove long-branch outliers from gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5')
 OrthoFilter_LB_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 OrthoFilter_LB_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 OrthoFilter_LB_parser.add_argument('--rrbr_cutoff', metavar='FLOAT', type=bounded_float(0.0), default=5, required=True, help='RRBR cutoff based on root-to-tip distance, default = 5')
@@ -217,11 +217,7 @@ Tree_Visualizer_parser = subparsers.add_parser(
     help='Render gene-tree figures with optional metadata overlays',
     formatter_class=CustomHelpFormatter,
     epilog='Example:\n'
-           '  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.visual20.imap --input_imap gene2sps.imap '
-           '--gene_categories Family.imap Order.imap Clade.imap '
-           '--input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt '
-           '--keep_branch 1 --tree_style r --visual_gd --gd_support 50 --subclade_support 0 '
-           '--dup_species_proportion 0 --dup_species_num 2 --deepvar 1'
+           '  PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap'
 )
 Tree_Visualizer_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Tree_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
@@ -260,7 +256,7 @@ GD_Visualizer_parser = subparsers.add_parser(
     'GD_Visualizer',
     help='Visualize GD counts or GD-type summaries on a species tree',
     formatter_class=CustomHelpFormatter,
-    epilog='Example:\n  PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap [--output gd_result_relaxed.pdf]'
+    epilog='Example:\n  PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap'
 )
 GD_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format (use the numbered tree output from GD_Detector, e.g., numed_sptree.nwk)')
 GD_Visualizer_parser.add_argument('--gd_result', metavar='GD_RESULT', required=True, help='GD result table produced by GD_Detector')
@@ -281,13 +277,13 @@ GD_Loss_Tracker_parser.add_argument('--parsimony_min_support_species', type=int,
 GD_Loss_Tracker_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # GD_Loss_Visualizer command
-GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='Visualize GD-loss tracker results on species tree topology', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_result gd_loss.csv [--output gd_loss_pie_visualizer.PDF]')
+GD_Loss_Visualizer_parser = subparsers.add_parser('GD_Loss_Visualizer', help='Visualize GD-loss tracker results on species tree topology', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_result gd_loss.csv')
 GD_Loss_Visualizer_parser.add_argument('--gd_loss_result', metavar='GD_LOSS_RESULT', required=True, help='CSV table generated by GD_Loss_Tracker (gd_loss.csv). When present, the neighboring gd_loss_node_summary.tsv is also used to recover mode-specific node-loss counts.')
 GD_Loss_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Numbered species tree file in Newick format (required for species tree layout)')
 GD_Loss_Visualizer_parser.add_argument('--output', metavar='PDF', default='gd_loss_pie_visualizer.PDF', help='Output PDF path, default = gd_loss_pie_visualizer.PDF')
 
 # Ortho_Retriever command
-Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Retrieve ortholog sets from rooted gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap [--input_synteny_blocks collinearity]')
+Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Retrieve ortholog sets from rooted gene trees', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap')
 Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Ortho_Retriever_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
@@ -314,12 +310,12 @@ Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=Fal
 Hybrid_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # HaploFinder
-haplofinder_parser = subparsers.add_parser('HaploFinder', help='Detect and visualize haplotype-level GD signals; also supports FASTA split mode', formatter_class=CustomHelpFormatter, epilog='Examples:\n  PhyloTracer HaploFinder --mode haplofinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a arh --species_b ard --species_a_gff arh.gff --species_b_gff ard.gff --species_a_lens arh.lens --species_b_lens ard.lens\n  PhyloTracer HaploFinder --mode split --input_GF_list gf.txt --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps \"P1 P2\" --species_b_gff ard.gff')
-haplofinder_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=False, default=None, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); required in haplofinder mode')
-haplofinder_parser.add_argument('--input_imap', metavar='IMAP', required=False, default=None, help='Two-column mapping file (gene_id<TAB>species_name); required in both haplofinder and split modes')
-haplofinder_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='Species tree file in Newick format; required in haplofinder mode')
-haplofinder_parser.add_argument('--species_a', metavar='SPECIES_A', type=str, required=False, help='Name of species A (required for haplofinder mode)')
-haplofinder_parser.add_argument('--species_b', metavar='SPECIES_B', type=str, required=False, help='Name of species B (required for haplofinder mode)')
+haplofinder_parser = subparsers.add_parser('HaploFinder', help='Unified GD-pair extraction, synteny dotplot, gene conversion detection, subgenome assignment, and optional FASTA partitioning', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer HaploFinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a ARD --species_b ARH --species_a_gff ARD.gff --species_b_gff ARH.gff --species_a_lens ARD.lens --species_b_lens ARH.lens')
+haplofinder_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=False, default=None, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path)')
+haplofinder_parser.add_argument('--input_imap', metavar='IMAP', required=False, default=None, help='Two-column mapping file (gene_id<TAB>species_name)')
+haplofinder_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='Species tree file in Newick format')
+haplofinder_parser.add_argument('--species_a', metavar='SPECIES_A', type=str, required=False, help='Name of species A (typically the diploid/donor)')
+haplofinder_parser.add_argument('--species_b', metavar='SPECIES_B', type=str, required=False, help='Name of species B (typically the polyploid/hybrid)')
 haplofinder_parser.add_argument('--species_a_gff', metavar='GFF', required=False, help='Genome annotation file for species A in GFF/GTF-compatible format')
 haplofinder_parser.add_argument('--species_b_gff', metavar='GFF', required=False, help='Genome annotation file for species B in GFF/GTF-compatible format')
 haplofinder_parser.add_argument('--species_a_lens', metavar='LENS', required=False, help='Chromosome-length file for species A (chr<TAB>length)')
@@ -329,12 +325,12 @@ haplofinder_parser.add_argument('--visual_chr_b', metavar='CHR_LIST', required=F
 haplofinder_parser.add_argument('--gd_support', metavar='INT', type=bounded_int(0, 100), required=False, default=50, help='Minimum support of GD nodes used for pair extraction (accepted range: 0-100, default = 50)')
 haplofinder_parser.add_argument('--pair_support', metavar='INT', type=bounded_int(0, 100), required=False, default=50, help='Minimum support of ortholog/speciation pair nodes (accepted range: 0-100, default = 50)')
 haplofinder_parser.add_argument('--size', metavar='FLOAT', type=bounded_float(0.0), required=False, default=0.0005, help='Point size in dotplot rendering (positive float, default = 0.0005)')
-haplofinder_parser.add_argument('--mode', metavar='MODE', type=str, choices=['haplofinder', 'split'], default='haplofinder', help='Run mode: "haplofinder" for GD analysis, "split" for FASTA partitioning by color labels, default = haplofinder')
-# Split mode specific arguments
-haplofinder_parser.add_argument('--hyb_sps', metavar='HYBRID_SPECIES', type=str, required=False, help='Hybrid species name used for subgenome assignment (required in split mode)')
-haplofinder_parser.add_argument('--parental_sps', metavar='PARENTAL_SPECIES', type=str, required=False, help='Parental species names used for split-mode assignment; provide as a single quoted, space-separated string')
-haplofinder_parser.add_argument('--input_fasta', metavar='FASTA_FILE', required=False, help='Input FASTA file (.fa/.fasta), required in split mode')
-haplofinder_parser.add_argument('--cluster_file', metavar='CLUSTER_FILE', required=False, help='Split-mode cluster metadata file (legacy compatibility field; currently required by CLI checks)')
+haplofinder_parser.add_argument('--mode', metavar='MODE', type=str, choices=['haplofinder', 'split'], default='haplofinder', help=argparse.SUPPRESS)
+# Subgenome assignment and FASTA split arguments
+haplofinder_parser.add_argument('--hyb_sps', metavar='HYBRID_SPECIES', type=str, required=False, help='Hybrid species name for subgenome assignment. Requires --parental_sps')
+haplofinder_parser.add_argument('--parental_sps', metavar='PARENTAL_SPECIES', type=str, required=False, help='Parental species names for subgenome assignment; space-separated, quoted string (e.g., "ARD ARI"). Requires --hyb_sps')
+haplofinder_parser.add_argument('--input_fasta', metavar='FASTA_FILE', required=False, help='Input FASTA file (.fa/.fasta). If provided, triggers per-subgenome FASTA partitioning')
+haplofinder_parser.add_argument('--cluster_file', metavar='CLUSTER_FILE', required=False, help=argparse.SUPPRESS)
 haplofinder_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 haplofinder_parser.add_argument('--chrs_per_subgenome', metavar='INT', type=int, default=10, help='Number of chromosomes per subgenome for subgenome mapping (default = 10). Used only as a legacy validation helper; primary homolog pairing is now inferred from collinearity.')
 # --- gene conversion detection (refactored) ---
@@ -856,89 +852,65 @@ def handle_hybrid_visualizer(cli_args):
 
 
 def handle_haplofinder(cli_args):
-    if cli_args.mode == 'split':
-        if (
-            cli_args.input_GF_list and cli_args.input_fasta and cli_args.input_imap
-            and cli_args.cluster_file and cli_args.hyb_sps and cli_args.parental_sps
-            and cli_args.species_b_gff
-        ):
-            start_time = time.time()
-            parental_sps = cli_args.parental_sps.split() if cli_args.parental_sps else []
+    required_args = [
+        cli_args.input_GF_list, cli_args.input_imap, cli_args.input_sps_tree,
+        cli_args.species_a, cli_args.species_b,
+        cli_args.species_a_gff, cli_args.species_b_gff,
+        cli_args.species_a_lens, cli_args.species_b_lens,
+        cli_args.gd_support, cli_args.pair_support,
+    ]
+    if not all(arg is not None for arg in required_args):
+        logger.error(
+            "Required arguments missing: --input_GF_list, --input_imap, "
+            "--input_sps_tree, --species_a, --species_b, --species_a_gff, "
+            "--species_b_gff, --species_a_lens, --species_b_lens, "
+            "--gd_support, --pair_support"
+        )
+        return
+
+    start_time = time.time()
+    parental_sps = cli_args.parental_sps.split() if cli_args.parental_sps else None
+    hyb_sps = cli_args.hyb_sps if cli_args.hyb_sps else None
+
+    # Step 1: gene-pair labels + optional subgenome assignment
+    process_gd_pairs, pair_source_dict, arh_subgenome_dict = process_gd_result(
+        cli_args.input_GF_list, cli_args.input_imap, cli_args.input_sps_tree,
+        cli_args.species_a, cli_args.species_b,
+        cli_args.gd_support, cli_args.pair_support,
+        parental_sps=parental_sps, hyb_sps=hyb_sps,
+    )
+
+    size = cli_args.size if cli_args.size is not None else 0.001
+
+    # Step 2: dotplot + conversion detection + unified output
+    out_dir = cli_args.output_dir if cli_args.output_dir else "."
+    os.makedirs(out_dir, exist_ok=True)
+    generate_dotplot(
+        cli_args.species_a_gff, cli_args.species_b_gff,
+        cli_args.species_a_lens, cli_args.species_b_lens,
+        process_gd_pairs, cli_args.species_a, cli_args.species_b,
+        os.path.join(out_dir, 'gd_pairs'),
+        cli_args.visual_chr_a, cli_args.visual_chr_b, size,
+        min_pairs=cli_args.min_conv_pairs,
+        n_permutations=cli_args.n_permutations,
+        p_threshold=cli_args.p_threshold,
+        pair_source_dict=pair_source_dict,
+        arh_subgenome_dict=arh_subgenome_dict,
+        output_dir=out_dir,
+    )
+
+    # Step 3: optional FASTA split
+    if cli_args.input_fasta:
+        haplofinder_tsv = os.path.join(out_dir, "haplofinder_output.tsv")
+        if os.path.exists(haplofinder_tsv):
             split_sequences(
-                cli_args.input_GF_list,
-                cli_args.input_imap,
-                cli_args.hyb_sps,
-                parental_sps,
-                cli_args.species_b_gff,
-                cli_args.input_fasta,
-                cli_args.cluster_file,
-                chrs_per_subgenome=cli_args.chrs_per_subgenome,
+                cli_args.input_fasta, haplofinder_tsv,
+                cli_args.species_b_gff, out_dir,
             )
-            report_execution_time(start_time)
         else:
-            logger.error(
-                "Required arguments for split mode are missing: "
-                "--input_GF_list, --input_imap, --input_fasta, --cluster_file, "
-                "--hyb_sps, --parental_sps, --species_b_gff"
-            )
-    else:
-        required_args = [
-            cli_args.input_GF_list,
-            cli_args.input_imap,
-            cli_args.input_sps_tree,
-            cli_args.species_a,
-            cli_args.species_b,
-            cli_args.species_a_gff,
-            cli_args.species_b_gff,
-            cli_args.species_a_lens,
-            cli_args.species_b_lens,
-            cli_args.gd_support,
-            cli_args.pair_support,
-        ]
-        if all(arg is not None for arg in required_args):
-            start_time = time.time()
+            logger.error("haplofinder_output.tsv not found, cannot run split")
 
-            # Step 1: build red/blue gene-pair labels from gene trees
-            process_gd_pairs = process_gd_result(
-                cli_args.input_GF_list,
-                cli_args.input_imap,
-                cli_args.input_sps_tree,
-                cli_args.species_a,
-                cli_args.species_b,
-                cli_args.gd_support,
-                cli_args.pair_support,
-            )
-
-            size = cli_args.size if cli_args.size is not None else 0.001
-
-            # Step 2: generate dotplot; chromosome homolog pairs are inferred
-            # from collinear-block coverage inside generate_dotplot via
-            # infer_homolog_pairs_from_collinearity — no chr-ratio assumption.
-            generate_dotplot(
-                cli_args.species_a_gff,
-                cli_args.species_b_gff,
-                cli_args.species_a_lens,
-                cli_args.species_b_lens,
-                process_gd_pairs,
-                cli_args.species_a,
-                cli_args.species_b,
-                'gd_pairs',
-                cli_args.visual_chr_a,
-                cli_args.visual_chr_b,
-                size,
-                min_pairs=cli_args.min_conv_pairs,
-                n_permutations=cli_args.n_permutations,
-                p_threshold=cli_args.p_threshold,
-            )
-            report_execution_time(start_time)
-        else:
-            logger.error(
-                "Required arguments for HaploFinder command are missing. "
-                "haplofinder mode requires: --input_GF_list, --input_imap, "
-                "--input_sps_tree, --species_a, --species_b, "
-                "--species_a_gff, --species_b_gff, --species_a_lens, --species_b_lens, "
-                "--gd_support, --pair_support"
-            )
+    report_execution_time(start_time)
 
 
 def print_cli_usage():

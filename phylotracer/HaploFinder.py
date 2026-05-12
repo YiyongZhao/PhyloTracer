@@ -259,12 +259,91 @@ def plot_dot(root, loc1, loc2, dict_gd, size=0.001):
 # ======================================================
 
 
+def write_unified_output(
+    sorted_lines: list,
+    pair_source_dict: dict,
+    sorted_pairs: list,
+    zone_records: list,
+    dict_gff1: dict,
+    dict_gff2: dict,
+    spe1: str,
+    spe2: str,
+    arh_subgenome_dict: dict = None,
+    output_path: str = "haplofinder_output.tsv",
+) -> str:
+    """Write single unified TSV with subgenome and ortholog annotation."""
+    # --- ortholog type lookup ---
+    ortholog_map = {"S": "ortholog", "D_same": "paralog", "D_cross": "gd_pair"}
+
+    zone_lookup: dict = {}
+    for rec in zone_records:
+        key = (rec["gene1"], rec["gene2"])
+        if key not in zone_lookup:
+            zone_lookup[key] = (
+                rec["zone_id"],
+                f"{rec['contig1']}&{rec['contig2']}",
+                rec["blue_run"],
+            )
+
+    total_pairs = len(sorted_lines)
+    header_cols = [
+        f"{spe1}_gene", f"{spe2}_gene",
+        f"{spe1}_chr", f"{spe2}_chr",
+        f"{spe1}_start", f"{spe1}_end",
+        f"{spe2}_start", f"{spe2}_end",
+        "color", "pair_source", "ortholog_type",
+        f"{spe1}_subgenome", f"{spe2}_subgenome",
+        "conversion_zone", "conversion_chr_pair", "conversion_blue_run",
+    ]
+    header = (
+        f"# HaploFinder unified output\n"
+        f"# species_a={spe1}  species_b={spe2}  total_pairs={total_pairs}\n"
+        f"# Columns:\n"
+        + "\t".join(header_cols) + "\n"
+    )
+
+    with open(output_path, "w") as fh:
+        fh.write(header)
+        for line in sorted_lines:
+            parts = line.strip().split("\t")
+            if len(parts) != 3:
+                continue
+            gene_a, gene_b, color = parts
+            gff_a = dict_gff1.get(gene_a)
+            gff_b = dict_gff2.get(gene_b)
+            chr_a = gff_a[0] if gff_a else "."
+            chr_b = gff_b[0] if gff_b else "."
+            start_a = gff_a[1] if gff_a else "."
+            end_a = gff_a[2] if gff_a else "."
+            start_b = gff_b[1] if gff_b else "."
+            end_b = gff_b[2] if gff_b else "."
+            source = pair_source_dict.get((gene_a, gene_b, color), "?")
+            otype = ortholog_map.get(source, "?")
+            arg_sub = "A"  # ARD is A-genome donor
+            arh_sub = arh_subgenome_dict.get(gene_b, ".") if arh_subgenome_dict else "."
+            zone_info = zone_lookup.get((gene_a, gene_b), (".", ".", "."))
+            zid, zcp, zbr = zone_info
+            fh.write(
+                f"{gene_a}\t{gene_b}\t"
+                f"{chr_a}\t{chr_b}\t"
+                f"{start_a}\t{end_a}\t{start_b}\t{end_b}\t"
+                f"{color}\t{source}\t{otype}\t"
+                f"{arg_sub}\t{arh_sub}\t"
+                f"{zid}\t{zcp}\t{zbr}\n"
+            )
+    logger.info("Wrote unified output: %s (%d pairs)", output_path, total_pairs)
+    return output_path
+
+
 def generate_dotplot(
     gff1, gff2, lens1, lens2, gd_pairs, spe1, spe2,
     file_name, target_chr1=None, target_chr2=None, size=None,
     min_pairs: int = 10,
     n_permutations: int = 1000,
     p_threshold: float = 0.05,
+    pair_source_dict: dict = None,
+    arh_subgenome_dict: dict = None,
+    output_dir: str = ".",
 ):
     """Generate dotplot and run gene-conversion detection."""
     plt.figure(figsize=(10, 10))
@@ -301,10 +380,23 @@ def generate_dotplot(
         p_threshold=p_threshold,
     )
 
-    result_conversion = find_gene_pair_info(
+    sorted_pairs = find_gene_pair_info(
         gene_conversion_list, dict_gd, dict_gff1, dict_gff2, file_name
     )
-    find_conversion_zones_with_ids_to_file(result_conversion, dict_gff1, dict_gff2)
+    # Extract 3-element tuples for conversion zone scanning
+    result_conversion = [(g1, g2, c) for g1, g2, c, *_ in sorted_pairs]
+    zone_records = find_conversion_zones_with_ids_to_file(
+        result_conversion, dict_gff1, dict_gff2
+    )
+
+    # Write unified output if pair_source_dict is provided
+    if pair_source_dict is not None:
+        write_unified_output(
+            gd_pairs, pair_source_dict, sorted_pairs, zone_records,
+            dict_gff1, dict_gff2, spe1, spe2,
+            arh_subgenome_dict=arh_subgenome_dict,
+            output_path=os.path.join(output_dir, "haplofinder_output.tsv"),
+        )
 
     # Cache gene locations to avoid redundant GFF traversals
     gene_loc_1 = gene_location(gff_1, lens_1, step_1)
@@ -319,8 +411,8 @@ def generate_dotplot(
     root.set_xlim(0, 1)
     root.set_ylim(0, 1)
     root.set_axis_off()
-    plt.savefig(file_name + "_dotplot.pdf", dpi=500)
-    plt.savefig(file_name + "_dotplot.png", dpi=500)
+    plt.savefig(os.path.join(output_dir, os.path.basename(file_name) + "_dotplot.pdf"), dpi=500)
+    plt.savefig(os.path.join(output_dir, os.path.basename(file_name) + "_dotplot.png"), dpi=500)
     plt.close()  # Free memory after saving
     logger.info("%s dotplot finished in %.1fs", file_name, time.time() - t1)
 
@@ -759,13 +851,7 @@ def find_gene_pair_info(
 
     # 2-D sort: primary on chr_a position, secondary on chr_b position
     sort_lst.sort(key=lambda x: (x[3], x[4], x[5], x[6]))
-
-    new_lst = []
-    with open(f"gene_conversion_{gd_pairs}.txt", "w") as f:
-        for gene_a, gene_b, color, *_ in sort_lst:
-            f.write(f"{gene_a}\t{gene_b}\t{color}\n")
-            new_lst.append((gene_a, gene_b, color))
-    return new_lst
+    return sort_lst
 
 
 def find_conversion_zones_with_ids_to_file(
@@ -773,7 +859,7 @@ def find_conversion_zones_with_ids_to_file(
     dict_gff1: dict,
     dict_gff2: dict,
     output_file: str = "gene_conversion.txt",
-) -> None:
+) -> list:
     """Scan for gene conversion zones using the corrected red→blue→red pattern.
 
     Original code scanned blue→red→blue, which is the inverted signal.
@@ -867,35 +953,36 @@ def find_conversion_zones_with_ids_to_file(
         # Allow overlapping detection from start_red2
         i = start_red2
 
-    with open(output_file, "w") as f:
-        f.write(
-            "# zone_id\tcontig1\tcontig2\t"
-            "gene1\tstart1\tend1\tgene2\tstart2\tend2\tcolor\n"
-        )
-        for zone in conversion_zones:
-            zid, s_r1, e_r2, s_b, e_b, blen = zone
-            first_gene1, first_gene2, _ = data[s_r1]
-            contig1 = dict_gff1[first_gene1][0]
-            contig2 = dict_gff2[first_gene2][0]
-            f.write(
-                f"# Conversion Zone {zid}: {contig1}&{contig2} "
-                f"(blue_run={blen} pairs)\n"
-            )
-            for j in range(s_r1, e_r2 + 1):
-                if j >= n:
-                    break
-                g1, g2, color = data[j]
-                gff1 = dict_gff1.get(g1)
-                gff2 = dict_gff2.get(g2)
-                if gff1 and gff2:
-                    c1, ps1, pe1 = gff1[0], gff1[1], gff1[2]
-                    c2, ps2, pe2 = gff2[0], gff2[1], gff2[2]
-                    f.write(
-                        f"{zid}\t{c1}\t{c2}\t"
-                        f"{g1}\t{ps1}\t{pe1}\t{g2}\t{ps2}\t{pe2}\t{color}\n"
-                    )
+    logger.info("Detected %d conversion zones", len(conversion_zones))
 
-    logger.info("Wrote %d conversion zones to %s", len(conversion_zones), output_file)
+    # Build structured zone output
+    zone_records = []
+    for zone in conversion_zones:
+        zid, s_r1, e_r2, s_b, e_b, blen = zone
+        first_gene1, first_gene2, _ = data[s_r1]
+        contig1 = dict_gff1[first_gene1][0]
+        contig2 = dict_gff2[first_gene2][0]
+        for j in range(s_r1, e_r2 + 1):
+            if j >= n:
+                break
+            g1, g2, color = data[j]
+            gff1 = dict_gff1.get(g1)
+            gff2 = dict_gff2.get(g2)
+            if gff1 and gff2:
+                zone_records.append({
+                    "zone_id": zid,
+                    "contig1": gff1[0],
+                    "contig2": gff2[0],
+                    "gene1": g1,
+                    "gene2": g2,
+                    "start1": gff1[1],
+                    "end1": gff1[2],
+                    "start2": gff2[1],
+                    "end2": gff2[2],
+                    "color": color,
+                    "blue_run": blen,
+                })
+    return zone_records
 
 
 # ======================================================
@@ -903,12 +990,13 @@ def find_conversion_zones_with_ids_to_file(
 # ======================================================
 
 
-def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support):
-    """Process gene-family trees to assign red/blue labels.
+def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support,
+                      parental_sps=None, hyb_sps=None):
+    """Process gene-family trees to assign red/blue labels and optionally
+    subgenome to species_b (hybrid) genes.
 
-    Fix: removed the len(i)==3 / len(i)==4 cap.  All duplication nodes with
-    ≥3 leaves and both target species present are now processed.  Trees that
-    are skipped due to missing species are logged at DEBUG level.
+    When parental_sps and hyb_sps are provided, each species_b gene is
+    assigned A/B via S-node sister-clade inference (same logic as split mode).
     """
     tre_dic = read_and_return_dict(gf)
     (gene2new_named_gene_dic, new_named_gene2gene_dic,
@@ -918,7 +1006,16 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support)
     renamed_sptree = rename_input_tre(
         read_phylo_tree(input_sps_tree), taxa2voucher_dic
     )
+    # --- subgenome assignment setup ---
+    do_subgenome = bool(parental_sps and hyb_sps)
+    arh_subgenome_dict: dict = {}
+    if do_subgenome:
+        hyb_renamed = taxa2voucher_dic[hyb_sps]
+        parental_renamed = {taxa2voucher_dic[s] for s in parental_sps}
+        subgenome_label = {tag: chr(ord("A") + i)
+                           for i, tag in enumerate(sorted(parental_renamed))}
     processed_lines: list = []
+    pair_source_dict: dict = {}
     written_results: set = set()
     skipped_trees = 0
 
@@ -944,6 +1041,13 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support)
             Phylo_t1, rename_sp1, rename_sp2,
             new_named_gene2gene_dic, processed_lines, written_results, pair_support,
         )
+        # Mark speciation pairs with source "S"
+        for line in processed_lines:
+            parts = line.strip().split("\t")
+            if len(parts) == 3:
+                key = (parts[0], parts[1], parts[2])
+                if key not in pair_source_dict:
+                    pair_source_dict[key] = "S"
 
         for dup_node in dup_node_list:
             n_leaves = len(dup_node.get_leaf_names())
@@ -975,22 +1079,63 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support)
                 gene_a = new_named_gene2gene_dic[gene1]
                 gene_b = new_named_gene2gene_dic[gene2]
                 if item_set <= tips1 or item_set <= tips2:
-                    color, suffix = "red", "r"
+                    color, suffix, source = "red", "r", "D_same"
                 else:
-                    color, suffix = "blue", "b"
+                    color, suffix, source = "blue", "b", "D_cross"
                 token = f"{gene2}-{suffix}"
                 if token not in written_results:
                     processed_lines.append(f"{gene_a}\t{gene_b}\t{color}\n")
+                    pair_source_dict[(gene_a, gene_b, color)] = source
                     written_results.add(token)
+
+        # --- inline subgenome assignment (same S-node sister-clade logic) ---
+        if do_subgenome and parental_renamed.issubset(
+            {g.split("_")[0] for g in Phylo_t1.get_leaf_names()}
+        ):
+            s_nodes: set = set()
+            for event in Phylo_t1.get_descendant_evol_events():
+                if event.etype == "S":
+                    enodes = set(event.in_seqs) | set(event.out_seqs)
+                    s_nodes.add(Phylo_t1.get_common_ancestor(list(enodes)))
+            for leaf in Phylo_t1.get_leaves():
+                leaf_name = leaf.name
+                if not leaf_name.startswith(hyb_renamed):
+                    continue
+                if leaf_name not in new_named_gene2gene_dic:
+                    continue
+                child = leaf
+                node = leaf.up
+                best_parent = None
+                while node is not None:
+                    if node not in s_nodes:
+                        child = node; node = node.up; continue
+                    sister_tags = set()
+                    sister_has_hybrid = False
+                    for sister in node.children:
+                        if sister is child: continue
+                        for ln in sister.get_leaf_names():
+                            tag = ln.split("_")[0]
+                            if tag == hyb_renamed: sister_has_hybrid = True
+                            elif tag in parental_renamed: sister_tags.add(tag)
+                    if len(sister_tags) == 1 and not sister_has_hybrid:
+                        best_parent = next(iter(sister_tags)); break
+                    if len(sister_tags) > 1: break
+                    child = node; node = node.up
+                if best_parent is not None:
+                    label = subgenome_label[best_parent]
+                    og = new_named_gene2gene_dic[leaf_name]
+                    if og in arh_subgenome_dict and arh_subgenome_dict[og] != label:
+                        arh_subgenome_dict[og] = "unknown"
+                    else:
+                        arh_subgenome_dict[og] = label
 
     if skipped_trees:
         logger.info("Skipped %d trees (single-species or missing target sp)", skipped_trees)
+    if do_subgenome:
+        logger.info("Subgenome assigned to %d %s genes", len(arh_subgenome_dict), sp2)
 
     sorted_lines = sorted(processed_lines, key=lambda x: x.split("\t")[0])
-    with open("color_label.txt", "w") as fh:
-        for line in sorted_lines:
-            fh.write(line)
-    return sorted_lines
+    return sorted_lines, pair_source_dict, arh_subgenome_dict
 
 
 # ======================================================
@@ -1143,93 +1288,66 @@ def assign_hybrid_subgenome(
 
 
 def split_sequences(
-    input_GF_list, input_imap, hyb_sps, parental_sps,
-    gff, input_fasta, cluster_file, chrs_per_subgenome=10,
+    input_fasta, haplofinder_tsv, gff, output_dir,
 ):
     """Split hybrid sequences into per-subgenome FASTA files.
 
-    For polyploids with >2 parental species, additional subgenome files
-    (C, D, …) are written automatically based on subgenome labels present
-    in the assignment output.
+    Reads ARH_subgenome assignments from haplofinder_output.tsv
+    and partitions the input FASTA accordingly.
     """
-    tre_dic = read_and_return_dict(input_GF_list)
+    # Read subgenome assignments from unified output
+    arh_sub: dict = {}
+    with open(haplofinder_tsv, "r") as fh:
+        for line in fh:
+            if line.startswith("#"):
+                continue
+            parts = line.strip().split("\t")
+            if len(parts) < 13:
+                continue
+            gene_id = parts[1]   # species_b gene
+            sub = parts[12]       # ARH_subgenome
+            if sub in ("A", "B"):
+                arh_sub[gene_id] = sub
+                arh_sub[gene_id] = sub
+
     gff_1, dict_gff1 = read_gff(gff)
     _ = gff_1
-    (gene2new_named_gene_dic, new_named_gene2gene_dic,
-     voucher2taxa_dic, taxa2voucher_dic) = gene_id_transfer(input_imap)
-    hyb_sps_renamed = taxa2voucher_dic.get(hyb_sps, hyb_sps)
-    parental_sps_renamed = [taxa2voucher_dic.get(s, s) for s in parental_sps]
-
-    all_gene_labels: dict = {}
-    conflict_genes: set = set()
-
-    logger.info(
-        "split mode: cluster_file=%s (used for logging only)", cluster_file
-    )
-
-    for tre_ID, tre_path in tre_dic.items():
-        Phylo_t0 = read_phylo_tree(tre_path)
-        Phylo_t0.resolve_polytomy(recursive=True)
-        Phylo_t0.sort_descendants()
-        Phylo_t1 = rename_input_tre(Phylo_t0, gene2new_named_gene_dic)
-        leaf_names = Phylo_t1.get_leaf_names()
-        leaf_species = {g.split("_")[0] for g in leaf_names}
-        if len(leaf_species) == 1:
-            continue
-        if not any(hyb_sps_renamed in ln for ln in leaf_names):
-            continue
-
-        a = assign_hybrid_subgenome(Phylo_t1, hyb_sps_renamed, parental_sps_renamed)
-        b = {new_named_gene2gene_dic[k]: v for k, v in a.items()}
-
-        for k1, v1 in b.items():
-            if k1 in all_gene_labels and all_gene_labels[k1] != v1:
-                all_gene_labels[k1] = "unknown"
-                conflict_genes.add(k1)
-            else:
-                all_gene_labels[k1] = v1
-
     all_sequences = read_fasta(input_fasta)
-    out_dir = "haplofinder_split"
-    os.makedirs(out_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
 
-    # Collect all distinct subgenome labels (supports A, B, C, A_2, etc.)
-    all_labels = set(all_gene_labels.values()) - {"unknown"}
+    all_labels = set(arh_sub.values()) - {"unknown"}
     split_buckets: Dict[str, dict] = {lbl: {} for lbl in all_labels}
     split_buckets["unknown"] = {}
     assigned_total = 0
     skipped_unassigned = 0
 
-    with open(os.path.join(out_dir, "split_assignment.tsv"), "w") as out:
-        out.write("gene_id\tsubgenome\tstatus\tchromosome\n")
+    with open(os.path.join(output_dir, "split_assignment.tsv"), "w") as out:
+        out.write("gene_id\tsubgenome\tchromosome\n")
         for gene_id, seq in all_sequences.items():
-            label = all_gene_labels.get(gene_id)
+            label = arh_sub.get(gene_id)
             if label is None:
                 skipped_unassigned += 1
                 continue
             assigned_total += 1
-            final_label = "unknown" if gene_id in conflict_genes else label
-            status = "conflict" if gene_id in conflict_genes else "ok"
             chr_name = dict_gff1.get(gene_id, [None])[0]
-            split_buckets.setdefault(final_label, {})[gene_id] = seq
+            split_buckets.setdefault(label, {})[gene_id] = seq
             out.write(
-                f"{gene_id}\t{final_label}\t{status}\t"
+                f"{gene_id}\t{label}\t"
                 f"{chr_name if chr_name else 'NA'}\n"
             )
 
     for lbl, seqs in split_buckets.items():
         safe_lbl = lbl.replace("/", "_")
-        write_fasta(seqs, os.path.join(out_dir, f"split_subgenome_{safe_lbl}.fasta"))
+        write_fasta(seqs, os.path.join(output_dir, f"split_subgenome_{safe_lbl}.fasta"))
 
-    with open(os.path.join(out_dir, "split_summary.txt"), "w") as out:
+    with open(os.path.join(output_dir, "split_summary.txt"), "w") as out:
         out.write(f"input_fasta_total={len(all_sequences)}\n")
         out.write(f"assigned_total={assigned_total}\n")
         out.write(f"skipped_unassigned={skipped_unassigned}\n")
         for lbl, seqs in split_buckets.items():
             out.write(f"subgenome_{lbl}={len(seqs)}\n")
-        out.write(f"conflict_genes={len(conflict_genes)}\n")
 
-    logger.info("split mode outputs written to %s", os.path.abspath(out_dir))
+    logger.info("split outputs written to %s", os.path.abspath(output_dir))
 
 
 # ======================================================
@@ -1291,7 +1409,7 @@ if __name__ == "__main__":
     process_blastp_pairs = _process_blastp_result_stub(args.blastp_pairs, args.num)
     alignments, alignment_scores = _parse_synteny_file_stub(args.synteny_pairs)
     process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
-    process_gd_pairs = process_gd_result(
+    process_gd_pairs, pair_source_dict = process_gd_result(
         args.gf, args.imap, args.input_sps_tree, args.spe1, args.spe2, 50, 50
     )
 
@@ -1300,6 +1418,7 @@ if __name__ == "__main__":
         (process_synteny_pairs, "synteny_pairs"),
         (process_gd_pairs, "gd_pairs"),
     ]:
+        p_src = pair_source_dict if tag == "gd_pairs" else None
         generate_dotplot(
             args.gff1, args.gff2, args.lens1, args.lens2,
             pairs, args.spe1, args.spe2, tag,
@@ -1307,6 +1426,7 @@ if __name__ == "__main__":
             min_pairs=args.min_conv_pairs,
             n_permutations=args.n_permutations,
             p_threshold=args.p_threshold,
+            pair_source_dict=p_src,
         )
 
     total_lst = _process_total_color_list_stub(
@@ -1319,6 +1439,7 @@ if __name__ == "__main__":
         min_pairs=args.min_conv_pairs,
         n_permutations=args.n_permutations,
         p_threshold=args.p_threshold,
+        pair_source_dict=pair_source_dict,
     )
 
 

@@ -6,12 +6,13 @@ This module generates candidate rooted trees, evaluates them using depth and
 duplication statistics, and selects optimal roots with RF-based refinement.
 """
 
+from dataclasses import dataclass
+from itertools import combinations
 import logging
 import os
 import shutil
 
 logger = logging.getLogger(__name__)
-from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -412,6 +413,218 @@ def _select_statistical_root_candidates(base_tree: object, max_candidates: int =
     return mad_ranked[:keep_n], var_ranked[:keep_n]
 
 
+@dataclass(frozen=True)
+class _RootCandidate:
+    """Lightweight rooted-candidate descriptor.
+
+    Stores only the target clade leaves. The full rerooted tree is materialized
+    only while scoring or writing the selected result, keeping large batches
+    from holding thousands of complete tree copies in memory.
+    """
+
+    method: str
+    leaf_names: tuple
+
+
+def _candidate_from_leaf_names(method: str, leaf_names: list) -> _RootCandidate:
+    """Create a deterministic candidate descriptor from target-clade leaves."""
+    return _RootCandidate(method=method, leaf_names=tuple(sorted(leaf_names)))
+
+
+def _materialize_root_candidate(base_tree: object, candidate: _RootCandidate) -> object:
+    """Create a rerooted tree for a candidate descriptor."""
+    tree = base_tree.copy()
+    leaf_names = list(candidate.leaf_names)
+    if len(leaf_names) == 1:
+        target = tree & leaf_names[0]
+    else:
+        target = tree.get_common_ancestor(leaf_names)
+    if target != tree:
+        tree.set_outgroup(target)
+    return tree
+
+
+def _candidate_descriptors_by_node_set(
+    base_tree: object,
+    node_list: list,
+    method: str,
+) -> list:
+    """Generate unique rerooting candidate descriptors from nodes."""
+    candidates = []
+    seen = set()
+    for node in node_list:
+        try:
+            leaf_names = node.get_leaf_names()
+            tree = _materialize_root_candidate(
+                base_tree, _candidate_from_leaf_names(method, leaf_names)
+            )
+            if tree == tree.get_tree_root() and len(leaf_names) == len(base_tree):
+                continue
+            sig = _root_signature(tree)
+            if sig in seen:
+                continue
+            seen.add(sig)
+            candidates.append(_candidate_from_leaf_names(method, leaf_names))
+        except Exception as exc:
+            logger.debug("Rerooting candidate failed for node (non-fatal): %s", exc)
+            continue
+    return candidates
+
+
+def _outgroup_candidate_descriptors(tree: object, basal_species_set: set) -> list:
+    """Generate outgroup candidate descriptors with the legacy candidate logic."""
+    candidates = []
+    added_topologies = set()
+
+    all_basal_leaves = []
+    for leaf in tree.get_leaves():
+        leaf_species = leaf.name.split('_')[0] if '_' in leaf.name else leaf.name
+        if leaf_species in basal_species_set:
+            all_basal_leaves.append(leaf)
+
+    if not all_basal_leaves:
+        logger.info("No basal leaves found. Skipping rooting.")
+        return candidates
+
+    is_monophyletic = False
+    try:
+        if len(all_basal_leaves) == 1:
+            is_monophyletic = True
+        else:
+            mrca_node = tree.get_common_ancestor(all_basal_leaves)
+            mrca_leaves_names = set(mrca_node.get_leaf_names())
+            basal_leaves_names = set([leaf.name for leaf in all_basal_leaves])
+            if mrca_leaves_names == basal_leaves_names:
+                is_monophyletic = True
+    except Exception as exc:
+        logger.warning("Monophyly check failed: %s", exc)
+        is_monophyletic = False
+
+    if is_monophyletic:
+        try:
+            basal_names = [leaf.name for leaf in all_basal_leaves]
+            if len(basal_names) == 1:
+                candidates.append(_candidate_from_leaf_names("outgroup", basal_names))
+            else:
+                full_mrca = tree.get_common_ancestor(basal_names)
+                if full_mrca != tree:
+                    candidates.append(
+                        _candidate_from_leaf_names("outgroup", full_mrca.get_leaf_names())
+                    )
+        except Exception as exc:
+            logger.warning("Failed optimized MRCA rooting: %s", exc)
+        return candidates
+
+    for leaf in all_basal_leaves:
+        candidates.append(_candidate_from_leaf_names("outgroup", [leaf.name]))
+
+    if len(all_basal_leaves) >= 2:
+        for leaf1, leaf2 in combinations(all_basal_leaves, 2):
+            try:
+                pair_mrca = tree.get_common_ancestor([leaf1, leaf2])
+                mrca_leaves_signature = frozenset(pair_mrca.get_leaf_names())
+
+                if mrca_leaves_signature in added_topologies:
+                    continue
+                added_topologies.add(mrca_leaves_signature)
+
+                candidates.append(
+                    _candidate_from_leaf_names("outgroup", pair_mrca.get_leaf_names())
+                )
+            except Exception as exc:
+                logger.debug("Failed pairwise MRCA rooting (non-fatal): %s", exc)
+
+    try:
+        basal_leaves_names = [leaf.name for leaf in all_basal_leaves]
+        full_mrca = tree.get_common_ancestor(basal_leaves_names)
+        mrca_leaves_signature = frozenset(full_mrca.get_leaf_names())
+
+        if mrca_leaves_signature not in added_topologies:
+            candidates.append(
+                _candidate_from_leaf_names("outgroup", full_mrca.get_leaf_names())
+            )
+            added_topologies.add(mrca_leaves_signature)
+    except Exception as exc:
+        logger.warning("Failed full basal MRCA rooting: %s", exc)
+
+    return candidates
+
+
+def _select_statistical_root_candidate_descriptors(
+    base_tree: object,
+    max_candidates: int = 20,
+) -> tuple:
+    """Select MAD/MinVar descriptors without retaining all rerooted trees."""
+    internal_nodes = [n for n in base_tree.traverse() if (not n.is_leaf() and not n.is_root())]
+    if not internal_nodes:
+        return [], []
+
+    scored = []
+    seen = set()
+    order = 0
+    for node in internal_nodes:
+        try:
+            candidate = _candidate_from_leaf_names("stat", node.get_leaf_names())
+            tree = _materialize_root_candidate(base_tree, candidate)
+            if tree == tree.get_tree_root() and len(candidate.leaf_names) == len(base_tree):
+                continue
+            sig = _root_signature(tree)
+            if sig in seen:
+                continue
+            seen.add(sig)
+            scored.append(
+                (
+                    _tip_distance_mad(tree),
+                    compute_tip_to_root_branch_length_variance(tree),
+                    order,
+                    candidate,
+                )
+            )
+            order += 1
+        except Exception as exc:
+            logger.debug("Statistical rerooting candidate failed (non-fatal): %s", exc)
+            continue
+
+    if not scored:
+        return [], []
+
+    if max_candidates <= 0:
+        max_candidates = 1
+    keep_n = min(max_candidates, len(scored))
+
+    mad_candidates = [
+        _candidate_from_leaf_names("MAD", item[3].leaf_names)
+        for item in sorted(scored, key=lambda x: (x[0], x[2]))[:keep_n]
+    ]
+    minvar_candidates = [
+        _candidate_from_leaf_names("MinVar", item[3].leaf_names)
+        for item in sorted(scored, key=lambda x: (x[1], x[2]))[:keep_n]
+    ]
+    return mad_candidates, minvar_candidates
+
+
+def _merge_unique_root_candidate_descriptors(
+    base_tree: object,
+    *candidate_groups: list,
+) -> list:
+    """Merge candidate descriptors and keep unique root-split signatures."""
+    merged = []
+    seen = set()
+    for group in candidate_groups:
+        for candidate in group:
+            try:
+                tree = _materialize_root_candidate(base_tree, candidate)
+                sig = _root_signature(tree)
+            except Exception as exc:
+                logger.debug("Candidate descriptor materialization failed: %s", exc)
+                continue
+            if sig in seen:
+                continue
+            seen.add(sig)
+            merged.append(candidate)
+    return merged
+
+
 def calculate_tree_statistics(
     tree: object,
     species_tree: object,
@@ -719,17 +932,16 @@ def root_main(
 
             current_gene_species = set(get_species_list(Phylo_t2))
             dynamic_basal_set = get_dynamic_basal_set(current_gene_species, renamed_species_tree)
-            outgroup_root_list = get_all_rerooted_trees_filtered(
-                Phylo_t2, dynamic_basal_set, new_name_to_gene
-            )
+            outgroup_root_list = _outgroup_candidate_descriptors(Phylo_t2, dynamic_basal_set)
 
             gd_nodes = find_dup_node(Phylo_t2, renamed_species_tree)
-            gd_root_list = _reroot_by_node_set(Phylo_t2, gd_nodes)
-            mad_root_list, minvar_root_list = _select_statistical_root_candidates(
+            gd_root_list = _candidate_descriptors_by_node_set(Phylo_t2, gd_nodes, "GD")
+            mad_root_list, minvar_root_list = _select_statistical_root_candidate_descriptors(
                 Phylo_t2, max_candidates=3
             )
 
-            root_list = merge_unique_root_candidates(
+            root_list = _merge_unique_root_candidate_descriptors(
+                Phylo_t2,
                 outgroup_root_list,
                 gd_root_list,
                 mad_root_list,
@@ -763,14 +975,13 @@ def root_main(
             # ==========================================
             # Single-stage scoring: compute all metrics including RF
             # ==========================================
-            tree_objects = {}
             temp_stats = []
 
-            for n, tree in enumerate(root_list):
+            for n, candidate in enumerate(root_list):
                 # tree is already in renamed Taxa ID format
+                tree = _materialize_root_candidate(Phylo_t2, candidate)
                 tree.resolve_polytomy(recursive=True)
                 tree_key = f"{tree_id}_{n+1}"
-                tree_objects[tree_key] = tree
                 deep, var, GD, species_overlap, gd_consistency, RF = calculate_tree_statistics(
                     tree=tree,
                     species_tree=renamed_species_tree,
@@ -781,19 +992,20 @@ def root_main(
                     "species_overlap": species_overlap,
                     "gd_consistency": gd_consistency,
                     "RF": RF,
-                    "tree_obj_ref": tree
                 })
                 # print(rename_input_tre(tree, new_name_to_gene))
                 # print(deep, var, GD, species_overlap, gd_consistency, RF)
             current_df = pd.DataFrame(temp_stats)
             current_df["score"] = normalize_and_score(current_df, stage1_weights, include_rf=True)
-            best_row = current_df.nlargest(1, "score").iloc[0]
+            best_selection = current_df.nlargest(1, "score")
+            best_row = best_selection.iloc[0]
+            best_position = int(best_selection.index[0])
 
             # ==========================================
             # Output
             # ==========================================
-            best_tree_key = best_row["Tree"]
-            best_tree = tree_objects[best_tree_key]
+            best_tree = _materialize_root_candidate(Phylo_t2, root_list[best_position])
+            best_tree.resolve_polytomy(recursive=True)
 
             rename_output_tre(
                 best_tree,
@@ -804,7 +1016,6 @@ def root_main(
             )
 
             record = best_row.to_dict()
-            del record["tree_obj_ref"]
             stat_matrix.append(record)
 
             pbar.update(1)

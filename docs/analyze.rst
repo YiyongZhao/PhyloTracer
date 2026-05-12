@@ -31,7 +31,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap [--support_value 50] [--revert] [--output_dir DIR]
+        PhyloTracer PhyloTree_CollapseExpand --input_GF_list GF_ID2path.imap
 
 
 2. PhyloSupport_Scaler
@@ -53,7 +53,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 1 [--output_dir DIR]
+        PhyloTracer PhyloSupport_Scaler --input_GF_list GF_ID2path.imap --scale_to 100
 
 
 3. BranchLength_NumericConverter
@@ -71,7 +71,7 @@ Optional Parameters:
 Example:
     .. code-block:: bash
 
-        PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap [--decimal_place 10]
+        PhyloTracer BranchLength_NumericConverter --input_GF_list GF_ID2path.imap
 
 
 4. Phylo_Rooter
@@ -133,13 +133,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        # Default (empirical weights)
         PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
-
-        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weights 0.30 0.10 0.30 0.10 0.10 0.10
-
-        # Entropy (data-driven) weighting
-        PhyloTracer Phylo_Rooter --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --weight-strategy entropy
 
 
 5. MulRF_Distance
@@ -179,8 +173,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer MulRF_Distance --mode 1 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--output mulrf_mode1.tsv]
-        PhyloTracer MulRF_Distance --mode 2 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk [--output mulrf_mode2.tsv]
+        PhyloTracer MulRF_Distance --mode 1 --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap
 
 
 6. OrthoFilter_LB
@@ -207,7 +200,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5 [--lb_mode or] [--visual] [--output_dir DIR]
+        PhyloTracer OrthoFilter_LB --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --rrbr_cutoff 5 --srbr_cutoff 2.5
 
 
 7. OrthoFilter_Mono
@@ -235,7 +228,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_taxa Clade.imap --input_sps_tree sptree.nwk [--purity_cutoff 0.95 --max_remove_fraction 0.5 --visual] [--output_dir DIR]
+        PhyloTracer OrthoFilter_Mono --input_GF_list GF_ID2path.imap --input_taxa Clade.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk
 
 
 8. TreeTopology_Summarizer
@@ -260,7 +253,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--visual_top 10] [--output_dir DIR]
+        PhyloTracer TreeTopology_Summarizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap
 
 
 9. Tree_Visualizer
@@ -295,7 +288,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap [--gene_categories Family.imap Order.imap Clade.imap --keep_branch 1 --tree_style r --input_sps_tree sptree.nwk --heatmap_matrix heatmap_matrix.txt --visual_gd --gd_support 50 --subclade_support 0 --dup_species_proportion 0.2 --dup_species_num 2 --deepvar 1] [--output_dir DIR]
+        PhyloTracer Tree_Visualizer --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap
 
 
 10. GD_Detector
@@ -326,7 +319,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --gd_support 50 --subclade_support 0 --dup_species_proportion 0.2 --dup_species_num 2 --input_sps_tree sptree.nwk --deepvar 1 [--gdtype_mode relaxed] [--output_dir DIR]
+        PhyloTracer GD_Detector --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_sps_tree sptree.nwk --gd_support 50 --subclade_support 50 --dup_species_proportion 0 --dup_species_num 2 --deepvar 1
 
 
 11. GD_Visualizer
@@ -349,7 +342,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap [--output_dir DIR]
+        PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap
 
 
 12. GD_Loss_Tracker
@@ -378,7 +371,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--target_species Arabidopsis_thaliana --mrca_node SpeciesA,SpeciesB --include_unobserved_species --node_count_mode parsimony] [--output_dir DIR]
+        PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
 
 
 13. GD_Loss_Visualizer
@@ -403,7 +396,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer GD_Loss_Visualizer --gd_loss_result gd_loss.csv --input_sps_tree numed_sptree.nwk [--output_dir DIR]
+        PhyloTracer GD_Loss_Visualizer --input_sps_tree numed_sptree.nwk --gd_loss_result gd_loss.csv
 
 
 14. Ortho_Retriever
@@ -431,7 +424,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap [--input_synteny_blocks collinearity] [--add_outgroup] [--output_dir DIR]
+        PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
 
 
 15. Hybrid_Tracer
@@ -458,7 +451,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer Hybrid_Tracer --input_GF_list GF_ID2path.imap --input_Seq_GF_list Seq_GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap [--mrca_node SpeciesA,SpeciesB --split_groups 1] [--output_dir DIR]
+        PhyloTracer Hybrid_Tracer --input_GF_list gf.txt --input_Seq_GF_list gf_aln.txt --input_sps_tree sptree.nwk --input_imap gene2sps.imap
 
     Outputs: ``hyde_out.txt``, ``hyde_filtered_out.txt``, and ``hyde_summary.txt``.
 
@@ -483,7 +476,7 @@ Output:
 Example:
     .. code-block:: bash
 
-        PhyloTracer Hybrid_Visualizer --hyde_out hyde.out --input_sps_tree sptree.nwk [--node] [--output_dir DIR]
+        PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk
 
     Combined figure legend: red = focal hybrid/clade, blue = target internal node label in ``--node`` mode, yellow = γ values, white = tested hybridization combinations.
 
@@ -492,61 +485,75 @@ Example:
 ----------------
 
 Description:
-   To distinguish gene conversion by tracing subgenome haplotypes through phylogenomic profiling.
+   A unified pipeline that extracts GD gene pairs from rooted gene family trees,
+   labels them as orthologs (red) or paralogs/GD-pairs (blue), renders
+   chromosome-level synteny dotplots, and detects gene conversion zones via
+   red→blue→red pattern scanning.
 
-Required Parameters (haplofinder mode):
-    - ``--input_GF_list``   File containing paths to gene tree files, one per line.
-    - ``--input_imap``      File with species classification information corresponding to genes.
+   When ``--parental_sps`` and ``--hyb_sps`` are provided, subgenome assignment
+   (A/B/...) is performed inline using S-node sister-clade logic: for each
+   hybrid-species gene, the algorithm walks upward to the nearest S (speciation)
+   node and inspects the sister clade. If the sister clade contains exactly one
+   parental species tag and no other hybrid genes, the gene is assigned the
+   corresponding subgenome label (A, B, ...). Labels are derived from the sorted
+   order of ``--parental_sps``. Optional ``--input_fasta`` triggers FASTA
+   partitioning of the hybrid proteome into per-subgenome files.
+
+Required Parameters:
+    - ``--input_GF_list``   Tab-delimited mapping file (GF_ID<TAB>gene_tree_path).
+    - ``--input_imap``      Two-column mapping file (gene_id<TAB>species_name).
     - ``--input_sps_tree``  Species tree file in Newick format.
-    - ``--species_a``       Name of species A.
-    - ``--species_b``       Name of species B.
-    - ``--species_a_gff``   GFF file of species A.
-    - ``--species_b_gff``   GFF file of species B.
-    - ``--species_a_lens``  Lens file of species A.
-    - ``--species_b_lens``  Lens file of species B.
+    - ``--species_a``       Name of species A (typically the diploid/donor).
+    - ``--species_b``       Name of species B (typically the polyploid/hybrid).
+    - ``--species_a_gff``   Genome annotation file for species A (GFF/GTF-compatible).
+    - ``--species_b_gff``   Genome annotation file for species B (GFF/GTF-compatible).
+    - ``--species_a_lens``  Chromosome-length file for species A (chr<TAB>length).
+    - ``--species_b_lens``  Chromosome-length file for species B (chr<TAB>length).
 
-Optional Parameters (haplofinder mode):
-    - ``--gd_support``      Minimum support of GD nodes used for pair extraction (range: 0-100, default is 50).
-    - ``--pair_support``    Minimum support of ortholog/speciation pair nodes (range: 0-100, default is 50).
-    - ``--visual_chr_a``    File containing chromosome numbers of species A for visualization.
-    - ``--visual_chr_b``    File containing chromosome numbers of species B for visualization.
-    - ``--size``            Size of points in the dotplot graph (default is 0.0005).
+Optional Parameters:
+    - ``--gd_support``      Minimum support of GD nodes used for pair extraction
+                            (range: 0-100, default is 50).
+    - ``--pair_support``    Minimum support of ortholog/speciation pair nodes
+                            (range: 0-100, default is 50).
+    - ``--parental_sps``    Parental species names for subgenome assignment;
+                            space-separated, quoted string (e.g., ``"ARD ARI"``).
+                            Requires ``--hyb_sps``.
+    - ``--hyb_sps``         Hybrid species name for subgenome assignment.
+                            Requires ``--parental_sps``.
+    - ``--input_fasta``     Input FASTA file (.fa/.fasta). If provided, triggers
+                            per-subgenome FASTA partitioning using assignments
+                            from ``haplofinder_output.tsv``.
+    - ``--visual_chr_a``    Optional chromosome list file for species A visualization subset.
+    - ``--visual_chr_b``    Optional chromosome list file for species B visualization subset.
+    - ``--size``            Point size in dotplot rendering (positive float, default is 0.0005).
     - ``--output_dir``      Output directory (default: current working directory).
 
-Split mode:
-    When ``--mode split`` is used, HaploFinder partitions FASTA sequences by subgenome color labels.
+Gene conversion detection parameters:
+    - ``--min_shared_pairs``  Minimum gene pairs required between two chromosomes
+                              to infer a homolog pair by collinear coverage (default is 5).
+    - ``--min_conv_pairs``    Minimum gene pairs on a chromosome pair to attempt
+                              gene conversion detection (default is 10).
+    - ``--n_permutations``    Number of permutations for the permutation test
+                              (default is 1000).
+    - ``--p_threshold``       Significance threshold applied to both binomial and
+                              permutation tests (default is 0.05).
 
-    Required parameters for split mode:
-        - ``--input_GF_list``   Tab-delimited mapping file (GF_ID<TAB>gene_tree_path).
-        - ``--input_imap``      Two-column mapping file (gene_id<TAB>species_name).
-        - ``--input_fasta``     Input FASTA file (.fa/.fasta).
-        - ``--cluster_file``    Split-mode cluster metadata file.
-        - ``--hyb_sps``         Hybrid species name used for subgenome assignment.
-        - ``--parental_sps``    Parental species names (quoted, space-separated string).
-        - ``--species_b_gff``   Genome annotation file for species B.
+Output:
+    - ``haplofinder_output.tsv``  16-column unified table (gene pairs, coordinates,
+                                   colors, ortholog types, subgenome labels, conversion zones).
+    - ``gd_pairs_dotplot.pdf``    Vector dotplot of GD pairs.
+    - ``gd_pairs_dotplot.png``    Raster dotplot of GD pairs.
 
-    Optional parameters (both modes):
-        - ``--mode``            Run mode: ``haplofinder`` (default) or ``split``.
-        - ``--output_dir``      Output directory (default: current working directory).
-
-Output (haplofinder mode):
-    - ``gd_pairs_dotplot.pdf``    Dotplot PDF showing GD-pair chromosomal positions.
-    - ``gd_pairs_dotplot.png``    Dotplot PNG version.
-    - ``color_label.txt``         Color-label assignments for each gene.
-
-Output (split mode):
-    - ``haplofinder_split/split_assignment.tsv``        Subgenome assignment table.
-    - ``haplofinder_split/split_subgenome_A.fasta``     FASTA for subgenome A.
-    - ``haplofinder_split/split_subgenome_B.fasta``     FASTA for subgenome B.
-    - ``haplofinder_split/split_subgenome_unknown.fasta``  FASTA for unassigned genes.
-    - ``haplofinder_split/split_summary.txt``            Summary statistics.
+    When ``--input_fasta`` is provided, additionally:
+        - ``split_assignment.tsv``        Per-gene subgenome assignments.
+        - ``split_subgenome_A.fasta``     Subgenome-A FASTA sequences.
+        - ``split_subgenome_B.fasta``     Subgenome-B FASTA sequences.
+        - ``split_summary.txt``           Partitioning statistics.
 
 Example:
     .. code-block:: bash
 
-        PhyloTracer HaploFinder --input_GF_list GF.list --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a A --species_b B --species_a_gff A.gff --species_b_gff B.gff --species_a_lens A.lens --species_b_lens B.lens [--gd_support 50 --pair_support 50 --visual_chr_a chr_a.txt --visual_chr_b chr_b.txt --size 0.0001] [--output_dir DIR]
-
-        PhyloTracer HaploFinder --mode split --input_GF_list gf.txt --input_imap gene2sps.imap --input_fasta proteins.fa --cluster_file cluster.tsv --hyb_sps Hybrid --parental_sps "P1 P2" --species_b_gff B.gff [--output_dir DIR]
+        PhyloTracer HaploFinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a ARD --species_b ARH --species_a_gff ARD.gff --species_b_gff ARH.gff --species_a_lens ARD.lens --species_b_lens ARH.lens
 
 
 For additional modules and detailed usage examples, refer to the relevant sections in this documentation.

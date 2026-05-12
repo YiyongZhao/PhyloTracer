@@ -512,6 +512,73 @@ def get_process_gd_clade(gd_type_dic, gd_count_dic):
 # ======================================================
 
 
+def write_unified_gene_matrix_csv(gene_matrices_data, voucher2taxa_dic, new_named_gene2gene_dic, output_file="hyde_gene_matrices_unified.csv"):
+    """
+    Write all GD event gene matrices to a unified CSV file with original gene IDs.
+
+    Parameters
+    ----------
+    gene_matrices_data : list
+        List of dictionaries containing matrix data for each GD event.
+    voucher2taxa_dic : dict
+        Mapping from voucher names to taxa names.
+    new_named_gene2gene_dic : dict
+        Reverse mapping from renamed gene IDs to original gene IDs.
+    output_file : str
+        Output CSV file path.
+
+    Returns
+    -------
+    None
+
+    Assumptions
+    -----------
+    Each dictionary in gene_matrices_data contains keys: gd_node, gd_event_id,
+    tree_id, outgroup_species, and matrix (pd.DataFrame).
+    """
+    if not gene_matrices_data:
+        logger.warning("No gene matrix data to write.")
+        return
+
+    all_rows = []
+
+    for data in gene_matrices_data:
+        matrix = data['matrix']
+        gd_node = data['gd_node']
+        gd_event_id = data['gd_event_id']
+        tree_id = data['tree_id']
+        outgroup_species = data['outgroup_species']
+
+        # Create a row for each species
+        for species in matrix.index:
+            row = {
+                'gd_node': gd_node,
+                'gd_event_id': gd_event_id,
+                'tree_id': tree_id,
+                'outgroup': voucher2taxa_dic.get(outgroup_species, outgroup_species),
+                'species': voucher2taxa_dic.get(species, species),
+            }
+
+            # Add gene IDs for each ortholog group (convert to original IDs)
+            for col_idx, col in enumerate(matrix.columns):
+                renamed_gene_id = matrix.loc[species, col]
+
+                # Convert to original gene ID
+                if renamed_gene_id == "-":
+                    original_gene_id = "-"
+                else:
+                    original_gene_id = new_named_gene2gene_dic.get(renamed_gene_id, renamed_gene_id)
+
+                row[f"ortholog_group_{col_idx+1}"] = original_gene_id
+
+            all_rows.append(row)
+
+    # Convert to DataFrame and write CSV
+    df = pd.DataFrame(all_rows)
+    df.to_csv(output_file, index=False)
+    logger.info(f"[Hybrid_Tracer] Unified gene matrix saved: {output_file} ({len(all_rows)} rows, {len(gene_matrices_data)} GD events)")
+
+
 def write_out(out, triple, outfile, outgroup_species=None):
     """
     Write a HyDe result record to an output file.
@@ -621,6 +688,7 @@ def hyde_main(
     HyDe results are written to ``hyde_out.txt`` and ``hyde_filtered_out.txt``.
     """
     hyde_tuple_lst = []
+    all_gene_matrices_data = []  # Collect all gene matrix data
     overall_stats = {
         "gd_nodes_detected": 0,
         "gd_nodes_processed": 0,
@@ -686,7 +754,7 @@ def hyde_main(
         for i, sub_group in enumerate(split_gds):
             logger.info("Batch %d: %d gene duplication events", i+1, len(sub_group))
         for sub_group in split_gds:
-            hyde_result_lst, group_stats, group_event_assignments = process_gd_group(
+            hyde_result_lst, group_stats, group_event_assignments, gene_matrices_data = process_gd_group(
                 sub_group,
                 rename_sptree,
                 gd_name,
@@ -698,6 +766,7 @@ def hyde_main(
             )
             hyde_tuple_lst.extend(hyde_result_lst)
             event_assignments.extend(group_event_assignments)
+            all_gene_matrices_data.extend(gene_matrices_data)  # Collect matrix data
             overall_stats["gd_events_skipped_no_outgroup"] += group_stats.get("skipped_no_outgroup", 0)
             overall_stats["hyde_triples_tested"] += len(hyde_result_lst)
             overall_stats["hyde_triples_filtered"] += sum(
@@ -725,6 +794,10 @@ def hyde_main(
 
     write_summary_report("hyde_summary.txt", overall_stats, per_node_stats)
     write_event_assignment_report("hyde_event_assignments.tsv", event_assignments)
+
+    # Write unified gene matrix CSV
+    new_named_gene2gene_dic = {v: k for k, v in gene2new_named_gene_dic.items()}
+    write_unified_gene_matrix_csv(all_gene_matrices_data, voucher2taxa_dic, new_named_gene2gene_dic)
 
 
 def process_gd_group(
@@ -769,6 +842,7 @@ def process_gd_group(
     """
     group_stats = {"skipped_no_outgroup": 0}
     event_assignments = []
+    gene_matrices_data = []  # Collect gene matrix data
     target_node_name = target_node if target_node else gd_name
     target_clade = rename_sptree & target_node_name
     bucket_matrices = defaultdict(list)
@@ -820,6 +894,16 @@ def process_gd_group(
             )
             continue
         one_gd_matrix = process_one_gd(gd_clade, outgroup_gene)
+
+        # Save matrix data before renaming columns
+        gene_matrices_data.append({
+            'gd_node': gd_name,
+            'gd_event_id': gdid,
+            'tree_id': tre_id1,
+            'outgroup_species': selected_outgroup_species,
+            'matrix': one_gd_matrix.copy(),
+        })
+
         num_cols = one_gd_matrix.shape[1]
         col_counter = bucket_col_counter[selected_outgroup_species]
         new_col_names = [f"col{col_counter + i}" for i in range(num_cols)]
@@ -848,7 +932,7 @@ def process_gd_group(
 
     if not bucket_matrices:
         logger.warning("No valid matrices found for GD group %s. Returning empty result.", gd_name)
-        return [], group_stats, event_assignments
+        return [], group_stats, event_assignments, gene_matrices_data
 
     hyde_result_lst = []
     for outgroup_species, matrices in bucket_matrices.items():
@@ -871,7 +955,7 @@ def process_gd_group(
                 outgroup_species=outgroup_original,
             )
         )
-    return hyde_result_lst, group_stats, event_assignments
+    return hyde_result_lst, group_stats, event_assignments, gene_matrices_data
 
 
 def run_hyde_from_matrix_integrated(
