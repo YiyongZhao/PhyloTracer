@@ -272,8 +272,8 @@ def write_unified_output(
     output_path: str = "haplofinder_output.tsv",
 ) -> str:
     """Write single unified TSV with subgenome and ortholog annotation."""
-    # --- ortholog type lookup ---
-    ortholog_map = {"S": "ortholog", "D_same": "paralog", "D_cross": "gd_pair"}
+    # --- pair_source display mapping ---
+    source_map = {"S": "Orthologs", "D_same": "Paralogs", "D_cross": "Paralogs"}
 
     zone_lookup: dict = {}
     for rec in zone_records:
@@ -285,15 +285,32 @@ def write_unified_output(
                 rec["blue_run"],
             )
 
+    # Sort by species_a chromosome → chromosome start (genomic order)
+    def _sort_key(line: str):
+        parts = line.strip().split("\t")
+        if len(parts) < 3:
+            return ("￿", 0)
+        gene_a = parts[0]
+        gff = dict_gff1.get(gene_a)
+        if gff:
+            chr_name = gff[0] if gff[0] != "." else "￿"
+            try:
+                start = int(gff[1])
+            except (ValueError, TypeError):
+                start = 0
+            return (chr_name, start)
+        return ("￿", 0)
+
+    sorted_lines = sorted(sorted_lines, key=_sort_key)
+
     total_pairs = len(sorted_lines)
     header_cols = [
         f"{spe1}_gene", f"{spe2}_gene",
         f"{spe1}_chr", f"{spe2}_chr",
         f"{spe1}_start", f"{spe1}_end",
         f"{spe2}_start", f"{spe2}_end",
-        "color", "pair_source", "ortholog_type",
-        f"{spe1}_subgenome", f"{spe2}_subgenome",
-        "conversion_zone", "conversion_chr_pair", "conversion_blue_run",
+        "color", "Pair_type", "Conversion_direction",
+        "Gene_conversion_zone", "Gene_conversion_chr_pair", "Gene_conversion_blue_run",
     ]
     header = (
         f"# HaploFinder unified output\n"
@@ -306,9 +323,10 @@ def write_unified_output(
         fh.write(header)
         for line in sorted_lines:
             parts = line.strip().split("\t")
-            if len(parts) != 3:
+            if len(parts) < 3:
                 continue
-            gene_a, gene_b, color = parts
+            gene_a, gene_b, color = parts[0], parts[1], parts[2]
+            direction = parts[3] if len(parts) >= 4 else "."
             gff_a = dict_gff1.get(gene_a)
             gff_b = dict_gff2.get(gene_b)
             chr_a = gff_a[0] if gff_a else "."
@@ -318,17 +336,14 @@ def write_unified_output(
             start_b = gff_b[1] if gff_b else "."
             end_b = gff_b[2] if gff_b else "."
             source = pair_source_dict.get((gene_a, gene_b, color), "?")
-            otype = ortholog_map.get(source, "?")
-            arg_sub = "A"  # ARD is A-genome donor
-            arh_sub = arh_subgenome_dict.get(gene_b, ".") if arh_subgenome_dict else "."
+            display_source = source_map.get(source, source)
             zone_info = zone_lookup.get((gene_a, gene_b), (".", ".", "."))
             zid, zcp, zbr = zone_info
             fh.write(
                 f"{gene_a}\t{gene_b}\t"
                 f"{chr_a}\t{chr_b}\t"
                 f"{start_a}\t{end_a}\t{start_b}\t{end_b}\t"
-                f"{color}\t{source}\t{otype}\t"
-                f"{arg_sub}\t{arh_sub}\t"
+                f"{color}\t{display_source}\t{direction}\t"
                 f"{zid}\t{zcp}\t{zbr}\n"
             )
     logger.info("Wrote unified output: %s (%d pairs)", output_path, total_pairs)
@@ -1042,9 +1057,14 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support,
             new_named_gene2gene_dic, processed_lines, written_results, pair_support,
         )
         # Mark speciation pairs with source "S"
-        for line in processed_lines:
+        for i, line in enumerate(processed_lines):
             parts = line.strip().split("\t")
             if len(parts) == 3:
+                key = (parts[0], parts[1], parts[2])
+                if key not in pair_source_dict:
+                    pair_source_dict[key] = "S"
+            elif len(parts) == 4 and parts[3] == ".":
+                # already has placeholder from speciation, mark source
                 key = (parts[0], parts[1], parts[2])
                 if key not in pair_source_dict:
                     pair_source_dict[key] = "S"
@@ -1082,9 +1102,12 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support,
                     color, suffix, source = "red", "r", "D_same"
                 else:
                     color, suffix, source = "blue", "b", "D_cross"
+                    # record which clade ARD is in for direction inference
+                    ard_in_tips1 = gene_a in tips1 or gene_b in tips1
+                    # ARD reference determines the A-like clade
                 token = f"{gene2}-{suffix}"
                 if token not in written_results:
-                    processed_lines.append(f"{gene_a}\t{gene_b}\t{color}\n")
+                    processed_lines.append(f"{gene_a}\t{gene_b}\t{color}\t.\n")
                     pair_source_dict[(gene_a, gene_b, color)] = source
                     written_results.add(token)
 
@@ -1134,7 +1157,34 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support,
     if do_subgenome:
         logger.info("Subgenome assigned to %d %s genes", len(arh_subgenome_dict), sp2)
 
-    sorted_lines = sorted(processed_lines, key=lambda x: x.split("\t")[0])
+    # Post-processing: compute gene-conversion direction for blue (D_cross) pairs
+    # Direction = based on ARH gene's subgenome assignment:
+    #   A-subgenome ARH paired blue with ARD → unexpected → "Putative_conversion"
+    #   B-subgenome ARH paired blue with ARD → expected cross-subgenome → "Cross_subgenome"
+    #   Red pairs (D_same / S) → "Same_clade"
+    for i, line in enumerate(processed_lines):
+        parts = line.strip().split("\t")
+        if len(parts) < 3:
+            continue
+        gene_a, gene_b, color = parts[0], parts[1], parts[2]
+        if color == "red":
+            direction = "Same_clade"
+        elif color == "blue":
+            arh_sub = arh_subgenome_dict.get(gene_b)
+            if arh_sub == "B":
+                direction = "Cross_subgenome"
+            elif arh_sub == "A":
+                direction = "Putative_conversion"
+            else:
+                direction = "Unknown"
+        else:
+            direction = "Same_clade"
+        if len(parts) == 4:
+            processed_lines[i] = f"{gene_a}\t{gene_b}\t{color}\t{direction}\n"
+        else:
+            processed_lines[i] = f"{gene_a}\t{gene_b}\t{color}\t{direction}\n"
+
+    sorted_lines = processed_lines  # sorting deferred to write_unified_output (chr-aware)
     return sorted_lines, pair_source_dict, arh_subgenome_dict
 
 
