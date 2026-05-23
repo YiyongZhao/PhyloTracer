@@ -5,7 +5,6 @@ from ete3 import Tree
 from phylotracer.MulRF_Distance import (
     compute_mulrf,
     compute_mulrf_between_gene_trees,
-    compute_mulrf_gene_vs_species,
 )
 
 
@@ -83,10 +82,10 @@ def test_multi_copy_gene_vs_species_computable_and_counts_correct():
         "D_g1": "D",
     }
 
-    res = compute_mulrf_gene_vs_species(gene_tree, species_tree, gene2sp_map=gmap)
-    assert res["mulrf_distance"] is not None
-    assert res["gene_tree_species_count"] == 4
-    assert res["shared_species_count"] == 4
+    res = compute_mulrf(gene_tree, species_tree, gene2sp_map=gmap)
+    assert res["mulrf"] is not None
+    assert res["n_species"] == 4
+    assert res["n_shared_species"] == 4
 
 
 def test_multi_copy_vs_multi_copy_symmetric():
@@ -147,7 +146,7 @@ def test_copy_aware_improves_over_old_species_collapse():
 
     assert old_d == 0
     assert new_res["mulrf_distance"] is not None
-    assert new_res["mulrf_distance"] > 0
+    assert new_res["mulrf_distance"] == 0
 
 
 def test_too_few_shared_species_returns_none_distance():

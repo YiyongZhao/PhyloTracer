@@ -130,7 +130,7 @@ class TestFindDupNodeIntegration:
         num_tre_node(sp_tree)
         annotate_gene_tree(gene_tree, sp_tree)
         dup_nodes = find_dup_node(gene_tree, sp_tree, gd_support=50, clade_support=50,
-                                  max_topology_distance=2)
+                                  dup_species_num=1, max_topology_distance=2)
         # Root node should be detected as duplication (A in both children)
         assert len(dup_nodes) >= 1
 
