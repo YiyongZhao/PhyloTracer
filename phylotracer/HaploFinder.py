@@ -259,6 +259,73 @@ def plot_dot(root, loc1, loc2, dict_gd, size=0.001):
 # ======================================================
 
 
+def _normalize_chr_num(chr_name: str):
+    """Extract chromosome number, handling Chr/chr/CHR prefix case-insensitively.
+    Returns int or None.
+    """
+    import re
+    m = re.match(r'chr(\d+)', chr_name.strip(), re.IGNORECASE)
+    return int(m.group(1)) if m else None
+
+
+def _detect_mode(lens_2: list) -> str:
+    """Auto-detect intra vs inter mode from chr_b numbering.
+    If chr_b has chr11-20 → intra (peanut subgenome structure).
+    Otherwise → inter (different species, all pairs cross-subgenome).
+    """
+    for row in lens_2:
+        n = _normalize_chr_num(row[0])
+        if n is not None and 11 <= n <= 20:
+            return "intra"
+    return "inter"
+
+
+def calculate_he_direction(chr_a: str, chr_b: str, color: str,
+                            parent_genome: str = "A",
+                            mode: str = "auto") -> str:
+    """Calculate HE direction based on expected vs observed ortholog/paralog pattern.
+
+    Two modes:
+    1. intra (peanut-style): same species, A/B subgenome structure.
+       ARD chr01-10, ARH chr01-10(A-subgenome) + chr11-20(B-subgenome).
+       same-subgenome (chr_a=i, chr_b=i): expected RED, blue -> B_to_A.
+       cross-subgenome (chr_a=i, chr_b=i+10): expected BLUE, red -> A_to_B.
+
+    2. inter (3-species): different species, all chr pairs are cross-subgenome.
+       Expected BLUE (homeolog between donor/recipient subgenomes).
+       red -> A_to_B (donor gene replaced recipient in gene tree).
+       blue -> . (normal orthology).
+    """
+    chr_a_num = _normalize_chr_num(chr_a)
+    chr_b_num = _normalize_chr_num(chr_b)
+    if chr_a_num is None or chr_b_num is None:
+        return "."
+
+    if mode == "inter":
+        # All pairs = cross-subgenome (different species/subgenomes)
+        # Expected: blue (D_cross = homeolog between subgenomes)
+        # red = both genes in same GD clade = A_to_B introgression
+        if color == "red":
+            return "A_to_B"
+        return "."
+
+    # --- intra mode (peanut-style) subgenome logic ---
+    # ARD only has chr01-10 (A-genome)
+    if not (1 <= chr_a_num <= 10):
+        return "."
+
+    # Homologous chromosome offset: A-subgenome chr i ↔ B-subgenome chr i+10
+    expected_red = (chr_b_num == chr_a_num)           # same-subgenome ortholog
+    expected_blue = (chr_b_num == chr_a_num + 10)     # cross-subgenome homeolog
+
+    if expected_red and color == "blue":
+        return "B_to_A"
+    elif expected_blue and color == "red":
+        return "A_to_B"
+
+    return "."
+
+
 def write_unified_output(
     sorted_lines: list,
     pair_source_dict: dict,
@@ -270,6 +337,7 @@ def write_unified_output(
     spe2: str,
     arh_subgenome_dict: dict = None,
     output_path: str = "haplofinder_output.tsv",
+    mode: str = "auto",
 ) -> str:
     """Write single unified TSV with subgenome and ortholog annotation."""
     # --- pair_source display mapping ---
@@ -286,10 +354,17 @@ def write_unified_output(
             )
 
     # Sort by species_a chromosome → chromosome start (genomic order)
+    # Use natural sort for chromosome names (chr1 < chr2 < chr10, not chr1 < chr10 < chr2)
+    def _natural_sort_key(chr_name: str):
+        """Natural sort key: extract numeric parts for proper ordering."""
+        import re
+        parts = re.split(r'(\d+)', chr_name)
+        return [int(p) if p.isdigit() else p for p in parts]
+
     def _sort_key(line: str):
         parts = line.strip().split("\t")
         if len(parts) < 3:
-            return ("￿", 0)
+            return (_natural_sort_key("￿"), 0)
         gene_a = parts[0]
         gff = dict_gff1.get(gene_a)
         if gff:
@@ -298,8 +373,8 @@ def write_unified_output(
                 start = int(gff[1])
             except (ValueError, TypeError):
                 start = 0
-            return (chr_name, start)
-        return ("￿", 0)
+            return (_natural_sort_key(chr_name), start)
+        return (_natural_sort_key("￿"), 0)
 
     sorted_lines = sorted(sorted_lines, key=_sort_key)
 
@@ -309,7 +384,7 @@ def write_unified_output(
         f"{spe1}_chr", f"{spe2}_chr",
         f"{spe1}_start", f"{spe1}_end",
         f"{spe2}_start", f"{spe2}_end",
-        "color", "Pair_type", "Conversion_direction",
+        "color", "Pair_type", "HE_direction",
         "Gene_conversion_zone", "Gene_conversion_chr_pair", "Gene_conversion_blue_run",
     ]
     header = (
@@ -326,7 +401,6 @@ def write_unified_output(
             if len(parts) < 3:
                 continue
             gene_a, gene_b, color = parts[0], parts[1], parts[2]
-            direction = parts[3] if len(parts) >= 4 else "."
             gff_a = dict_gff1.get(gene_a)
             gff_b = dict_gff2.get(gene_b)
             chr_a = gff_a[0] if gff_a else "."
@@ -335,6 +409,10 @@ def write_unified_output(
             end_a = gff_a[2] if gff_a else "."
             start_b = gff_b[1] if gff_b else "."
             end_b = gff_b[2] if gff_b else "."
+
+            # Calculate HE_direction (mode-aware)
+            he_direction = calculate_he_direction(chr_a, chr_b, color, parent_genome="A", mode=mode)
+
             source = pair_source_dict.get((gene_a, gene_b, color), "?")
             display_source = source_map.get(source, source)
             zone_info = zone_lookup.get((gene_a, gene_b), (".", ".", "."))
@@ -343,7 +421,7 @@ def write_unified_output(
                 f"{gene_a}\t{gene_b}\t"
                 f"{chr_a}\t{chr_b}\t"
                 f"{start_a}\t{end_a}\t{start_b}\t{end_b}\t"
-                f"{color}\t{display_source}\t{direction}\t"
+                f"{color}\t{display_source}\t{he_direction}\t"
                 f"{zid}\t{zcp}\t{zbr}\n"
             )
     logger.info("Wrote unified output: %s (%d pairs)", output_path, total_pairs)
@@ -359,8 +437,23 @@ def generate_dotplot(
     pair_source_dict: dict = None,
     arh_subgenome_dict: dict = None,
     output_dir: str = ".",
+    mode: str = "auto",
+    chr_pair: str = None,
 ):
-    """Generate dotplot and run gene-conversion detection."""
+    """Generate dotplot and run gene-conversion detection.
+
+    If chr_pair is specified (format "ChrA,ChrB"), filter to that single
+    chromosome pair, increase dot size, and highlight conversion zones.
+    """
+    # Resolve chr_pair filter
+    chr_a_filter = None
+    chr_b_filter = None
+    if chr_pair:
+        parts = chr_pair.split(",")
+        if len(parts) == 2:
+            chr_a_filter, chr_b_filter = parts[0].strip(), parts[1].strip()
+            logger.info("Zoom mode: showing only %s <-> %s", chr_a_filter, chr_b_filter)
+
     plt.figure(figsize=(10, 10))
     root = plt.axes([0, 0, 1, 1])
     t1 = time.time()
@@ -376,11 +469,36 @@ def generate_dotplot(
         lens_1 = read_lens(lens1)
         lens_2 = read_lens(lens2)
 
+    # Resolve mode: auto-detect from chr_b numbering pattern
+    if mode == "auto":
+        mode = _detect_mode(lens_2)
+    logger.info("Mode resolved to: %s", mode)
+
+    dict_gd = read_gd_pairs(gd_pairs)
+
+    # ── Zoom mode: filter to single chromosome pair ──
+    if chr_a_filter and chr_b_filter:
+        # Filter lens to target chromosomes only
+        lens_map1 = dict(lens_1)
+        lens_map2 = dict(lens_2)
+        if chr_a_filter in lens_map1 and chr_b_filter in lens_map2:
+            lens_1 = [[chr_a_filter, lens_map1[chr_a_filter]]]
+            lens_2 = [[chr_b_filter, lens_map2[chr_b_filter]]]
+        # Filter dict_gd
+        dict_gd = {
+            k: v for k, v in dict_gd.items()
+            if dict_gff1.get(k.split(":")[0], [None])[0] == chr_a_filter
+            and dict_gff2.get(k.split(":")[1], [None])[0] == chr_b_filter
+        }
+        # Increase dot size for zoomed view
+        if size is None or size == 0.001:
+            size = 0.005
+        logger.info("Zoom filter: %d pairs on %s<->%s, dot_size=%.4f",
+                     len(dict_gd), chr_a_filter, chr_b_filter, size or 0.005)
+
     gl1, gl2 = 0.92, 0.92
     step_1 = plot_chr1(lens_1, gl1, gl2, "", spe1)
     step_2 = plot_chr2(lens_2, gl2, gl1, "", spe2)
-
-    dict_gd = read_gd_pairs(gd_pairs)
 
     # Infer homolog pairs from collinear-block coverage (replaces numeric ratio)
     homolog_pairs = infer_homolog_pairs_from_collinearity(
@@ -393,6 +511,7 @@ def generate_dotplot(
         min_pairs=min_pairs,
         n_permutations=n_permutations,
         p_threshold=p_threshold,
+        mode=mode,
     )
 
     sorted_pairs = find_gene_pair_info(
@@ -401,16 +520,36 @@ def generate_dotplot(
     # Extract 3-element tuples for conversion zone scanning
     result_conversion = [(g1, g2, c) for g1, g2, c, *_ in sorted_pairs]
     zone_records = find_conversion_zones_with_ids_to_file(
-        result_conversion, dict_gff1, dict_gff2
+        result_conversion, dict_gff1, dict_gff2, mode=mode
     )
 
     # Write unified output if pair_source_dict is provided
     if pair_source_dict is not None:
+        # Convert gd_pairs (list of strings) to the format expected by write_unified_output
+        # gd_pairs contains all GD pairs, not just those in conversion zones
+        all_pairs_for_output = []
+        for line in gd_pairs:
+            parts = line.strip().split("\t")
+            if len(parts) >= 3:
+                gene_a, gene_b, color = parts[0], parts[1], parts[2]
+                gff_a = dict_gff1.get(gene_a)
+                gff_b = dict_gff2.get(gene_b)
+                if gff_a and gff_b:
+                    chr_a, start_a = gff_a[0], gff_a[1]
+                    chr_b, start_b = gff_b[0], gff_b[1]
+                    try:
+                        start_a_int = int(start_a)
+                        start_b_int = int(start_b)
+                        all_pairs_for_output.append((gene_a, gene_b, color, chr_a, start_a_int, chr_b, start_b_int))
+                    except (ValueError, TypeError):
+                        pass
+
         write_unified_output(
-            gd_pairs, pair_source_dict, sorted_pairs, zone_records,
+            gd_pairs, pair_source_dict, all_pairs_for_output, zone_records,
             dict_gff1, dict_gff2, spe1, spe2,
             arh_subgenome_dict=arh_subgenome_dict,
             output_path=os.path.join(output_dir, "haplofinder_output.tsv"),
+            mode=mode,
         )
 
     # Cache gene locations to avoid redundant GFF traversals
@@ -423,11 +562,41 @@ def generate_dotplot(
     else:
         plot_dot(root, gene_loc_1, gene_loc_2, dict_gd)
 
+    # ── Highlight conversion zones with rectangles (zoom mode) ──
+    if chr_a_filter and chr_b_filter and zone_records:
+        # Collect zone spans grouped by zone_id
+        from collections import defaultdict as _dd
+        zone_spans = _dd(lambda: [None, None, None, None])  # min_x,max_x,min_y,max_y
+        for rec in zone_records:
+            if rec["contig1"] != chr_a_filter or rec["contig2"] != chr_b_filter:
+                continue
+            g1, g2 = rec["gene1"], rec["gene2"]
+            x = gene_loc_1.get(g1)
+            y = gene_loc_2.get(g2)
+            if x is not None and y is not None:
+                zid = rec["zone_id"]
+                cur = zone_spans[zid]
+                zone_spans[zid] = [
+                    min(cur[0], x) if cur[0] is not None else x,
+                    max(cur[1], x) if cur[1] is not None else x,
+                    min(cur[2], y) if cur[2] is not None else y,
+                    max(cur[3], y) if cur[3] is not None else y,
+                ]
+        for zid, (xmin, xmax, ymin, ymax) in zone_spans.items():
+            if None not in (xmin, xmax, ymin, ymax):
+                rect = mpatches.Rectangle(
+                    (xmin, ymin), xmax - xmin, ymax - ymin,
+                    linewidth=1.5, edgecolor="orange", facecolor="none",
+                    linestyle="--", alpha=0.8,
+                )
+                root.add_patch(rect)
+
     root.set_xlim(0, 1)
     root.set_ylim(0, 1)
     root.set_axis_off()
-    plt.savefig(os.path.join(output_dir, os.path.basename(file_name) + "_dotplot.pdf"), dpi=500)
-    plt.savefig(os.path.join(output_dir, os.path.basename(file_name) + "_dotplot.png"), dpi=500)
+    out_prefix = os.path.join(output_dir, os.path.basename(file_name))
+    plt.savefig(out_prefix + "_dotplot.pdf", dpi=500)
+    plt.savefig(out_prefix + "_dotplot.png", dpi=500)
     plt.close()  # Free memory after saving
     logger.info("%s dotplot finished in %.1fs", file_name, time.time() - t1)
 
@@ -672,13 +841,21 @@ def infer_homolog_pairs_from_collinearity(
         if chr_b not in best_a_for_b or cnt > best_a_for_b[chr_b][1]:
             best_a_for_b[chr_b] = (chr_a, cnt)
 
-    # Reciprocal best hits + minimum coverage filter
+    # Reciprocal pairs + minimum coverage filter.
+    # Collect ALL reciprocal pairs above threshold, not just the single best
+    # hit.  For allopolyploids this captures both same-subgenome pairs
+    # (e.g. chr01<->chr01) and cross-subgenome homeologs (e.g. chr01<->chr11).
     homolog_pairs = []
-    for chr_a, (chr_b, cnt_ab) in best_b_for_a.items():
+    seen_pairs = set()
+    for (chr_a, chr_b), cnt_ab in pair_count.items():
         if cnt_ab < min_shared_pairs:
             continue
+        if (chr_a, chr_b) in seen_pairs or (chr_b, chr_a) in seen_pairs:
+            continue
+        # Reciprocal: chr_b must also have chr_a in its top hit
         if best_a_for_b.get(chr_b, (None,))[0] == chr_a:
             homolog_pairs.append((chr_a, chr_b))
+            seen_pairs.add((chr_a, chr_b))
             logger.info(
                 "Homolog pair inferred: %s <-> %s  (shared pairs=%d)",
                 chr_a, chr_b, cnt_ab,
@@ -760,6 +937,7 @@ def find_gene_conversion(
     min_pairs: int = 10,
     n_permutations: int = 1000,
     p_threshold: float = 0.05,
+    mode: str = "auto",
 ) -> list:
     """Collect homolog chromosome pairs to scan for local conversion islands.
 
@@ -874,6 +1052,7 @@ def find_conversion_zones_with_ids_to_file(
     dict_gff1: dict,
     dict_gff2: dict,
     output_file: str = "gene_conversion.txt",
+    mode: str = "auto",
 ) -> list:
     """Scan for gene conversion zones using the corrected red→blue→red pattern.
 
@@ -887,6 +1066,9 @@ def find_conversion_zones_with_ids_to_file(
     -----------------
         red … red   |   blue … blue   |   red … red
         (normal)        (converted)        (normal)
+
+    Each chromosome pair is scanned independently to avoid fragmentation
+    when multiple homolog pairs coexist (e.g. chr01↔chr01 + chr01↔chr11).
     """
 
     def _consume_color_run(data, start_idx, expected_color, chrom1, chrom2, dict_gff1, dict_gff2):
@@ -907,78 +1089,130 @@ def find_conversion_zones_with_ids_to_file(
             i += 1
         return i - 1, i - start_idx
 
-    conversion_zones = []
-    n = len(data)
+    def _scan_chromosome_pair(pairs: list, chrom1: str, chrom2: str,
+                               zone_id_start: int,
+                               mode: str = "auto") -> list:
+        """Scan a single chromosome pair for conversion zones.
+
+        Detects two biological patterns depending on mode:
+
+        intra mode (peanut subgenome):
+            Same-subgenome (ARH chr01-10, expected red background):
+                red … red | blue … blue | red … red  →  blue island = B→A conversion
+            Cross-subgenome (ARH chr11-20, expected blue background):
+                blue … blue | red … red | blue … blue  →  red island = A→B conversion
+
+        inter mode (different species):
+            All pairs = cross-subgenome (donor vs recipient).
+            expected blue background, red islands = A→B conversion.
+        """
+        chr_b_num = _normalize_chr_num(chrom2)
+
+        if mode == "inter":
+            # All pairs cross-subgenome: blue background, red signal
+            bg_color, sig_color = "blue", "red"
+        elif mode == "intra" and chr_b_num is not None:
+            if 1 <= chr_b_num <= 10:
+                bg_color, sig_color = "red", "blue"      # same-subgenome
+            elif 11 <= chr_b_num <= 20:
+                bg_color, sig_color = "blue", "red"      # cross-subgenome
+            else:
+                return []
+        else:
+            # auto or unknown: fallback to chr_b_num pattern detection
+            if chr_b_num is None:
+                return []
+            if 1 <= chr_b_num <= 10:
+                bg_color, sig_color = "red", "blue"
+            elif 11 <= chr_b_num <= 20:
+                bg_color, sig_color = "blue", "red"
+            else:
+                return []
+
+        label = "blue_run" if sig_color == "blue" else "red_run"
+
+        pair_zones = []
+        n = len(pairs)
+        i = 0
+        while i < n - 1:
+            gene1_start, gene2_start, color = pairs[i]
+
+            if color != bg_color:
+                i += 1
+                continue
+
+            # Consume leading background run
+            end_bg1, _ = _consume_color_run(pairs, i, bg_color, chrom1, chrom2, dict_gff1, dict_gff2)
+            i = end_bg1 + 1
+
+            if i >= n or pairs[i][2] != sig_color:
+                continue
+
+            # Consume signal (converted) run
+            start_sig = i
+            end_sig, sig_run_len = _consume_color_run(pairs, i, sig_color, chrom1, chrom2, dict_gff1, dict_gff2)
+            i = end_sig + 1
+
+            if i >= n or pairs[i][2] != bg_color:
+                i = start_sig
+                continue
+
+            # Consume trailing background run
+            start_bg2 = i
+            end_bg2, _ = _consume_color_run(pairs, i, bg_color, chrom1, chrom2, dict_gff1, dict_gff2)
+            i = end_bg2 + 1
+
+            if sig_run_len >= 3:
+                local_start = end_bg1
+                local_end = start_bg2
+                pair_zones.append((local_start, local_end, start_sig, end_sig, sig_run_len))
+                logger.info(
+                    "Conversion zone %d: %s&%s  %s=%d  [idx %d-%d]",
+                    zone_id_start + len(pair_zones), chrom1, chrom2,
+                    label, sig_run_len, start_sig, end_sig,
+                )
+
+            i = start_bg2
+
+        return pair_zones
+
+    # ── Group pairs by chromosome pair ────────────────────────────
+    chr_groups: Dict[Tuple[str, str], list] = defaultdict(list)
+    for global_idx, (g1, g2, c) in enumerate(data):
+        gff1 = dict_gff1.get(g1)
+        gff2 = dict_gff2.get(g2)
+        if gff1 and gff2:
+            chr_groups[(gff1[0], gff2[0])].append((global_idx, g1, g2, c))
+
+    # ── Scan each chromosome pair independently ──────────────────
+    all_conversion_zones = []  # (zone_id, s_r1_global, e_r2_global, s_b_global, e_b_global, blue_run_len)
     zone_id = 1
-    i = 0
 
-    while i < n - 1:
-        gene1_start, gene2_start, color = data[i]
+    for (chrom1, chrom2), indexed_pairs in chr_groups.items():
+        # Build local list (global_idx, gene_a, gene_b, color)
+        local_data = [(g1, g2, c) for _, g1, g2, c in indexed_pairs]
+        local_zones = _scan_chromosome_pair(local_data, chrom1, chrom2, zone_id, mode=mode)
 
-        # Must start with a red run
-        if color != "red":
-            i += 1
-            continue
-
-        gff1_info = dict_gff1.get(gene1_start)
-        gff2_info = dict_gff2.get(gene2_start)
-        if not gff1_info or not gff2_info:
-            i += 1
-            continue
-
-        chrom1, chrom2 = gff1_info[0], gff2_info[0]
-
-        # Consume leading red run
-        start_red1 = i
-        end_red1, _ = _consume_color_run(data, i, "red", chrom1, chrom2, dict_gff1, dict_gff2)
-        i = end_red1 + 1
-
-        if i >= n or data[i][2] != "blue":
-            continue
-
-        # Consume blue (converted) run
-        start_blue = i
-        end_blue, blue_run_len = _consume_color_run(data, i, "blue", chrom1, chrom2, dict_gff1, dict_gff2)
-        i = end_blue + 1
-
-        if i >= n or data[i][2] != "red":
-            i = start_blue
-            continue
-
-        # Consume trailing red run
-        start_red2 = i
-        end_red2, _ = _consume_color_run(data, i, "red", chrom1, chrom2, dict_gff1, dict_gff2)
-        i = end_red2 + 1
-
-        # Require at least 3 blue pairs in the converted run
-        if blue_run_len >= 3:
-            # Report the local island only: nearest red anchor on each side
-            # plus the continuous blue run. The full red runs are background
-            # context and would make candidate zones artificially large.
-            local_start = end_red1
-            local_end = start_red2
-            conversion_zones.append((zone_id, local_start, local_end,
-                                     start_blue, end_blue, blue_run_len))
-            logger.info(
-                "Conversion zone %d: %s&%s  blue_run=%d  [idx %d-%d]",
-                zone_id, chrom1, chrom2, blue_run_len, start_blue, end_blue,
-            )
+        for l_start, l_end, l_sb, l_eb, blen in local_zones:
+            # Map local indices back to global indices
+            g_start = indexed_pairs[l_start][0]
+            g_end = indexed_pairs[l_end][0]
+            g_sb = indexed_pairs[l_sb][0]
+            g_eb = indexed_pairs[l_eb][0]
+            all_conversion_zones.append((zone_id, g_start, g_end, g_sb, g_eb, blen))
             zone_id += 1
 
-        # Allow overlapping detection from start_red2
-        i = start_red2
+    logger.info("Detected %d conversion zones", len(all_conversion_zones))
 
-    logger.info("Detected %d conversion zones", len(conversion_zones))
-
-    # Build structured zone output
+    # ── Build structured zone output (original format) ────────────
     zone_records = []
-    for zone in conversion_zones:
+    for zone in all_conversion_zones:
         zid, s_r1, e_r2, s_b, e_b, blen = zone
         first_gene1, first_gene2, _ = data[s_r1]
         contig1 = dict_gff1[first_gene1][0]
         contig2 = dict_gff2[first_gene2][0]
         for j in range(s_r1, e_r2 + 1):
-            if j >= n:
+            if j >= len(data):
                 break
             g1, g2, color = data[j]
             gff1 = dict_gff1.get(g1)
@@ -1157,32 +1391,8 @@ def process_gd_result(gf, imap, input_sps_tree, sp1, sp2, support, pair_support,
     if do_subgenome:
         logger.info("Subgenome assigned to %d %s genes", len(arh_subgenome_dict), sp2)
 
-    # Post-processing: compute gene-conversion direction for blue (D_cross) pairs
-    # Direction = based on ARH gene's subgenome assignment:
-    #   A-subgenome ARH paired blue with ARD → unexpected → "Putative_conversion"
-    #   B-subgenome ARH paired blue with ARD → expected cross-subgenome → "Cross_subgenome"
-    #   Red pairs (D_same / S) → "Same_clade"
-    for i, line in enumerate(processed_lines):
-        parts = line.strip().split("\t")
-        if len(parts) < 3:
-            continue
-        gene_a, gene_b, color = parts[0], parts[1], parts[2]
-        if color == "red":
-            direction = "Same_clade"
-        elif color == "blue":
-            arh_sub = arh_subgenome_dict.get(gene_b)
-            if arh_sub == "B":
-                direction = "Cross_subgenome"
-            elif arh_sub == "A":
-                direction = "Putative_conversion"
-            else:
-                direction = "Unknown"
-        else:
-            direction = "Same_clade"
-        if len(parts) == 4:
-            processed_lines[i] = f"{gene_a}\t{gene_b}\t{color}\t{direction}\n"
-        else:
-            processed_lines[i] = f"{gene_a}\t{gene_b}\t{color}\t{direction}\n"
+    # Note: Conversion_direction calculation removed.
+    # HE_direction is now calculated in write_unified_output() based on chromosome positions.
 
     sorted_lines = processed_lines  # sorting deferred to write_unified_output (chr-aware)
     return sorted_lines, pair_source_dict, arh_subgenome_dict
@@ -1421,81 +1631,8 @@ def get_chromosome_subgenome(chr_name: str, chrs_per_subgenome: int = 10) -> Opt
 
 
 # ======================================================
-# Section 13: CLI Entry Point
+# Section 13: Optional input processors (stub implementations)
 # ======================================================
-
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description="HaploFinder (refactored) — polyploid subgenome assignment "
-                    "and gene conversion detection"
-    )
-    parser.add_argument("gff1")
-    parser.add_argument("gff2")
-    parser.add_argument("lens1")
-    parser.add_argument("lens2")
-    parser.add_argument("--blastp_pairs", default=None,
-                        help="Optional: path to BLAST pair file for additional coloring")
-    parser.add_argument("--synteny_pairs", default=None,
-                        help="Optional: path to synteny pairs file for alignment-based coloring")
-    parser.add_argument("spe1")
-    parser.add_argument("spe2")
-    parser.add_argument("num", type=int)
-    parser.add_argument("gf")
-    parser.add_argument("imap")
-    parser.add_argument("target_chr1")
-    parser.add_argument("target_chr2")
-    parser.add_argument("size", type=float)
-    parser.add_argument("input_sps_tree")
-    parser.add_argument("--min_shared_pairs", type=int, default=5,
-                        help="Min gene pairs to infer a chromosome homolog pair")
-    parser.add_argument("--min_conv_pairs", type=int, default=10,
-                        help="Min gene pairs on a chr pair to test gene conversion")
-    parser.add_argument("--n_permutations", type=int, default=1000)
-    parser.add_argument("--p_threshold", type=float, default=0.05)
-    args = parser.parse_args()
-
-    process_blastp_pairs = _process_blastp_result_stub(args.blastp_pairs, args.num)
-    alignments, alignment_scores = _parse_synteny_file_stub(args.synteny_pairs)
-    process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
-    process_gd_pairs, pair_source_dict = process_gd_result(
-        args.gf, args.imap, args.input_sps_tree, args.spe1, args.spe2, 50, 50
-    )
-
-    for pairs, tag in [
-        (process_blastp_pairs, "blastp_pairs"),
-        (process_synteny_pairs, "synteny_pairs"),
-        (process_gd_pairs, "gd_pairs"),
-    ]:
-        p_src = pair_source_dict if tag == "gd_pairs" else None
-        generate_dotplot(
-            args.gff1, args.gff2, args.lens1, args.lens2,
-            pairs, args.spe1, args.spe2, tag,
-            args.target_chr1, args.target_chr2, args.size,
-            min_pairs=args.min_conv_pairs,
-            n_permutations=args.n_permutations,
-            p_threshold=args.p_threshold,
-            pair_source_dict=p_src,
-        )
-
-    total_lst = _process_total_color_list_stub(
-        [process_blastp_pairs, process_synteny_pairs, process_gd_pairs]
-    )
-    generate_dotplot(
-        args.gff1, args.gff2, args.lens1, args.lens2,
-        total_lst, args.spe1, args.spe2, "total_pairs",
-        args.target_chr1, args.target_chr2, args.size,
-        min_pairs=args.min_conv_pairs,
-        n_permutations=args.n_permutations,
-        p_threshold=args.p_threshold,
-        pair_source_dict=pair_source_dict,
-    )
-
-
-# ============================================================
-# Optional input processors (fallback implementations)
-# ============================================================
 
 def _process_blastp_result_stub(blastp_pairs, num):
     """Fallback: read simple TSV with chr1,s1,e1,chr2,s2,e2,color format."""
@@ -1546,3 +1683,95 @@ def _process_total_color_list_stub(total_pairs):
     for pair_list in total_pairs:
         merged.extend(pair_list)
     return merged
+
+
+# ======================================================
+# Section 14: CLI Entry Point
+# ======================================================
+
+if __name__ == "__main__":
+    import argparse
+    import logging
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+
+    parser = argparse.ArgumentParser(
+        description="HaploFinder (refactored) — polyploid subgenome assignment "
+                    "and gene conversion detection"
+    )
+    parser.add_argument("gff1")
+    parser.add_argument("gff2")
+    parser.add_argument("lens1")
+    parser.add_argument("lens2")
+    parser.add_argument("--blastp_pairs", default=None,
+                        help="Optional: path to BLAST pair file for additional coloring")
+    parser.add_argument("--synteny_pairs", default=None,
+                        help="Optional: path to synteny pairs file for alignment-based coloring")
+    parser.add_argument("spe1")
+    parser.add_argument("spe2")
+    parser.add_argument("num", type=int)
+    parser.add_argument("gf")
+    parser.add_argument("imap")
+    parser.add_argument("target_chr1")
+    parser.add_argument("target_chr2")
+    parser.add_argument("size", type=float)
+    parser.add_argument("input_sps_tree")
+    parser.add_argument("--min_shared_pairs", type=int, default=5,
+                        help="Min gene pairs to infer a chromosome homolog pair")
+    parser.add_argument("--min_conv_pairs", type=int, default=10,
+                        help="Min gene pairs on a chr pair to test gene conversion")
+    parser.add_argument("--n_permutations", type=int, default=1000)
+    parser.add_argument("--p_threshold", type=float, default=0.05)
+    parser.add_argument("--mode", type=str, default="auto",
+                        choices=["auto", "intra", "inter"],
+                        help="Analysis mode: auto (detect from chr naming), "
+                             "intra (peanut-style A/B subgenome), "
+                             "inter (different species, all cross-subgenome)")
+    parser.add_argument("--chr_pair", type=str, default=None,
+                        help="Zoom to single chromosome pair: ChrA,ChrB")
+    args = parser.parse_args()
+
+    process_blastp_pairs = _process_blastp_result_stub(args.blastp_pairs, args.num)
+    alignments, alignment_scores = _parse_synteny_file_stub(args.synteny_pairs)
+    process_synteny_pairs = assign_colors_by_alignment(alignments, alignment_scores)
+    process_gd_pairs, pair_source_dict, _arh_sub = process_gd_result(
+        args.gf, args.imap, args.input_sps_tree, args.spe1, args.spe2, 50, 50
+    )
+
+    for pairs, tag in [
+        (process_blastp_pairs, "blastp_pairs"),
+        (process_synteny_pairs, "synteny_pairs"),
+        (process_gd_pairs, "gd_pairs"),
+    ]:
+        p_src = pair_source_dict if tag == "gd_pairs" else None
+        generate_dotplot(
+            args.gff1, args.gff2, args.lens1, args.lens2,
+            pairs, args.spe1, args.spe2, tag,
+            args.target_chr1, args.target_chr2, args.size,
+            min_pairs=args.min_conv_pairs,
+            n_permutations=args.n_permutations,
+            p_threshold=args.p_threshold,
+            pair_source_dict=p_src,
+            mode=args.mode,
+            chr_pair=args.chr_pair,
+        )
+
+    total_lst = _process_total_color_list_stub(
+        [process_blastp_pairs, process_synteny_pairs, process_gd_pairs]
+    )
+    generate_dotplot(
+        args.gff1, args.gff2, args.lens1, args.lens2,
+        total_lst, args.spe1, args.spe2, "total_pairs",
+        args.target_chr1, args.target_chr2, args.size,
+        min_pairs=args.min_conv_pairs,
+        n_permutations=args.n_permutations,
+        p_threshold=args.p_threshold,
+        pair_source_dict=pair_source_dict,
+        mode=args.mode,
+        chr_pair=args.chr_pair,
+    )
+
+
