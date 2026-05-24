@@ -225,9 +225,9 @@ def DrawCircle(ax, loc, radius, color, alpha):
     ax.add_patch(circle)
 
 
-def plot_dot(root, loc1, loc2, dict_gd, size=0.001):
+def plot_dot(root, loc1, loc2, dict_gd, size=0.001, dict_gff1=None, dict_gff2=None, mode="auto",
+             chrs_per_subgenome=10):
     gl_start1, gl_start2 = 0.95, 0.05
-    color_order = ["NONE", "red", "green", "purple", "blue"]
     color_map = {
         "NONE": ("gray", 0.6),
         "red": ("red", 0.6),
@@ -235,23 +235,63 @@ def plot_dot(root, loc1, loc2, dict_gd, size=0.001):
         "purple": ("purple", 0.6),
         "blue": ("blue", 0.6),
     }
+    all_colors = ["NONE", "red", "green", "purple", "blue"]
 
-    # Pre-group pairs by color to avoid O(5×N) nested loop
-    pairs_by_color = defaultdict(list)
-    for pair, color in dict_gd.items():
-        gene1, gene2 = pair.split(":")
-        if gene1 in loc1 and gene2 in loc2:
-            pairs_by_color[color].append((gene1, gene2))
+    # Determine per-chromosome-pair draw order: signal color always last.
+    # Generic across species: uses get_chromosome_subgenome + chrs_per_subgenome.
+    def _draw_order_for_chr_pair(chr_a, chr_b):
+        if mode == "inter":
+            # All pairs cross-subgenome (different species): blue bg, red signal
+            bg, sig = "blue", "red"
+        elif mode == "intra":
+            # Polyploid: use chrs_per_subgenome to classify same/cross subgenome
+            sub_a = get_chromosome_subgenome(chr_a, chrs_per_subgenome)
+            sub_b = get_chromosome_subgenome(chr_b, chrs_per_subgenome)
+            if sub_a and sub_b and sub_a == sub_b:
+                bg, sig = "red", "blue"   # same-subgenome
+            else:
+                bg, sig = "blue", "red"   # cross-subgenome or unknown
+        else:
+            # auto: detect polyploid pattern (chr_b has chr 1..2N, N=chrs_per_subgenome)
+            chr_b_num = _normalize_chr_num(chr_b)
+            if chr_b_num is not None and 1 <= chr_b_num <= 2 * chrs_per_subgenome:
+                sub_a = get_chromosome_subgenome(chr_a, chrs_per_subgenome)
+                sub_b = get_chromosome_subgenome(chr_b, chrs_per_subgenome)
+                if sub_a and sub_b and sub_a == sub_b:
+                    bg, sig = "red", "blue"
+                else:
+                    bg, sig = "blue", "red"
+            else:
+                bg, sig = "blue", "red"   # inter-like default
+        return [c for c in all_colors if c not in (bg, sig)] + [bg, sig]
 
-    # Draw in color order
-    for pass_color in color_order:
-        if pass_color not in pairs_by_color:
-            continue
-        c, a = color_map[pass_color]
-        for gene1, gene2 in pairs_by_color[pass_color]:
-            x = gl_start1 - loc1[gene1]
-            y = gl_start2 + loc2[gene2]
-            DrawCircle(root, [y, x], size, c, a)
+    # Group pairs by (chr_a, chr_b) for per-chr-pair rendering
+    if dict_gff1 and dict_gff2:
+        chr_pair_groups = defaultdict(lambda: defaultdict(list))
+        for pair, color in dict_gd.items():
+            gene1, gene2 = pair.split(":")
+            if gene1 not in loc1 or gene2 not in loc2:
+                continue
+            chr_a = dict_gff1.get(gene1, ["."])[0]
+            chr_b = dict_gff2.get(gene2, ["."])[0]
+            chr_pair_groups[(chr_a, chr_b)][color].append((gene1, gene2))
+    else:
+        chr_pair_groups = {("." , "."): defaultdict(list)}
+        for pair, color in dict_gd.items():
+            gene1, gene2 = pair.split(":")
+            if gene1 in loc1 and gene2 in loc2:
+                chr_pair_groups[(".", ".")][color].append((gene1, gene2))
+
+    for (chr_a, chr_b), groups in chr_pair_groups.items():
+        draw_order = _draw_order_for_chr_pair(chr_a, chr_b)
+        for pass_color in draw_order:
+            if pass_color not in groups:
+                continue
+            c, a = color_map[pass_color]
+            for gene1, gene2 in groups[pass_color]:
+                x = gl_start1 - loc1[gene1]
+                y = gl_start2 + loc2[gene2]
+                DrawCircle(root, [y, x], size, c, a)
 
 
 # ======================================================
@@ -268,16 +308,20 @@ def _normalize_chr_num(chr_name: str):
     return int(m.group(1)) if m else None
 
 
-def _detect_mode(lens_2: list) -> str:
-    """Auto-detect intra vs inter mode from chr_b numbering.
-    If chr_b has chr11-20 → intra (peanut subgenome structure).
-    Otherwise → inter (different species, all pairs cross-subgenome).
+def _detect_mode(lens_1: list, lens_2: list) -> tuple:
+    """Auto-detect intra vs inter mode from chromosome counts.
+
+    Intra (polyploid): species_b has ~2× the chromosomes of species_a
+      → donor is diploid parent, recipient is allopolyploid hybrid.
+    Inter (cross-species): otherwise.
+
+    Returns (mode, chrs_per_subgenome).
     """
-    for row in lens_2:
-        n = _normalize_chr_num(row[0])
-        if n is not None and 11 <= n <= 20:
-            return "intra"
-    return "inter"
+    n_a = len([r for r in lens_1 if _normalize_chr_num(r[0]) is not None])
+    n_b = len([r for r in lens_2 if _normalize_chr_num(r[0]) is not None])
+    if n_a > 0 and abs(n_b - 2 * n_a) <= 2:
+        return "intra", n_a
+    return "inter", n_a if n_a > 0 else 10
 
 
 def calculate_he_direction(chr_a: str, chr_b: str, color: str,
@@ -386,6 +430,7 @@ def write_unified_output(
         f"{spe2}_start", f"{spe2}_end",
         "color", "Pair_type", "HE_direction",
         "Gene_conversion_zone", "Gene_conversion_chr_pair", "Gene_conversion_blue_run",
+        f"{spe2}_subgenome",
     ]
     header = (
         f"# HaploFinder unified output\n"
@@ -417,12 +462,13 @@ def write_unified_output(
             display_source = source_map.get(source, source)
             zone_info = zone_lookup.get((gene_a, gene_b), (".", ".", "."))
             zid, zcp, zbr = zone_info
+            subgenome = arh_subgenome_dict.get(gene_b, ".") if arh_subgenome_dict else "."
             fh.write(
                 f"{gene_a}\t{gene_b}\t"
                 f"{chr_a}\t{chr_b}\t"
                 f"{start_a}\t{end_a}\t{start_b}\t{end_b}\t"
                 f"{color}\t{display_source}\t{he_direction}\t"
-                f"{zid}\t{zcp}\t{zbr}\n"
+                f"{zid}\t{zcp}\t{zbr}\t{subgenome}\n"
             )
     logger.info("Wrote unified output: %s (%d pairs)", output_path, total_pairs)
     return output_path
@@ -439,6 +485,7 @@ def generate_dotplot(
     output_dir: str = ".",
     mode: str = "auto",
     chr_pair: str = None,
+    chrs_per_subgenome: int = 10,
 ):
     """Generate dotplot and run gene-conversion detection.
 
@@ -469,10 +516,13 @@ def generate_dotplot(
         lens_1 = read_lens(lens1)
         lens_2 = read_lens(lens2)
 
-    # Resolve mode: auto-detect from chr_b numbering pattern
+    # Resolve mode: auto-detect from donor/receiver chromosome counts
     if mode == "auto":
-        mode = _detect_mode(lens_2)
-    logger.info("Mode resolved to: %s", mode)
+        mode, detected_n = _detect_mode(lens_1, lens_2)
+        chrs_per_subgenome = detected_n
+        logger.info("Mode resolved to: %s (chrs_per_subgenome=%d)", mode, chrs_per_subgenome)
+    else:
+        logger.info("Mode: %s (chrs_per_subgenome=%d)", mode, chrs_per_subgenome)
 
     dict_gd = read_gd_pairs(gd_pairs)
 
@@ -558,9 +608,9 @@ def generate_dotplot(
 
     gc.collect()
     if size:
-        plot_dot(root, gene_loc_1, gene_loc_2, dict_gd, size)
+        plot_dot(root, gene_loc_1, gene_loc_2, dict_gd, size, dict_gff1, dict_gff2, mode, chrs_per_subgenome)
     else:
-        plot_dot(root, gene_loc_1, gene_loc_2, dict_gd)
+        plot_dot(root, gene_loc_1, gene_loc_2, dict_gd, dict_gff1=dict_gff1, dict_gff2=dict_gff2, mode=mode, chrs_per_subgenome=chrs_per_subgenome)
 
     # ── Highlight conversion zones with rectangles (zoom mode) ──
     if chr_a_filter and chr_b_filter and zone_records:
@@ -1565,7 +1615,7 @@ def split_sequences(
             if len(parts) < 13:
                 continue
             gene_id = parts[1]   # species_b gene
-            sub = parts[12]       # ARH_subgenome
+            sub = parts[14]       # species_b_subgenome
             if sub in ("A", "B"):
                 arh_sub[gene_id] = sub
                 arh_sub[gene_id] = sub

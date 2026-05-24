@@ -332,7 +332,6 @@ haplofinder_parser.add_argument('--parental_sps', metavar='PARENTAL_SPECIES', ty
 haplofinder_parser.add_argument('--input_fasta', metavar='FASTA_FILE', required=False, help='Input FASTA file (.fa/.fasta). If provided, triggers per-subgenome FASTA partitioning')
 haplofinder_parser.add_argument('--cluster_file', metavar='CLUSTER_FILE', required=False, help=argparse.SUPPRESS)
 haplofinder_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
-haplofinder_parser.add_argument('--chrs_per_subgenome', metavar='INT', type=int, default=10, help='Number of chromosomes per subgenome for subgenome mapping (default = 10). Used only as a legacy validation helper; primary homolog pairing is now inferred from collinearity.')
 # --- gene conversion detection (refactored) ---
 haplofinder_parser.add_argument('--min_shared_pairs', metavar='INT', type=bounded_int(1), default=5, help='Minimum gene pairs required between two chromosomes to infer a homolog pair by collinear coverage (default = 5). Increase for noisy datasets.')
 haplofinder_parser.add_argument('--min_conv_pairs', metavar='INT', type=bounded_int(1), default=10, help='Minimum gene pairs on a chromosome pair to attempt gene conversion detection (default = 10).')
