@@ -1,18 +1,16 @@
 """
-Hybridization tracing and HyDe integration for the PhyloTracer pipeline.
+HyDe-based admixture screening for the PhyloTracer pipeline.
 
 This module identifies candidate duplication clades, builds gene matrices,
-runs HyDe analyses, and writes filtered hybridization results.
+runs HyDe analyses, and writes filtered HyDe summary results for downstream
+interpretation.
 """
 
 import logging
 import os
-import subprocess
-import time
 
 logger = logging.getLogger(__name__)
 from collections import Counter, defaultdict
-from signal import SIGUSR2
 
 import numpy as np
 import pandas as pd
@@ -21,18 +19,12 @@ try:
 except ImportError:
     hd = None
 from Bio import SeqIO
-from ete3 import PhyloTree
-from tqdm import tqdm
 
 from phylotracer import (
     annotate_gene_tree,
     find_dup_node,
-    gene_id_transfer,
     get_species_list,
     get_species_set,
-    num_sptree,
-    num_tre_node,
-    read_and_return_dict,
     read_phylo_tree,
     rename_input_tre,
 )
@@ -41,52 +33,6 @@ from phylotracer.GD_Detector import get_model as detector_get_model, normalize_m
 # ======================================================
 # Section 1: Species Tree and Sequence Utilities
 # ======================================================
-
-
-def process_start_node(file_path: str, sptree: object) -> str:
-    """
-    Determine the common ancestor of species listed in a file.
-
-    Parameters
-    ----------
-    file_path : str
-        Path to a file containing species names, one per line.
-    sptree : object
-        Species tree object used to compute the common ancestor.
-
-    Returns
-    -------
-    str
-        Name of the common ancestor node, or None if unavailable.
-
-    Assumptions
-    -----------
-    Species names in the file match those in the species tree.
-    """
-    species_list = []
-    try:
-        with open(file_path, "r") as f:
-            for line in f:
-                species_list.append(line.strip())
-    except FileNotFoundError:
-        logger.error("Species list file not found at %s", file_path)
-        return None
-    except Exception as e:
-        logger.error("Error reading species list file: %s", e)
-        return None
-
-    if not species_list:
-        logger.warning("Species list file is empty.")
-        return None
-
-    try:
-        common_ancestor = sptree.get_common_ancestor(species_list)
-        return common_ancestor.name
-    except Exception as e:
-        logger.error("Error finding common ancestor in species tree: %s", e)
-        return None
-
-
 def create_fasta_dict(fasta_file, gene2new_named_gene_dic):
     """
     Parse a FASTA file into a dictionary keyed by renamed gene IDs.
@@ -115,37 +61,6 @@ def create_fasta_dict(fasta_file, gene2new_named_gene_dic):
             continue
         fasta_dict[new_id] = str(record.seq)
     return fasta_dict
-
-
-def get_outsps_sort_lst(map_t, sptree):
-    """
-    Sort outgroup species by topological distance to a mapped node.
-
-    Parameters
-    ----------
-    map_t : object
-        Species tree node defining the mapped clade.
-    sptree : object
-        Species tree object to traverse.
-
-    Returns
-    -------
-    list
-        List of species names sorted by distance to the mapped node.
-
-    Assumptions
-    -----------
-    Distances are computed using topology-only mode.
-    """
-    sps_depth = {}
-    for gene in sptree:
-        if gene.name in get_species_list(map_t):
-            continue
-        sps_depth[gene.name] = gene.get_distance(map_t, topology_only=True)
-    sorted_out = sorted(sps_depth.items(), key=lambda item: item[1])
-    return [sps for sps, _ in sorted_out]
-
-
 def get_dynamic_basal_set_for_gd(gene_tree_species_set: set, species_tree_root: object) -> set:
     """
     Compute a dynamic outgroup-candidate species set using Phylo_Rooter logic.
@@ -240,34 +155,6 @@ def get_sister_nodes(node):
             sister_nodes.append(sisters[0])
         current_node = current_node.up
     return sister_nodes
-
-
-def get_target_gene(sisters, sps):
-    """
-    Find a target gene within sister clades for a given species.
-
-    Parameters
-    ----------
-    sisters : list
-        List of sister nodes to search.
-    sps : object
-        Species prefix to match.
-
-    Returns
-    -------
-    object
-        Closest matching gene name, or None if not found.
-
-    Assumptions
-    -----------
-    Sister nodes are valid ETE nodes with leaf names.
-    """
-    for sis_node in sisters:
-        if sps in get_species_set(sis_node):
-            return get_outsps_min_distance_gene(sis_node, sps)
-    return None
-
-
 def get_outgroup_species_candidates_for_gd_node(gd_node_name, sptree):
     """
     Return sister-branch outgroup species candidates ordered by proximity.
@@ -685,7 +572,8 @@ def hyde_main(
 
     Assumptions
     -----------
-    HyDe results are written to ``hyde_out.txt`` and ``hyde_filtered_out.txt``.
+    HyDe summary tables are written to ``hyde_out.txt`` and
+    ``hyde_filtered_out.txt``.
     """
     hyde_tuple_lst = []
     all_gene_matrices_data = []  # Collect all gene matrix data

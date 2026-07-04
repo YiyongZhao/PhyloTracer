@@ -69,70 +69,6 @@ def classify_copy_transition(prev_copy: int, curr_copy: int) -> str:
         return LOSS_TYPE_2_0 if (prev_copy - curr_copy) >= 2 else LOSS_TYPE_2_1
 
 
-# ======================================================
-# Section 1: Duplication Loss Validation
-# ======================================================
-
-
-def legacy_is_valid_duplication_loss(species_voucher, dup_node, renamed_sptree):
-    """
-    Deprecated legacy validator for duplication loss.
-
-    Parameters
-    ----------
-    species_voucher : object
-        Voucher identifier for the target species.
-    dup_node : object
-        Duplication node in the gene tree.
-    renamed_sptree : object
-        Species tree with renamed labels for mapping.
-
-    Returns
-    -------
-    bool
-        Legacy boolean flag; retained only for backward compatibility.
-
-    Assumptions
-    -----------
-    Deprecated: this function uses a strict AND criterion (left and right
-    both present before calling loss), which is inconsistent with event-level
-    2_2/2_1/2_0 classification and should not be used in new code.
-    """
-    gd_species_set = get_species_set(dup_node)
-
-    if len(gd_species_set) == 1:
-        mapped_node = renamed_sptree & list(gd_species_set)[0]
-    else:
-        mapped_node = renamed_sptree.get_common_ancestor(gd_species_set)
-
-    if mapped_node is None:
-        return False
-
-    if species_voucher not in set(mapped_node.get_leaf_names()):
-        return False
-
-    children = dup_node.get_children()
-    if len(children) != 2:
-        return False
-
-    left, right = children
-
-    left_species = {leaf.split("_")[0] for leaf in left.get_leaf_names()}
-    right_species = {leaf.split("_")[0] for leaf in right.get_leaf_names()}
-
-    should_have_two = (species_voucher in left_species) and (species_voucher in right_species)
-
-    if not should_have_two:
-        return False
-
-    observed_copy_num = 0
-    for leaf in dup_node.get_leaf_names():
-        if leaf.split("_")[0] == species_voucher:
-            observed_copy_num += 1
-
-    return observed_copy_num < 2
-
-
 def classify_species_copy_state(
     species_voucher: str,
     dup_node: object,
@@ -243,28 +179,6 @@ def build_transition_summary(transition_keys):
     c10 = ordered_types.count(LOSS_TYPE_1_0)
     node_events = ";".join(f"{node_name}|{trans_type}" for node_name, trans_type in transition_keys)
     return ",".join(ordered_types), c20, c21, c10, node_events
-
-
-def build_path_count_summary(node_events, types_str, c20, c21, c10):
-    """Backward-compatible helper retained for older callers."""
-    if not types_str or types_str == LOSS_TYPE_NA:
-        return LOSS_TYPE_NA
-    return str(types_str).replace(",", ";")
-
-
-def build_path_count_summary_by_mode(mode, transition_keys):
-    """Build one concise node-event summary from mode-specific transition keys.
-
-    ``transition_keys`` has already been prepared according to the selected mode:
-    accumulate keeps every path transition, while parsimony keeps collapsed shared
-    transitions. Export the same node:type representation for both modes so users
-    can verify node counts from one column.
-    """
-    if not transition_keys:
-        return LOSS_TYPE_NA
-    return ";".join(f"{node_name}:{loss_type}" for node_name, loss_type in transition_keys)
-
-
 def get_path_node_order(path_str: str) -> dict:
     """Return node order on one loss path for stable event display."""
     parsed = parse_loss_path(path_str)
@@ -457,32 +371,6 @@ def get_tips_to_clade_path_lst(taget_node: object, dic) -> list:
 
         path_str_lst.append(result)
     return path_str_lst
-
-
-def get_maptree_node_count_dic(sp_list, map_clade):
-    sp_dic = {i.name: 0 for i in map_clade.traverse()}
-    for i in sp_list:
-        if i in sp_dic:
-            sp_dic[i] += 1
-
-    tips = set([j for j in sp_dic.keys() if not (j.startswith("S") and j[1:].isdigit())])  # only match S+digits as internal nodes, not species like Solanum
-    for k, v in sp_dic.items():
-        if k.startswith("S") and k[1:].isdigit():  # match S+digits only
-            if v == 0:
-                t = map_clade & k
-                sp = get_species_set(t)
-                if len(sp & tips) != 0:
-                    sp_dic[k] = 1
-            elif v == 1:
-                t = map_clade & k
-                sp = get_species_set(t)
-                if len(sp & tips) != 0:
-                    jiao = list(sp & tips)[0]
-                    if sp_dic[jiao] == 2:
-                        sp_dic[k] = 2
-    return sp_dic
-
-
 # ======================================================
 # Section 3: Gene Pair and Path Extraction
 # ======================================================
@@ -880,20 +768,6 @@ def get_path_str_num_dic(
 # ======================================================
 # Section 6: Sorting and Excel Reporting
 # ======================================================
-
-
-def sort_dict_by_keys(input_dict):
-    sorted_keys = sorted(input_dict.keys(), key=lambda k: k.split("->")[-1].split("(")[0])
-    sorted_dict = {k: input_dict[k] for k in sorted_keys}
-    return dict(
-        sorted(
-            sorted_dict.items(),
-            key=lambda x: [int(n) for n in re.findall(r"\((\d+)\)", x[0])],
-            reverse=True,
-        )
-    )
-
-
 def summarize_event_level_loss(records, node_count_mode="parsimony"):
     """Build event-level loss-node and loss-pattern labels for export."""
     event_level = {}

@@ -6,13 +6,13 @@
 PhyloTracer: A Versatile Toolkit for Comparative Genomics and Phylogenomics Analysis
 ====================================================================================
 
-**PhyloTracer** is a user-friendly toolkit designed for comprehensive phylogenetic analysis, including tree format manipulation, gene tree rooting, detection of gene duplication origins and losses, ortholog retrieval, phylogenetic noise elimination, gene tree topology summarization, species hybridization detection, and visualization. By enabling more accurate rooting of gene trees, PhyloTracer lays a solid foundation for inferring putative orthologous genes. Additionally, it provides tools to statistically summarize topology types, such as ABAB-ABBA models, facilitating the identification of hybridization signals.
+**PhyloTracer** is a user-friendly toolkit designed for comprehensive phylogenetic analysis, including tree format manipulation, gene tree rooting, detection of gene duplication origins and losses, ortholog retrieval, phylogenetic noise elimination, gene tree topology summarization, species hybridization-related signal detection, and visualization. By enabling more accurate rooting of gene trees, PhyloTracer lays a solid foundation for inferring putative orthologous genes. Additionally, it provides tools to statistically summarize topology types and admixture-compatible patterns that can support downstream hybridization interpretation.
 
 Features
 --------
 
 - Incorporating the principles of maximizing the outgroup depth score, minimizing the Robinson-Foulds (RF) distance, reducing the variance in ingroup branch lengths, and maximizing the overlap ratio of gene duplication species enhances the accuracy of root determination.
-- Use GD clade to verify hybridization signals between species.
+- Use GD clades to prioritize gene sets for downstream HyDe-based admixture screening between species.
 - Introducing the concept of long-branch genes for noise filtration in gene trees.
 - Introducing the concept of inserted genes for monophyletic filtering in single-copy gene trees.
 
@@ -25,5 +25,4 @@ Documentation
    installation.rst
    input_files.rst
    analyze.rst
-
 

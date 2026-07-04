@@ -1,8 +1,8 @@
 """
-Hybridization visualization utilities for the PhyloTracer pipeline.
+HyDe summary visualization utilities for the PhyloTracer pipeline.
 
 This module parses HyDe outputs, computes summary statistics, and produces
-annotated tree and heatmap figures for hybridization inference.
+annotated tree and heatmap figures for admixture-oriented interpretation.
 """
 
 import logging
@@ -11,7 +11,6 @@ from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
-import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -24,7 +23,7 @@ except ImportError:
     TextFace = None
     TreeStyle = None
 from matplotlib import colors
-from matplotlib.colors import LinearSegmentedColormap, ListedColormap
+from matplotlib.colors import ListedColormap
 from PIL import Image, ImageDraw, ImageFont
 
 from phylotracer import (
@@ -447,57 +446,6 @@ def hyde_visual_cmap():
         lucency = lucency - (1 / 5000)
     newcmp = ListedColormap(cmap)
     return newcmp
-
-
-def get_necmap():
-    """
-    Generate a combined lightened colormap for heatmaps.
-
-    Returns
-    -------
-    LinearSegmentedColormap
-        Combined colormap for heatmap rendering.
-
-    Assumptions
-    -----------
-    Two base RGB colors define the gradient extremes.
-    """
-
-    def create_lightened_cmap(rgb_color, reverse=False):
-        colors = [rgb_color]
-        for i in range(50):
-            lightened_color = tuple(
-                (np.array(rgb_color) + (1 - np.array(rgb_color)) * (i / 50)).tolist()
-            )
-            colors.append(lightened_color)
-        cmap_values = np.linspace(0, 1, len(colors))
-        if reverse:
-            colors = colors[::-1]
-        lightened_cmap = LinearSegmentedColormap.from_list(
-            "lightened_cmap",
-            list(zip(cmap_values, colors)),
-        )
-        return lightened_cmap
-
-    rgb_color1 = (33 / 255, 205 / 255, 67 / 255)
-    rgb_color2 = (33 / 255, 171 / 255, 205 / 255)
-
-    lightened_cmap1 = create_lightened_cmap(rgb_color1, reverse=True)
-    lightened_cmap2 = create_lightened_cmap(rgb_color2)
-
-    combined_cmap = LinearSegmentedColormap.from_list(
-        "combined_cmap",
-        np.vstack(
-            (
-                lightened_cmap1(np.linspace(0, 1, 256)),
-                lightened_cmap2(np.linspace(0, 1, 256)),
-            )
-        ),
-    )
-
-    return combined_cmap
-
-
 # ======================================================
 # Section 5: Heatmap Construction
 # ======================================================
@@ -505,7 +453,7 @@ def get_necmap():
 
 def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
     """
-    Create a heatmap for hybridization summaries at an internal node.
+    Create a heatmap for HyDe summaries at an internal node.
 
     Parameters
     ----------
@@ -643,7 +591,7 @@ def create_hot_map_node(summary_dic, hyb_dic, node, t, filename):
 
 def create_hot_map_leaf(summary_dic, a_hyb_to_three_tup_list, t, filename):
     """
-    Create a heatmap for hybridization summaries at the leaf level.
+    Create a heatmap for HyDe summaries at the leaf level.
 
     Parameters
     ----------
@@ -867,7 +815,7 @@ def combine_fig(prefix, mode="leaf"):
     max_width = combine_fig_size
     max_height = combine_fig_size
 
-    y_text = "y (hybridization)"
+    y_text = "gamma (HyDe)"
     y_text_x = max(10, min(50, max_width - 200))
     y_text_y = 15
     draw.text((y_text_x, y_text_y), y_text, fill="black", font=font_title)
@@ -915,7 +863,7 @@ def combine_fig(prefix, mode="leaf"):
 
 def hyde_visual_leaf_main(out_file_name, sptree, output_dir=None):
     """
-    Generate hybridization visualizations centered on leaves.
+    Generate HyDe-summary visualizations centered on leaves.
 
     Parameters
     ----------
@@ -952,7 +900,7 @@ def hyde_visual_leaf_main(out_file_name, sptree, output_dir=None):
 
 def hyde_visual_node_main(out_file_name, sptree, output_dir=None):
     """
-    Generate hybridization visualizations centered on internal nodes.
+    Generate HyDe-summary visualizations centered on internal nodes.
 
     Parameters
     ----------
@@ -1002,7 +950,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Visualize hybridization (HyDe) results on a species tree.",
+        description="Visualize HyDe summary results on a species tree.",
     )
     parser.add_argument(
         "species_tree_file",

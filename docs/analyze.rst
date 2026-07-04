@@ -431,7 +431,7 @@ Example:
 ------------------
 
 Description:
-    To detect hybridization signals from GD-derived gene sets using coalescent-based phylogenetic invariants (HyDe) on species-tree mapped GD nodes.
+    To screen GD-derived gene sets with coalescent-based phylogenetic invariants (HyDe) on species-tree mapped GD nodes and summarize admixture-compatible triplets.
 
 Required Parameters:
     - ``--input_GF_list``       File containing paths to gene tree files, one per line.
@@ -460,7 +460,7 @@ Example:
 ----------------------
 
 Description:
-    To visualize hybridization signals, highlighting hybridization proportions (gamma) from HyDe analysis.
+    To visualize HyDe-derived admixture summaries, highlighting gamma values and tested triplets on the species tree.
 
 Required Parameters:
     - ``--hyde_out``        File containing the result of HyDe from Hybrid_Tracer.
@@ -471,24 +471,24 @@ Optional Parameters:
     - ``--output_dir``      Output directory (default: current working directory).
 
 Output:
-    - Heatmap PDF(s) showing hybridization gamma values across species pairs, annotated on the species tree.
+    - Heatmap PDF(s) showing HyDe gamma summaries across species pairs, annotated on the species tree.
 
 Example:
     .. code-block:: bash
 
         PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk
 
-    Combined figure legend: red = focal hybrid/clade, blue = target internal node label in ``--node`` mode, yellow = γ values, white = tested hybridization combinations.
+    Combined figure legend: red = focal hybrid/clade, blue = target internal node label in ``--node`` mode, yellow = γ values, white = tested HyDe combinations.
 
 
 17. HaploFinder
 ----------------
 
 Description:
-   A unified pipeline that extracts GD gene pairs from rooted gene family trees,
-   labels them as orthologs (red) or paralogs/GD-pairs (blue), renders
-   chromosome-level synteny dotplots, and detects gene conversion zones via
-   red→blue→red pattern scanning.
+   A unified pipeline that extracts GD-derived gene pairs from rooted gene
+   family trees, preserves raw gene-tree pair colors, renders chromosome-level
+   synteny dotplots using projection-aware colors, and detects local
+   conversion-like zones via color-pattern scanning.
 
    When ``--parental_sps`` and ``--hyb_sps`` are provided, subgenome assignment
    (A/B/...) is performed inline using S-node sister-clade logic: for each
@@ -530,17 +530,21 @@ Optional Parameters:
 
 Gene conversion detection parameters:
     - ``--min_shared_pairs``  Minimum gene pairs required between two chromosomes
-                              to infer a homolog pair by collinear coverage (default is 5).
+                              to infer a chromosome-pair projection by collinear
+                              coverage (default is 5).
     - ``--min_conv_pairs``    Minimum gene pairs on a chromosome pair to attempt
                               gene conversion detection (default is 10).
-    - ``--n_permutations``    Number of permutations for the permutation test
-                              (default is 1000).
-    - ``--p_threshold``       Significance threshold applied to both binomial and
-                              permutation tests (default is 0.05).
+    - ``--n_permutations``    Compatibility parameter retained in the CLI;
+                              currently not used by the local conversion-zone
+                              scanner (default is 1000).
+    - ``--p_threshold``       Compatibility parameter retained in the CLI;
+                              currently not used by the local conversion-zone
+                              scanner (default is 0.05).
 
 Output:
-    - ``haplofinder_output.tsv``  16-column unified table (gene pairs, coordinates,
-                                   colors, ortholog types, subgenome labels, conversion zones).
+    - ``haplofinder_output.tsv``  17-column unified table including raw pair color,
+                                   projection color/type, inferred exchange direction,
+                                   subgenome labels, and conversion-zone annotations.
     - ``gd_pairs_dotplot.pdf``    Vector dotplot of GD pairs.
     - ``gd_pairs_dotplot.png``    Raster dotplot of GD pairs.
 

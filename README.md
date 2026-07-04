@@ -37,7 +37,7 @@ An integrated phylogenomics toolkit designed for comprehensive post–gene-tree 
 ---
 ## What does PhyloTracer do?
 
-`PhyloTracer` provides a reproducible workflow that bridges gene tree inference and biological interpretation. It employs a six-metric composite scoring framework for gene tree rooting, identifies gene duplication events and classifies them into evolutionary models (AABB/AXBB/AABX/Complex), traces per-species copy-state trajectories (2→2, 2→1, 2→0) for lineage-specific loss profiling, screens hybridization signals via HyDe D-statistics on GD-derived gene sets, and detects ancient recombination events on chromosomal synteny dotplots with subgenome-aware ortholog partitioning.
+`PhyloTracer` provides a reproducible workflow that bridges gene tree inference and biological interpretation. It employs a six-metric composite scoring framework for gene tree rooting, identifies gene duplication events and classifies them into evolutionary models (AABB/AXBB/AABX/Complex), traces per-species copy-state trajectories (2→2, 2→1, 2→0) for lineage-specific loss profiling, screens hybridization-related signals via HyDe on GD-derived gene sets, and detects ancient recombination events on chromosomal synteny dotplots with subgenome-aware ortholog partitioning.
 All 17 modules share a consistent data model (gene-to-species mapping, Newick trees, tab-delimited annotations) and can be used independently or combined in larger phylogenomic pipelines.
 
 ---
@@ -59,7 +59,7 @@ All 17 modules share a consistent data model (gene-to-species mapping, Newick tr
 ---
 ## Module Features
 
-PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, rooting, orthology refinement, duplication/loss detection, and hybridization analysis. Each module can run independently or be incorporated into larger evolutionary pipelines.
+PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, rooting, orthology refinement, duplication/loss detection, and HyDe-based admixture screening. Each module can run independently or be incorporated into larger evolutionary pipelines.
 
 1. **Phylo_Rooter:** Automatically finds the best root for each gene tree. Generates candidates from four strategies (outgroup-based, GD-node-based, MAD, MinVar) and scores them with six complementary metrics—covering outgroup position, branch-length balance, duplication parsimony, species overlap, GD consistency, and topological concordance—then selects the top-ranked root.
 2. **MulRF_Distance:** Measures how much a gene tree's topology conflicts with the species tree (or another gene tree). Works with both single-copy and multi-copy gene families by comparing at the species level rather than the gene level.
@@ -75,9 +75,9 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
 12. **GD_Loss_Tracker:** Traces what happened to duplicated gene copies across species: for each duplication event, every species is classified as retaining both copies (2→2), losing one (2→1), or losing both (2→0). Results can be filtered by target species or restricted to specific ancestral nodes, and are exported as detailed Excel reports.
 13. **GD_Loss_Visualizer:** Renders pie charts of copy-state distributions (2-2/2-1/2-0) at each species tree node for visual identification of lineage-specific gene loss patterns.
 14. **Ortho_Retriever:** Infers phylogenetically supported single-copy putative orthologs by recursively splitting paralogous clades from gene family trees, using gene length to resolve within-species paralog conflicts, optionally refining candidate ortholog sets with synteny block support, and optionally attaching strict sister-clade outgroup genes to the written trees.
-15. **Hybrid_Tracer:** Screens for hybridization (introgression) signals using genes derived from detected duplication events. For each duplication node, relevant sequences are extracted and tested with HyDe's D-statistic to distinguish incomplete lineage sorting from true hybridization. Supports node-focused or genome-wide analysis with batch processing.
-16. **Hybrid_Visualizer:** Displays admixture proportions (γ) and D-statistic support values on the species tree in leaf-mode or node-mode heatmaps.
-17. **HaploFinder:** A unified pipeline that extracts gene duplication (GD) pairs from gene family trees, assigns red/blue labels via ortholog/paralog classification, renders chromosome-level synteny dotplots, and detects gene conversion zones (red→blue→red transitions). When `--parental_sps` and `--hyb_sps` are provided, subgenome assignment (A/B/...) is performed inline via S-node sister-clade inference. Optional `--input_fasta` triggers FASTA partitioning of the hybrid proteome into per-subgenome files for downstream analysis of polyploid genome evolution.
+15. **Hybrid_Tracer:** Screens hybridization-related signals using genes derived from detected duplication events. For each duplication node, relevant sequences are extracted and tested with HyDe's phylogenetic-invariant framework to summarize admixture-compatible triplets. Supports node-focused or genome-wide analysis with batch processing.
+16. **Hybrid_Visualizer:** Displays admixture proportions (γ) and HyDe support summaries on the species tree in leaf-mode or node-mode heatmaps.
+17. **HaploFinder:** A unified pipeline that extracts GD-derived gene pairs from gene family trees, preserves raw gene-tree pair colors, renders chromosome-level synteny dotplots with projection-aware coloring, and detects local conversion-like zones. When `--parental_sps` and `--hyb_sps` are provided, subgenome assignment (A/B/...) is performed inline via S-node sister-clade inference. Optional `--input_fasta` triggers FASTA partitioning of the hybrid proteome into per-subgenome files for downstream analysis of polyploid genome evolution.
 
 *Together, these modules provide a comprehensive workflow for constructing, refining, and interpreting large-scale phylogenomic data.*
 
@@ -97,10 +97,10 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
   Traces post-duplication gene retention along the species tree with per-species 2→2 / 2→1 / 2→0 trajectories, target-species filtering, and MRCA-restricted analyses.
 
 - **GD-informed hybridization screening** (via `Hybrid_Tracer`):  
-  Extracts duplication-derived gene sets, constructs node-partitioned concatenated alignments, and runs HyDe (D-statistic) to detect introgression and hybrid speciation signals.
+  Extracts duplication-derived gene sets, constructs node-partitioned concatenated alignments, and runs HyDe to summarize admixture-compatible triplets for downstream interpretation of hybridization or introgression.
 
 - **Haplotype analysis & subgenome assignment** (via `HaploFinder`):  
-  Extracts GD-derived gene pairs, classifies them as orthologs/paralogs/GD-pairs, and overlays them on chromosomal synteny dotplots to detect gene conversion zones (red→blue→red). Inline subgenome assignment uses S-node sister-clade logic; optional FASTA partitioning outputs per-subgenome proteomes.
+  Extracts GD-derived gene pairs, preserves raw pair colors, projects them onto chromosomal synteny dotplots, and scans for local conversion-like zones. Inline subgenome assignment uses S-node sister-clade logic; optional FASTA partitioning outputs per-subgenome proteomes.
 
 ---
 ## Getting started with PhyloTracer
@@ -195,7 +195,7 @@ export QT_QPA_PLATFORM=offscreen
   * pyqt5 (for visualization modules)
   * phyde>=1.0.2 (HyDe Python interface)
     
-Note: PhyloTracer uses basic functions of analysis and visualization of trees from Python framework [ete3](https://etetoolkit.org/) and detects species hybridization signals using ABBA-BABA test by [HyDe](https://github.com/pblischak/HyDe).
+Note: PhyloTracer uses basic analysis and visualization functions from [ete3](https://etetoolkit.org/) and evaluates admixture-compatible triplets with [HyDe](https://github.com/pblischak/HyDe).
 
 ---
 ## Example input files
@@ -266,7 +266,7 @@ Most modules generate task-specific outputs in either the current working direct
 - Hybridization outputs: `hyde_out.txt`, `hyde_filtered_out.txt`
 - Ortholog retrieval outputs: `ortho_retriever_summary.txt`, `ortholog_trees.tsv`
 - Topology summaries: `absolute_*.txt`, `relative_*.txt`, merged PDF summaries
-- HaploFinder: `haplofinder_output.tsv` (16-column unified table), `gd_pairs_dotplot.pdf`, `gd_pairs_dotplot.png`
+- HaploFinder: `haplofinder_output.tsv` (17-column unified table), `gd_pairs_dotplot.pdf`, `gd_pairs_dotplot.png`
 - HaploFinder (with `--input_fasta`): additionally `split_assignment.tsv`, `split_subgenome_A.fasta`, `split_subgenome_B.fasta`, `split_summary.txt` (written directly to `--output_dir`)
 
 ---
@@ -692,7 +692,7 @@ Outputs include `ortho_retriever_summary.txt` and `ortholog_trees.tsv`. When `--
 ### Hybrid_Tracer
 ```
 Description:
-    To detect hybridization signals from GD-derived gene sets and run HyDe testing on species-tree mapped GD nodes
+    To screen GD-derived gene sets with HyDe on species-tree mapped GD nodes and summarize admixture-compatible triplets
 Required parameters:
     --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
     --input_Seq_GF_list     Tab-delimited mapping file (GF_ID<TAB>alignment_path), aligned with --input_GF_list IDs
@@ -714,7 +714,7 @@ Outputs include `hyde_out.txt`, `hyde_filtered_out.txt`, and a run summary file 
 ### Hybrid_Visualizer
 ```
 Description:
-    To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals
+    To visualize HyDe-derived admixture summaries, highlighting gene-tree context and gamma-supported triplets
 Required parameters:
     --hyde_out              HYDE output table file
     --input_sps_tree        Species tree file in Newick format
@@ -724,11 +724,13 @@ Optional parameters:
 Usage:
     PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk
 
-The combined image legend uses red for the focal hybrid/clade, blue for the target internal node label in `--node` mode, yellow for γ values, and white labels for tested hybridization combinations.
+The combined image legend uses red for the focal hybrid/clade, blue for the target internal node label in `--node` mode, yellow for γ values, and white labels for tested HyDe combinations.
 ```
 ### HaploFinder
 
-**Description:** A unified pipeline that extracts GD gene pairs from rooted gene family trees, labels them as orthologs (red) or paralogs/GD-pairs (blue), renders chromosome-level synteny dotplots, and detects gene conversion zones via red→blue→red pattern scanning. When `--parental_sps` and `--hyb_sps` are provided, subgenome assignment (A/B/...) is performed inline using S-node sister-clade logic. Optional `--input_fasta` triggers FASTA partitioning into per-subgenome files.
+**Description:** A unified pipeline that extracts GD-derived gene pairs from rooted gene family trees, writes raw gene-tree pair colors, projects those pairs onto chromosome-level dotplots, and detects local conversion-like zones via color-pattern scanning. When `--parental_sps` and `--hyb_sps` are provided, subgenome assignment (A/B/...) is performed inline using S-node sister-clade logic. Optional `--input_fasta` triggers FASTA partitioning into per-subgenome files.
+
+In `haplofinder_output.tsv`, `Raw_pair_color` preserves the original gene-tree classification, whereas `Pair_color` is the chromosome-projection color used for dotplot interpretation (`primary` projection = red, `homeologous` projection = blue).
 
 **Subgenome assignment logic**
 
@@ -740,7 +742,7 @@ Labels are derived from the sorted order of `--parental_sps`: the first parental
 
 ```
 Description:
-    Unified pipeline for GD-pair extraction, synteny dotplot, gene conversion detection,
+    Unified pipeline for GD-pair extraction, projection-aware dotplot rendering, local conversion-zone detection,
     subgenome assignment, and optional FASTA partitioning.
 
 Required parameters:
@@ -771,19 +773,22 @@ Optional parameters:
                             Default: command-specific subfolder in current working directory
 
 Gene conversion detection parameters:
-    --min_shared_pairs      Minimum gene pairs between two chromosomes to infer a homolog pair
+    --min_shared_pairs      Minimum gene pairs between two chromosomes to infer a supported chromosome-pair projection
                             by collinear coverage (default = 5).
     --min_conv_pairs        Minimum gene pairs on a chromosome pair to attempt gene conversion
                             detection (default = 10).
-    --n_permutations        Number of permutations for the permutation test (default = 1000).
-    --p_threshold           Significance threshold for gene conversion tests (default = 0.05).
+    --n_permutations        Compatibility parameter retained in the CLI; currently not used by the local
+                            conversion-zone scanner (default = 1000).
+    --p_threshold           Compatibility parameter retained in the CLI; currently not used by the local
+                            conversion-zone scanner (default = 0.05).
 
 Usage:
     PhyloTracer HaploFinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a ARD --species_b ARH --species_a_gff ARD.gff --species_b_gff ARH.gff --species_a_lens ARD.lens --species_b_lens ARH.lens
 
 Output files:
-    haplofinder_output.tsv    16-column unified table (gene pairs, coordinates, colors,
-                               ortholog types, subgenome labels, conversion zones)
+    haplofinder_output.tsv    17-column unified table including raw pair color,
+                               projection color/type, inferred exchange direction,
+                               subgenome labels, and conversion-zone annotations
     gd_pairs_dotplot.pdf      Vector dotplot of GD pairs
     gd_pairs_dotplot.png      Raster dotplot of GD pairs
 

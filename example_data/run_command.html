@@ -7517,7 +7517,7 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h1 id="PhyloTracer-mannual">PhyloTracer mannual<a class="anchor-link" href="#PhyloTracer-mannual">¶</a></h1><h2 id="1.-Introduction">1. Introduction<a class="anchor-link" href="#1.-Introduction">¶</a></h2><p>PhyloTracer is a user-friendly toolkit designed for comprehensive phylogenetic analysis, including tree format manipulation, gene tree rooting, detection of gene duplication origins and losses, ortholog retrieval, phylogenetic noise elimination, gene tree topology summarization, species hybridization detection, and visualization. By enabling more accurate rooting of gene trees, PhyloTracer lays a solid foundation for inferring putative orthologous genes. Additionally, it provides tools to statistically summarize topology types, such as ABAB-ABBA models, facilitating the identification of hybridization signals.</p>
+<h1 id="PhyloTracer-mannual">PhyloTracer mannual<a class="anchor-link" href="#PhyloTracer-mannual">¶</a></h1><h2 id="1.-Introduction">1. Introduction<a class="anchor-link" href="#1.-Introduction">¶</a></h2><p>PhyloTracer is a user-friendly toolkit designed for comprehensive phylogenetic analysis, including tree format manipulation, gene tree rooting, detection of gene duplication origins and losses, ortholog retrieval, phylogenetic noise elimination, gene tree topology summarization, species hybridization-related signal detection, and visualization. By enabling more accurate rooting of gene trees, PhyloTracer lays a solid foundation for inferring putative orthologous genes. Additionally, it provides tools to statistically summarize topology types and admixture-compatible patterns that can support downstream hybridization interpretation.</p>
 <p><strong>Version：</strong> 1.0.0<br/>
 <strong>Module features：</strong></p>
 <ul>
@@ -7534,8 +7534,8 @@ a.anchor-link {
 <li>GD_Loss_Tracker: To track the gene duplication loss event starting across each node/tip from a specific GD burst event in the species tree.</li>
 <li>GD_Loss_Visualizer: To visualize the summary of gene duplication loss event counts for each node/tip in the context of the species tree.</li>
 <li>Ortho_Retriever: To rapidly infer putative single-copy orthologs by splitting paralogs from large-scale gene family trees across multiple species.</li>
-<li>Hybrid_Tracer: To detect hybridization signals for each potential GD burst event across species tree by using the D-statistic (ABAB-BABA) test.</li>
-<li>Hybrid_Visualizer: To visualize hybridization signals, highlighting support from gene tree topologies and D-statistic signals.</li>
+<li>Hybrid_Tracer: To detect hybridization-related signals for each potential GD burst event across the species tree by using HyDe to summarize admixture-compatible triplets.</li>
+<li>Hybrid_Visualizer: To visualize HyDe-derived admixture summaries, highlighting gene tree context and gamma-supported triplets.</li>
 <li>HaploFinder: Distinguishing ancient genome recombination events including gene conversions and crossovers by tracing subgenome haplotypes through phylogenomic profiling.</li>
 </ul>
 <h2 id="2.-Installation-Guide">2. Installation Guide<a class="anchor-link" href="#2.-Installation-Guide">¶</a></h2><h3 id="Dependencies">Dependencies<a class="anchor-link" href="#Dependencies">¶</a></h3><p>PhyloTracer requires the following dependencies:</p>

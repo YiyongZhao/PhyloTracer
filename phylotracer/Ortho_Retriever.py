@@ -5,17 +5,12 @@ This module identifies offcut paralogous clades, separates ortholog groups,
 extracts single-copy subtrees, and writes summary tables for downstream use.
 """
 
-import os
 import re
 from collections import defaultdict
 
-from ete3 import PhyloTree
-
 from phylotracer import (
     find_tre_dup,
-    gene_id_transfer,
     is_rooted,
-    read_and_return_dict,
     read_phylo_tree,
     rename_input_tre,
     root_tre_with_midpoint_outgroup,

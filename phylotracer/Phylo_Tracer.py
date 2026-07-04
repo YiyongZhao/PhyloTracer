@@ -39,7 +39,6 @@ from phylotracer.GD_Loss_Visualizer import load_visualizer_species_tree, visuali
 from phylotracer.GD_Visualizer import gd_visualizer_main
 from phylotracer.HaploFinder import (
     generate_dotplot,
-    infer_homolog_pairs_from_collinearity,
     process_gd_result,
     split_sequences,
 )
@@ -303,14 +302,14 @@ Hybrid_Tracer_parser.add_argument('--split_groups', type=bounded_int(1), require
 Hybrid_Tracer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # Hybrid_Visualizer
-Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Visualize HYDE hybridization signals', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk')
+Hybrid_Visualizer_parser = subparsers.add_parser('Hybrid_Visualizer', help='Visualize HyDe admixture summaries on the species tree', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer Hybrid_Visualizer --hyde_out hyde_out.txt --input_sps_tree sptree.nwk')
 Hybrid_Visualizer_parser.add_argument('--hyde_out', metavar='HYDE_OUT', required=True, help='HYDE output table file')
 Hybrid_Visualizer_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 Hybrid_Visualizer_parser.add_argument('--node', action="store_true", default=False, help="Use node-mode heatmaps (monophyletic clade stacking) instead of leaf-mode output")
 Hybrid_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # HaploFinder
-haplofinder_parser = subparsers.add_parser('HaploFinder', help='Unified GD-pair extraction, synteny dotplot, gene conversion detection, subgenome assignment, and optional FASTA partitioning', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer HaploFinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a ARD --species_b ARH --species_a_gff ARD.gff --species_b_gff ARH.gff --species_a_lens ARD.lens --species_b_lens ARH.lens')
+haplofinder_parser = subparsers.add_parser('HaploFinder', help='Unified GD-pair extraction, projection-aware dotplot rendering, local conversion-zone detection, subgenome assignment, and optional FASTA partitioning', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer HaploFinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a ARD --species_b ARH --species_a_gff ARD.gff --species_b_gff ARH.gff --species_a_lens ARD.lens --species_b_lens ARH.lens')
 haplofinder_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=False, default=None, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path)')
 haplofinder_parser.add_argument('--input_imap', metavar='IMAP', required=False, default=None, help='Two-column mapping file (gene_id<TAB>species_name)')
 haplofinder_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='Species tree file in Newick format')
@@ -325,7 +324,6 @@ haplofinder_parser.add_argument('--visual_chr_b', metavar='CHR_LIST', required=F
 haplofinder_parser.add_argument('--gd_support', metavar='INT', type=bounded_int(0, 100), required=False, default=50, help='Minimum support of GD nodes used for pair extraction (accepted range: 0-100, default = 50)')
 haplofinder_parser.add_argument('--pair_support', metavar='INT', type=bounded_int(0, 100), required=False, default=50, help='Minimum support of ortholog/speciation pair nodes (accepted range: 0-100, default = 50)')
 haplofinder_parser.add_argument('--size', metavar='FLOAT', type=bounded_float(0.0), required=False, default=0.0005, help='Point size in dotplot rendering (positive float, default = 0.0005)')
-haplofinder_parser.add_argument('--mode', metavar='MODE', type=str, choices=['haplofinder', 'split'], default='haplofinder', help=argparse.SUPPRESS)
 # Subgenome assignment and FASTA split arguments
 haplofinder_parser.add_argument('--hyb_sps', metavar='HYBRID_SPECIES', type=str, required=False, help='Hybrid species name for subgenome assignment. Requires --parental_sps')
 haplofinder_parser.add_argument('--parental_sps', metavar='PARENTAL_SPECIES', type=str, required=False, help='Parental species names for subgenome assignment; space-separated, quoted string (e.g., "ARD ARI"). Requires --hyb_sps')
@@ -333,10 +331,10 @@ haplofinder_parser.add_argument('--input_fasta', metavar='FASTA_FILE', required=
 haplofinder_parser.add_argument('--cluster_file', metavar='CLUSTER_FILE', required=False, help=argparse.SUPPRESS)
 haplofinder_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 # --- gene conversion detection (refactored) ---
-haplofinder_parser.add_argument('--min_shared_pairs', metavar='INT', type=bounded_int(1), default=5, help='Minimum gene pairs required between two chromosomes to infer a homolog pair by collinear coverage (default = 5). Increase for noisy datasets.')
+haplofinder_parser.add_argument('--min_shared_pairs', metavar='INT', type=bounded_int(1), default=5, help='Minimum gene pairs required between two chromosomes to infer a supported chromosome-pair projection by collinear coverage (default = 5). Increase for noisy datasets.')
 haplofinder_parser.add_argument('--min_conv_pairs', metavar='INT', type=bounded_int(1), default=10, help='Minimum gene pairs on a chromosome pair to attempt gene conversion detection (default = 10).')
-haplofinder_parser.add_argument('--n_permutations', metavar='INT', type=bounded_int(100), default=1000, help='Number of permutations for the gene conversion permutation test (default = 1000).')
-haplofinder_parser.add_argument('--p_threshold', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0.05, help='Significance threshold applied to both binomial and permutation tests for gene conversion detection (default = 0.05).')
+haplofinder_parser.add_argument('--n_permutations', metavar='INT', type=bounded_int(100), default=1000, help='Compatibility parameter retained for the historical gene-conversion CLI; currently not used by the local conversion-zone scanner (default = 1000).')
+haplofinder_parser.add_argument('--p_threshold', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0.05, help='Compatibility parameter retained for the historical gene-conversion CLI; currently not used by the local conversion-zone scanner (default = 0.05).')
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
 
@@ -871,8 +869,8 @@ def handle_haplofinder(cli_args):
     parental_sps = cli_args.parental_sps.split() if cli_args.parental_sps else None
     hyb_sps = cli_args.hyb_sps if cli_args.hyb_sps else None
 
-    # Step 1: gene-pair labels + optional subgenome assignment
-    process_gd_pairs, pair_source_dict, arh_subgenome_dict = process_gd_result(
+    # Step 1: raw gene-tree pair labels + optional subgenome assignment
+    haplofinder_pairs, pair_source_dict, arh_subgenome_dict = process_gd_result(
         cli_args.input_GF_list, cli_args.input_imap, cli_args.input_sps_tree,
         cli_args.species_a, cli_args.species_b,
         cli_args.gd_support, cli_args.pair_support,
@@ -887,10 +885,11 @@ def handle_haplofinder(cli_args):
     generate_dotplot(
         cli_args.species_a_gff, cli_args.species_b_gff,
         cli_args.species_a_lens, cli_args.species_b_lens,
-        process_gd_pairs, cli_args.species_a, cli_args.species_b,
-        os.path.join(out_dir, 'gd_pairs'),
+        haplofinder_pairs, cli_args.species_a, cli_args.species_b,
+        os.path.join(out_dir, 'haplofinder_pairs'),
         cli_args.visual_chr_a, cli_args.visual_chr_b, size,
         min_pairs=cli_args.min_conv_pairs,
+        min_shared_pairs=cli_args.min_shared_pairs,
         n_permutations=cli_args.n_permutations,
         p_threshold=cli_args.p_threshold,
         pair_source_dict=pair_source_dict,

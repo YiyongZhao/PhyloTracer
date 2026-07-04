@@ -7,7 +7,6 @@ nodes, and renders annotated species trees with duplication summaries.
 
 import logging
 import os
-import re
 from collections import defaultdict
 
 logger = logging.getLogger(__name__)
