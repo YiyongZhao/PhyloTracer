@@ -728,9 +728,9 @@ The combined image legend uses red for the focal hybrid/clade, blue for the targ
 ```
 ### HaploFinder
 
-**Description:** A unified pipeline that extracts GD-derived gene pairs from rooted gene family trees, writes raw gene-tree pair colors, projects those pairs onto chromosome-level dotplots, and detects local conversion-like zones via color-pattern scanning. When `--parental_sps` and `--hyb_sps` are provided, subgenome assignment (A/B/...) is performed inline using S-node sister-clade logic. Optional `--input_fasta` triggers FASTA partitioning into per-subgenome files.
+**Description:** A unified pipeline that extracts GD-derived gene pairs from rooted gene family trees, writes raw gene-tree pair colors, projects those pairs onto chromosome-level dotplots, and detects local conversion-like zones via color-pattern scanning. When `--parental_sps` and `--hyb_sps` are provided, subgenome assignment (A/B/...) is performed inline using S-node sister-clade logic. Optional `--input_fasta` partitions the complete in-memory assignment set into per-subgenome FASTA files; assignment is not limited to genes that also occur in the GD-pair output table.
 
-In `haplofinder_output.tsv`, `Raw_pair_color` preserves the original gene-tree classification, whereas `Pair_color` is the chromosome-projection color used for dotplot interpretation (`primary` projection = red, `homeologous` projection = blue).
+In `haplofinder_output.tsv`, `Raw_pair_color` preserves the original gene-tree classification, whereas `Pair_color` is the chromosome-projection color used for dotplot interpretation (`primary` projection = red, `homeologous` projection = blue). Projection inference is genome-wide: explicit A/B/D suffixes are used first, numeric `N -> kN` chromosome systems are scored by whole-genome offsets, and other labels use normalized anchor coverage with global one-to-one matching. Explicit suffix mapping requires support from at least 60% of donor chromosomes. Density-based mapping additionally requires a top/runner-up score ratio of at least 1.15. Otherwise `Projection_type` is `ambiguous`, `Pair_color` retains `Raw_pair_color`, and the pair is excluded from conversion-zone scanning. Dotplots use `Pair_color`; local conversion-zone scanning uses `Raw_pair_color` only on confident chromosome-pair projections so local gene-tree deviations are not erased by chromosome-level recoloring.
 
 **Subgenome assignment logic**
 
@@ -777,11 +777,6 @@ Gene conversion detection parameters:
                             by collinear coverage (default = 5).
     --min_conv_pairs        Minimum gene pairs on a chromosome pair to attempt gene conversion
                             detection (default = 10).
-    --n_permutations        Compatibility parameter retained in the CLI; currently not used by the local
-                            conversion-zone scanner (default = 1000).
-    --p_threshold           Compatibility parameter retained in the CLI; currently not used by the local
-                            conversion-zone scanner (default = 0.05).
-
 Usage:
     PhyloTracer HaploFinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a ARD --species_b ARH --species_a_gff ARD.gff --species_b_gff ARH.gff --species_a_lens ARD.lens --species_b_lens ARH.lens
 

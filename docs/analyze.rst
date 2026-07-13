@@ -534,13 +534,6 @@ Gene conversion detection parameters:
                               coverage (default is 5).
     - ``--min_conv_pairs``    Minimum gene pairs on a chromosome pair to attempt
                               gene conversion detection (default is 10).
-    - ``--n_permutations``    Compatibility parameter retained in the CLI;
-                              currently not used by the local conversion-zone
-                              scanner (default is 1000).
-    - ``--p_threshold``       Compatibility parameter retained in the CLI;
-                              currently not used by the local conversion-zone
-                              scanner (default is 0.05).
-
 Output:
     - ``haplofinder_output.tsv``  17-column unified table including raw pair color,
                                    projection color/type, inferred exchange direction,

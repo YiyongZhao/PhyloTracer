@@ -310,15 +310,15 @@ Hybrid_Visualizer_parser.add_argument('--output_dir', metavar='DIR', default=Non
 
 # HaploFinder
 haplofinder_parser = subparsers.add_parser('HaploFinder', help='Unified GD-pair extraction, projection-aware dotplot rendering, local conversion-zone detection, subgenome assignment, and optional FASTA partitioning', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer HaploFinder --input_GF_list gf.txt --input_imap gene2sps.imap --input_sps_tree sptree.nwk --species_a ARD --species_b ARH --species_a_gff ARD.gff --species_b_gff ARH.gff --species_a_lens ARD.lens --species_b_lens ARH.lens')
-haplofinder_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=False, default=None, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path)')
-haplofinder_parser.add_argument('--input_imap', metavar='IMAP', required=False, default=None, help='Two-column mapping file (gene_id<TAB>species_name)')
-haplofinder_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=False, help='Species tree file in Newick format')
-haplofinder_parser.add_argument('--species_a', metavar='SPECIES_A', type=str, required=False, help='Name of species A (typically the diploid/donor)')
-haplofinder_parser.add_argument('--species_b', metavar='SPECIES_B', type=str, required=False, help='Name of species B (typically the polyploid/hybrid)')
-haplofinder_parser.add_argument('--species_a_gff', metavar='GFF', required=False, help='Genome annotation file for species A in GFF/GTF-compatible format')
-haplofinder_parser.add_argument('--species_b_gff', metavar='GFF', required=False, help='Genome annotation file for species B in GFF/GTF-compatible format')
-haplofinder_parser.add_argument('--species_a_lens', metavar='LENS', required=False, help='Chromosome-length file for species A (chr<TAB>length)')
-haplofinder_parser.add_argument('--species_b_lens', metavar='LENS', required=False, help='Chromosome-length file for species B (chr<TAB>length)')
+haplofinder_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path)')
+haplofinder_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
+haplofinder_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
+haplofinder_parser.add_argument('--species_a', metavar='SPECIES_A', type=str, required=True, help='Name of species A (typically the diploid/donor)')
+haplofinder_parser.add_argument('--species_b', metavar='SPECIES_B', type=str, required=True, help='Name of species B (typically the polyploid/hybrid)')
+haplofinder_parser.add_argument('--species_a_gff', metavar='GFF', required=True, help='Genome annotation file for species A in GFF/GTF-compatible format')
+haplofinder_parser.add_argument('--species_b_gff', metavar='GFF', required=True, help='Genome annotation file for species B in GFF/GTF-compatible format')
+haplofinder_parser.add_argument('--species_a_lens', metavar='LENS', required=True, help='Chromosome-length file for species A (chr<TAB>length)')
+haplofinder_parser.add_argument('--species_b_lens', metavar='LENS', required=True, help='Chromosome-length file for species B (chr<TAB>length)')
 haplofinder_parser.add_argument('--visual_chr_a', metavar='CHR_LIST', required=False, help='Optional chromosome list file for species A visualization subset')
 haplofinder_parser.add_argument('--visual_chr_b', metavar='CHR_LIST', required=False, help='Optional chromosome list file for species B visualization subset')
 haplofinder_parser.add_argument('--gd_support', metavar='INT', type=bounded_int(0, 100), required=False, default=50, help='Minimum support of GD nodes used for pair extraction (accepted range: 0-100, default = 50)')
@@ -333,8 +333,8 @@ haplofinder_parser.add_argument('--output_dir', metavar='DIR', default=None, hel
 # --- gene conversion detection (refactored) ---
 haplofinder_parser.add_argument('--min_shared_pairs', metavar='INT', type=bounded_int(1), default=5, help='Minimum gene pairs required between two chromosomes to infer a supported chromosome-pair projection by collinear coverage (default = 5). Increase for noisy datasets.')
 haplofinder_parser.add_argument('--min_conv_pairs', metavar='INT', type=bounded_int(1), default=10, help='Minimum gene pairs on a chromosome pair to attempt gene conversion detection (default = 10).')
-haplofinder_parser.add_argument('--n_permutations', metavar='INT', type=bounded_int(100), default=1000, help='Compatibility parameter retained for the historical gene-conversion CLI; currently not used by the local conversion-zone scanner (default = 1000).')
-haplofinder_parser.add_argument('--p_threshold', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=0.05, help='Compatibility parameter retained for the historical gene-conversion CLI; currently not used by the local conversion-zone scanner (default = 0.05).')
+haplofinder_parser.add_argument('--n_permutations', metavar='INT', type=bounded_int(100), default=None, help=argparse.SUPPRESS)
+haplofinder_parser.add_argument('--p_threshold', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=None, help=argparse.SUPPRESS)
 parser.add_argument('-h', '--help', action='store_true', help=argparse.SUPPRESS)
 # Analyze command line parameters
 
@@ -849,23 +849,14 @@ def handle_hybrid_visualizer(cli_args):
 
 
 def handle_haplofinder(cli_args):
-    required_args = [
-        cli_args.input_GF_list, cli_args.input_imap, cli_args.input_sps_tree,
-        cli_args.species_a, cli_args.species_b,
-        cli_args.species_a_gff, cli_args.species_b_gff,
-        cli_args.species_a_lens, cli_args.species_b_lens,
-        cli_args.gd_support, cli_args.pair_support,
-    ]
-    if not all(arg is not None for arg in required_args):
-        logger.error(
-            "Required arguments missing: --input_GF_list, --input_imap, "
-            "--input_sps_tree, --species_a, --species_b, --species_a_gff, "
-            "--species_b_gff, --species_a_lens, --species_b_lens, "
-            "--gd_support, --pair_support"
-        )
-        return
-
     start_time = time.time()
+    for legacy_name in ("n_permutations", "p_threshold", "cluster_file"):
+        if getattr(cli_args, legacy_name, None) is not None:
+            logger.warning(
+                "--%s is deprecated and has no effect; it is accepted only "
+                "for command compatibility.",
+                legacy_name,
+            )
     parental_sps = cli_args.parental_sps.split() if cli_args.parental_sps else None
     hyb_sps = cli_args.hyb_sps if cli_args.hyb_sps else None
 
@@ -890,8 +881,8 @@ def handle_haplofinder(cli_args):
         cli_args.visual_chr_a, cli_args.visual_chr_b, size,
         min_pairs=cli_args.min_conv_pairs,
         min_shared_pairs=cli_args.min_shared_pairs,
-        n_permutations=cli_args.n_permutations,
-        p_threshold=cli_args.p_threshold,
+        n_permutations=cli_args.n_permutations or 1000,
+        p_threshold=cli_args.p_threshold if cli_args.p_threshold is not None else 0.05,
         pair_source_dict=pair_source_dict,
         arh_subgenome_dict=arh_subgenome_dict,
         output_dir=out_dir,
@@ -904,6 +895,7 @@ def handle_haplofinder(cli_args):
             split_sequences(
                 cli_args.input_fasta, haplofinder_tsv,
                 cli_args.species_b_gff, out_dir,
+                subgenome_assignments=arh_subgenome_dict,
             )
         else:
             logger.error("haplofinder_output.tsv not found, cannot run split")
@@ -1074,6 +1066,15 @@ def main():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     args = _parser.parse_args()
+    if args.command == "HaploFinder":
+        has_hybrid = bool(args.hyb_sps)
+        has_parents = bool(args.parental_sps)
+        if has_hybrid != has_parents:
+            _parser.error("HaploFinder requires --hyb_sps and --parental_sps together")
+        if args.input_fasta and not (has_hybrid and has_parents):
+            _parser.error(
+                "HaploFinder --input_fasta requires both --hyb_sps and --parental_sps"
+            )
     output_dir_user_provided = bool(getattr(args, "output_dir", None))
     temp_files_to_cleanup = _normalize_input_paths(args)
     os.environ["PHYLTR_OUTPUT_DIR_EXPLICIT"] = "1" if output_dir_user_provided else "0"

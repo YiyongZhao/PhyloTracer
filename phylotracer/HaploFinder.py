@@ -33,7 +33,9 @@ from typing import Dict, List, Optional, Tuple
 
 import matplotlib
 import matplotlib.patches as mpatches
+import numpy as np
 from ete3 import PhyloTree
+from scipy.optimize import linear_sum_assignment
 from tqdm import tqdm
 
 from phylotracer import (
@@ -241,35 +243,34 @@ def infer_projection_color_map(
     min_shared_pairs: int = 5,
     min_secondary_fraction: float = 0.25,
 ) -> Tuple[dict, dict]:
-    """Infer subgenome-aware display colors from chromosome-level projections.
+    """Infer one genome-wide projection interpretation for all chromosomes.
 
-    Raw red/blue colors describe gene-tree relationships. For polyploid
-    interpretation, a donor chromosome can project to multiple hybrid
-    chromosomes. If chromosome labels carry explicit genome suffixes (for
-    example 1A/1B/1D), suffix-matched projections define the primary
-    parental-like chromosome. Otherwise, the densest compatible projection is
-    treated as primary; additional compatible projections are treated as
-    homeologous counterparts. Interpreted colors are projection colors:
-    primary = red, homeologous = blue. The raw gene-tree color is preserved in
-    the unified output as Raw_pair_color.
+    A chromosome-pair score is the geometric mean of donor and target anchor
+    coverage. Anchors are unique gene IDs, so one-to-many gene pairs cannot
+    inflate support. Explicit genome suffixes are interpreted first, numeric
+    ``N -> kN`` systems are interpreted by whole-genome offset groups, and
+    remaining labels use a global one-to-one matching. An inferred mapping is
+    explicit suffix mapping is accepted when at least 60% of donor chromosomes
+    have supported same-number/same-suffix targets. Density-based mappings are
+    accepted only when the top score is at least 1.15 times the runner-up and
+    at least 60% of donor chromosomes support it. Otherwise all supported
+    chromosome pairs are marked ``ambiguous`` and retain their raw colors.
     """
-    chrs_1 = {row[0] for row in lens_1}
-    chrs_2 = {row[0] for row in lens_2}
-    chr_b_by_num: Dict[int, str] = {}
-    for row in lens_2:
-        num = _normalize_chr_num(row[0])
-        if num is not None:
-            chr_b_by_num[num] = row[0]
-    n_a_numeric = len([row for row in lens_1 if _normalize_chr_num(row[0]) is not None])
-    n_b_numeric = len([row for row in lens_2 if _normalize_chr_num(row[0]) is not None])
-    inferred_ploidy = 0
-    if n_a_numeric > 0:
-        for ploidy in (2, 3, 4):
-            if n_b_numeric == n_a_numeric * ploidy:
-                inferred_ploidy = ploidy
-                break
-    stats: Dict[Tuple[str, str], Counter] = defaultdict(Counter)
+    del min_secondary_fraction  # Retained only for API compatibility.
+    min_score_ratio = 1.15
+    min_donor_coverage = 0.60
+    chr_order_a = [row[0] for row in lens_1]
+    chr_order_b = [row[0] for row in lens_2]
+    chrs_1 = set(chr_order_a)
+    chrs_2 = set(chr_order_b)
 
+    gene_count_a = Counter(
+        info[0] for info in dict_gff1.values() if info and info[0] in chrs_1
+    )
+    gene_count_b = Counter(
+        info[0] for info in dict_gff2.values() if info and info[0] in chrs_2
+    )
+    anchors = defaultdict(lambda: {"a": set(), "b": set()})
     for pair_key, color in raw_pair_colors.items():
         if color not in ("red", "blue"):
             continue
@@ -279,78 +280,215 @@ def infer_projection_color_map(
         if not gff_a or not gff_b:
             continue
         chr_a, chr_b = gff_a[0], gff_b[0]
-        if chr_a in chrs_1 and chr_b in chrs_2:
-            stats[(chr_a, chr_b)][color] += 1
+        if chr_a not in chrs_1 or chr_b not in chrs_2:
+            continue
+        anchors[(chr_a, chr_b)]["a"].add(gene_a)
+        anchors[(chr_a, chr_b)]["b"].add(gene_b)
 
-    by_chr_a: Dict[str, list] = defaultdict(list)
-    for (chr_a, chr_b), counter in stats.items():
-        total = counter["red"] + counter["blue"]
-        if total >= min_shared_pairs:
-            red_ratio = counter["red"] / total if total else 0.0
-            by_chr_a[chr_a].append((chr_b, total, red_ratio))
+    candidates = {}
+    for chr_pair, pair_anchors in anchors.items():
+        chr_a, chr_b = chr_pair
+        unique_a = len(pair_anchors["a"])
+        unique_b = len(pair_anchors["b"])
+        support = min(unique_a, unique_b)
+        if support < min_shared_pairs:
+            continue
+        chromosome_scale = (
+            max(gene_count_a[chr_a], 1) * max(gene_count_b[chr_b], 1)
+        ) ** 0.5
+        candidates[chr_pair] = {
+            "support": support,
+            "score": support / chromosome_scale,
+        }
 
     projection_map: Dict[Tuple[str, str], str] = {}
-    for chr_a, rows in by_chr_a.items():
-        rows.sort(key=lambda row: (row[1], row[2]), reverse=True)
-        if not rows:
-            continue
-        row_by_chr_b = {chr_b: (total, red_ratio) for chr_b, total, red_ratio in rows}
-        chr_a_num = _normalize_chr_num(chr_a)
-        if inferred_ploidy and chr_a_num is not None:
-            compatible_numbers = {
-                chr_a_num + offset_idx * n_a_numeric
-                for offset_idx in range(inferred_ploidy)
-            }
-            compatible_rows = [
-                (chr_b, total, red_ratio)
-                for chr_b, total, red_ratio in rows
-                if _normalize_chr_num(chr_b) in compatible_numbers
-            ]
-            if not compatible_rows:
-                compatible_rows = rows[:1]
+    if not candidates:
+        logger.warning(
+            "No chromosome-pair projection met min_shared_pairs=%d",
+            min_shared_pairs,
+        )
+    else:
+        donor_total = max(len(chr_order_a), 1)
 
-            chr_a_suffix = _chr_genome_suffix(chr_a)
-            suffix_matched_rows = [
-                row for row in compatible_rows
-                if chr_a_suffix and _chr_genome_suffix(row[0]) == chr_a_suffix
-            ]
-            primary_candidates = suffix_matched_rows or compatible_rows
-            primary_chr_b, primary_total, _ = max(
-                primary_candidates, key=lambda row: (row[1], row[2])
+        def _log_and_check(method, scores, winner, covered):
+            ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+            top_score = scores.get(winner, 0.0)
+            runner_score = max(
+                (score for group, score in ranked if group != winner),
+                default=0.0,
             )
-            projection_map[(chr_a, primary_chr_b)] = "primary"
-            secondary_min = max(min_shared_pairs, int(primary_total * min_secondary_fraction))
-            for chr_b, total, _ in compatible_rows:
-                if chr_b != primary_chr_b and total >= secondary_min:
-                    projection_map[(chr_a, chr_b)] = "homeologous"
-            continue
+            ratio = float("inf") if runner_score == 0 else top_score / runner_score
+            coverage = len(covered) / donor_total
+            score_text = ", ".join(
+                f"{group}={score:.6f}" for group, score in ranked
+            )
+            logger.info("Projection candidate scores (%s): %s", method, score_text)
+            logger.info(
+                "Projection confidence (%s): winner=%s ratio=%s coverage=%.3f",
+                method, winner,
+                "inf" if ratio == float("inf") else f"{ratio:.3f}", coverage,
+            )
+            return (
+                top_score > 0
+                and (not ranked or ranked[0][0] == winner)
+                and ratio >= min_score_ratio
+                and coverage >= min_donor_coverage
+            )
 
-        primary_chr_b, primary_total, _ = rows[0]
-        projection_map[(chr_a, primary_chr_b)] = "primary"
-        secondary_min = max(min_shared_pairs, int(primary_total * min_secondary_fraction))
-        for chr_b, total, _ in rows[1:]:
-            if total >= secondary_min:
-                projection_map[(chr_a, chr_b)] = "homeologous"
+        # Level 1: explicit genome suffixes, e.g. 1A/1B/1D.
+        suffix_donors = [c for c in chr_order_a if _chr_genome_suffix(c)]
+        suffix_targets = [c for c in chr_order_b if _chr_genome_suffix(c)]
+        used_method = None
+        confident = False
+        if suffix_donors and suffix_targets:
+            scores = defaultdict(float)
+            matched_donors = set()
+            for (chr_a, chr_b), data in candidates.items():
+                suffix_a = _chr_genome_suffix(chr_a)
+                suffix_b = _chr_genome_suffix(chr_b)
+                if (
+                    suffix_a and suffix_b
+                    and _normalize_chr_num(chr_a) == _normalize_chr_num(chr_b)
+                ):
+                    group = "same_suffix" if suffix_a == suffix_b else f"target_{suffix_b}"
+                    scores[group] += data["score"]
+                    if suffix_a == suffix_b:
+                        matched_donors.add(chr_a)
+            used_method = "suffix"
+            density_agrees = _log_and_check(
+                used_method, scores, "same_suffix", matched_donors
+            )
+            suffix_coverage = len(matched_donors) / donor_total
+            confident = scores.get("same_suffix", 0.0) > 0 and suffix_coverage >= min_donor_coverage
+            if confident and not density_agrees:
+                logger.info(
+                    "Explicit chromosome suffixes take precedence over pair-density "
+                    "ranking (same-suffix coverage=%.3f)",
+                    suffix_coverage,
+                )
+            if confident:
+                for chr_pair in candidates:
+                    chr_a, chr_b = chr_pair
+                    suffix_a = _chr_genome_suffix(chr_a)
+                    suffix_b = _chr_genome_suffix(chr_b)
+                    same_number = _normalize_chr_num(chr_a) == _normalize_chr_num(chr_b)
+                    if suffix_a and suffix_b and same_number:
+                        projection_map[chr_pair] = (
+                            "primary" if suffix_a == suffix_b else "homeologous"
+                        )
+                    else:
+                        projection_map[chr_pair] = "ambiguous"
+            else:
+                projection_map.update({chr_pair: "ambiguous" for chr_pair in candidates})
+
+        # Level 2: numeric N -> kN systems, e.g. Brassica Chr1-9 -> Chr1-18.
+        numeric_a = {_normalize_chr_num(c) for c in chr_order_a}
+        numeric_b = {_normalize_chr_num(c) for c in chr_order_b}
+        numeric_a.discard(None)
+        numeric_b.discard(None)
+        n_a = len(numeric_a)
+        numeric_ploidy = len(numeric_b) / n_a if n_a else 0
+        is_offset_system = (
+            used_method is None
+            and n_a == len(chr_order_a)
+            and len(numeric_b) == len(chr_order_b)
+            and numeric_ploidy in (2, 3, 4)
+        )
+        if is_offset_system:
+            offsets = [idx * n_a for idx in range(int(numeric_ploidy))]
+            scores = defaultdict(float)
+            supporting_donors = defaultdict(set)
+            pair_offsets = {}
+            for (chr_a, chr_b), data in candidates.items():
+                offset = _normalize_chr_num(chr_b) - _normalize_chr_num(chr_a)
+                if offset in offsets:
+                    pair_offsets[(chr_a, chr_b)] = offset
+                    scores[offset] += data["score"]
+                    supporting_donors[offset].add(chr_a)
+            winner = max(scores, key=scores.get) if scores else None
+            used_method = "numeric_offset"
+            confident = winner is not None and _log_and_check(
+                used_method, scores, winner, supporting_donors[winner]
+            )
+            for chr_pair in candidates:
+                offset = pair_offsets.get(chr_pair)
+                if confident and offset in offsets:
+                    projection_map[chr_pair] = (
+                        "primary" if offset == winner else "homeologous"
+                    )
+                else:
+                    projection_map[chr_pair] = "ambiguous"
+
+        # Level 3: standardized scores plus global one-to-one matching.
+        if used_method is None:
+            matrix = np.zeros((len(chr_order_a), len(chr_order_b)), dtype=float)
+            for i, chr_a in enumerate(chr_order_a):
+                for j, chr_b in enumerate(chr_order_b):
+                    matrix[i, j] = candidates.get((chr_a, chr_b), {}).get("score", 0.0)
+            row_idx, col_idx = linear_sum_assignment(-matrix)
+            selected = {
+                (chr_order_a[i], chr_order_b[j])
+                for i, j in zip(row_idx, col_idx)
+                if matrix[i, j] > 0
+            }
+            top_score = sum(candidates[pair]["score"] for pair in selected)
+            runner_score = 0.0
+            for chr_a, chr_b in selected:
+                alternatives = [
+                    data["score"]
+                    for pair, data in candidates.items()
+                    if pair[0] == chr_a and pair[1] != chr_b
+                ]
+                runner_score += max(alternatives, default=0.0)
+            scores = {"matching": top_score, "alternatives": runner_score}
+            used_method = "one_to_one"
+            confident = _log_and_check(
+                used_method, scores, "matching", {pair[0] for pair in selected}
+            )
+            for chr_pair in candidates:
+                if confident:
+                    projection_map[chr_pair] = (
+                        "primary" if chr_pair in selected else "homeologous"
+                    )
+                else:
+                    projection_map[chr_pair] = "ambiguous"
+
+        counts = Counter(projection_map.values())
+        logger.info(
+            "Projection inference result: method=%s confident=%s "
+            "primary=%d homeologous=%d ambiguous=%d",
+            used_method, confident, counts["primary"], counts["homeologous"],
+            counts["ambiguous"],
+        )
 
     interpreted_colors = {}
-    for pair_key, color in raw_pair_colors.items():
-        if color not in ("red", "blue"):
-            interpreted_colors[pair_key] = color
+    for pair_key, raw_color in raw_pair_colors.items():
+        if raw_color not in ("red", "blue"):
+            interpreted_colors[pair_key] = raw_color
             continue
         gene_a, gene_b = pair_key.split(":", 1)
         gff_a = dict_gff1.get(gene_a)
         gff_b = dict_gff2.get(gene_b)
-        projection = None
-        if gff_a and gff_b:
-            projection = projection_map.get((gff_a[0], gff_b[0]))
+        projection = (
+            projection_map.get((gff_a[0], gff_b[0]))
+            if gff_a and gff_b else None
+        )
         if projection == "primary":
             interpreted_colors[pair_key] = "red"
         elif projection == "homeologous":
             interpreted_colors[pair_key] = "blue"
         else:
-            interpreted_colors[pair_key] = color
+            interpreted_colors[pair_key] = raw_color
 
     return interpreted_colors, projection_map
+
+
+def confident_projection_pairs(projection_map: dict) -> List[Tuple[str, str]]:
+    """Return projection pairs eligible for conversion-zone scanning."""
+    return [
+        chr_pair for chr_pair, projection in projection_map.items()
+        if projection in ("primary", "homeologous")
+    ]
 
 
 def DrawCircle(ax, loc, radius, color, alpha):
@@ -433,13 +571,16 @@ def plot_dot(root, loc1, loc2, dict_gd, size=0.001, dict_gff1=None, dict_gff2=No
     for (chr_a, chr_b), groups in chr_pair_groups.items():
         draw_order = _draw_order_for_chr_pair(chr_a, chr_b)
         is_homolog_pair = (chr_a, chr_b) in homolog_pair_set
+        is_ambiguous = projection_map.get((chr_a, chr_b)) == "ambiguous"
         bg_color, sig_color = draw_order[-2], draw_order[-1]
         for pass_color in draw_order:
             if pass_color not in groups:
                 continue
             c, a = color_map[pass_color]
             if pass_color in ("red", "blue"):
-                if is_homolog_pair and pass_color == sig_color:
+                if is_ambiguous:
+                    a = 0.12
+                elif is_homolog_pair and pass_color == sig_color:
                     a = 0.85
                 elif is_homolog_pair and pass_color == bg_color:
                     a = 0.65
@@ -645,8 +786,12 @@ def write_unified_output(
             )
 
             # Calculate HE_direction (mode-aware)
-            he_direction = calculate_he_direction(chr_a, chr_b, color, parent_genome="A",
-                                                   mode=mode, chrs_per_subgenome=chrs_per_subgenome)
+            he_direction = "."
+            if projection != "ambiguous":
+                he_direction = calculate_he_direction(
+                    chr_a, chr_b, color, parent_genome="A",
+                    mode=mode, chrs_per_subgenome=chrs_per_subgenome,
+                )
 
             source = pair_source_dict.get((gene_a, gene_b, raw_color), "?")
             display_source = source_map.get(source, source)
@@ -751,19 +896,22 @@ def generate_dotplot(
     step_1 = plot_chr1(lens_1, gl1, gl2, "", spe1)
     step_2 = plot_chr2(lens_2, gl2, gl1, "", spe2)
 
-    # Infer supported chromosome-pair projections from collinear-block coverage.
+    # Only confident projections are eligible for conversion-zone scanning.
     if homolog_pair_map:
         homolog_pairs = read_homolog_pair_map(homolog_pair_map, lens_1, lens_2)
         logger.info("Using user-supplied chromosome-pair map: %s", homolog_pair_map)
     else:
-        homolog_pairs = infer_homolog_pairs_from_collinearity(
-            interpreted_pair_colors, dict_gff1, dict_gff2, lens_1, lens_2,
-            min_shared_pairs=min_shared_pairs,
+        homolog_pairs = confident_projection_pairs(projection_map)
+        logger.info(
+            "Retained %d confident chromosome-pair projections for conversion scanning",
+            len(homolog_pairs),
         )
-        logger.info("Inferred %d supported chromosome-pair projections", len(homolog_pairs))
 
+    # Projection colors describe chromosome-level identity and are used for
+    # the dotplot. Local conversion-like interruptions must instead be scanned
+    # from the raw gene-tree colors, restricted to confident projections.
     gene_conversion_list = find_gene_conversion(
-        interpreted_pair_colors, dict_gff1, dict_gff2, homolog_pairs,
+        raw_pair_colors, dict_gff1, dict_gff2, homolog_pairs,
         min_pairs=min_pairs,
         n_permutations=n_permutations,
         p_threshold=p_threshold,
@@ -771,7 +919,7 @@ def generate_dotplot(
     )
 
     sorted_pairs = find_gene_pair_info(
-        gene_conversion_list, interpreted_pair_colors, dict_gff1, dict_gff2, file_name
+        gene_conversion_list, raw_pair_colors, dict_gff1, dict_gff2, file_name
     )
     # Extract 3-element tuples for conversion zone scanning
     result_conversion = [(g1, g2, c) for g1, g2, c, *_ in sorted_pairs]
@@ -1513,7 +1661,7 @@ def find_conversion_zones_with_ids_to_file(
             chr_groups[(gff1[0], gff2[0])].append((global_idx, g1, g2, c))
 
     # ── Scan each chromosome pair independently ──────────────────
-    all_conversion_zones = []  # (zone_id, s_r1_global, e_r2_global, s_b_global, e_b_global, blue_run_len)
+    all_conversion_zones = []  # (zone_id, chromosome-pair-local global indices, signal length)
     zone_id = 1
 
     for (chrom1, chrom2), indexed_pairs in chr_groups.items():
@@ -1522,27 +1670,23 @@ def find_conversion_zones_with_ids_to_file(
         local_zones = _scan_chromosome_pair(local_data, chrom1, chrom2, zone_id, mode=mode,
                                             chrs_per_subgenome=chrs_per_subgenome)
 
-        for l_start, l_end, l_sb, l_eb, blen in local_zones:
-            # Map local indices back to global indices
-            g_start = indexed_pairs[l_start][0]
-            g_end = indexed_pairs[l_end][0]
-            g_sb = indexed_pairs[l_sb][0]
-            g_eb = indexed_pairs[l_eb][0]
-            all_conversion_zones.append((zone_id, g_start, g_end, g_sb, g_eb, blen))
+        for l_start, l_end, _l_sb, _l_eb, blen in local_zones:
+            # Keep only indices belonging to this chromosome pair. A global
+            # start:end slice would include interleaved rows from other target
+            # chromosomes and incorrectly assign them to this zone.
+            zone_indices = [
+                indexed_pairs[local_idx][0]
+                for local_idx in range(l_start, l_end + 1)
+            ]
+            all_conversion_zones.append((zone_id, zone_indices, blen))
             zone_id += 1
 
     logger.info("Detected %d conversion zones", len(all_conversion_zones))
 
     # ── Build structured zone output (original format) ────────────
     zone_records = []
-    for zone in all_conversion_zones:
-        zid, s_r1, e_r2, s_b, e_b, blen = zone
-        first_gene1, first_gene2, _ = data[s_r1]
-        contig1 = dict_gff1[first_gene1][0]
-        contig2 = dict_gff2[first_gene2][0]
-        for j in range(s_r1, e_r2 + 1):
-            if j >= len(data):
-                break
+    for zid, zone_indices, blen in all_conversion_zones:
+        for j in zone_indices:
             g1, g2, color = data[j]
             gff1 = dict_gff1.get(g1)
             gff2 = dict_gff2.get(g2)
@@ -1880,38 +2024,48 @@ def assign_hybrid_subgenome(
 
 def split_sequences(
     input_fasta, haplofinder_tsv, gff, output_dir,
+    subgenome_assignments: dict = None,
 ):
     """Split hybrid sequences into per-subgenome FASTA files.
 
-    Reads ARH_subgenome assignments from haplofinder_output.tsv
-    and partitions the input FASTA accordingly.
+    Uses the complete in-memory subgenome assignments when supplied by the CLI.
+    Reading assignments from ``haplofinder_output.tsv`` is retained as a
+    backward-compatible fallback for direct API callers.
     """
-    # Read subgenome assignments from unified output
-    arh_sub: dict = {}
-    gene_col = None
-    subgenome_col = None
-    with open(haplofinder_tsv, "r") as fh:
-        for line in fh:
-            if line.startswith("#"):
-                if line.startswith("# Columns:"):
-                    cols = line.rstrip("\n").split("\t")[1:]
-                    try:
-                        gene_col = 1
-                        subgenome_col = cols.index(f"{cols[1].split('_gene')[0]}_subgenome")
-                    except (ValueError, IndexError):
-                        subgenome_col = len(cols) - 1 if cols else None
-                continue
-            parts = line.strip().split("\t")
-            if gene_col is None:
-                gene_col = 1
-            if subgenome_col is None:
-                subgenome_col = len(parts) - 1
-            if len(parts) <= max(gene_col, subgenome_col):
-                continue
-            gene_id = parts[gene_col]   # species_b gene
-            sub = parts[subgenome_col]  # species_b_subgenome
-            if sub in ("A", "B"):
-                arh_sub[gene_id] = sub
+    if subgenome_assignments is not None:
+        arh_sub = {
+            gene_id: sub
+            for gene_id, sub in subgenome_assignments.items()
+            if sub not in (None, "", ".", "unknown")
+        }
+    else:
+        arh_sub = {}
+        gene_col = None
+        subgenome_col = None
+        with open(haplofinder_tsv, "r") as fh:
+            for line in fh:
+                if line.startswith("#"):
+                    if line.startswith("# Columns:"):
+                        cols = line.rstrip("\n").split("\t")[1:]
+                        try:
+                            gene_col = 1
+                            subgenome_col = cols.index(
+                                f"{cols[1].split('_gene')[0]}_subgenome"
+                            )
+                        except (ValueError, IndexError):
+                            subgenome_col = len(cols) - 1 if cols else None
+                    continue
+                parts = line.strip().split("\t")
+                if gene_col is None:
+                    gene_col = 1
+                if subgenome_col is None:
+                    subgenome_col = len(parts) - 1
+                if len(parts) <= max(gene_col, subgenome_col):
+                    continue
+                gene_id = parts[gene_col]
+                sub = parts[subgenome_col]
+                if sub not in (None, "", ".", "unknown"):
+                    arh_sub[gene_id] = sub
 
     gff_1, dict_gff1 = read_gff(gff)
     _ = gff_1

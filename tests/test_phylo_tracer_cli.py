@@ -5,6 +5,7 @@ Tests for phylotracer.Phylo_Tracer CLI entry point.
 import os
 import sys
 import subprocess
+from types import SimpleNamespace
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -79,6 +80,100 @@ class TestCLIHelp:
         )
         assert "GD_Detector" in result.stdout
         assert "Phylo_Rooter" in result.stdout
+
+    def test_haplofinder_help_hides_legacy_no_effect_options(self):
+        result = subprocess.run(
+            [sys.executable, "-m", "phylotracer.Phylo_Tracer", "HaploFinder", "--help"],
+            capture_output=True,
+            text=True,
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        )
+        assert result.returncode == 0
+        assert "--n_permutations" not in result.stdout
+        assert "--p_threshold" not in result.stdout
+        assert "--cluster_file" not in result.stdout
+
+
+class TestHaploFinderCLI:
+    required_args = [
+        "--input_GF_list", "gf.imap",
+        "--input_imap", "genes.imap",
+        "--input_sps_tree", "species.nwk",
+        "--species_a", "ARD",
+        "--species_b", "ARH",
+        "--species_a_gff", "ARD.gff",
+        "--species_b_gff", "ARH.gff",
+        "--species_a_lens", "ARD.lens",
+        "--species_b_lens", "ARH.lens",
+    ]
+
+    def test_missing_core_arguments_exits_two(self):
+        from phylotracer.Phylo_Tracer import _parser
+        with pytest.raises(SystemExit) as exc_info:
+            _parser.parse_args(["HaploFinder"])
+        assert exc_info.value.code == 2
+
+    def test_default_command_needs_no_projection_parameter(self):
+        from phylotracer.Phylo_Tracer import _parser
+        args = _parser.parse_args(["HaploFinder", *self.required_args])
+        assert args.min_shared_pairs == 5
+        assert not hasattr(args, "projection_mode")
+
+    def test_legacy_arguments_remain_parseable(self):
+        from phylotracer.Phylo_Tracer import _parser
+        args = _parser.parse_args([
+            "HaploFinder", *self.required_args,
+            "--n_permutations", "200",
+            "--p_threshold", "0.01",
+            "--cluster_file", "legacy.tsv",
+        ])
+        assert args.n_permutations == 200
+        assert args.p_threshold == pytest.approx(0.01)
+        assert args.cluster_file == "legacy.tsv"
+
+    @pytest.mark.parametrize(
+        "extra_args",
+        [
+            ["--hyb_sps", "ARH"],
+            ["--parental_sps", "ARD ARI"],
+            ["--input_fasta", "ARH.pep"],
+        ],
+    )
+    def test_subgenome_dependency_validation_exits_two(self, extra_args):
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "phylotracer.Phylo_Tracer", "HaploFinder",
+                *self.required_args, *extra_args,
+            ],
+            capture_output=True,
+            text=True,
+            cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        )
+        assert result.returncode == 2
+
+    def test_legacy_arguments_emit_deprecation_warning(self, monkeypatch, caplog, tmp_path):
+        import phylotracer.Phylo_Tracer as cli
+        monkeypatch.setattr(cli, "process_gd_result", lambda *args, **kwargs: ([], {}, {}))
+        monkeypatch.setattr(cli, "generate_dotplot", lambda *args, **kwargs: None)
+        monkeypatch.setattr(cli, "report_execution_time", lambda *args, **kwargs: None)
+        args = SimpleNamespace(
+            input_GF_list="gf.imap", input_imap="genes.imap",
+            input_sps_tree="species.nwk", species_a="ARD", species_b="ARH",
+            species_a_gff="ARD.gff", species_b_gff="ARH.gff",
+            species_a_lens="ARD.lens", species_b_lens="ARH.lens",
+            gd_support=50, pair_support=50, size=0.0005,
+            hyb_sps=None, parental_sps=None, input_fasta=None,
+            visual_chr_a=None, visual_chr_b=None, min_conv_pairs=10,
+            min_shared_pairs=5, output_dir=str(tmp_path),
+            n_permutations=200, p_threshold=0.01, cluster_file="legacy.tsv",
+        )
+
+        with caplog.at_level("WARNING"):
+            cli.handle_haplofinder(args)
+
+        assert "--n_permutations is deprecated and has no effect" in caplog.text
+        assert "--p_threshold is deprecated and has no effect" in caplog.text
+        assert "--cluster_file is deprecated and has no effect" in caplog.text
 
 
 # =============================================
