@@ -22,7 +22,7 @@
                                                                          
 ###############################################################################################
 ```
-![Version](https://img.shields.io/badge/Version-1.0.3-blue)
+![Version](https://img.shields.io/badge/Version-1.0.0-blue)
 [![CI](https://github.com/YiyongZhao/PhyloTracer/actions/workflows/ci.yml/badge.svg)](https://github.com/YiyongZhao/PhyloTracer/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/phylotracer/badge/?version=latest)](https://phylotracer.readthedocs.io)
 [![PyPI](https://img.shields.io/pypi/v/PhyloTracer.svg)](https://pypi.python.org/pypi/PhyloTracer)
