@@ -6,7 +6,12 @@ extracts single-copy subtrees, and writes summary tables for downstream use.
 """
 
 import re
+import math
+import hashlib
+import os
+import sqlite3
 from collections import defaultdict
+from pathlib import Path
 
 from phylotracer import (
     find_tre_dup,
@@ -426,9 +431,43 @@ def get_single_copy_trees(
     return trees
 
 
-def parse_synteny_blocks(synteny_blocks_path: str) -> dict:
+def _iter_synteny_pairs(synteny_blocks_path: str):
+    """Yield explicit anchor pairs in file order, so the last duplicate wins."""
+    with open(synteny_blocks_path, "r", encoding="utf-8") as handle:
+        for line_number, raw_line in enumerate(handle, 1):
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+
+            parts = line.split()
+            if len(parts) < 2:
+                raise ValueError(f"Invalid synteny row at {synteny_blocks_path}:{line_number}")
+            gene1 = parts[0]
+            gene2 = parts[1]
+            score = 1.0
+
+            if len(parts) >= 3 and parts[1].lstrip("-").isdigit():
+                gene2 = parts[2]
+            elif len(parts) >= 3:
+                try:
+                    score = float(parts[2])
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Invalid anchor score at {synteny_blocks_path}:{line_number}"
+                    ) from exc
+                if not math.isfinite(score) or score < 0:
+                    raise ValueError(
+                        f"Anchor score must be finite and nonnegative at "
+                        f"{synteny_blocks_path}:{line_number}"
+                    )
+
+            if gene1 != gene2:
+                yield gene1, gene2, score
+
+
+def parse_synteny_blocks(synteny_blocks_path: str) -> dict[str, dict[str, float]]:
     """
-    Parse a raw synteny block file into a gene-to-block mapping.
+    Parse explicit anchor pairs and their raw scores.
 
     Parameters
     ----------
@@ -439,7 +478,8 @@ def parse_synteny_blocks(synteny_blocks_path: str) -> dict:
     Returns
     -------
     dict
-        Mapping from gene identifier to a set of block IDs.
+        Mapping from each gene to partner genes and raw anchor scores. Pairs
+        are stored in both directions; the last row wins for duplicate pairs.
 
     Assumptions
     -----------
@@ -447,51 +487,172 @@ def parse_synteny_blocks(synteny_blocks_path: str) -> dict:
     1. a simplified two-column gene pair, or
     2. a WGDI-style row where the first and third columns are gene IDs.
     """
-    gene_to_blocks = defaultdict(set)
-    current_block = None
-    block_index = 0
+    gene_to_partners = defaultdict(dict)
+    for gene1, gene2, score in _iter_synteny_pairs(synteny_blocks_path):
+        gene_to_partners[gene1][gene2] = score
+        gene_to_partners[gene2][gene1] = score
 
-    with open(synteny_blocks_path, "r", encoding="utf-8") as handle:
-        for raw_line in handle:
-            line = raw_line.strip()
-            if not line:
-                continue
-            if line.startswith("#"):
-                block_index += 1
-                header = line.lstrip("#").strip()
-                block_label = ""
-                if header:
-                    parts = header.split()
-                    if len(parts) >= 2 and parts[0] == "Alignment":
-                        block_label = f"{parts[0]}_{parts[1].rstrip(':')}"
-                    else:
-                        block_label = parts[0]
-                current_block = block_label or f"block_{block_index}"
-                continue
-
-            if current_block is None:
-                block_index += 1
-                current_block = f"block_{block_index}"
-
-            parts = line.split()
-            if len(parts) < 2:
-                continue
-            gene1 = parts[0]
-            gene2 = parts[1]
-
-            # Support WGDI-like rows such as:
-            # gene1  order1  gene2  order2  strand
-            # while keeping the original two-column format unchanged.
-            if len(parts) >= 3 and parts[1].lstrip("-").isdigit():
-                gene2 = parts[2]
-
-            gene_to_blocks[gene1].add(current_block)
-            gene_to_blocks[gene2].add(current_block)
-
-    return gene_to_blocks
+    return dict(gene_to_partners)
 
 
-def filter_trees_by_synteny(trees: list, gene_to_blocks: dict) -> tuple[list, list]:
+class SyntenySource:
+    """Read one synteny file or index species-pair ``*.anchors`` files on demand."""
+
+    def __init__(self, path: str, gene_to_species: dict[str, str]):
+        source = Path(path)
+        self.files_by_species_pair = {}
+        self.covered_species_pairs = set()
+        self._indexed = {}
+        self._db = None
+        self._single_scores = None
+
+        code_to_species = {}
+        ambiguous_codes = set()
+        for gene, species in gene_to_species.items():
+            if "_" in gene:
+                code = gene.split("_", 1)[0]
+                if code in ambiguous_codes:
+                    continue
+                if code in code_to_species and code_to_species[code] != species:
+                    ambiguous_codes.add(code)
+                    del code_to_species[code]
+                else:
+                    code_to_species[code] = species
+
+        if source.is_dir():
+            files = sorted(source.glob("*.anchors"))
+            if not files:
+                raise ValueError(f"No *.anchors files found in {source}")
+            for file_path in files:
+                tokens = file_path.stem.split(".")
+                if len(tokens) != 2:
+                    raise ValueError(f"Expected SpeciesA.SpeciesB.anchors: {file_path}")
+                species_pair = tuple(sorted(code_to_species.get(token, token) for token in tokens))
+                if species_pair in self.files_by_species_pair:
+                    raise ValueError(f"Duplicate anchors files for species pair {species_pair}")
+                self.files_by_species_pair[species_pair] = file_path
+                self.covered_species_pairs.add(species_pair)
+            cache_root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache"))
+            cache_dir = cache_root / "phylotracer" / "synteny"
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            directory_hash = hashlib.sha256(str(source.resolve()).encode("utf-8")).hexdigest()
+            self._db = sqlite3.connect(cache_dir / f"{directory_hash}.sqlite3", timeout=60)
+            self._db.execute("PRAGMA journal_mode=WAL")
+            self._db.execute("PRAGMA synchronous=NORMAL")
+            self._db.execute(
+                "CREATE TABLE IF NOT EXISTS files ("
+                "id INTEGER PRIMARY KEY, filename TEXT UNIQUE NOT NULL, "
+                "size INTEGER NOT NULL, mtime_ns INTEGER NOT NULL, has_pairs INTEGER NOT NULL)"
+            )
+            self._db.execute(
+                "CREATE TABLE IF NOT EXISTS pairs ("
+                "file_id INTEGER NOT NULL, gene1 TEXT NOT NULL, gene2 TEXT NOT NULL, "
+                "score REAL NOT NULL, PRIMARY KEY (file_id, gene1, gene2)) WITHOUT ROWID"
+            )
+        else:
+            self._single_scores = parse_synteny_blocks(str(source))
+            tokens = source.stem.split(".") if source.suffix == ".anchors" else []
+            if len(tokens) == 2:
+                self.covered_species_pairs.add(
+                    tuple(sorted(code_to_species.get(token, token) for token in tokens))
+                )
+            else:
+                for gene1, partners in self._single_scores.items():
+                    species1 = gene_to_species.get(gene1)
+                    if species1 is None:
+                        continue
+                    for gene2 in partners:
+                        species2 = gene_to_species.get(gene2)
+                        if species2 is not None and species1 != species2:
+                            self.covered_species_pairs.add(tuple(sorted((species1, species2))))
+
+    def _indexed_file(self, file_path: Path) -> tuple[int, bool]:
+        """Index a file once per run and rebuild it if changed since a prior run."""
+        filename = file_path.name
+        if filename in self._indexed:
+            return self._indexed[filename]
+        stat = file_path.stat()
+        row = self._db.execute(
+            "SELECT id, size, mtime_ns, has_pairs FROM files WHERE filename = ?", (filename,)
+        ).fetchone()
+        if row and (row[1], row[2]) == (stat.st_size, stat.st_mtime_ns):
+            result = (row[0], bool(row[3]))
+            self._indexed[filename] = result
+            return result
+
+        with self._db:
+            self._db.execute("BEGIN IMMEDIATE")
+            row = self._db.execute(
+                "SELECT id, size, mtime_ns, has_pairs FROM files WHERE filename = ?", (filename,)
+            ).fetchone()
+            if row and (row[1], row[2]) == (stat.st_size, stat.st_mtime_ns):
+                result = (row[0], bool(row[3]))
+                self._indexed[filename] = result
+                return result
+            if row:
+                file_id = row[0]
+                self._db.execute("DELETE FROM pairs WHERE file_id = ?", (file_id,))
+            else:
+                file_id = self._db.execute(
+                    "INSERT INTO files (filename, size, mtime_ns, has_pairs) VALUES (?, ?, ?, 0)",
+                    (filename, stat.st_size, stat.st_mtime_ns),
+                ).lastrowid
+            batch = []
+            has_pairs = False
+            for gene1, gene2, score in _iter_synteny_pairs(str(file_path)):
+                has_pairs = True
+                batch.append((file_id, min(gene1, gene2), max(gene1, gene2), score))
+                if len(batch) == 1000:
+                    self._db.executemany(
+                        "INSERT OR REPLACE INTO pairs VALUES (?, ?, ?, ?)", batch
+                    )
+                    batch.clear()
+            if batch:
+                self._db.executemany("INSERT OR REPLACE INTO pairs VALUES (?, ?, ?, ?)", batch)
+            current_stat = file_path.stat()
+            if (current_stat.st_size, current_stat.st_mtime_ns) != (stat.st_size, stat.st_mtime_ns):
+                raise RuntimeError(f"Synteny file changed while being indexed: {file_path}")
+            self._db.execute(
+                "UPDATE files SET size = ?, mtime_ns = ?, has_pairs = ? WHERE id = ?",
+                (stat.st_size, stat.st_mtime_ns, int(has_pairs), file_id),
+            )
+        result = (file_id, has_pairs)
+        self._indexed[filename] = result
+        return result
+
+    def close(self):
+        if self._db is not None:
+            self._db.close()
+            self._db = None
+
+    def pair_score(self, gene1: str, gene2: str, species1: str, species2: str) -> tuple[bool, float | None]:
+        """Return whether the species pair was assayed and its optional anchor score."""
+        species_pair = tuple(sorted((species1, species2)))
+        if species_pair not in self.covered_species_pairs:
+            return False, None
+
+        if self._single_scores is not None:
+            scores = self._single_scores
+            if not scores:
+                return False, None
+            return True, scores.get(gene1, {}).get(gene2)
+
+        file_id, has_pairs = self._indexed_file(self.files_by_species_pair[species_pair])
+        if not has_pairs:
+            return False, None
+        row = self._db.execute(
+            "SELECT score FROM pairs WHERE file_id = ? AND gene1 = ? AND gene2 = ?",
+            (file_id, min(gene1, gene2), max(gene1, gene2)),
+        ).fetchone()
+        return True, row[0] if row else None
+
+
+def filter_trees_by_synteny(
+    trees: list,
+    gene_to_partners: SyntenySource | dict,
+    gene_to_species: dict[str, str],
+    synteny_threshold: float = 0.2,
+) -> tuple[list, list]:
     """
     Filter candidate ortholog trees by raw synteny block support.
 
@@ -499,8 +660,14 @@ def filter_trees_by_synteny(trees: list, gene_to_blocks: dict) -> tuple[list, li
     ----------
     trees : list
         List of ``(tree_name, tree_object)`` tuples.
-    gene_to_blocks : dict
-        Mapping from gene identifier to a set of synteny block IDs.
+    gene_to_partners : SyntenySource or dict
+        Synteny source or a direct gene-to-partner mapping.
+    gene_to_species : dict
+        Species mapping for every candidate gene. Each candidate must contain
+        at most one gene per species.
+    synteny_threshold : float
+        Minimum matched fraction of all candidate cross-species pairs. A pair
+        missing from the synteny data counts as unmatched.
 
     Returns
     -------
@@ -509,38 +676,63 @@ def filter_trees_by_synteny(trees: list, gene_to_blocks: dict) -> tuple[list, li
 
     Assumptions
     -----------
-    A candidate passes if at least two genes have synteny support and the most
-    supported block covers at least half of the synteny-supported genes.
+    A valid single-copy tree with n tips has n * (n - 1) / 2 pairs. The rate is
+    ``matched_pairs / total_pairs``. Missing genes, pairs, or species-pair
+    files never reduce the denominator. Raw anchor scores are reported only as
+    a separate mean over matched pairs.
     """
+    if not 0.0 <= synteny_threshold <= 1.0:
+        raise ValueError("synteny_threshold must be between 0 and 1")
+
     filtered_trees = []
     report_rows = []
 
     for tree_name, phylo_tree in trees:
         leaf_names = [leaf.name for leaf in phylo_tree]
-        block_gene_counts = defaultdict(set)
-        supported_genes = 0
-
-        for gene in leaf_names:
-            blocks = gene_to_blocks.get(gene, set())
-            if not blocks:
-                continue
-            supported_genes += 1
-            for block_id in blocks:
-                block_gene_counts[block_id].add(gene)
-
-        best_block = ""
-        best_block_gene_count = 0
-        if block_gene_counts:
-            best_block, best_genes = max(
-                block_gene_counts.items(),
-                key=lambda item: (len(item[1]), item[0]),
+        if len(leaf_names) != len(set(leaf_names)):
+            raise ValueError(f"Duplicate gene IDs in candidate tree {tree_name}")
+        missing_species = [gene for gene in leaf_names if not gene_to_species.get(gene)]
+        if missing_species:
+            raise ValueError(
+                f"Missing species mapping for candidate tree {tree_name}: "
+                + ", ".join(missing_species)
             )
-            best_block_gene_count = len(best_genes)
-
-        support_ratio = (
-            best_block_gene_count / supported_genes if supported_genes else 0.0
-        )
-        passes = supported_genes >= 2 and support_ratio >= 0.5
+        species_names = [gene_to_species[gene] for gene in leaf_names]
+        if len(species_names) != len(set(species_names)):
+            raise ValueError(f"Candidate tree {tree_name} is not single-copy: duplicate species")
+        total_pairs = len(leaf_names) * (len(leaf_names) - 1) // 2
+        matched_pairs = 0
+        pairs_without_synteny_data = 0
+        total_score = 0.0
+        for index, gene1 in enumerate(leaf_names):
+            species1 = gene_to_species[gene1]
+            for gene2 in leaf_names[index + 1:]:
+                species2 = gene_to_species[gene2]
+                if isinstance(gene_to_partners, SyntenySource):
+                    covered, score = gene_to_partners.pair_score(
+                        gene1, gene2, species1, species2
+                    )
+                    if not covered:
+                        pairs_without_synteny_data += 1
+                else:
+                    partners = gene_to_partners.get(gene1, {})
+                    reverse_partners = gene_to_partners.get(gene2, {})
+                    score = (
+                        partners.get(gene2) if isinstance(partners, dict)
+                        else 1.0 if gene2 in partners else None
+                    )
+                    if score is None:
+                        score = (
+                            reverse_partners.get(gene1) if isinstance(reverse_partners, dict)
+                            else 1.0 if gene1 in reverse_partners else None
+                        )
+                if score is not None:
+                    matched_pairs += 1
+                    total_score += score
+        unmatched_pairs = total_pairs - matched_pairs
+        synteny_rate = matched_pairs / total_pairs if total_pairs else 0.0
+        avg_matched_score = total_score / matched_pairs if matched_pairs else 0.0
+        passes = total_pairs > 0 and synteny_rate >= synteny_threshold
         if passes:
             filtered_trees.append((tree_name, phylo_tree))
 
@@ -548,10 +740,13 @@ def filter_trees_by_synteny(trees: list, gene_to_blocks: dict) -> tuple[list, li
             (
                 tree_name,
                 str(len(leaf_names)),
-                str(supported_genes),
-                best_block,
-                str(best_block_gene_count),
-                f"{support_ratio:.4f}",
+                str(total_pairs),
+                str(matched_pairs),
+                str(unmatched_pairs),
+                str(pairs_without_synteny_data),
+                f"{synteny_rate:.6f}",
+                f"{avg_matched_score:.2f}",
+                f"{synteny_threshold:.4f}",
                 "pass" if passes else "fail",
             )
         )
@@ -700,6 +895,7 @@ def split_main(
     synteny_blocks_path: str | None = None,
     add_outgroup: bool = False,
     gene_to_species: dict[str, str] | None = None,
+    synteny_threshold: float = 0.2,
 ):
     """
     Split gene family trees into single-copy ortholog trees and write outputs.
@@ -714,6 +910,9 @@ def split_main(
         Mapping from renamed identifiers to original gene identifiers.
     renamed_len_dic : dict
         Mapping from renamed gene identifiers to sequence lengths.
+    synteny_threshold : float
+        Minimum cross-species gene-pair rate required to retain a subtree when
+        a synteny file is supplied.
 
     Returns
     -------
@@ -725,9 +924,14 @@ def split_main(
     """
     import csv
 
-    gene_to_blocks = {}
+    if synteny_blocks_path and gene_to_species is None:
+        raise ValueError("gene_to_species is required when synteny filtering is enabled")
+    if synteny_blocks_path and not 0.0 <= synteny_threshold <= 1.0:
+        raise ValueError("synteny_threshold must be between 0 and 1")
+
+    gene_to_partners = None
     if synteny_blocks_path:
-        gene_to_blocks = parse_synteny_blocks(synteny_blocks_path)
+        gene_to_partners = SyntenySource(synteny_blocks_path, gene_to_species)
 
     outgroup_report_rows = []
 
@@ -757,7 +961,12 @@ def split_main(
                 tre_ID,
             )
             if synteny_blocks_path:
-                trees, tree_report_rows = filter_trees_by_synteny(trees, gene_to_blocks)
+                trees, tree_report_rows = filter_trees_by_synteny(
+                    trees,
+                    gene_to_partners,
+                    gene_to_species=gene_to_species,
+                    synteny_threshold=synteny_threshold,
+                )
                 synteny_report_rows.extend((tre_ID,) + row for row in tree_report_rows)
 
             tree_ortholog_trees = []
@@ -816,13 +1025,14 @@ def split_main(
     if synteny_blocks_path:
         with open("ortholog_synteny_report.tsv", "w", encoding="utf-8") as out:
             out.write(
-                "tre_ID\ttre_name\tnum_genes\tsynteny_supported_genes\tbest_block\t"
-                "best_block_gene_count\tsupport_ratio\tsynteny_filter\n"
+                "tre_ID\ttre_name\tnum_genes\ttotal_pairs\tmatched_pairs\t"
+                "unmatched_pairs\tpairs_without_synteny_data\tsynteny_rate\t"
+                "mean_matched_anchor_score\tthreshold\tsynteny_filter\n"
             )
             for row in synteny_report_rows:
                 out.write("\t".join(row) + "\n")
 
-    if add_outgroup and outgroup_report_rows:
+    if add_outgroup:
         with open("ortholog_outgroup_report.tsv", "w", encoding="utf-8") as out:
             out.write("tre_name\tgf_id\tnum_ingroup\tnum_outgroup\toutgroup_genes\tstatus\n")
             for row in outgroup_report_rows:
@@ -840,6 +1050,12 @@ def split_main(
             for tre_ID, trees in tsv_data.items():
                 row = [tre_ID] + trees + [""] * (max_cols - len(trees))
                 writer.writerow(row)
+    elif synteny_blocks_path:
+        with open("ortholog_trees.tsv", "w", newline="", encoding="utf-8") as tsvfile:
+            csv.writer(tsvfile, delimiter='\t').writerow(["tre_ID"])
+
+    if isinstance(gene_to_partners, SyntenySource):
+        gene_to_partners.close()
 
 
 # ======================================================

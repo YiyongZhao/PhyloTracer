@@ -3,6 +3,7 @@ Tests for phylotracer.Ortho_Retriever module.
 """
 
 import io
+from itertools import combinations
 import os
 import sys
 import textwrap
@@ -23,6 +24,7 @@ from phylotracer.Ortho_Retriever import (
     rm_dup,
     split_offcut_ev_seqs,
     parse_synteny_blocks,
+    SyntenySource,
     filter_trees_by_synteny,
     choose_strict_single_copy_outgroup_genes,
     split_main,
@@ -158,8 +160,8 @@ class TestParseSyntenyBlocks:
         """)
         result = parse_synteny_blocks(path)
         os.unlink(path)
-        assert "geneA" in result
-        assert "geneB" in result
+        assert result["geneA"] == {"geneB": 1.0}
+        assert result["geneB"] == {"geneA": 1.0}
 
     def test_wgdi_style(self):
         # gene1  order  gene2  order  strand
@@ -169,8 +171,8 @@ class TestParseSyntenyBlocks:
         """)
         result = parse_synteny_blocks(path)
         os.unlink(path)
-        assert "geneA" in result
-        assert "geneB" in result
+        assert result["geneA"] == {"geneB": 1.0}
+        assert result["geneB"] == {"geneA": 1.0}
 
     def test_empty_file(self):
         path = self._write_tmp("")
@@ -187,10 +189,8 @@ class TestParseSyntenyBlocks:
         """)
         result = parse_synteny_blocks(path)
         os.unlink(path)
-        assert len(result["g1"]) == 1
-        assert len(result["g3"]) == 1
-        # g1 and g3 should belong to different blocks
-        assert result["g1"] != result["g3"]
+        assert result["g1"] == {"g2": 1.0}
+        assert result["g3"] == {"g4": 1.0}
 
     def test_gene_in_multiple_blocks(self):
         path = self._write_tmp("""\
@@ -201,7 +201,36 @@ class TestParseSyntenyBlocks:
         """)
         result = parse_synteny_blocks(path)
         os.unlink(path)
-        assert len(result["shared"]) == 2
+        assert result["shared"] == {"g2": 1.0, "g3": 1.0}
+
+    def test_three_column_anchors_and_reversed_duplicates(self):
+        path = self._write_tmp("""\
+            ###
+            AAB_1\tAAC_1\t131
+            AAC_1\tAAB_1\t2140
+        """)
+        result = parse_synteny_blocks(path)
+        os.unlink(path)
+        assert result == {"AAB_1": {"AAC_1": 2140.0}, "AAC_1": {"AAB_1": 2140.0}}
+
+    def test_duplicate_anchor_score_uses_last_row(self):
+        path = self._write_tmp("""\
+            AAB_1\tAAC_1\t2140
+            AAC_1\tAAB_1\t131
+        """)
+        result = parse_synteny_blocks(path)
+        os.unlink(path)
+        assert result["AAB_1"]["AAC_1"] == 131.0
+
+    def test_genes_in_same_block_are_not_implicitly_paired(self):
+        path = self._write_tmp("""\
+            # block1
+            A_1\tB_1
+            A_2\tB_2
+        """)
+        result = parse_synteny_blocks(path)
+        os.unlink(path)
+        assert "B_2" not in result["A_1"]
 
 
 # =============================================
@@ -214,45 +243,152 @@ class TestFilterTreesBySynteny:
         newick = "(" + ",".join(f"{n}:1" for n in leaf_names) + ");"
         return Tree(newick)
 
-    def test_passes_with_enough_support(self):
+    def test_missing_pairs_count_in_denominator(self):
         tree = self._make_tree(["g1", "g2", "g3"])
-        gene_to_blocks = {
-            "g1": {"blk1"},
-            "g2": {"blk1"},
-            "g3": {"blk1"},
-        }
-        filtered, report = filter_trees_by_synteny([("T1", tree)], gene_to_blocks)
+        species = {"g1": "A", "g2": "B", "g3": "C"}
+        filtered, report = filter_trees_by_synteny(
+            [("T1", tree)], {"g1": {"g2"}}, species, synteny_threshold=0.3
+        )
         assert len(filtered) == 1
+        assert report[0][2:7] == ("3", "1", "2", "0", "0.333333")
         assert report[0][-1] == "pass"
 
     def test_fails_with_no_support(self):
         tree = self._make_tree(["g1", "g2", "g3"])
-        filtered, report = filter_trees_by_synteny([("T1", tree)], {})
+        species = {"g1": "A", "g2": "B", "g3": "C"}
+        filtered, report = filter_trees_by_synteny([("T1", tree)], {}, species)
         assert len(filtered) == 0
+        assert report[0][2:7] == ("3", "0", "3", "0", "0.000000")
         assert report[0][-1] == "fail"
 
-    def test_fails_when_support_ratio_low(self):
-        # g1 in blk1, g2 in blk2 → best_block covers 1/2 genes, ratio=0.5 → pass threshold exactly
-        tree = self._make_tree(["g1", "g2"])
-        gene_to_blocks = {"g1": {"blk1"}, "g2": {"blk2"}}
-        filtered, report = filter_trees_by_synteny([("T1", tree)], gene_to_blocks)
-        # supported_genes=2, best_block_gene_count=1 → ratio=0.5 → passes (>=0.5)
-        assert report[0][-1] == "pass"
+    def test_threshold_boundary_uses_exact_rate(self):
+        tree = self._make_tree(["g1", "g2", "g3", "g4"])
+        species = {gene: gene for gene in ["g1", "g2", "g3", "g4"]}
+        partners = {"g1": {"g2", "g3"}}
+        passed, report = filter_trees_by_synteny(
+            [("T1", tree)], partners, species, synteny_threshold=1 / 3
+        )
+        failed, _ = filter_trees_by_synteny(
+            [("T1", tree)], partners, species, synteny_threshold=0.34
+        )
+        assert len(passed) == 1
+        assert len(failed) == 0
+        assert report[0][2:5] == ("6", "2", "4")
 
-    def test_fails_when_only_one_supported_gene(self):
+    def test_duplicate_species_rejected_as_not_single_copy(self):
         tree = self._make_tree(["g1", "g2", "g3"])
-        gene_to_blocks = {"g1": {"blk1"}}
-        filtered, report = filter_trees_by_synteny([("T1", tree)], gene_to_blocks)
+        species = {"g1": "A", "g2": "A", "g3": "B"}
+        partners = {"g1": {"g2", "g3"}}
+        with pytest.raises(ValueError, match="not single-copy"):
+            filter_trees_by_synteny(
+                [("T1", tree)], partners, species, synteny_threshold=0.5
+            )
+
+    def test_one_tip_fails_even_at_zero_threshold(self):
+        tree = Tree("g1;")
+        filtered, report = filter_trees_by_synteny(
+            [("T1", tree)], {}, {"g1": "A"},
+            synteny_threshold=0,
+        )
         assert report[0][-1] == "fail"
+        assert filtered == []
+
+    def test_missing_species_mapping_fails_explicitly(self):
+        tree = self._make_tree(["g1", "g2"])
+        with pytest.raises(ValueError, match="Missing species mapping"):
+            filter_trees_by_synteny([("T1", tree)], {}, {"g1": "A"})
 
     def test_report_columns(self):
         tree = self._make_tree(["g1", "g2"])
-        gene_to_blocks = {"g1": {"blk1"}, "g2": {"blk1"}}
-        _, report = filter_trees_by_synteny([("T1", tree)], gene_to_blocks)
+        _, report = filter_trees_by_synteny(
+            [("T1", tree)], {"g1": {"g2"}}, {"g1": "A", "g2": "B"}
+        )
         row = report[0]
-        # (tree_name, num_genes, supported_genes, best_block, best_block_gene_count, ratio, verdict)
-        assert len(row) == 7
+        assert len(row) == 10
         assert row[0] == "T1"
+
+    def test_missing_species_file_stays_in_denominator(self, tmp_path):
+        (tmp_path / "A.B.anchors").write_text("###\nA_1\tB_1\t131\n")
+        (tmp_path / "A.C.anchors").write_text("###\nA_2\tC_2\t2140\n")
+        source = SyntenySource(str(tmp_path), {"A_1": "A", "B_1": "B", "C_1": "C"})
+        tree = self._make_tree(["A_1", "B_1", "C_1"])
+        filtered, report = filter_trees_by_synteny(
+            [("T1", tree)], source,
+            {"A_1": "A", "B_1": "B", "C_1": "C"},
+            synteny_threshold=0.3,
+        )
+        assert len(filtered) == 1
+        assert report[0][2:8] == ("3", "1", "2", "1", "0.333333", "131.00")
+        failed, _ = filter_trees_by_synteny(
+            [("T1", tree)], source,
+            {"A_1": "A", "B_1": "B", "C_1": "C"},
+            synteny_threshold=0.4,
+        )
+        assert failed == []
+
+    def test_empty_species_pair_file_is_not_assessable(self, tmp_path):
+        (tmp_path / "A.B.anchors").write_text("###\n")
+        source = SyntenySource(str(tmp_path), {"A_1": "A", "B_1": "B"})
+        tree = self._make_tree(["A_1", "B_1"])
+        filtered, report = filter_trees_by_synteny(
+            [("T1", tree)], source, {"A_1": "A", "B_1": "B"},
+            synteny_threshold=0.2,
+        )
+        assert filtered == []
+        assert report[0][2:7] == ("1", "0", "1", "1", "0.000000")
+
+    def test_directory_index_reuses_and_refreshes_anchor_pairs(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
+        anchor_dir = tmp_path / "anchors"
+        anchor_dir.mkdir()
+        anchor = anchor_dir / "A.B.anchors"
+        anchor.write_text("A_1\tB_1\t131\nB_1\tA_1\t2140\n")
+        species = {"A_1": "A", "B_1": "B"}
+
+        source = SyntenySource(str(anchor_dir), species)
+        assert source.pair_score("A_1", "B_1", "A", "B") == (True, 2140.0)
+        assert source.pair_score("B_1", "A_1", "B", "A") == (True, 2140.0)
+        assert source.pair_score("A_2", "B_2", "A", "B") == (True, None)
+        source.close()
+
+        from phylotracer import Ortho_Retriever as module
+        original_iterator = module._iter_synteny_pairs
+        def fail_if_reparsed(_):
+            raise AssertionError("unchanged anchors file was reparsed")
+        monkeypatch.setattr(module, "_iter_synteny_pairs", fail_if_reparsed)
+        source = SyntenySource(str(anchor_dir), species)
+        assert source.pair_score("A_1", "B_1", "A", "B") == (True, 2140.0)
+        source.close()
+        monkeypatch.setattr(module, "_iter_synteny_pairs", original_iterator)
+
+        anchor.write_text("A_1\tB_1\t42\n")
+        source = SyntenySource(str(anchor_dir), species)
+        assert source.pair_score("A_1", "B_1", "A", "B") == (True, 42.0)
+        source.close()
+
+    def test_ten_tips_twenty_seven_matches_use_all_forty_five_pairs(self):
+        genes = [f"S{i}_g" for i in range(10)]
+        species = {gene: gene.split("_", 1)[0] for gene in genes}
+        partners = {}
+        for gene1, gene2 in list(combinations(genes, 2))[:27]:
+            partners.setdefault(gene1, set()).add(gene2)
+        tree = self._make_tree(genes)
+
+        passed, report = filter_trees_by_synteny(
+            [("T10", tree)], partners, species, synteny_threshold=0.6
+        )
+        failed, _ = filter_trees_by_synteny(
+            [("T10", tree)], partners, species, synteny_threshold=0.61
+        )
+
+        assert len(passed) == 1
+        assert failed == []
+        assert report[0][2:7] == ("45", "27", "18", "0", "0.600000")
+
+    @pytest.mark.parametrize("threshold", [-0.01, 1.01])
+    def test_invalid_threshold_rejected(self, threshold):
+        with pytest.raises(ValueError, match="synteny_threshold"):
+            filter_trees_by_synteny([], {}, {}, synteny_threshold=threshold)
 
 
 # =============================================
@@ -366,13 +502,49 @@ class TestSplitMainIntegration:
             for k, v in raw_tre_dic.items()
         }
 
-        split_main(tre_dic, gene2new, new2gene, renamed_len_dic, synteny_blocks_path=synteny_path)
+        split_main(
+            tre_dic, gene2new, new2gene, renamed_len_dic,
+            synteny_blocks_path=synteny_path,
+            gene_to_species=read_and_return_dict(imap_path),
+        )
 
         report = self.tmp / "ortholog_synteny_report.tsv"
         assert report.exists(), "ortholog_synteny_report.tsv not created"
         lines = report.read_text().splitlines()
-        assert lines[0].startswith("tre_ID\t")
+        assert lines[0] == (
+            "tre_ID\ttre_name\tnum_genes\ttotal_pairs\tmatched_pairs\t"
+            "unmatched_pairs\tpairs_without_synteny_data\tsynteny_rate\t"
+            "mean_matched_anchor_score\tthreshold\tsynteny_filter"
+        )
         assert len(lines) > 1
+
+    def test_all_filtered_out_replaces_stale_ortholog_table(self):
+        from phylotracer import gene_id_transfer, read_and_return_dict
+
+        imap_path = os.path.join(EXAMPLE_DIR, "gene2sps.imap")
+        len_path = os.path.join(EXAMPLE_DIR, "gene2length.imap")
+        gf_path = os.path.join(EXAMPLE_DIR, "GF_ID2path.imap")
+        gene2new, new2gene, _, _ = gene_id_transfer(imap_path)
+        len_dic = read_and_return_dict(len_path)
+        raw_tre_dic = read_and_return_dict(gf_path)
+        first_id, first_path = next(iter(raw_tre_dic.items()))
+        tre_dic = {first_id: os.path.join(EXAMPLE_DIR, first_path)}
+        anchors = self.tmp / "empty.anchors"
+        anchors.write_text("###\n")
+        (self.tmp / "ortholog_trees.tsv").write_text("stale\n")
+        (self.tmp / "ortholog_outgroup_report.tsv").write_text("stale\n")
+
+        split_main(
+            tre_dic, gene2new, new2gene, rename_len_dic(len_dic, gene2new),
+            synteny_blocks_path=str(anchors),
+            gene_to_species=read_and_return_dict(imap_path),
+            add_outgroup=True,
+        )
+
+        assert (self.tmp / "ortholog_trees.tsv").read_text().strip() == "tre_ID"
+        assert (self.tmp / "ortholog_outgroup_report.tsv").read_text().splitlines() == [
+            "tre_name\tgf_id\tnum_ingroup\tnum_outgroup\toutgroup_genes\tstatus"
+        ]
 
     def test_add_outgroup_produces_report(self):
         from phylotracer import gene_id_transfer, read_and_return_dict

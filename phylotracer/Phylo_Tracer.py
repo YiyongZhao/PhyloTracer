@@ -286,7 +286,8 @@ Ortho_Retriever_parser = subparsers.add_parser('Ortho_Retriever', help='Retrieve
 Ortho_Retriever_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 Ortho_Retriever_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
 Ortho_Retriever_parser.add_argument('--input_gene_length', metavar='GENE_LENGTH_LIST', required=True, help='Two-column mapping file (gene_id<TAB>gene_length)')
-Ortho_Retriever_parser.add_argument('--input_synteny_blocks', metavar='SYNTENY_BLOCKS', default=None, help='Optional raw synteny block file. Each block starts with "#" and each non-comment line contains one gene pair.')
+Ortho_Retriever_parser.add_argument('--input_synteny_blocks', metavar='FILE_OR_DIR', default=None, help='Raw synteny file or directory of SpeciesA.SpeciesB.anchors files. An optional third anchors column is the raw pair score.')
+Ortho_Retriever_parser.add_argument('--synteny_threshold', metavar='FLOAT', type=bounded_float(0.0, 1.0), default=None, help='Minimum fraction of all candidate cross-species gene pairs supported by synteny (0-1, default = 0.2). Requires --input_synteny_blocks.')
 Ortho_Retriever_parser.add_argument('--add_outgroup', action='store_true', default=False, help='Attach strict sister-clade outgroup genes to output trees. Outgroup species must not overlap with ingroup species and must be single-copy within the candidate sister clade.')
 Ortho_Retriever_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
@@ -767,6 +768,7 @@ def handle_ortho_retriever(cli_args):
             new_named_gene2gene_dic,
             renamed_len_dic,
             synteny_blocks_path=cli_args.input_synteny_blocks,
+            synteny_threshold=cli_args.synteny_threshold if cli_args.synteny_threshold is not None else 0.2,
             add_outgroup=cli_args.add_outgroup,
             gene_to_species=read_and_return_dict(cli_args.input_imap),
         )
@@ -1066,6 +1068,8 @@ def main():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     args = _parser.parse_args()
+    if args.command == "Ortho_Retriever" and not args.input_synteny_blocks and args.synteny_threshold is not None:
+        _parser.error("Ortho_Retriever --synteny_threshold requires --input_synteny_blocks")
     if args.command == "HaploFinder":
         has_hybrid = bool(args.hyb_sps)
         has_parents = bool(args.parental_sps)

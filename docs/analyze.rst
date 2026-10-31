@@ -411,15 +411,18 @@ Required Parameters:
     - ``--input_gene_length``   File with gene length information.
 
 Optional Parameters:
-    - ``--input_synteny_blocks``  Optional raw synteny block file used to refine candidate ortholog sets.
+    - ``--input_synteny_blocks``  Raw synteny file or directory of ``SpeciesA.SpeciesB.anchors`` files used to refine candidate ortholog sets. The optional third anchors column is the raw pair score.
+    - ``--synteny_threshold``     Minimum supported fraction of all cross-species gene pairs in each candidate single-copy tree (0-1, default: 0.2; requires ``--input_synteny_blocks``). All missing gene pairs and missing species-pair files count as unmatched.
     - ``--add_outgroup``          Attach strict sister-clade outgroup genes to output trees. Outgroup species must not overlap with ingroup species and must be single-copy within the candidate sister clade.
     - ``--output_dir``          Output directory (default: current working directory).
 
 Output:
     - ``ortho_retriever_summary.txt``  Summary of ortholog extraction results per gene family.
     - ``ortholog_trees.tsv``           Tab-delimited list of extracted single-copy ortholog subtrees.
-    - ``ortholog_synteny_report.tsv``  Written only when ``--input_synteny_blocks`` is used.
-    - ``ortholog_outgroup_report.tsv`` Written only when ``--add_outgroup`` is used; records selected outgroup genes and whether each tree received a valid strict outgroup.
+    - ``ortholog_synteny_report.tsv``  Written only when ``--input_synteny_blocks`` is used; includes total, matched and unmatched pair counts, ``synteny_rate = matched_pairs / total_pairs``, the separate raw ``mean_matched_anchor_score``, threshold and filter result for each candidate subtree.
+    - ``ortholog_outgroup_report.tsv`` Written only when ``--add_outgroup`` is used; records selected outgroup genes and whether each tree received a valid strict outgroup. Contains only its header when no trees pass filtering.
+
+    For a synteny directory, queried anchors files are indexed on demand in a reusable SQLite database under ``${XDG_CACHE_HOME:-~/.cache}/phylotracer/synteny``. Files changed since the previous run are reindexed.
 
 Example:
     .. code-block:: bash

@@ -681,13 +681,14 @@ Required parameters:
     --input_imap            Two-column mapping file (gene_id<TAB>species_name)
     --input_gene_length     Two-column mapping file (gene_id<TAB>gene_length)
 Optional parameters:
-    --input_synteny_blocks  Optional raw synteny block file. Each block starts with "#" and each non-comment line contains one gene pair
+    --input_synteny_blocks  Raw synteny file or directory of SpeciesA.SpeciesB.anchors files; the optional third anchors column is the raw pair score
+    --synteny_threshold     Minimum supported fraction of all cross-species gene pairs in each single-copy candidate tree (0-1, default = 0.2; requires --input_synteny_blocks)
     --add_outgroup          Attach closest sister-clade outgroup genes to output trees. Outgroup species must not overlap with ingroup species and must be single-copy within the candidate sister clade
     --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
 Usage:
     PhyloTracer Ortho_Retriever --input_GF_list GF_ID2path.imap --input_imap gene2sps.imap --input_gene_length gene2length.imap
 
-Outputs include `ortho_retriever_summary.txt` and `ortholog_trees.tsv`. When `--add_outgroup` is enabled, `ortho_retriever_summary.txt` contains the rooted ingroup+outgroup combined trees and an additional `ortholog_outgroup_report.tsv` file records the selected outgroup genes and per-tree status (`ok` or `skip_no_valid_outgroup`).
+Outputs include `ortho_retriever_summary.txt` and `ortholog_trees.tsv`. With `--input_synteny_blocks`, each candidate single-copy subtree with n tips has `n * (n - 1) / 2` cross-species gene pairs. The filtering `synteny_rate` is the number of explicitly supported pairs divided by that full count; pairs absent from the anchors data, including missing species-pair files, count as unmatched. `ortholog_synteny_report.tsv` records `total_pairs`, `matched_pairs`, `unmatched_pairs`, `synteny_rate`, and the separately named raw `mean_matched_anchor_score` (which can exceed 1 and is not compared with the rate threshold). Trees containing multiple genes from the same species are rejected as invalid single-copy candidates. Directory inputs build a reusable SQLite index under `${XDG_CACHE_HOME:-~/.cache}/phylotracer/synteny` as files are queried; changed files are reindexed on the next run. When `--add_outgroup` is enabled, `ortho_retriever_summary.txt` contains the rooted ingroup+outgroup combined trees and an additional `ortholog_outgroup_report.tsv` file records the selected outgroup genes and per-tree status (`ok` or `skip_no_valid_outgroup`), with only a header if no trees pass filtering.
 ```
 ### Hybrid_Tracer
 ```
