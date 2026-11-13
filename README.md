@@ -18,7 +18,7 @@
     Github: https://github.com/YiyongZhao/PhyloTracer                                        
     License: MIT license                                                                     
     Release Date: 2023-7                                                                     
-    Contacts: Tao Li(l948777439@gmail.com); Yiyong Zhao(yiyong.zhao@yale.edu)
+    Contacts: Tao Li(l948777439@gmail.com); Yiyong Zhao(yz3676@cornell.edu)
                                                                          
 ###############################################################################################
 ```
