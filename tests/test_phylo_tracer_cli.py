@@ -94,6 +94,53 @@ class TestCLIHelp:
         assert "--cluster_file" not in result.stdout
 
 
+class TestGDLossTrackerCLI:
+    required_args = [
+        "--input_GF_list", "gf.imap",
+        "--input_sps_tree", "species.nwk",
+        "--input_imap", "genes.imap",
+    ]
+
+    def test_gd_node_and_legacy_alias_share_repeatable_selection(self):
+        from phylotracer.Phylo_Tracer import _parser
+
+        args = _parser.parse_args([
+            "GD_Loss_Tracker", *self.required_args,
+            "--gd_node", "A,B", "--mrca_node", "C,D",
+        ])
+        assert args.gd_node == ["A,B", "C,D"]
+        assert args.node_count_mode == "parsimony"
+        assert args.parsimony_min_support_ratio == 0.5
+        assert args.parsimony_min_support_species == 2
+        assert not args.include_unobserved_species
+
+    @pytest.mark.parametrize("option", ["--gd_node", "--mrca_node"])
+    def test_gd_node_selection_reaches_tracker_handler(self, option, monkeypatch, tmp_path):
+        import phylotracer.Phylo_Tracer as cli
+
+        species = tmp_path / "species.nwk"
+        species.write_text("((A,B),C);")
+        args = cli._parser.parse_args([
+            "GD_Loss_Tracker", *self.required_args,
+            "--input_sps_tree", str(species), option, "A,B",
+        ])
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr(cli, "gene_id_transfer", lambda _: ({}, {}, {}, {}))
+        monkeypatch.setattr(cli, "read_and_return_dict", lambda _: {})
+        captured = {}
+
+        def tracker(*args, **kwargs):
+            captured.update(kwargs)
+            return {}, {}, []
+
+        monkeypatch.setattr(cli, "get_path_str_num_dic", tracker)
+        monkeypatch.setattr(cli, "write_gd_loss_csv", lambda *args, **kwargs: None)
+        monkeypatch.setattr(cli, "write_gd_loss_node_summary_tsv", lambda *args, **kwargs: None)
+        monkeypatch.setattr(cli, "report_execution_time", lambda *args, **kwargs: None)
+        cli.handle_gd_loss_tracker(args)
+        assert captured["allowed_gd_species_sets"] == {frozenset({"A", "B"})}
+
+
 class TestHaploFinderCLI:
     required_args = [
         "--input_GF_list", "gf.imap",

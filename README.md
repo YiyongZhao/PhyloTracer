@@ -72,7 +72,7 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
 9. **Tree_Visualizer:** Renders multi-layer gene trees with tip annotations, optional expression heatmaps, and GD-node overlays; also maps duplication counts onto species trees. All outputs are publication-ready vector PDFs with deterministic, label-stable coloring.
 10. **GD_Detector:** Identifies gene duplication events by reconciling gene trees with the species tree. Each duplication is further classified into a retention model—AABB (both child lineages retain genes from both sides of the species tree), AXBB/AABX (asymmetric loss on one side), or Complex—providing insight into post-duplication evolutionary fate. Supports relaxed and strict detection modes.
 11. **GD_Visualizer:** Displays detected duplication nodes in a species tree context.
-12. **GD_Loss_Tracker:** Traces what happened to duplicated gene copies across species: for each duplication event, every species is classified as retaining both copies (2→2), losing one (2→1), or losing both (2→0). Results can be filtered by target species or restricted to specific ancestral nodes, and are exported as detailed Excel reports.
+12. **GD_Loss_Tracker:** Traces the two GD child lineages, exports numeric paths and mode-specific loss-transition counts, and supports GD-origin filtering with `--gd_node`. States 0/1/2 describe represented child lineages rather than individual gene counts. See the [English and Chinese guide](docs/gd_loss_tracker.rst).
 13. **GD_Loss_Visualizer:** Renders pie charts of copy-state distributions (2-2/2-1/2-0) at each species tree node for visual identification of lineage-specific gene loss patterns.
 14. **Ortho_Retriever:** Infers phylogenetically supported single-copy putative orthologs by recursively splitting paralogous clades from gene family trees, using gene length to resolve within-species paralog conflicts, optionally refining candidate ortholog sets with synteny block support, and optionally attaching strict sister-clade outgroup genes to the written trees.
 15. **Hybrid_Tracer:** Screens hybridization-related signals using genes derived from detected duplication events. For each duplication node, relevant sequences are extracted and tested with HyDe's phylogenetic-invariant framework to summarize admixture-compatible triplets. Supports node-focused or genome-wide analysis with batch processing.
@@ -94,7 +94,7 @@ PhyloTracer integrates 17 modular tools covering phylogenetic preprocessing, roo
   Identifies gene duplication events via species-overlap reconciliation and classifies each into evolutionary models (AABB, AXBB, AABX, Complex) in both relaxed and strict modes.
 
 - **Per-species copy-state tracking** (via `GD_Loss_Tracker`):  
-  Traces post-duplication gene retention along the species tree with per-species 2→2 / 2→1 / 2→0 trajectories, target-species filtering, and MRCA-restricted analyses.
+  Traces post-duplication lineage states and 2→1 / 1→0 / 2→0 transitions, with target-species filtering and GD-origin selection through `--gd_node`.
 
 - **GD-informed hybridization screening** (via `Hybrid_Tracer`):  
   Extracts duplication-derived gene sets, constructs node-partitioned concatenated alignments, and runs HyDe to summarize admixture-compatible triplets for downstream interpretation of hybridization or introgression.
@@ -619,41 +619,33 @@ Usage:
     PhyloTracer GD_Visualizer --input_sps_tree numed_sptree.nwk --gd_result gd_result_relaxed.txt --input_imap gene2sps.imap
 ```
 ### GD_Loss_Tracker
+
+Trace inferred lineage states and loss transitions after gene duplication.
+
+```bash
+PhyloTracer GD_Loss_Tracker \
+  --input_GF_list GF_ID2path.imap \
+  --input_sps_tree sptree.nwk \
+  --input_imap gene2sps.imap \
+  --gd_node "SpeciesA,SpeciesB" \
+  --node_count_mode parsimony \
+  --output_dir loss_parsimony
 ```
-Description:
-    To analyze and summarize gene duplication loss events across nodes and tips in the species tree
-Required parameters:
-    --input_GF_list         Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line
-    --input_sps_tree        Species tree file in Newick format
-    --input_imap            Two-column mapping file (gene_id<TAB>species_name)
-Optional parameters:
-    --target_species        Only count loss paths ending in this species (Arabidopsis_thaliana). Can be used multiple times
-    --mrca_node             Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times
-    --include_unobserved_species
-                            Policy for species absent from the current gene family tree
-                            If set: absent species are still assigned 2→2/2→1/2→0 labels
-                              based on the presence/absence pattern in the gd suclade A/gd suclade B
-                            If not set (default): absent species are labeled "missing_data"
-                            Note: this flag only affects classification labels; it does not
-                            change aggregate count statistics.
-    --node_count_mode       How to count loss paths for path_count_* transition statistics
-                            Default: parsimony. Choices: parsimony | accumulate
-                              parsimony  — if multiple species lost a gene in the same ancestor,
-                                           that is counted as one shared loss event (reduces
-                                           redundancy and is appropriate for most analyses)
-                              accumulate — each independent loss path is counted separately
-                                           (use when per-lineage resolution is needed)
-    --parsimony_min_support_ratio
-                            Minimum fraction of descendant species required to collapse
-                            multiple losses into one shared parsimony node. Default = 0.5
-                            Evaluated relative to all species under the current GD event node.
-    --parsimony_min_support_species
-                            Minimum number of descendant species required to collapse
-                            multiple losses into one shared parsimony node. Default = 2
-    --output_dir            Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory
-Usage:
-    PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
-```
+
+- `--gd_node SP1,SP2`: select events whose **GD origin is exactly the MRCA** of two input species, then trace their descendants. Repeat for multiple origin nodes. It does not filter the location of loss. The old `--mrca_node` spelling remains a compatible alias. Pass species names, not `S20` or another generated node ID.
+- `--target_species SP`: retain output paths ending in the specified species; repeat for multiple species. This filtering happens after per-event transition inference.
+- `--node_count_mode parsimony` (default): assign shared transition types to fully affected clades, then count once per `Tree ID + GD ID + node + type` in the node summary.
+- `--node_count_mode accumulate`: count every descendant-species path transition, including repeated ancestral steps. These counts are not independent biological loss events.
+- `--parsimony_min_support_ratio` (default `0.5`): affected fraction within the **candidate node's** descendant species. The current full-clade cover makes the fraction 1 for selected nodes; this is not gene-tree branch support.
+- `--parsimony_min_support_species` (default `2`): minimum affected species at an internal candidate node. Rejected clades are skipped, not re-expanded; terminal assignments are exempt. Both support options are ignored in accumulate mode.
+- `--include_unobserved_species`: include species absent from the entire family in terminal classification. By default `Species final loss type` is `NA` for them (internal reason `missing_data`). Numeric paths and GD detection do not change.
+- `--output_dir DIR`: write directly in DIR; otherwise use the command-specific output folder.
+
+Outputs: `gd_loss.csv`, `gd_loss_node_summary.tsv`, and `numed_sptree.nwk`.
+The node summary contains `P2_0/P2_1/P1_0` or `C2_0/C2_1/C1_0`, but no retention (`2_2`) column. Neither mode directly exports cumulative inherited-state histories.
+
+**Transition definitions:** `2_1` means 2→1, `1_0` means 1→0, and `2_0` means 2→0 between adjacent numeric path nodes. Each is one transition record; `2_0` is not counted twice. Terminal `2_0` instead means absence from both GD child subclades and does not distinguish direct from sequential loss. See the [detailed guide and Chinese translation](docs/gd_loss_tracker.rst) for examples, output fields, missing-data limits and cumulative-history summaries.
+
 ### GD_Loss_Visualizer
 ```
 Description:

@@ -36,10 +36,10 @@ from phylotracer import (
 # Constants
 # ======================================================
 
-LOSS_TYPE_2_2 = "2_2"  # Both copies retained
-LOSS_TYPE_2_1 = "2_1"  # One copy lost
-LOSS_TYPE_2_0 = "2_0"  # Absent from both GD child subclades
-LOSS_TYPE_1_0 = "1_0"  # Single copy lost
+LOSS_TYPE_2_2 = "2_2"  # Terminal presence in both GD child lineages
+LOSS_TYPE_2_1 = "2_1"  # Path 2->1; terminal presence in one GD child
+LOSS_TYPE_2_0 = "2_0"  # Path 2->0; terminal absence from both GD children
+LOSS_TYPE_1_0 = "1_0"  # Path 1->0 only; not a terminal classification
 LOSS_TYPE_NA = "NA"
 
 SORT_SENTINEL = 10**9  # Sentinel for non-S-node sorting
@@ -56,7 +56,7 @@ def node_sort_key(name: str) -> int:
 
 
 def classify_copy_transition(prev_copy: int, curr_copy: int) -> str:
-    """Classify copy number transition into loss type."""
+    """Classify a decrease between adjacent mapped lineage states (not gene totals)."""
     if curr_copy >= prev_copy:
         return LOSS_TYPE_NA
     if prev_copy == 2 and curr_copy == 0:

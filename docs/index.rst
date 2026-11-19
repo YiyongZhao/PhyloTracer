@@ -25,4 +25,5 @@ Documentation
    installation.rst
    input_files.rst
    analyze.rst
+   gd_loss_tracker.rst
 

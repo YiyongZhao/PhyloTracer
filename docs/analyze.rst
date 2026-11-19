@@ -348,30 +348,28 @@ Example:
 12. GD_Loss_Tracker
 --------------------
 
-Description:
-    Analyze and summarize gene duplication loss events across nodes and tips in the species tree.
+Trace inferred lineage states and loss transitions after duplication.
+See :doc:`gd_loss_tracker` for full parameter descriptions, examples, output definitions,
+and the Chinese translation.
 
-Required Parameters:
-    - ``--input_GF_list``   File containing paths to gene tree files, one per line.
-    - ``--input_sps_tree``  Species tree file in Newick format.
-    - ``--input_imap``      File with species classification information corresponding to genes.
+Required parameters:
+    - ``--input_GF_list``: tab-delimited ``GF_ID<TAB>gene_tree_path`` mapping.
+    - ``--input_sps_tree``: species tree in Newick format.
+    - ``--input_imap``: two-column ``gene_id<TAB>species_name`` mapping.
 
-Optional Parameters:
-    - ``--target_species``            Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.
-    - ``--mrca_node``                 Only count loss paths passing through the MRCA of two species. Format: ``SpeciesA,SpeciesB`` (comma-separated, no space). Can be used multiple times.
-    - ``--include_unobserved_species`` If set, species unobserved in a gene family are still classified by left/right presence instead of labeled as missing_data.
-    - ``--node_count_mode``           Node counting mode for ``path_count_*`` transition statistics: ``parsimony`` (default) collapses shared descendant losses to one ancestral count when supported; ``accumulate`` keeps all repeated descendant transitions.
-    - ``--output_dir``                Output directory (default: current working directory).
+Key options:
+    - ``--gd_node SP1,SP2`` selects GDs born exactly at the two species' MRCA.
+      Repeat for several origins. ``--mrca_node`` remains a legacy alias.
+    - ``--node_count_mode parsimony`` (default) groups supported shared transitions
+      and deduplicates Tree/GD/node/type in the node summary.
+    - ``--node_count_mode accumulate`` counts every descendant-species path transition,
+      including repeated ancestral steps, without changing numeric path states.
+    - ``--output_dir DIR`` writes directly in DIR; otherwise a command-specific folder is used.
 
-Output:
-    - ``gd_loss.csv``                 Standard GD-loss table. Columns begin with ``Tree ID``, ``GD ID``, ``GD Burst Node``, and ``Loss Node``; the loss node is defined as the first node where copy number decreases along ``Loss Path``. The table also contains per-species A/B copy assignments, presence flags, loss type, and path-derived transition summaries.
-    - ``gd_loss_count_summary.txt``   Aggregated loss counts per species-tree node/tip.
-    - ``gd_loss.xlsx``                Excel workbook combining the summary tables.
-
-Example:
-    .. code-block:: bash
-
-        PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap
+Outputs:
+    - ``gd_loss.csv``: event/species records, inferred path states and loss patterns.
+    - ``gd_loss_node_summary.tsv``: mode-specific loss-transition counts.
+    - ``numed_sptree.nwk``: numbered species tree for interpreting node labels.
 
 
 13. GD_Loss_Visualizer

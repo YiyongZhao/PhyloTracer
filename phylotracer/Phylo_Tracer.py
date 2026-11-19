@@ -263,16 +263,39 @@ GD_Visualizer_parser.add_argument('--input_imap', metavar='IMAP', required=True,
 GD_Visualizer_parser.add_argument('--output', metavar='PDF', default=None, help='Output PDF path, default = <gd_result_basename>.pdf')
 
 # GD_Loss_Tracker command
-GD_Loss_Tracker_parser = subparsers.add_parser('GD_Loss_Tracker', help='Track inferred post-GD loss paths across species tree branches', formatter_class=CustomHelpFormatter, epilog='Example:\n  PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap --input_sps_tree sptree.nwk --input_imap gene2sps.imap')
+GD_Loss_Tracker_parser = subparsers.add_parser(
+    'GD_Loss_Tracker',
+    help='Track inferred post-GD lineage states and loss transitions',
+    description=(
+        'Trace the two child lineages of each GD event on a species tree.\n'
+        'Path states 0/1/2 count represented GD child lineages, not individual genes.\n'
+        'Loss transitions: 2_1 = two to one; 1_0 = one to zero; 2_0 = two directly to zero.\n'
+        'A 2_0 transition counts once, not twice; absence alone does not prove biological loss.'
+    ),
+    formatter_class=CustomHelpFormatter,
+    epilog=(
+        'Examples:\n'
+        '  PhyloTracer GD_Loss_Tracker --input_GF_list GF_ID2path.imap '
+        '--input_sps_tree sptree.nwk --input_imap gene2sps.imap\n'
+        '  Add --gd_node "SpeciesA,SpeciesB" --node_count_mode accumulate '
+        'to select GDs born at that MRCA.\n\n'
+        'Outputs: gd_loss.csv (event/species rows and numeric paths), '
+        'gd_loss_node_summary.tsv (mode-specific loss counts), numed_sptree.nwk.\n'
+        'Parsimony counts clade-cover loss assignments once per GD/node/type; '
+        'accumulate counts every descendant-species path transition.\n'
+        'Neither mode directly exports cumulative inherited-state histories or 2_2 retention counts.\n'
+        'Detailed English and Chinese definitions: docs/gd_loss_tracker.rst'
+    ),
+)
 GD_Loss_Tracker_parser.add_argument('--input_GF_list', metavar='GENE_TREE_LIST', required=True, help='Tab-delimited mapping file (GF_ID<TAB>gene_tree_path); one gene tree path per line')
 GD_Loss_Tracker_parser.add_argument('--input_sps_tree', metavar='NEWICK_TREE', required=True, help='Species tree file in Newick format')
 GD_Loss_Tracker_parser.add_argument('--input_imap', metavar='IMAP', required=True, help='Two-column mapping file (gene_id<TAB>species_name)')
-GD_Loss_Tracker_parser.add_argument('--target_species', metavar='SP', action='append', default=None, help='Only count loss paths ending in this species (e.g., Arabidopsis_thaliana). Can be used multiple times.')
-GD_Loss_Tracker_parser.add_argument('--mrca_node', metavar='SP1,SP2', action='append', default=None, help='Only count loss paths passing through the MRCA of SP1 and SP2. Format: SpeciesA,SpeciesB (comma-separated, no space). Can be used multiple times.')
-GD_Loss_Tracker_parser.add_argument('--include_unobserved_species', action='store_true', help='Classification policy for species absent from the current gene family, default = False. If set, treat unobserved species as classifiable (2-2/2-1/2-0) based on left/right presence; if not set, label them as missing_data. This flag does not change loss_path copy-state values (0/1/2) or GD event detection.')
-GD_Loss_Tracker_parser.add_argument('--node_count_mode', choices=['parsimony', 'accumulate'], default='parsimony', help='Node counting mode for path_count_* transition statistics, default = parsimony. parsimony: if multiple descendant species share one ancestral loss, count it once at the shared ancestor; accumulate: count all descendant loss-path events. This flag does not change the (0/1/2) copy-state numbers shown in loss_path.')
-GD_Loss_Tracker_parser.add_argument('--parsimony_min_support_ratio', type=float, default=0.5, help='Minimum descendant-species support ratio required to collapse a loss to one shared parsimony node, default = 0.5. The ratio is evaluated against all species under the current GD event node.')
-GD_Loss_Tracker_parser.add_argument('--parsimony_min_support_species', type=int, default=2, help='Minimum descendant-species support required to collapse a loss to one shared parsimony node, default = 2.')
+GD_Loss_Tracker_parser.add_argument('--target_species', metavar='SP', action='append', default=None, help='Keep output rows/paths ending in SP; repeat to select several species.\nUse exact input species names. Filtering is applied after per-GD transition inference.')
+GD_Loss_Tracker_parser.add_argument('--gd_node', '--mrca_node', dest='gd_node', metavar='SP1,SP2', action='append', default=None, help='Keep GD events born exactly at the MRCA of SP1 and SP2, then trace their descendants.\nUse two exact input species names separated by a comma; repeat to select several GD nodes.\nNot a loss-location filter; does not accept an S-node ID. --mrca_node is a legacy alias.')
+GD_Loss_Tracker_parser.add_argument('--include_unobserved_species', action='store_true', help='Classify species absent from the entire gene family by GD-child presence (default: off).\nBy default their Species final loss type is NA (internal reason: missing_data).\nDoes not change GD detection or numeric paths; it does change terminal classification labels.')
+GD_Loss_Tracker_parser.add_argument('--node_count_mode', choices=['parsimony', 'accumulate'], default='parsimony', help='Loss-transition counting mode (default: parsimony).\nparsimony: group species sharing a transition type into fully affected clades; count each\n           assigned Tree ID + GD ID + node + type once in the node summary.\naccumulate: count each descendant-species path transition, including repeated ancestral steps.\nChanges GD loss pattern and node-summary counts, not numeric path states or GD detection.\nCounts are transition records, not numbers of lost genes or cumulative inherited states.')
+GD_Loss_Tracker_parser.add_argument('--parsimony_min_support_ratio', type=float, default=0.5, help='Minimum affected-species fraction within a candidate parsimony node (default: 0.5).\nDenominator: all descendant species of that candidate node, not the entire GD clade.\nCurrent full-clade cover makes this fraction 1 for selected nodes; not branch support.\nInternal nodes only; ignored in accumulate mode.')
+GD_Loss_Tracker_parser.add_argument('--parsimony_min_support_species', type=int, default=2, help='Minimum affected descendant-species count for an internal parsimony node (default: 2).\nA rejected clade is skipped, not re-expanded into terminal assignments.\nTerminal assignments are exempt; ignored in accumulate mode.')
 GD_Loss_Tracker_parser.add_argument('--output_dir', metavar='DIR', default=None, help='Output directory. If provided, write results directly in DIR (no extra nested module folder). default: command-specific subfolder in current working directory')
 
 # GD_Loss_Visualizer command
@@ -698,10 +721,10 @@ def handle_gd_loss_tracker(cli_args):
         tre_dic = read_and_return_dict(cli_args.input_GF_list)
 
         allowed_gd_species_sets = set()
-        if cli_args.mrca_node:
-            for pair_str in cli_args.mrca_node:
+        if cli_args.gd_node:
+            for pair_str in cli_args.gd_node:
                 if ',' not in pair_str:
-                    logger.warning("Invalid mrca_node format '%s'. Skipping.", pair_str)
+                    logger.warning("Invalid --gd_node format '%s'; expected SpeciesA,SpeciesB. Skipping.", pair_str)
                     continue
                 sp1, sp2 = [x.strip() for x in pair_str.split(',', 1)]
                 try:
